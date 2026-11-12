@@ -1,0 +1,217 @@
+.keyboard-dock {
+  display: grid;
+  grid-template-rows: 30px 1fr;
+  gap: 6px;
+  height: 196px;
+  padding: 8px 10px 10px;
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, #3a312b, #2a231f);
+  box-shadow: var(--shadow);
+}
+
+[data-theme='dark'] .keyboard-dock {
+  background: linear-gradient(180deg, #2a2420, #15110f);
+}
+
+.keyboard-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: #e8dcc8;
+  padding: 0 4px;
+}
+
+.keyboard-head .muted {
+  color: #a89880;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.keyboard-head .pedal {
+  color: #a89880;
+}
+
+.keyboard-head .pedal.is-down {
+  color: #e6b450;
+}
+
+.keyboard-head .note-chip {
+  background: rgba(255, 220, 200, 0.14);
+  color: #ffd9c8;
+}
+
+.keyboard-head .note-chip.is-sustained {
+  background: rgba(230, 180, 80, 0.16);
+  color: #e6b450;
+}
+
+.keyboard-head .muted:not(.kb-range) {
+  font-size: 12px;
+}
+
+.piano {
+  position: relative;
+  height: 100%;
+  min-height: 0;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  border-top: 3px solid #8c2f22;
+  border-radius: 2px 2px 6px 6px;
+  overflow: hidden;
+}
+
+.key {
+  position: absolute;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  cursor: pointer;
+  transition: background 0.05s;
+}
+
+.key-white {
+  height: 100%;
+  background: linear-gradient(180deg, #f3eee4 0%, var(--key-white) 12%, var(--key-white) 92%, #ece4d6 100%);
+  border-left: 1px solid var(--key-white-edge);
+  border-bottom: 1px solid var(--key-white-edge);
+  border-radius: 0 0 5px 5px;
+  z-index: 1;
+}
+
+.key-black {
+  height: 62%;
+  background: linear-gradient(180deg, var(--key-black-top), var(--key-black) 85%, #000 100%);
+  border-radius: 0 0 4px 4px;
+  box-shadow:
+    inset 0 -4px 0 rgba(255, 255, 255, 0.08),
+    0 2px 3px rgba(0, 0, 0, 0.45);
+  z-index: 2;
+}
+
+.key-white.is-expected {
+  background: linear-gradient(180deg, #f3eee4, var(--key-expected) 30%);
+}
+
+.key-black.is-expected {
+  background: linear-gradient(180deg, #6b5a26, #a8913f);
+}
+
+.key-white.is-held {
+  background: linear-gradient(180deg, #e6dccb, var(--key-held) 40%);
+}
+
+.key-black.is-held {
+  background: linear-gradient(180deg, #7a3426, #a24633);
+}
+
+.key-white.is-sustained {
+  background: linear-gradient(180deg, #f3eee4, color-mix(in srgb, var(--key-held) 45%, var(--key-white)) 40%);
+}
+
+.key-white.is-correct {
+  background: linear-gradient(180deg, #e6dccb, var(--key-correct) 40%);
+}
+
+.key-black.is-correct {
+  background: linear-gradient(180deg, #2c5a3c, #3f7d55);
+}
+
+.key.is-wrong {
+  animation: key-wrong 0.45s ease;
+}
+
+.key-white.is-wrong {
+  background: linear-gradient(180deg, #f0d5cf, #e88c7f 40%);
+}
+
+.key-black.is-wrong {
+  background: linear-gradient(180deg, #8a2216, #c0392b);
+}
+
+@keyframes key-wrong {
+  25% {
+    transform: translateX(-1px);
+  }
+  50% {
+    transform: translateX(1px);
+  }
+}
+
+.key-label {
+  font-size: clamp(8px, calc(100vw / var(--white-count) / 3.4), 12px);
+  font-weight: 700;
+  color: #9a8c7a;
+  margin-bottom: 7px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.key-label.is-c {
+  color: #8c2f22;
+}
+
+.key-label-black {
+  color: #f1e4cc;
+  margin-bottom: 5px;
+}
+
+.key-qwerty {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  color: #b2a48f;
+  margin-bottom: 2px;
+  pointer-events: none;
+}
+
+.key-black .key-qwerty {
+  color: #8a7c68;
+}
+
+.key-heat {
+  position: absolute;
+  left: 15%;
+  right: 15%;
+  top: 6px;
+  height: 6px;
+  border-radius: 3px;
+}
+
+@media (max-height: 780px) {
+  .keyboard-dock {
+    height: 160px;
+  }
+}
+
+@media (max-width: 760px) {
+  .keyboard-dock {
+    height: 150px;
+    padding: 6px;
+  }
+  .keyboard-head .kb-range {
+    display: none;
+  }
+}
+
+.key-white.is-action {
+  background: linear-gradient(180deg, #f3eee4, color-mix(in srgb, var(--accent) 14%, var(--key-white)) 45%);
+}
+
+.key-action {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  translate: -50% 0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  padding: 2px 5px;
+  border-radius: 5px;
+  background: #8c2f22;
+  color: #fff8f0;
+  white-space: nowrap;
+  pointer-events: none;
+}

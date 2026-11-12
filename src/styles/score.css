@@ -1,0 +1,164 @@
+.score-scroll {
+  flex: 1;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+}
+
+.score-canvas {
+  position: relative;
+  min-height: 100%;
+}
+
+.score-host {
+  position: relative;
+}
+
+.score-host svg {
+  display: block;
+}
+
+/* Theme the engraving: VexFlow writes presentation attributes (or none at all, relying
+   on inheritance), and CSS overrides both. */
+.score-svg {
+  fill: var(--ink);
+}
+
+.score-svg [fill]:not([fill='none']) {
+  fill: var(--ink);
+}
+
+.score-svg [stroke]:not([stroke='none']) {
+  stroke: var(--ink);
+}
+
+.score-svg .vf-stave [fill]:not([fill='none']),
+.score-svg .vf-stave [stroke]:not([stroke='none']) {
+  fill: var(--ink-2);
+  stroke: var(--ink-2);
+}
+
+.score-svg .vf-pp-note [fill]:not([fill='none']),
+.score-svg .vf-pp-note [stroke]:not([stroke='none']) {
+  transition: fill 0.12s, stroke 0.12s;
+}
+
+.score-svg .vf-pp-note.is-current,
+.score-svg .vf-pp-note.is-current [fill]:not([fill='none']) {
+  fill: var(--accent);
+}
+
+.score-svg .vf-pp-note.is-current [stroke]:not([stroke='none']) {
+  stroke: var(--accent);
+}
+
+.score-svg .vf-pp-note.is-good,
+.score-svg .vf-pp-note.is-good [fill]:not([fill='none']) {
+  fill: var(--ok);
+}
+
+.score-svg .vf-pp-note.is-good [stroke]:not([stroke='none']) {
+  stroke: var(--ok);
+}
+
+.score-svg .vf-pp-note.is-ok,
+.score-svg .vf-pp-note.is-ok [fill]:not([fill='none']) {
+  fill: var(--warn);
+}
+
+.score-svg .vf-pp-note.is-ok [stroke]:not([stroke='none']) {
+  stroke: var(--warn);
+}
+
+.score-svg .vf-pp-note.is-bad,
+.score-svg .vf-pp-note.is-missed,
+.score-svg .vf-pp-note.is-bad [fill]:not([fill='none']),
+.score-svg .vf-pp-note.is-missed [fill]:not([fill='none']) {
+  fill: var(--bad);
+}
+
+.score-svg .vf-pp-note.is-bad [stroke]:not([stroke='none']),
+.score-svg .vf-pp-note.is-missed [stroke]:not([stroke='none']) {
+  stroke: var(--bad);
+}
+
+.score-svg .vf-pp-note.is-missed {
+  opacity: 0.55;
+}
+
+.score-svg .pp-label {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 700;
+  fill: var(--label);
+  stroke: none;
+  letter-spacing: 0.02em;
+}
+
+.score-svg .pp-bar-number {
+  font-family: var(--serif);
+  font-size: 11px;
+  font-style: italic;
+  fill: var(--ink-3);
+  stroke: none;
+}
+
+.score-cursor,
+.score-playhead {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  opacity: 0;
+  will-change: transform;
+}
+
+.score-cursor {
+  width: 30px;
+  border-radius: 8px;
+  background: var(--cursor);
+  box-shadow: inset 0 0 0 1.5px var(--cursor-edge);
+  transition:
+    transform 0.16s cubic-bezier(0.3, 0.7, 0.3, 1),
+    opacity 0.2s,
+    height 0.16s;
+}
+
+.score-cursor.is-wrong {
+  animation: cursor-wrong 0.45s ease;
+}
+
+@keyframes cursor-wrong {
+  0%,
+  100% {
+    background: var(--cursor);
+  }
+  20% {
+    background: var(--bad-soft);
+    box-shadow: inset 0 0 0 2px var(--bad);
+    translate: -3px 0;
+  }
+  45% {
+    translate: 3px 0;
+  }
+  70% {
+    translate: -2px 0;
+  }
+}
+
+.score-playhead {
+  width: 3px;
+  border-radius: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.score-error {
+  position: absolute;
+  inset: 16px;
+  display: grid;
+  place-items: center;
+  color: var(--bad);
+  font-weight: 600;
+}
