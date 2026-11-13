@@ -139,7 +139,8 @@ export function ExercisePanel(props: {
 
       <section className="panel-section">
         <div className="section-title">Display</div>
-        <Toggle label="Note names" hint="On the staff and keys" checked={s.showNoteNames} onChange={(showNoteNames) => update({ showNoteNames })} />
+        <Toggle label="Note names on the staff" hint="Letter names under the notes" checked={s.showStaffNames} onChange={(showStaffNames) => update({ showStaffNames })} />
+        <Toggle label="Note names on the keys" hint="Letter names on the on-screen keyboard" checked={s.showKeyNames} onChange={(showKeyNames) => update({ showKeyNames })} />
         <Toggle label="Keyboard guide" hint="Highlight the keys to play" checked={s.showKeyboardGuide} onChange={(showKeyboardGuide) => update({ showKeyboardGuide })} />
         <Toggle label="Computer-key hints" hint="Show A S D F… on the keys" checked={s.showQwertyHints} onChange={(showQwertyHints) => update({ showQwertyHints })} />
         <div className="grid-2">

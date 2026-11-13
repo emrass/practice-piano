@@ -428,7 +428,7 @@ function Studio({ profile }: { profile: Profile }) {
             {runtime.stage ? (
               runtime.stage(controller)
             ) : (
-              <ScoreView exercise={exercise} showNoteNames={s.showNoteNames} controller={controller} showFingering={!!runtime.score?.showFingering} />
+              <ScoreView exercise={exercise} showNoteNames={s.showStaffNames} controller={controller} showFingering={!!runtime.score?.showFingering} />
             )}
             <ResultsLayer
               controller={controller}
@@ -562,7 +562,7 @@ function KeyboardDock(props: {
         sustained={held.sustained}
         expected={expected}
         wrong={state.wrong?.midi ?? null}
-        showLabels={props.settings.showNoteNames}
+        showLabels={props.settings.showKeyNames}
         preferFlats={props.preferFlats}
         spelling={spelling}
         qwertyBase={props.qwertyBase}

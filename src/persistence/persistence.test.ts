@@ -141,6 +141,13 @@ describe('normalizeSettings', () => {
     expect(s).not.toHaveProperty('level');
   });
 
+  it('splits the old note-names switch into staff and keys', () => {
+    expect(normalizeSettings({ showNoteNames: false })).toMatchObject({ showStaffNames: false, showKeyNames: false });
+    expect(normalizeSettings({ showNoteNames: true, showKeyNames: false })).toMatchObject({ showStaffNames: true, showKeyNames: false });
+    expect(normalizeSettings({})).toMatchObject({ showStaffNames: true, showKeyNames: true });
+    expect(normalizeSettings({ showNoteNames: false })).not.toHaveProperty('showNoteNames');
+  });
+
   it('patches lesson groups field by field', () => {
     const s = applySettingsPatch(DEFAULT_SETTINGS, { chords: { mode: 'flow' }, theme: 'dark' });
     expect(s.chords).toEqual({ ...DEFAULT_SETTINGS.chords, mode: 'flow' });

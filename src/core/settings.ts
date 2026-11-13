@@ -104,7 +104,10 @@ export interface Settings extends LessonSettings {
   // Display
   keyboardSize: KeyboardSize;
   keyboardView: 'fit' | 'full';
-  showNoteNames: boolean;
+  /** Letter names under the notes (sight reading and ear training; other lessons print their own). */
+  showStaffNames: boolean;
+  /** Letter names on the on-screen keys. */
+  showKeyNames: boolean;
   showKeyboardGuide: boolean;
   showQwertyHints: boolean;
   /** Play the synth for on-screen and computer keys (off: a MIDI piano makes its own sound). */
@@ -223,7 +226,8 @@ export const DEFAULT_SETTINGS: Settings = {
   countInBars: 1,
   keyboardSize: 88,
   keyboardView: 'fit',
-  showNoteNames: true,
+  showStaffNames: true,
+  showKeyNames: true,
   showKeyboardGuide: true,
   showQwertyHints: false,
   keySound: false,
@@ -277,7 +281,9 @@ export function normalizeSettings(raw: unknown): Settings {
     countInBars: oneOf(r.countInBars, [1, 2] as const, d.countInBars),
     keyboardSize: oneOf(r.keyboardSize, KEYBOARD_SIZES, d.keyboardSize),
     keyboardView: oneOf(r.keyboardView, ['fit', 'full'] as const, d.keyboardView),
-    showNoteNames: bool(r.showNoteNames, d.showNoteNames),
+    // Older settings had one `showNoteNames` for both.
+    showStaffNames: bool(r.showStaffNames, bool(r.showNoteNames, d.showStaffNames)),
+    showKeyNames: bool(r.showKeyNames, bool(r.showNoteNames, d.showKeyNames)),
     showKeyboardGuide: bool(r.showKeyboardGuide, d.showKeyboardGuide),
     showQwertyHints: bool(r.showQwertyHints, d.showQwertyHints),
     keySound: bool(r.keySound, d.keySound),

@@ -76,7 +76,7 @@ test.describe('Chords & progressions', () => {
   test('Keys and held notes are spelled as the chord asked for', async ({ app, page }) => {
     // F♯ major: the V chord is C♯ E♯ G♯, so the F key reads E♯ while it is asked for.
     await app.open({
-      settings: { lesson: 'chords', showNoteNames: true, chords: { task: 'progression', progression: 'I-V-vi-IV', key: 'F#', hands: 'rh', mode: 'wait' } },
+      settings: { lesson: 'chords', showKeyNames: true, chords: { task: 'progression', progression: 'I-V-vi-IV', key: 'F#', hands: 'rh', mode: 'wait' } },
     });
     const ts = await app.exercise(targets);
     const eSharp = ts[1].voicing.find((k) => k % 12 === 5)!;
