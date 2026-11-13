@@ -121,7 +121,13 @@ export function useChordsLesson(ctx: LessonContext, active: boolean): LessonRunt
     stage: chart ? (session) => <ChordChart exercise={exercise} controller={session} /> : undefined,
     mode: { value: c.mode, set: (mode) => ctx.update({ chords: { mode } }) },
     focusActive: !!drillFocus && Object.keys({ ...drillFocus.qualities, ...drillFocus.roots }).length > 0,
-    keyboard: { span: exercise.range, qwertyHints: true, spelling: (st) => spellings[st.chords?.index ?? 0] },
+    keyboard: {
+      span: exercise.range,
+      spelling: (st) => spellings[st.chords?.index ?? 0],
+      unavailable: {
+        guide: item.task === 'drill' ? `In a drill the chord is the question${c.mode === 'wait' ? ' — press ? for a hint' : ''}` : undefined,
+      },
+    },
     review: () => {
       ctx.update({ chords: { source: 'review' } });
       ctx.reseed();

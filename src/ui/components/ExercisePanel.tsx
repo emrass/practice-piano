@@ -2,7 +2,6 @@ import { useState } from 'react';
 import type { HandsMode } from '../../core/exercise';
 import { bpmForLevel, RHYTHM_COMPLEXITY_LABELS } from '../../core/generator/difficulty';
 import { tierForLevel } from '../../core/generator/tiers';
-import { KEYBOARD_RANGES, KEYBOARD_SIZES, type KeyboardSize } from '../../core/keyboard/range';
 import { KEYS } from '../../core/music/keys';
 import { TIME_SIGNATURE_IDS, type TimeSignatureId } from '../../core/music/rhythm';
 import type { ProgressState } from '../../core/progress/progress';
@@ -140,26 +139,6 @@ export function ExercisePanel(props: {
       <section className="panel-section">
         <div className="section-title">Display</div>
         <Toggle label="Note names on the staff" hint="Letter names under the notes" checked={s.showStaffNames} onChange={(showStaffNames) => update({ showStaffNames })} />
-        <Toggle label="Note names on the keys" hint="Letter names on the on-screen keyboard" checked={s.showKeyNames} onChange={(showKeyNames) => update({ showKeyNames })} />
-        <Toggle label="Keyboard guide" hint="Highlight the keys to play" checked={s.showKeyboardGuide} onChange={(showKeyboardGuide) => update({ showKeyboardGuide })} />
-        <Toggle label="Computer-key hints" hint="Show A S D F… on the keys" checked={s.showQwertyHints} onChange={(showQwertyHints) => update({ showQwertyHints })} />
-        <div className="grid-2">
-          <Select<number>
-            label="Your keyboard"
-            value={s.keyboardSize}
-            onChange={(v) => update({ keyboardSize: v as KeyboardSize })}
-            options={KEYBOARD_SIZES.map((k) => ({ value: k, label: KEYBOARD_RANGES[k].label }))}
-          />
-          <Select<'fit' | 'full'>
-            label="Keyboard view"
-            value={s.keyboardView}
-            onChange={(keyboardView) => update({ keyboardView })}
-            options={[
-              { value: 'fit', label: 'Fit to exercise' },
-              { value: 'full', label: 'Full keyboard' },
-            ]}
-          />
-        </div>
       </section>
     </div>
   );

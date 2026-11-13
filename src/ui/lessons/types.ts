@@ -22,6 +22,14 @@ export interface LessonContext {
   now: number;
 }
 
+/** Which keyboard display settings apply to a lesson (the rest are greyed out in the keyboard bar). */
+export interface KeyboardAvailability {
+  /** Why a setting does not apply here, shown with it greyed out. */
+  unavailable?: { guide?: string; qwertyHints?: string };
+  /** What "fit" means here (ear training: a fixed C3–C6 window). Default: fit to the exercise. */
+  fitLabel?: string;
+}
+
 /**
  * One lesson as the studio sees it: the current exercise and how to practise it, the lesson's
  * settings panel and stage, and how it reacts to "next", "easier / harder" and settings
@@ -55,11 +63,9 @@ export interface LessonRuntime {
     qwerty?: ReadonlyMap<string, number>;
     /** Labels on keys (rhythm: the designated keys). */
     markers?: ReadonlyMap<number, string>;
-    /** Whether the usual QWERTY hints make sense. */
-    qwertyHints: boolean;
     /** How the keys and held notes are spelled at this point of the run (chords: as the chord asked for). */
     spelling?: (state: PracticeState) => PcSpelling | undefined;
-  };
+  } & KeyboardAvailability;
   /** Progress tab: review the due items (repertoire lessons). */
   review?: () => void;
   /** Progress tab: practise the weak spots it lists. */

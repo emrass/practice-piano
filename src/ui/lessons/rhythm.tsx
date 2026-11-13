@@ -74,7 +74,15 @@ export function useRhythmLesson(ctx: LessonContext, active: boolean): LessonRunt
     },
     panel: <RhythmPanel settings={s} progress={ctx.progress} update={ctx.update} onNew={next} weakFigures={findWeakFigures(ctx.progress)} />,
     focusActive: s.weakSpotFocus && focus.length > 0,
-    keyboard: { span: { min: Math.min(lhKey, rhKey), max: Math.max(lhKey, rhKey) }, qwerty: keys.qwerty, markers: keys.markers, qwertyHints: false },
+    keyboard: {
+      span: { min: Math.min(lhKey, rhKey), max: Math.max(lhKey, rhKey) },
+      qwerty: keys.qwerty,
+      markers: keys.markers,
+      unavailable: {
+        guide: exercise.rhythm.task === 'echo' ? 'Echo: you play back what you heard, so the keys stay dark' : undefined,
+        qwertyHints: 'Rhythm uses J and F, marked on its two keys',
+      },
+    },
     practiceWeakSpots: () => {
       refreshFocus();
       ctx.update({ weakSpotFocus: true });

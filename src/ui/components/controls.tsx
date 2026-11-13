@@ -94,10 +94,10 @@ export function CommitSlider(props: {
   );
 }
 
-export function Toggle(props: { label: ReactNode; checked: boolean; onChange: (v: boolean) => void; hint?: ReactNode }) {
+export function Toggle(props: { label: ReactNode; checked: boolean; onChange: (v: boolean) => void; hint?: ReactNode; disabled?: boolean }) {
   const id = useId();
   return (
-    <div className="toggle-row">
+    <div className={`toggle-row ${props.disabled ? 'is-disabled' : ''}`}>
       <label htmlFor={id} className="toggle-label">
         <span>{props.label}</span>
         {props.hint ? <small>{props.hint}</small> : null}
@@ -108,6 +108,7 @@ export function Toggle(props: { label: ReactNode; checked: boolean; onChange: (v
         role="switch"
         aria-checked={props.checked}
         className={`switch ${props.checked ? 'is-on' : ''}`}
+        disabled={props.disabled}
         onClick={() => props.onChange(!props.checked)}
       >
         <span className="switch-knob" />

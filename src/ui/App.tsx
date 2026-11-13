@@ -18,6 +18,7 @@ import { MidiService } from '../platform/midi/midiService';
 import { isNativeApp } from '../platform/native';
 import { Segmented } from './components/controls';
 import { InputAudioPanel, InputMonitor } from './components/InputAudioPanel';
+import { KeyboardControls } from './components/KeyboardControls';
 import { LatencyCalibration } from './components/LatencyCalibration';
 import { MetaStrip } from './components/MetaStrip';
 import { PianoKeyboard } from './components/PianoKeyboard';
@@ -26,6 +27,7 @@ import { ProgressPanel } from './components/ProgressPanel';
 import { ResultsCard } from './components/ResultsCard';
 import { ScoreView } from './components/ScoreView';
 import { type LessonRuntime, useLesson } from './lessons';
+import type { KeyboardAvailability } from './lessons/types';
 import type { PracticeState, Session } from './practice/session';
 import { type Profile, useProfile } from './state/useProfile';
 
@@ -133,7 +135,7 @@ function Studio({ profile }: { profile: Profile }) {
     else controller.start();
   }, [controller]);
   // A hint while the guide already lights the keys would only cost the step.
-  const guideOn = s.showKeyboardGuide;
+  const guideOn = s.showKeyboardGuide && !runtime.keyboard.unavailable?.guide;
   const hint = useCallback(() => {
     if (guideOn && controller.state.get().expected.length) return;
     controller.hint?.();
@@ -455,16 +457,17 @@ function Studio({ profile }: { profile: Profile }) {
             resultsHidden={resultsHidden}
             onShowResults={() => setHiddenResultsFor(null)}
             pianoShortcuts={s.pianoShortcuts}
-            keyboardGuide={s.showKeyboardGuide}
+            keyboardGuide={guideOn}
           />
           <KeyboardDock
             controller={controller}
             min={kbRange.min}
             max={kbRange.max}
             settings={s}
-            onToggleKeySound={() => update({ keySound: !s.keySound })}
+            update={update}
+            availability={runtime.keyboard}
             preferFlats={prefersFlats(exercise.key)}
-            qwertyBase={s.showQwertyHints && runtime.keyboard.qwertyHints ? qwertyBase : null}
+            qwertyBase={s.showQwertyHints && !runtime.keyboard.unavailable?.qwertyHints ? qwertyBase : null}
             markers={runtime.keyboard.markers}
             spelling={runtime.keyboard.spelling}
           />
@@ -526,14 +529,16 @@ function KeyboardDock(props: {
   markers?: ReadonlyMap<number, string>;
   /** Spelling that follows the run (chords: the chord asked for). */
   spelling?: (state: PracticeState) => PcSpelling | undefined;
-  onToggleKeySound: () => void;
+  update: (patch: SettingsPatch) => void;
+  availability: KeyboardAvailability;
 }) {
   const held = useStore(inputBus.held);
   const soundOn = props.settings.keySound;
   const state = useStore(props.controller.state);
+  const guideOn = props.settings.showKeyboardGuide && !props.availability.unavailable?.guide;
   const expected = useMemo(
-    () => (state.status === 'finished' ? [] : [...new Set([...(props.settings.showKeyboardGuide ? state.expected : []), ...state.revealed])]),
-    [state.status, state.expected, state.revealed, props.settings.showKeyboardGuide],
+    () => (state.status === 'finished' ? [] : [...new Set([...(guideOn ? state.expected : []), ...state.revealed])]),
+    [state.status, state.expected, state.revealed, guideOn],
   );
   const actions = props.settings.pianoShortcuts && state.status === 'finished' ? ACTION_LABELS : undefined;
   const spelling = props.spelling?.(state);
@@ -545,13 +550,14 @@ function KeyboardDock(props: {
           <span className="muted kb-range">
             {midiLabel(props.min)}–{midiLabel(props.max)}
           </span>
+          <KeyboardControls settings={props.settings} update={props.update} availability={props.availability} />
           <button
             type="button"
-            className={`kb-sound ${soundOn ? 'is-on' : ''}`}
+            className={`kb-icon kb-sound ${soundOn ? 'is-on' : ''}`}
             aria-pressed={soundOn}
             aria-label="Key sound for on-screen and computer keys"
             title={soundOn ? 'Key sound on — on-screen and computer keys play a piano sound' : 'Key sound off — turn on to hear on-screen and computer keys'}
-            onClick={props.onToggleKeySound}
+            onClick={() => props.update({ keySound: !soundOn })}
           >
             <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
               <path d="M3 7.5h3l4-3.5v12l-4-3.5H3z" fill="currentColor" />

@@ -111,19 +111,9 @@ export function EarPanel(props: {
       </details>
 
       <section className="panel-section">
-        <div className="section-title">Sound</div>
+        <div className="section-title">Sound &amp; display</div>
         <CommitSlider label="Piano volume" min={0} max={100} step={5} value={Math.round(s.synthVolume * 100)} onCommit={(v) => update({ synthVolume: v / 100 })} format={(v) => `${v}%`} />
         <Toggle label="Note names on the staff" hint="Under the notes you have found" checked={s.showStaffNames} onChange={(showStaffNames) => update({ showStaffNames })} />
-        <Toggle label="Note names on the keys" hint="Letter names on the on-screen keyboard" checked={s.showKeyNames} onChange={(showKeyNames) => update({ showKeyNames })} />
-        <Select<'fit' | 'full'>
-          label="Keyboard view"
-          value={s.keyboardView}
-          onChange={(keyboardView) => update({ keyboardView })}
-          options={[
-            { value: 'fit', label: 'Compact (C3–C6)' },
-            { value: 'full', label: 'Full keyboard' },
-          ]}
-        />
       </section>
     </div>
   );

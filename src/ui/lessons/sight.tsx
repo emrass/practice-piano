@@ -87,7 +87,7 @@ export function useSightLesson(ctx: LessonContext, active: boolean): LessonRunti
     panel: <ExercisePanel settings={s} progress={ctx.progress} update={ctx.update} onNew={next} weakNotesLabel={weakLabel} />,
     mode: { value: sight.mode, set: (mode) => ctx.update({ sight: { mode } }) },
     focusActive: s.weakSpotFocus && focus.length > 0,
-    keyboard: { span: exercise.range, qwertyHints: true },
+    keyboard: { span: exercise.range },
     practiceWeakSpots: () => {
       refresh();
       ctx.update({ weakSpotFocus: true });

@@ -103,7 +103,7 @@ export function useScalesLesson(ctx: LessonContext, active: boolean): LessonRunt
     score: { showFingering: sc.showFingering },
     mode: { value: sc.mode, set: (mode) => ctx.update({ scales: { mode } }) },
     focusActive: false,
-    keyboard: { span: exercise.range, qwertyHints: true },
+    keyboard: { span: exercise.range },
     review: () => {
       ctx.update({ scales: { source: 'review' } });
       ctx.reseed();

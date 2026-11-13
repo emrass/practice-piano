@@ -198,7 +198,9 @@ A lesson is a set of modules, one of each kind, and App.tsx only picks the activ
   `Exercise` (scales, chords and rhythm drills fit the same measures/steps model), and analysis
   that puts the lesson's summary on `ExerciseResult` (`result.lesson`, plus e.g. `result.chords`).
 - **Settings** — a group in `core/settings.ts` (`settings.<lesson>`, validated by a
-  `normalize<Lesson>` function); shared settings (display, audio, input) stay at the top level.
+  `normalize<Lesson>` function); shared settings (display, audio, input) stay at the top level;
+  the keyboard's display settings are switched in the bar above the keys
+  (`ui/components/KeyboardControls.tsx`), not in the lesson panels.
   Changes go through `applySettingsPatch`, which merges lesson groups field by field
   (`update({ chords: { mode: 'flow' } })`).
 - **Session** — a controller extending `SessionBase` (`ui/practice/sessionBase.ts`: state store
@@ -211,7 +213,8 @@ A lesson is a set of modules, one of each kind, and App.tsx only picks the activ
 - **Lesson hook** — `ui/lessons/<lesson>.tsx` returns a `LessonRuntime` (`ui/lessons/types.ts`): the
   current exercise and its session, `next` / `step` (easier / harder), how it reacts to settings
   changes (`onPatch`), its settings panel, an optional stage that replaces the score (chord chart,
-  play from memory), the Wait / Flow switch, keyboard span and mappings, review and weak-spot
+  play from memory), the Wait / Flow switch, keyboard span and mappings (and which keyboard
+  display settings don't apply, greyed out in the bar above the keys), review and weak-spot
   actions for the Progress tab. Shared pieces live in `ui/lessons/shared.ts` (weak-spot focus,
   review queue and manual tempo ladder for repertoire lessons). `useLesson` in
   `ui/lessons/index.ts` runs every lesson's hook (hooks can't be conditional); only the active one

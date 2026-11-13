@@ -160,7 +160,6 @@ export function ScalesPanel(props: {
           checked={!s.scales.notation}
           onChange={(memory) => update({ scales: { notation: !memory } })}
         />
-        <Toggle label="Keyboard guide" hint="Highlight the next keys" checked={s.showKeyboardGuide} onChange={(showKeyboardGuide) => update({ showKeyboardGuide })} />
         <Select<number>
           label="Mastery goal"
           value={s.scales.goalNps}

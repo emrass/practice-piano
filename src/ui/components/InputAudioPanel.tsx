@@ -1,3 +1,4 @@
+import { KEYBOARD_RANGES, KEYBOARD_SIZES, type KeyboardSize } from '../../core/keyboard/range';
 import { midiLabel, type PcSpelling, pitchLabel, spellMidiIn } from '../../core/music/pitch';
 import { LATENCY_PRESETS, type Settings, type SettingsPatch } from '../../core/settings';
 import { useStore } from '../../lib/store';
@@ -102,6 +103,13 @@ export function InputAudioPanel(props: {
             </p>
           </details>
         ) : null}
+        <Select<KeyboardSize>
+          label="Your keyboard"
+          value={s.keyboardSize}
+          onChange={(keyboardSize) => update({ keyboardSize })}
+          options={KEYBOARD_SIZES.map((k) => ({ value: k, label: KEYBOARD_RANGES[k].label }))}
+        />
+        <p className="field-hint">Sight reading keeps its passages within your keyboard’s range.</p>
         <div className="field-label">Live input</div>
         <InputMonitor />
       </section>

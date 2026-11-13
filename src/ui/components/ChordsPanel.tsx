@@ -201,7 +201,6 @@ export function ChordsPanel(props: {
             onChange={(chart) => update({ chords: { notation: !chart } })}
           />
         )}
-        <Toggle label="Keyboard guide" hint="Show a suggested voicing when you are stuck (after 5 s or a wrong key)" checked={s.showKeyboardGuide} onChange={(showKeyboardGuide) => update({ showKeyboardGuide })} />
         <Select<number>
           label="Mastery goal"
           value={goal}

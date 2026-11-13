@@ -45,8 +45,9 @@ npm run dev          # http://localhost:5173 — open in Chrome, allow MIDI
 
 No piano nearby? Every exercise can be played with the **on-screen keyboard** (mouse/touch)
 or the **computer keyboard** (`A`–`'` white keys, `W E T Y U O P` black keys, `Z`/`X` octave,
-`Shift` = sustain pedal). Turn on *Key sound* under Input & audio to hear them; it is off by
-default because a MIDI piano makes its own sound.
+`Shift` = sustain pedal). Turn on *Key sound* (the speaker in the bar above the keys) to hear
+them; it is off by default because a MIDI piano makes its own sound. The same bar holds the
+keyboard guide and a menu for note names on the keys, computer-key hints and the keyboard view.
 
 | Command | What it does |
 |---|---|

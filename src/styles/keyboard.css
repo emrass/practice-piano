@@ -52,12 +52,16 @@
   gap: 4px;
 }
 
-.kb-sound {
+/* Guide, display menu and key sound: small icon buttons on the dark bar (gold = on). */
+.kb-range {
+  margin-right: 6px;
+}
+
+.kb-icon {
   display: grid;
   place-items: center;
   width: 28px;
   height: 22px;
-  margin-left: 6px;
   padding: 0;
   border: 0;
   border-radius: 6px;
@@ -66,18 +70,56 @@
   cursor: pointer;
 }
 
-.kb-sound:hover {
+.kb-icon:hover,
+.kb-icon.is-open {
   background: rgba(255, 255, 255, 0.08);
   color: #e8dcc8;
 }
 
-.kb-sound.is-on {
+.kb-icon.is-on {
   color: #e6b450;
 }
 
-.kb-sound:focus-visible {
+.kb-icon[aria-disabled='true'] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.kb-icon[aria-disabled='true']:hover {
+  background: transparent;
+  color: #a89880;
+}
+
+.kb-icon:focus-visible {
   outline: 2px solid #e6b450;
   outline-offset: 1px;
+}
+
+.kb-menu {
+  position: relative;
+}
+
+/* Opens upwards from the bar, over the practice bar, in the page's own colours. */
+.kb-popover {
+  position: absolute;
+  right: -34px;
+  bottom: calc(100% + 10px);
+  z-index: 40;
+  display: grid;
+  gap: 12px;
+  width: 300px;
+  max-width: calc(100vw - 24px);
+  padding: 14px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+  animation: fade-in 0.12s ease-out;
+}
+
+.kb-popover .segmented {
+  width: 100%;
 }
 
 .keyboard-head .muted:not(.kb-range) {

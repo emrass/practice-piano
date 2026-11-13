@@ -65,6 +65,83 @@ test('Key sound toggle above the keys flips the setting and persists', async ({ 
   await expect(page.locator('.kb-sound')).toHaveAttribute('aria-pressed', 'true');
 });
 
+test('Keyboard guide button above the keys flips the setting, persists and lights the keys', async ({ app, page }) => {
+  await app.open({ settings: { lesson: 'sight', showKeyboardGuide: true, sight: { mode: 'wait', level: 8, hands: 'rh' } } });
+  const guide = page.locator('.kb-guide');
+  await expect(guide).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.key.is-expected')).not.toHaveCount(0);
+  await guide.click();
+  await expect(guide).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.locator('.key.is-expected')).toHaveCount(0);
+  await expect.poll(async () => (await app.savedSettings()).showKeyboardGuide).toBe(false);
+  await page.reload();
+  await expect(page.locator('.kb-guide')).toHaveAttribute('aria-pressed', 'false');
+});
+
+test('The keyboard guide is greyed out, with the reason, where it would give the answer away', async ({ app, page }) => {
+  await app.open({ settings: { lesson: 'ear', showKeyboardGuide: true } });
+  const guide = page.locator('.kb-guide');
+  await expect(guide).toHaveAttribute('aria-disabled', 'true');
+  await expect(guide).toHaveAttribute('aria-pressed', 'false');
+  await expect(guide).toHaveAttribute('title', /never shows the answer/);
+  await guide.click({ force: true }); // aria-disabled: a click does nothing
+  await expect(guide).toHaveAttribute('aria-pressed', 'false');
+  expect((await app.savedSettings()).showKeyboardGuide).toBe(true); // the preference is kept for the other lessons
+  await page.locator('.topbar-lesson [role=radio]').nth(LESSONS.indexOf('chords')).click();
+  await expect(guide).toHaveAttribute('aria-disabled', 'true'); // chord drill (default)
+  await page.locator('.topbar-lesson [role=radio]').nth(LESSONS.indexOf('sight')).click();
+  await expect(guide).not.toHaveAttribute('aria-disabled', 'true');
+  await expect(guide).toHaveAttribute('aria-pressed', 'true');
+});
+
+for (const width of [390, 1440]) {
+  test(`Keyboard display menu fits at ${width}px and switches names, hints and view`, async ({ app, page }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await app.open({ settings: { lesson: 'sight', showKeyNames: true, showQwertyHints: false, keyboardView: 'fit' } });
+    const head = page.locator('.keyboard-head');
+    expect(await head.evaluate((el) => el.scrollWidth <= el.clientWidth + 1), 'keyboard bar overflows').toBe(true);
+    await page.getByRole('button', { name: 'Keyboard display' }).click();
+    const menu = page.getByRole('dialog', { name: 'Keyboard display' });
+    await expect(menu).toBeVisible();
+    const box = (await menu.boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(width);
+    expect(box.y).toBeGreaterThanOrEqual(0);
+    await expect(page.locator('.key-label', { hasText: /^D$/ }).first()).toBeVisible();
+    await menu.getByRole('switch').nth(0).click(); // note names on the keys
+    await expect(page.locator('.key-label', { hasText: /^D$/ })).toHaveCount(0);
+    await menu.getByRole('switch').nth(1).click(); // computer-key hints
+    await expect(page.locator('.key-qwerty').first()).toBeVisible();
+    const keys = await page.locator('.key').count();
+    await menu.getByRole('radio', { name: 'Full keyboard' }).click();
+    await expect.poll(() => page.locator('.key').count()).toBeGreaterThan(keys);
+    await expect.poll(async () => app.savedSettings()).toMatchObject({ showKeyNames: false, showQwertyHints: true, keyboardView: 'full' });
+    await page.keyboard.press('Escape');
+    await expect(menu).toBeHidden();
+    await page.getByRole('button', { name: 'Keyboard display' }).click();
+    await page.locator('.meta-strip').click();
+    await expect(menu).toBeHidden();
+  });
+}
+
+test('Rhythm greys out computer-key hints (it uses J and F)', async ({ app, page }) => {
+  await app.open({ settings: { lesson: 'rhythm', showQwertyHints: true } });
+  await page.getByRole('button', { name: 'Keyboard display' }).click();
+  const menu = page.getByRole('dialog', { name: 'Keyboard display' });
+  await expect(menu.getByRole('switch').nth(1)).toBeDisabled();
+  await expect(menu).toContainText('Rhythm uses J and F');
+  await expect(page.locator('.key-qwerty')).toHaveCount(0);
+});
+
+test('Your keyboard size is set under Input & audio', async ({ app, page }) => {
+  await app.open({ settings: { lesson: 'sight', keyboardSize: 88 } });
+  await app.openTab('Input & audio');
+  await page.getByLabel('Your keyboard').selectOption({ index: 0 });
+  await expect.poll(async () => (await app.savedSettings()).keyboardSize).not.toBe(88);
+  await app.openTab('Exercise');
+  await expect(page.locator('.sidebar')).not.toContainText('Keyboard guide');
+});
+
 test('Every lesson renders its exercise and Progress panels', async ({ app, page }) => {
   await app.open({ settings: { lesson: 'sight' } });
   for (let i = 0; i < LESSONS.length; i++) {

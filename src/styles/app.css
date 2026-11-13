@@ -528,6 +528,15 @@ input[type='range']::-moz-range-thumb {
   gap: 12px;
 }
 
+.toggle-row.is-disabled .toggle-label > span,
+.toggle-row.is-disabled .switch {
+  opacity: 0.45;
+}
+
+.switch:disabled {
+  cursor: not-allowed;
+}
+
 .toggle-label {
   display: grid;
   gap: 1px;
