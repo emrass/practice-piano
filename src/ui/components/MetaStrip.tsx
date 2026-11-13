@@ -77,7 +77,7 @@ export function MetaStrip(props: { exercise: Exercise; firstSight: boolean; focu
       <div className="meta-tier">
         {scale || chords ? (
           <span className="meta-tier-name meta-item-title" title={(scale ?? chords)!.title}>
-            {ci?.task === 'drill' ? CHORD_SETS[ci.set].name : (scale ?? chords)!.title}
+            {ci?.task === 'drill' ? CHORD_SETS[ci.set].name : ci?.task === 'progression' ? (findProgression(ci.progression)?.name ?? chords!.title) : scale!.title}
           </span>
         ) : (
           <>

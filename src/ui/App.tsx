@@ -924,7 +924,7 @@ function KeyboardDock(props: {
   return (
     <div className="keyboard-dock">
       <div className="keyboard-head">
-        <InputMonitor />
+        <InputMonitor preferFlats={props.preferFlats} />
         <div className="kb-right">
           <span className="muted kb-range">
             {midiLabel(props.min)}–{midiLabel(props.max)}

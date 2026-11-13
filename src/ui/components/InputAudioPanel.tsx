@@ -12,7 +12,8 @@ const BACKEND_TEXT = {
   none: 'No MIDI support',
 } as const;
 
-export function InputMonitor() {
+/** Held keys; spelled with flats in flat keys, like the on-screen keyboard. */
+export function InputMonitor(props: { preferFlats?: boolean }) {
   const held = useStore(inputBus.held);
   return (
     <div className="monitor" aria-live="polite">
@@ -24,12 +25,12 @@ export function InputMonitor() {
         {held.held.length === 0 && held.sustained.length === 0 ? <span className="muted">No keys held</span> : null}
         {held.held.map((m) => (
           <span key={m} className="note-chip">
-            {midiLabel(m)}
+            {midiLabel(m, props.preferFlats)}
           </span>
         ))}
         {held.sustained.map((m) => (
           <span key={`s${m}`} className="note-chip is-sustained" title="Sounding via sustain pedal">
-            {midiLabel(m)}
+            {midiLabel(m, props.preferFlats)}
           </span>
         ))}
       </div>
