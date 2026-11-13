@@ -72,4 +72,20 @@ test.describe('Chords & progressions', () => {
     expect(await app.exercise((ex) => (ex.chords as { itemId: string }).itemId)).toBe('chords/prog/canon/Eb/rh');
     expect(await app.exercise((ex) => ex.bpm)).toBe(68);
   });
+
+  test('Keys and held notes are spelled as the chord asked for', async ({ app, page }) => {
+    // F♯ major: the V chord is C♯ E♯ G♯, so the F key reads E♯ while it is asked for.
+    await app.open({
+      settings: { lesson: 'chords', showNoteNames: true, chords: { task: 'progression', progression: 'I-V-vi-IV', key: 'F#', hands: 'rh', mode: 'wait' } },
+    });
+    const ts = await app.exercise(targets);
+    const eSharp = ts[1].voicing.find((k) => k % 12 === 5)!;
+    const keyLabel = page.locator(`.key[data-midi="${eSharp}"] .key-label`);
+    await expect(keyLabel).toHaveText('F');
+    await app.tap(ts[0].voicing);
+    await expect(keyLabel).toHaveText('E♯');
+    // Part of the chord held (the whole chord would move on to the next one).
+    await app.noteOn([eSharp]);
+    await expect(page.locator('.held-notes .note-chip')).toHaveText([`E♯${Math.floor(eSharp / 12) - 1}`]);
+  });
 });

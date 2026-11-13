@@ -1,4 +1,4 @@
-import { makePitch, pitchLabel, type SpelledPitch } from '../music/pitch';
+import { makePitch, type PcSpelling, pitchClass, pitchLabel, type SpelledPitch } from '../music/pitch';
 import { parseTonic, type Degree } from '../scales/catalog';
 import { spellAbove } from '../scales/generator';
 
@@ -49,6 +49,11 @@ export interface ChordSpec {
 /** Chord tones spelled from a root (octave of the root, ascending). */
 export function chordTones(root: SpelledPitch, quality: ChordQuality): SpelledPitch[] {
   return QUALITIES[quality].tones.map((t) => spellAbove(root, t));
+}
+
+/** Each pitch class of the chord spelled as the chord spells it (D♭7: D♭ F A♭ C♭). */
+export function chordSpelling(spec: Pick<ChordSpec, 'root' | 'quality'>): PcSpelling {
+  return new Map(chordTones(spec.root, spec.quality).map((p) => [pitchClass(p.midi), { letter: p.letter, alter: p.alter }]));
 }
 
 export function pcsOf(spec: Pick<ChordSpec, 'root' | 'quality'>): number[] {

@@ -129,6 +129,19 @@ export function spellMidi(midi: number, preferFlats = false): SpelledPitch {
   return makePitch(letter, 1, octave);
 }
 
+/** How to spell some pitch classes, where the music decides it (the chord asked for). */
+export type PcSpelling = ReadonlyMap<number, { letter: Letter; alter: number }>;
+
+/**
+ * Spell a MIDI number as `spelling` says for its pitch class (the octave follows the letter,
+ * so B3 spelled as C♭ is C♭4), otherwise as spellMidi does.
+ */
+export function spellMidiIn(midi: number, preferFlats: boolean, spelling?: PcSpelling): SpelledPitch {
+  const s = spelling?.get(pitchClass(midi));
+  if (!s) return spellMidi(midi, preferFlats);
+  return makePitch(s.letter, s.alter, Math.round((midi - s.alter - LETTER_PC[s.letter]) / 12) - 1);
+}
+
 export function midiLabel(midi: number, preferFlats = false, withOctave = true): string {
   return pitchLabel(spellMidi(midi, preferFlats), withOctave);
 }

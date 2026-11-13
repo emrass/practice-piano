@@ -1,8 +1,9 @@
 import type { ReactNode, RefObject } from 'react';
 import type { Exercise } from '../../core/exercise';
+import type { PcSpelling } from '../../core/music/pitch';
 import type { ProgressState } from '../../core/progress/progress';
 import type { Settings, SettingsPatch } from '../../core/settings';
-import type { Session } from '../practice/session';
+import type { PracticeState, Session } from '../practice/session';
 
 /** What every lesson module gets from the studio. */
 export interface LessonContext {
@@ -56,6 +57,8 @@ export interface LessonRuntime {
     markers?: ReadonlyMap<number, string>;
     /** Whether the usual QWERTY hints make sense. */
     qwertyHints: boolean;
+    /** How the keys and held notes are spelled at this point of the run (chords: as the chord asked for). */
+    spelling?: (state: PracticeState) => PcSpelling | undefined;
   };
   /** Progress tab: review the due items (repertoire lessons). */
   review?: () => void;

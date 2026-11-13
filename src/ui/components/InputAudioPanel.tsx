@@ -1,4 +1,4 @@
-import { midiLabel } from '../../core/music/pitch';
+import { midiLabel, type PcSpelling, pitchLabel, spellMidiIn } from '../../core/music/pitch';
 import { LATENCY_PRESETS, type Settings, type SettingsPatch } from '../../core/settings';
 import { useStore } from '../../lib/store';
 import { inputBus } from '../../input/inputBus';
@@ -12,8 +12,8 @@ const BACKEND_TEXT = {
   none: 'No MIDI support',
 } as const;
 
-/** Held keys; spelled with flats in flat keys, like the on-screen keyboard. */
-export function InputMonitor(props: { preferFlats?: boolean }) {
+/** Held keys; spelled like the on-screen keyboard (flats in flat keys, chord tones as the chord spells them). */
+export function InputMonitor(props: { preferFlats?: boolean; spelling?: PcSpelling }) {
   const held = useStore(inputBus.held);
   return (
     <div className="monitor" aria-live="polite">
@@ -25,12 +25,12 @@ export function InputMonitor(props: { preferFlats?: boolean }) {
         {held.held.length === 0 && held.sustained.length === 0 ? <span className="muted">No keys held</span> : null}
         {held.held.map((m) => (
           <span key={m} className="note-chip">
-            {midiLabel(m, props.preferFlats)}
+            {pitchLabel(spellMidiIn(m, !!props.preferFlats, props.spelling), true)}
           </span>
         ))}
         {held.sustained.map((m) => (
           <span key={`s${m}`} className="note-chip is-sustained" title="Sounding via sustain pedal">
-            {midiLabel(m, props.preferFlats)}
+            {pitchLabel(spellMidiIn(m, !!props.preferFlats, props.spelling), true)}
           </span>
         ))}
       </div>

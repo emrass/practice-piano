@@ -1,7 +1,7 @@
 import { memo, useMemo, useRef } from 'react';
 import { isBlackKey } from '../../core/keyboard/range';
 import { midiToQwertyLabel } from '../../core/input/qwerty';
-import { spellMidi, pitchLabel } from '../../core/music/pitch';
+import { type PcSpelling, pitchLabel, spellMidiIn } from '../../core/music/pitch';
 import { inputBus } from '../../input/inputBus';
 
 export interface PianoKeyboardProps {
@@ -13,6 +13,8 @@ export interface PianoKeyboardProps {
   wrong: number | null;
   showLabels: boolean;
   preferFlats: boolean;
+  /** Pitch classes spelled by the music (chords: as the chord asked for), over preferFlats. */
+  spelling?: PcSpelling;
   qwertyBase: number | null;
   heat?: Map<number, { attempts: number; accuracy: number }>;
   /** Piano-shortcut labels by pitch class (shown after an exercise). */
@@ -97,7 +99,7 @@ export const PianoKeyboard = memo(function PianoKeyboard(props: PianoKeyboardPro
         const isSustained = !isHeld && sustained.has(k.midi);
         const isExpected = expected.has(k.midi);
         const isWrong = props.wrong === k.midi;
-        const spelled = spellMidi(k.midi, props.preferFlats);
+        const spelled = spellMidiIn(k.midi, props.preferFlats, props.spelling);
         const isC = k.midi % 12 === 0;
         const qwerty = props.qwertyBase !== null ? midiToQwertyLabel(k.midi, props.qwertyBase) : null;
         const heat = props.heat?.get(k.midi);

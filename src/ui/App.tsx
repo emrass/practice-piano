@@ -7,7 +7,7 @@ import { PIANO_ACTIONS, type PianoAction, PianoShortcutGate } from '../core/inpu
 import { clampQwertyBase, OCTAVE_DOWN_CODE, OCTAVE_UP_CODE, qwertyBaseFor, qwertyToMidi } from '../core/input/qwerty';
 import { fitKeyboardRange, KEYBOARD_RANGES } from '../core/keyboard/range';
 import { prefersFlats } from '../core/music/keys';
-import { midiLabel } from '../core/music/pitch';
+import { midiLabel, type PcSpelling } from '../core/music/pitch';
 import { applyResult, type Award, dayKey, displayStreak } from '../core/progress/progress';
 import type { Settings, SettingsPatch } from '../core/settings';
 import { useStore } from '../lib/store';
@@ -26,7 +26,7 @@ import { ProgressPanel } from './components/ProgressPanel';
 import { ResultsCard } from './components/ResultsCard';
 import { ScoreView } from './components/ScoreView';
 import { type LessonRuntime, useLesson } from './lessons';
-import type { Session } from './practice/session';
+import type { PracticeState, Session } from './practice/session';
 import { type Profile, useProfile } from './state/useProfile';
 
 const midiService = new MidiService(inputBus);
@@ -460,6 +460,7 @@ function Studio({ profile }: { profile: Profile }) {
             preferFlats={prefersFlats(exercise.key)}
             qwertyBase={s.showQwertyHints && runtime.keyboard.qwertyHints ? qwertyBase : null}
             markers={runtime.keyboard.markers}
+            spelling={runtime.keyboard.spelling}
           />
         </main>
       </div>
@@ -517,6 +518,8 @@ function KeyboardDock(props: {
   qwertyBase: number | null;
   /** Rhythm mode: the designated keys. */
   markers?: ReadonlyMap<number, string>;
+  /** Spelling that follows the run (chords: the chord asked for). */
+  spelling?: (state: PracticeState) => PcSpelling | undefined;
   onToggleKeySound: () => void;
 }) {
   const held = useStore(inputBus.held);
@@ -524,10 +527,11 @@ function KeyboardDock(props: {
   const state = useStore(props.controller.state);
   const expected = props.settings.showKeyboardGuide && state.status !== 'finished' ? state.expected : [];
   const actions = props.settings.pianoShortcuts && state.status === 'finished' ? ACTION_LABELS : undefined;
+  const spelling = props.spelling?.(state);
   return (
     <div className="keyboard-dock">
       <div className="keyboard-head">
-        <InputMonitor preferFlats={props.preferFlats} />
+        <InputMonitor preferFlats={props.preferFlats} spelling={spelling} />
         <div className="kb-right">
           <span className="muted kb-range">
             {midiLabel(props.min)}–{midiLabel(props.max)}
@@ -560,6 +564,7 @@ function KeyboardDock(props: {
         wrong={state.wrong?.midi ?? null}
         showLabels={props.settings.showNoteNames}
         preferFlats={props.preferFlats}
+        spelling={spelling}
         qwertyBase={props.qwertyBase}
         actions={actions}
         markers={state.status === 'finished' ? undefined : props.markers}

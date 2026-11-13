@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { chordItemId, type ChordItem, type ChordQuality, findProgression, keysFor, parseChordItemId, PROGRESSIONS } from '../../core/chords/catalog';
+import { chordItemId, type ChordItem, type ChordQuality, chordSpelling, findProgression, keysFor, parseChordItemId, PROGRESSIONS } from '../../core/chords/catalog';
 import { type ChordFocus, generateChordExercise, initialChordBpm } from '../../core/chords/generator';
 import { findWeakChords, type ProgressState } from '../../core/progress/progress';
 import { inputBus } from '../../input/inputBus';
@@ -55,6 +55,8 @@ export function useChordsLesson(ctx: LessonContext, active: boolean): LessonRunt
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [item, c.count, drillFocus, seed, retryToken, rep.ladderToken],
   );
+  // Keys and held notes are spelled as the chord asked for spells them (D♭7 shows C♭, not B).
+  const spellings = useMemo(() => exercise?.chords.targets.map((t) => chordSpelling(t.spec)) ?? [], [exercise]);
   // A new session whenever the exercise, the mode or a timing setting changes, or on retry.
   const session = useMemo(
     () =>
@@ -119,7 +121,7 @@ export function useChordsLesson(ctx: LessonContext, active: boolean): LessonRunt
     stage: chart ? (session) => <ChordChart exercise={exercise} controller={session} /> : undefined,
     mode: { value: c.mode, set: (mode) => ctx.update({ chords: { mode } }) },
     focusActive: !!drillFocus && Object.keys({ ...drillFocus.qualities, ...drillFocus.roots }).length > 0,
-    keyboard: { span: exercise.range, qwertyHints: true },
+    keyboard: { span: exercise.range, qwertyHints: true, spelling: (st) => spellings[st.chords?.index ?? 0] },
     review: () => {
       ctx.update({ chords: { source: 'review' } });
       ctx.reseed();

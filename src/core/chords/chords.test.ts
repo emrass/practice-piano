@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { isSupportedDuration } from '../music/rhythm';
-import { pitchLabel } from '../music/pitch';
+import { pitchLabel, spellMidiIn } from '../music/pitch';
 import { applyResult, emptyProgress, findWeakChords, isPass } from '../progress/progress';
 import { normalizeSettings } from '../settings';
 import { chordResult, summarizeChords } from './analysis';
 import {
   CHORD_SET_IDS,
   type ChordItem,
+  chordSpelling,
   chordItemId,
   chordSymbol,
   keysFor,
@@ -237,5 +238,20 @@ describe('chord analysis and progress', () => {
     expect(normalizeSettings({ chords: { progression: 'andalusian', key: 'Db' } }).chords.key).toBe('A');
     expect(normalizeSettings({ chords: { progression: 'nope' } }).chords.progression).toBe('I-IV-V-I');
     expect(normalizeSettings({ chords: { key: 'shuffle' } }).chords.key).toBe('shuffle');
+  });
+});
+
+describe('chord spelling on the keys', () => {
+  it('spells each key as the chord asked for spells it, octave from the letter', () => {
+    const db7 = chordSpelling({ root: rootPitch('Db'), quality: '7' });
+    const label = (midi: number) => pitchLabel(spellMidiIn(midi, false, db7), true);
+    expect([61, 65, 68, 71].map(label)).toEqual(['D♭4', 'F4', 'A♭4', 'C♭5']);
+    expect(label(59)).toBe('C♭4'); // the B below middle C
+    // Keys outside the chord keep the usual spelling.
+    expect(label(62)).toBe('D4');
+    expect(label(63)).toBe('D♯4');
+    expect(pitchLabel(spellMidiIn(63, true, db7), true)).toBe('E♭4');
+    const fs = chordSpelling({ root: rootPitch('F#'), quality: 'maj' });
+    expect(pitchLabel(spellMidiIn(70, true, fs), true)).toBe('A♯4');
   });
 });
