@@ -70,6 +70,7 @@ export interface ExerciseResult {
   hints?: number;
   rhythm?: RhythmSummary;
   scale?: ScaleSummary;
+  chords?: ChordSummary;
 }
 
 /** Scales & arpeggios measurements (docs/DIDACTICS.md §4.4). */
@@ -91,6 +92,47 @@ export interface ScaleSummary {
   syncMs: number | null;
   /** Recurring timing bumps, worst first. */
   bumps: { label: string; hand: Hand; finger: number | null; crossing: 'thumb-under' | 'finger-over' | null; ms: number }[];
+}
+
+/** One chord of a chords run, for the per-chord statistics. */
+export interface ChordOutcome {
+  symbol: string;
+  quality: string;
+  /** Root pitch class 0–11. */
+  rootPc: number;
+  inversion: number;
+  correct: boolean;
+  /** Right notes but the wrong one in the bass. */
+  wrongBass: boolean;
+  reactionMs?: number;
+  deltaMs?: number;
+  timingScore?: number;
+}
+
+/** Chords & progressions measurements (docs/DIDACTICS.md §4.5). */
+export interface ChordSummary {
+  itemId: string;
+  task: 'drill' | 'progression';
+  bpm: number;
+  goalBpm: number;
+  /** Flow: clean enough to move up the tempo ladder. */
+  clean: boolean;
+  chords: number;
+  correct: number;
+  /** Wait: median time to find a chord. */
+  medianReactionMs: number | null;
+  /** Flow: average offset of chord onsets (+ = late) and their spread. */
+  tendencyMs: number | null;
+  steadinessMs: number | null;
+  /** Flow: median time between the first and last key of a chord (lower = together). */
+  spreadMs: number | null;
+  /** Progressions: how close the hand's moves were to the smallest possible (1 = smoothest). */
+  voiceLeading: number | null;
+  /** Average semitones the right hand moved per change, and the smallest possible. */
+  movement: { played: number; minimal: number } | null;
+  /** Chords to look at, worst first. */
+  trouble: { symbol: string; reason: 'missed' | 'retry' | 'bass' | 'slow' | 'late' | 'early' | 'rolled'; ms?: number }[];
+  outcomes: ChordOutcome[];
 }
 
 export interface LiveStats {

@@ -6,6 +6,16 @@ import { KEYBOARD_SIZES, type KeyboardSize } from './keyboard/range';
 import type { GeneratorSettings } from './generator/generator';
 import type { EarReference, EarSettings } from './ear/generator';
 import { LESSON_IDS, type LessonId } from './lessons';
+import {
+  CHORD_SET_IDS,
+  type ChordHands,
+  type ChordPrompt,
+  type ChordSetId,
+  findProgression,
+  type InversionRule,
+  keysFor,
+  PROGRESSIONS,
+} from './chords/catalog';
 import { SCALE_TYPE_IDS, SCALE_TYPES, type NoteValue, type ScaleHands, type ScaleTypeId } from './scales/catalog';
 import { RHYTHM_TEXTURES, type RhythmHands, type RhythmSettings, type RhythmTask, type RhythmTexture } from './rhythm/generator';
 
@@ -52,6 +62,24 @@ export interface Settings {
   showFingering: boolean;
   /** false = play from memory (notation hidden). */
   scaleNotation: boolean;
+  // Chords & progressions
+  chordsTask: 'drill' | 'progression';
+  chordsSet: ChordSetId;
+  /** Drill: chords named by symbol, or written on the staff. */
+  chordsPrompt: ChordPrompt;
+  chordsInversions: InversionRule;
+  /** Drill length in chords. */
+  chordsCount: 8 | 12 | 16;
+  chordsProgression: string;
+  /** A key the progression's mode has, or 'shuffle'. */
+  chordsKey: string;
+  chordsHands: ChordHands;
+  chordsMode: 'wait' | 'flow';
+  chordsSource: 'pick' | 'review';
+  /** Mastery goal in bpm (one chord per bar). */
+  chordsGoalBpm: number;
+  /** Progressions: show the suggested voicing on the staff (off = play from the chord chart). */
+  chordsNotation: boolean;
   // Sight-reading exercise
   level: number;
   hands: HandsMode;
@@ -142,6 +170,18 @@ export const DEFAULT_SETTINGS: Settings = {
   scaleGoalNps: 4,
   showFingering: true,
   scaleNotation: true,
+  chordsTask: 'drill',
+  chordsSet: 'triads',
+  chordsPrompt: 'symbol',
+  chordsInversions: 'root',
+  chordsCount: 8,
+  chordsProgression: 'I-IV-V-I',
+  chordsKey: 'C',
+  chordsHands: 'rh',
+  chordsMode: 'wait',
+  chordsSource: 'pick',
+  chordsGoalBpm: 80,
+  chordsNotation: true,
   level: 1,
   hands: 'rh',
   bars: 4,
@@ -213,6 +253,17 @@ export function normalizeSettings(raw: unknown): Settings {
     scaleGoalNps: Math.round(clampNum(r.scaleGoalNps, 1, 12, d.scaleGoalNps)),
     showFingering: typeof r.showFingering === 'boolean' ? r.showFingering : d.showFingering,
     scaleNotation: typeof r.scaleNotation === 'boolean' ? r.scaleNotation : d.scaleNotation,
+    chordsTask: oneOf(r.chordsTask, ['drill', 'progression'] as const, d.chordsTask),
+    chordsSet: oneOf(r.chordsSet, CHORD_SET_IDS, d.chordsSet),
+    chordsPrompt: oneOf(r.chordsPrompt, ['symbol', 'notation'] as const, d.chordsPrompt),
+    chordsInversions: oneOf(r.chordsInversions, ['any', 'root', 'inversions'] as const, d.chordsInversions),
+    chordsCount: oneOf(r.chordsCount, [8, 12, 16] as const, d.chordsCount),
+    ...progressionChoice(r.chordsProgression, r.chordsKey),
+    chordsHands: oneOf(r.chordsHands, ['rh', 'lh-bass'] as const, d.chordsHands),
+    chordsMode: oneOf(r.chordsMode, ['wait', 'flow'] as const, d.chordsMode),
+    chordsSource: oneOf(r.chordsSource, ['pick', 'review'] as const, d.chordsSource),
+    chordsGoalBpm: Math.round(clampNum(r.chordsGoalBpm, 40, 160, d.chordsGoalBpm)),
+    chordsNotation: typeof r.chordsNotation === 'boolean' ? r.chordsNotation : d.chordsNotation,
     level: Math.round(clampNum(r.level, 1, 100, d.level)),
     hands: oneOf(r.hands, ['rh', 'lh', 'alternating', 'both'] as const, d.hands),
     bars: oneOf(r.bars, [4, 8, 16] as const, d.bars),
@@ -247,6 +298,15 @@ export function normalizeSettings(raw: unknown): Settings {
     midiInputId: typeof r.midiInputId === 'string' && r.midiInputId ? r.midiInputId : d.midiInputId,
     pianoShortcuts: typeof r.pianoShortcuts === 'boolean' ? r.pianoShortcuts : d.pianoShortcuts,
   };
+}
+
+/** A progression and a key of its mode (major keys for major progressions, minor for minor). */
+export function progressionChoice(progression: unknown, key: unknown): Pick<Settings, 'chordsProgression' | 'chordsKey'> {
+  const d = DEFAULT_SETTINGS;
+  const def = findProgression(progression as string) ?? findProgression(d.chordsProgression) ?? PROGRESSIONS[0];
+  const keys = keysFor(def.mode);
+  const chordsKey = key === 'shuffle' || keys.includes(key as string) ? (key as string) : keys[0];
+  return { chordsProgression: def.id, chordsKey };
 }
 
 /** Scale type, key and hands that belong together (contrary motion only where it exists). */

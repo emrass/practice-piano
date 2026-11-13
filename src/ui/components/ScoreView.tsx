@@ -135,6 +135,8 @@ export function ScoreView(props: { exercise: Exercise; showNoteNames: boolean; c
     if (!head) return;
     if (state.mode !== 'flow' || (state.status !== 'countin' && state.status !== 'running')) {
       head.style.opacity = '0';
+      // A fresh (or stopped) Flow run starts from the top.
+      if (state.mode === 'flow' && state.status === 'ready') scrollRef.current?.scrollTo({ top: 0 });
       return;
     }
     let raf = 0;

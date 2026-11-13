@@ -222,17 +222,17 @@ describe('repertoire ladder and review', () => {
 
   it('moves up after clean runs, down after messy ones, and masters at the goal tempo', () => {
     const now = Date.UTC(2026, 0, 1);
-    let r = applyRepertoireRun(undefined, { mode: 'flow', accuracy: 1, scale: summary(true, 200) }, now);
+    let r = applyRepertoireRun(undefined, { mode: 'flow', accuracy: 1, ladder: summary(true, 200) }, now);
     expect(r.change.toNpm).toBe(208); // +4 bpm in eighths
     expect(r.item.box).toBe(1);
     expect(r.change.dueInDays).toBe(REVIEW_DAYS[1]);
-    r = applyRepertoireRun(r.item, { mode: 'flow', accuracy: 0.7, scale: summary(false, 208) }, now);
+    r = applyRepertoireRun(r.item, { mode: 'flow', accuracy: 0.7, ladder: summary(false, 208) }, now);
     expect(r.item.ladderNpm).toBe(200);
     expect(r.item.box).toBe(0);
-    r = applyRepertoireRun(r.item, { mode: 'flow', accuracy: 1, scale: summary(true, 240) }, now);
+    r = applyRepertoireRun(r.item, { mode: 'flow', accuracy: 1, ladder: summary(true, 240) }, now);
     expect(r.change.newlyMastered).toBe(true);
     // Learning runs don't move the ladder.
-    const w = applyRepertoireRun(r.item, { mode: 'wait', accuracy: 1, scale: summary(false, 240) }, now);
+    const w = applyRepertoireRun(r.item, { mode: 'wait', accuracy: 1, ladder: summary(false, 240) }, now);
     expect(w.item.ladderNpm).toBe(r.item.ladderNpm);
   });
 

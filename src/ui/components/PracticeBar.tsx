@@ -39,6 +39,8 @@ export function PracticeBar(props: {
   else if (phase === 'response') message = 'Your turn — play it back';
   else if (phase === 'silent') message = 'Silent — keep the beat going';
   else if (phase === 'click') message = 'Feel the pulse…';
+  else if (s.chords && flow) message = 'Play each chord on beat 1';
+  else if (s.chords) message = s.chords.bassHint ?? (s.chords.index === 0 ? 'Play the chord — any octave' : 'Take your time');
   else if (flow) message = 'Play along with the playhead';
   else if (s.live.correct === 0 && s.live.wrong === 0) message = 'Play the highlighted note';
   else message = 'Take your time — the cursor waits for you';

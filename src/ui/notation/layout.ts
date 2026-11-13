@@ -83,7 +83,8 @@ export function computeLayout(ex: Exercise, width: number, headerWidth: number, 
   if (measuresPerSystem === 1 && ex.bars > 1) measuresPerSystem = Math.max(1, Math.min(maxFit, maxPerSystem, ex.bars));
   const measureWidth = Math.floor(available / measuresPerSystem);
   const pxPerTick = measureWidth / tpb;
-  const leadPx = Math.max(10, Math.min(26, pxPerTick * shortest * 0.45));
+  // Chords (one stacked chord per bar) need room after the bar line for columns of accidentals.
+  const leadPx = 'chords' in ex ? 44 : Math.max(10, Math.min(26, pxPerTick * shortest * 0.45));
 
   const h = systemHeight(ex.staves);
   const systems: SystemLayout[] = [];

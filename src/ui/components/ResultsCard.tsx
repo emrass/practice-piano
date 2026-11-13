@@ -31,6 +31,8 @@ export function ResultsCard(props: {
   const ear = result.mode === 'ear';
   const rhythm = result.rhythm ?? null;
   const scale = result.scale ?? null;
+  const chords = result.chords ?? null;
+  const repertoire = scale ?? chords;
   const passed = isPass(result);
   const headline =
     passed &&
@@ -51,6 +53,10 @@ export function ResultsCard(props: {
     ? result.mode === 'flow'
       ? 'A clean run needs ≥ 95% notes and ≥ 80% timing'
       : 'Needs ≥ 90% accuracy'
+    : chords
+      ? result.mode === 'flow'
+        ? 'A clean run needs ≥ 90% chords and ≥ 75% timing'
+        : 'Needs ≥ 90% of chords right first time'
     : rhythm
     ? 'Needs ≥ 90% hits and ≥ 70% timing to pass'
     : ear
@@ -60,13 +66,15 @@ export function ResultsCard(props: {
     <div className="results-backdrop" role="dialog" aria-modal="false" aria-labelledby="results-title">
       <div className="results-card">
         <div className={`results-ribbon ${passed ? 'is-pass' : 'is-fail'}`}>
-          {passed ? (scale ? (result.mode === 'flow' ? 'Clean run — tempo goes up' : 'Notes learned — try it in Flow') : rhythm ? 'In time — counts toward mastery' : '≥ 90% — counts toward mastery') : failText}
+          {passed ? (repertoire ? (result.mode === 'flow' ? 'Clean run — tempo goes up' : chords ? 'Chords found — try them in Flow' : 'Notes learned — try it in Flow') : rhythm ? 'In time — counts toward mastery' : '≥ 90% — counts toward mastery') : failText}
         </div>
         <h2 id="results-title">
-          {scale && passed ? (result.mode === 'flow' ? (award?.repertoire?.newlyMastered ? 'Mastered!' : 'Clean!') : 'Notes in place!') : headline}
+          {repertoire && passed ? (result.mode === 'flow' ? (award?.repertoire?.newlyMastered ? 'Mastered!' : 'Clean!') : chords ? 'Chords in place!' : 'Notes in place!') : headline}
         </h2>
         {scale ? (
           <ScaleResults result={result} award={award} />
+        ) : chords ? (
+          <ChordResults result={result} award={award} />
         ) : rhythm ? (
           <div className="results-grid">
             <div className="rg-item rg-main">
@@ -139,12 +147,12 @@ export function ResultsCard(props: {
           <div className="results-xp">
             <span className="xp-total">+{award.xp} XP</span>
             {award.firstSightBonus > 0 ? <span className="xp-bonus">incl. first-sight bonus +{award.firstSightBonus}</span> : null}
-            {!award.firstAttempt && !scale ? <span className="xp-note">Repeat passage — reduced XP. New passages train {ear ? 'your ear' : rhythm ? 'your rhythm' : 'sight reading'} best.</span> : null}
+            {!award.firstAttempt && !repertoire ? <span className="xp-note">Repeat passage — reduced XP. New passages train {ear ? 'your ear' : rhythm ? 'your rhythm' : 'sight reading'} best.</span> : null}
             {ear && (result.replays ?? 0) > 0 ? <span className="xp-note">Each replay reduces XP a little — try to catch it in one listen.</span> : null}
             {award.levelCapped ? <span className="xp-note">XP multiplier capped at level {award.effectiveLevel} — master lower tiers to raise it.</span> : null}
           </div>
         ) : null}
-        {award && tier && !scale ? (
+        {award && tier && !repertoire ? (
           <div className="results-tier">
             <div className="rt-head">
               <span>{tier.name}</span>
@@ -177,7 +185,7 @@ export function ResultsCard(props: {
             Retry <kbd>R</kbd>
           </button>
           <button type="button" className="btn btn-primary" onClick={props.onNext} ref={nextRef}>
-            {ear ? 'Next phrase' : rhythm ? 'Next rhythm' : scale ? 'Next' : 'Next exercise'} <kbd>Enter</kbd>
+            {ear ? 'Next phrase' : rhythm ? 'Next rhythm' : repertoire ? 'Next' : 'Next exercise'} <kbd>Enter</kbd>
           </button>
         </div>
       </div>
@@ -257,6 +265,94 @@ function ScaleResults(props: { result: ExerciseResult; award: Award | null }) {
             </li>
           ))}
           {scale.thumbAccent ? <li>Your thumb plays louder than the other fingers — keep it light as it passes under.</li> : null}
+        </ul>
+      ) : null}
+    </>
+  );
+}
+
+const TROUBLE_TEXT = {
+  missed: 'missed',
+  retry: 'a wrong key first',
+  bass: 'wrong note in the bass',
+  slow: 'slow to find',
+  late: 'late',
+  early: 'early',
+  rolled: 'keys not together',
+} as const;
+
+function ChordResults(props: { result: ExerciseResult; award: Award | null }) {
+  const { result, award } = props;
+  const c = result.chords!;
+  const flow = result.mode === 'flow';
+  const change = award?.repertoire;
+  return (
+    <>
+      <div className="results-grid">
+        <div className="rg-item rg-main">
+          <span className="rg-v">
+            {c.correct}/{c.chords}
+          </span>
+          <span className="rg-k">{flow ? 'Chords on the beat' : 'Right first time'}</span>
+        </div>
+        {flow ? (
+          <div className="rg-item" title="Average offset of your chords: early = rushing, late = dragging">
+            <span className="rg-v">{pct(result.timingAccuracy)}</span>
+            <span className="rg-k">Timing · {signedMs(c.tendencyMs, 'early', 'late').toLowerCase()}</span>
+          </div>
+        ) : (
+          <div className="rg-item" title="Median time from a chord being asked to it being played">
+            <span className="rg-v">{c.medianReactionMs === null ? '—' : `${(c.medianReactionMs / 1000).toFixed(1)} s`}</span>
+            <span className="rg-k">To find a chord</span>
+          </div>
+        )}
+        {flow ? (
+          <div className="rg-item" title="Time between the first and last key of a chord — lower sounds together">
+            <span className="rg-v rg-v-small">{c.spreadMs === null ? '—' : `${c.spreadMs} ms`}</span>
+            <span className="rg-k">Keys together</span>
+          </div>
+        ) : (
+          <div className="rg-item">
+            <span className="rg-v">{result.wrongNotes}</span>
+            <span className="rg-k">Wrong keys</span>
+          </div>
+        )}
+        {c.voiceLeading !== null && c.movement ? (
+          <div className="rg-item" title="How far your hand moved between chords, compared with the smallest move possible">
+            <span className="rg-v rg-v-small">{pct(c.voiceLeading)}</span>
+            <span className="rg-k">
+              Voice leading · {c.movement.played} vs {c.movement.minimal} st
+            </span>
+          </div>
+        ) : (
+          <div className="rg-item">
+            <span className="rg-v">{c.chords - c.correct}</span>
+            <span className="rg-k">{flow ? 'Missed' : 'Needed a retry'}</span>
+          </div>
+        )}
+      </div>
+      {flow && change ? (
+        <div className={`scale-ladder ${change.toNpm > change.fromNpm ? 'is-up' : change.toNpm < change.fromNpm ? 'is-down' : ''}`}>
+          {change.toNpm > change.fromNpm
+            ? `Tempo up: ${change.fromNpm} → ${change.toNpm} bpm`
+            : change.toNpm < change.fromNpm
+              ? `Tempo down to ${change.toNpm} bpm — get it clean first`
+              : `Tempo stays at ${change.toNpm} bpm`}
+          {change.newlyMastered ? ` · ★ mastered at ${c.bpm} bpm` : ''}
+          {change.dueInDays > 0 ? ` · review in ${change.dueInDays} day${change.dueInDays === 1 ? '' : 's'}` : ''}
+        </div>
+      ) : null}
+      {c.trouble.length || (c.voiceLeading !== null && c.voiceLeading < 0.8) ? (
+        <ul className="scale-notes">
+          {c.trouble.map((t) => (
+            <li key={`${t.symbol}${t.reason}`}>
+              <b>{t.symbol}</b>: {TROUBLE_TEXT[t.reason]}
+              {t.ms !== undefined ? ` (${t.reason === 'slow' ? `${(t.ms / 1000).toFixed(1)} s` : `${Math.abs(t.ms)} ms`})` : ''}
+            </li>
+          ))}
+          {c.voiceLeading !== null && c.voiceLeading < 0.8 ? (
+            <li>Your hand jumps between chords — keep common notes and move the others to the nearest chord tone (try the voicings shown).</li>
+          ) : null}
         </ul>
       ) : null}
     </>

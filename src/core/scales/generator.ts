@@ -71,7 +71,7 @@ interface Tone {
 }
 
 /** Spell a degree above a tonic pitch (letter steps decide the name, semitones the sound). */
-function spell(tonic: SpelledPitch, deg: Degree): SpelledPitch {
+export function spellAbove(tonic: SpelledPitch, deg: Degree): SpelledPitch {
   const step = letterOctaveToStep(tonic.letter, tonic.octave) + deg.steps;
   const letter = stepToLetter(step);
   const octave = stepToOctave(step);
@@ -85,12 +85,12 @@ function ascending(def: ScaleTypeDef, tonic: SpelledPitch, octaves: number, cycl
   for (let o = 0; o < octaves; o++) {
     cycle.forEach((deg, i) => {
       const shifted = { steps: deg.steps + 7 * o, semis: deg.semis + 12 * o };
-      const pitch = def.id === 'chromatic' ? spellMidi(tonic.midi + shifted.semis, chromaticFlats) : spell(tonic, shifted);
+      const pitch = def.id === 'chromatic' ? spellMidi(tonic.midi + shifted.semis, chromaticFlats) : spellAbove(tonic, shifted);
       out.push({ pitch, degree: i, ascending: true });
     });
   }
   const top = { steps: cycle[0].steps + 7 * octaves, semis: cycle[0].semis + 12 * octaves };
-  out.push({ pitch: def.id === 'chromatic' ? spellMidi(tonic.midi + top.semis, chromaticFlats) : spell(tonic, top), degree: 0, ascending: true });
+  out.push({ pitch: def.id === 'chromatic' ? spellMidi(tonic.midi + top.semis, chromaticFlats) : spellAbove(tonic, top), degree: 0, ascending: true });
   return out;
 }
 
@@ -118,7 +118,7 @@ function handTones(def: ScaleTypeDef, item: ScaleItem, hand: Hand, octaves: numb
   const { letter, alter } = parseTonic(item.tonic);
   const contrary = item.hands === 'contrary';
   // Place the *first played note* (tonic, or the arpeggio's root) in the chosen octave.
-  const probe = spell(makePitch(letter, alter, 4), def.asc[0]);
+  const probe = spellAbove(makePitch(letter, alter, 4), def.asc[0]);
   const wanted = startOctave(hand, octaves, probe.letter, contrary);
   const tonic = makePitch(letter, alter, 4 + (wanted - probe.octave));
   if (contrary && hand === 'lh') {

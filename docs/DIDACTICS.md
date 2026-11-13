@@ -196,19 +196,58 @@ tag (`scaleKey`) for future cross-mode suggestions with sight reading in that ke
 **Not in v1:** 3–4 octaves (needs 8va / clef changes in the engraving), scales in thirds and broken
 patterns, modes, exam-style stages, LH fingering for black-key arpeggios.
 
-### 4.5 Chords & progressions (planned — fixed repertoire)
+### 4.5 Chords & progressions ✓ (v1 — fixed repertoire)
 
-- **Vocabulary:** play a chord on demand from a symbol (Cm7), a Roman numeral in a key, or notation;
-  inversions. Draws are random in *order* only, from the chosen set.
-- **Progressions:** library of standard progressions (I–IV–V–I, ii–V–I, I–vi–IV–V, 12-bar blues,
-  circle of fifths, minor i–iv–V–i) transposed to all keys and shuffled; at advanced levels
-  rule-based progressions (tonic → pre-dominant → dominant → tonic). No random chord chains.
-- **Measurements:** correct chord (any voicing unless specified), inversion, reaction time, a
-  **voice-leading score** (hand movement vs. the smallest possible).
-- **Weak spots:** chord quality × root × inversion. Links: ear-training harmony, arpeggios.
+**Items.** Two tasks, each a repertoire item with its own tempo ladder and review date:
+- **Chord drill** — *set × prompt × voicing rule*. Sets: major & minor triads; all triads (+ °, +);
+  suspended (sus2, sus4); sevenths (7, maj7, m7); all sevenths (+ ø7, °7). Every root, spelled
+  with flats for major-type chords and sharps for minor-type ones (D♭, F♯m). The *order* is
+  random (no immediate repeats), the vocabulary is fixed. Prompt: the **symbol** (Cm7, shown as a
+  lead-sheet chart, since the staff would give the answer) or the **notation** (a close voicing on
+  the staff, no symbol — reading it is the task). Voicing rule: *root position* (root lowest),
+  *inversions* (the bass note asked for, written as a slash chord C/E), or *any voicing*.
+- **Progression** — *progression × key × hands*. Library: I–IV–V–I, I–V–vi–IV, I–vi–IV–V,
+  ii7–V7–Imaj7, i–iv–V–i, iiø7–V7–i, Andalusian i–VII–VI–V, Pachelbel's canon, circle of fifths,
+  12-bar blues (dominant sevenths). All 12 major or minor keys (minor dominants from harmonic
+  minor); four-chord progressions go round twice so the turnaround is practised. Hands: right
+  hand alone, or **+ LH root** (left hand plays the root in the bass staff, which becomes the
+  required bass note). Symbols *and* Roman numerals are printed above the staff; *Play from the
+  chord chart* hides the notation (voice it yourself).
+
+**Judging.** A chord is right when the keys down together have exactly its pitch classes — any
+octave, any doubling, nothing extra — and, where the rule asks, the right note lowest. Wait: the
+chord counts the moment it is complete (or when a stray key is let go); wrong keys first make it
+"not first time"; right notes over the wrong bass get a hint ("put E in the bass"). A repeated
+chord must be struck again. Flow: one chord per 4/4 bar on beat 1; keys pressed around the bar
+line (−0.3 / +0.4 of a bar, at most 300 / 450 ms) plus keys held over from before (common tones)
+make the chord; holding the previous chord through the bar line does not count.
+
+**Keyboard guide** would give the answer away, so it is help for when you are stuck: in Wait it
+shows the suggested voicing after 5 s or a wrong key; in Flow only for progressions.
+
+**Voicings.** The suggested voicing is close position; progressions move to the nearest voicing
+each time (smallest total semitone movement, kept between G3 and G5).
+
+**Tempo ladder and review** as in §4.4, counted in bpm (one chord per bar, ladder step 4 bpm).
+Starts at 48 bpm (drills) / 60 bpm (progressions); clean = ≥ 90 % chords and ≥ 75 % timing;
+mastered at the goal tempo (default ♩ = 80, a chord every 3 s).
+
+**Measurements.** Wait: right first time, median time to find a chord, slow chords (> 2× your
+median). Flow: chords on the beat, timing tendency, **keys together** (median time from the first
+to the last key of a chord; > 120 ms reads as rolled). Progressions: a **voice-leading score** —
+average semitones the right hand moved per change against the smallest move possible (1 = as
+smooth as the shown voicings). Results list the chords to look at (missed, wrong bass, slow,
+early / late, rolled).
+
+**Weak spots.** Shared tags `chordQuality`, `chordRoot` (pitch class) and `chordInversion`
+(accuracy, reaction, timing). Weak-spot focus draws more of the weak qualities and roots in drills.
+
+**Not in v1:** open / spread voicings and left-hand shells, extended chords (9, 11, 13) and
+altered dominants, rule-based progressions generated from functions, Roman-numeral prompts in a
+key for drills, rhythm patterns (comping) inside the bar.
 
 ## 5. Order of work
 
 1. Sight reading ✓ 2. Ear training ✓ 3. Rhythm ✓ 4. Scales & arpeggios ✓ (introduced the
 fixed-repertoire infrastructure: item picker, tempo ladder, spaced review, evenness metrics)
-5. Chords & progressions (reuses it).
+5. Chords & progressions ✓ (reuses it: tempo ladder in bpm, review, pitch-class judging).

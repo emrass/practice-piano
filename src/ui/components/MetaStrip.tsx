@@ -5,6 +5,8 @@ import { RHYTHM_COMPLEXITY_LABELS } from '../../core/generator/difficulty';
 import { isRhythmExercise, TASK_INFO, TEXTURE_INFO } from '../../core/rhythm/generator';
 import { HANDS_LABEL as SCALE_HANDS, NOTE_VALUE_LABEL } from '../../core/scales/catalog';
 import { isScaleExercise, nps } from '../../core/scales/generator';
+import { CHORD_SETS, chordSetExamples, findProgression } from '../../core/chords/catalog';
+import { isChordExercise } from '../../core/chords/generator';
 
 const HANDS_LABEL = { rh: 'Right hand', lh: 'Left hand', alternating: 'Alternating', both: 'Both hands' } as const;
 
@@ -15,7 +17,27 @@ export function MetaStrip(props: { exercise: Exercise; firstSight: boolean; focu
   const ear = (ex as Partial<EarExercise>).ear;
   const rhythm = isRhythmExercise(ex) ? ex.rhythm : null;
   const scale = isScaleExercise(ex) ? ex.scale : null;
-  const items: [string, string][] = scale
+  const chords = isChordExercise(ex) ? ex.chords : null;
+  const ci = chords?.item;
+  const items: [string, string][] = chords
+    ? ci!.task === 'drill'
+      ? [
+          ['Chords', chordSetExamples(ci!.set)],
+          ['Shown as', ci!.prompt === 'symbol' ? 'Symbols' : 'Notation'],
+          ['Voicing', { any: 'Any', root: 'Root position', inversions: 'Inversions' }[ci!.inversions]],
+          ['Length', `${chords.targets.length} chords`],
+          ['Tempo', `${ex.bpm} bpm`],
+          ['Per chord', `${(240 / ex.bpm).toFixed(1)} s`],
+        ]
+      : [
+          ['Key', ex.key.label],
+          ['Chords', `${findProgression(ci!.progression)?.chords.length ?? chords.targets.length}`],
+          ['Hands', ci!.hands === 'lh-bass' ? 'RH + LH root' : 'Right hand'],
+          ['Length', `${chords.targets.length} bars`],
+          ['Tempo', `${ex.bpm} bpm`],
+          ['Per chord', `${(240 / ex.bpm).toFixed(1)} s`],
+        ]
+    : scale
     ? [
         ['Key', ex.key.label === 'C major' && scale.item.type === 'chromatic' ? '—' : ex.key.label],
         ['Hands', SCALE_HANDS[scale.item.hands]],
@@ -53,9 +75,9 @@ export function MetaStrip(props: { exercise: Exercise; firstSight: boolean; focu
   return (
     <div className="meta-strip">
       <div className="meta-tier">
-        {scale ? (
-          <span className="meta-tier-name meta-item-title" title={scale.title}>
-            {scale.title}
+        {scale || chords ? (
+          <span className="meta-tier-name meta-item-title" title={(scale ?? chords)!.title}>
+            {ci?.task === 'drill' ? CHORD_SETS[ci.set].name : (scale ?? chords)!.title}
           </span>
         ) : (
           <>
@@ -73,7 +95,7 @@ export function MetaStrip(props: { exercise: Exercise; firstSight: boolean; focu
         </div>
       ))}
       <div className="meta-badges">
-        {scale ? null : (
+        {scale || chords ? null : (
           <span className={`badge badge-sight ${props.firstSight ? '' : 'is-off'}`} title="Unseen passage: first-try success earns bonus XP">
             {props.firstSight ? 'First sight' : 'Repeat'}
           </span>

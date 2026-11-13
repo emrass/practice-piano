@@ -152,8 +152,10 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
   container.replaceChildren();
   const percussion = isPercussion(ex);
   const fingered = 'scale' in ex;
-  // Scales print fingering where note names would go; names stay on the keyboard.
-  const showNames = opts.showNoteNames && !percussion && !fingered;
+  const chordChart = 'chords' in ex;
+  // Scales print fingering where note names would go; chords show symbols (reading them is
+  // the exercise). Names stay on the keyboard.
+  const showNames = opts.showNoteNames && !percussion && !fingered && !chordChart;
   const headerWidth = measureHeaderWidth(ex);
   const scale = opts.height > 0 ? chooseScale(ex, opts.width, opts.height, headerWidth) : 1;
   const layout = computeLayout(ex, Math.floor(opts.width / scale), headerWidth);
@@ -175,7 +177,9 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
       'aria-label',
       percussion
         ? `Rhythm exercise, ${ex.timeSignature.id}, ${ex.bars} bars`
-        : `Sight-reading exercise in ${ex.key.label}, ${ex.timeSignature.id}, ${ex.bars} bars`,
+        : 'chords' in ex
+          ? `Chord exercise in ${ex.key.label}, ${ex.bars} chords`
+          : `Sight-reading exercise in ${ex.key.label}, ${ex.timeSignature.id}, ${ex.bars} bars`,
     );
   }
   const stepByTick = new Map(ex.steps.map((s) => [s.tick, s.index]));
@@ -318,6 +322,36 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
           if (f === undefined) continue;
           const cx = (note.getNoteHeadBeginX() + note.getNoteHeadEndX()) / 2;
           addText(svg, labelLayer, cx, rowY, String(f), `pp-finger ${f === 1 ? 'is-thumb' : ''}`, stepByTick.get(event.startTick));
+        }
+      }
+
+      // Chord symbols (and Roman numerals) on one row above the treble staff.
+      if (clef === ex.staves[0] && svg && labelLayer && labelled.some((l) => l.event.symbol)) {
+        let rowY = staveBottom - 40 - 14;
+        for (const { note } of labelled) {
+          rowY = Math.min(rowY, ...note.getYs().map((y) => y - 16));
+          if (note.hasStem() && note.getStemDirection() === Stem.UP) rowY = Math.min(rowY, note.getStemExtents().topY - 10);
+        }
+        for (const { note, event } of labelled) {
+          if (!event.symbol) continue;
+          const [symbol, numeral] = event.symbol.split(/\s{2,}/);
+          const el = document.createElementNS(SVG_NS, 'text');
+          const step = stepByTick.get(event.startTick);
+          if (step !== undefined) el.setAttribute('data-step', String(step));
+          el.setAttribute('x', (note.getNoteHeadBeginX() - 2).toFixed(1));
+          el.setAttribute('y', rowY.toFixed(1));
+          el.setAttribute('class', 'pp-chord-symbol');
+          const main = document.createElementNS(SVG_NS, 'tspan');
+          main.textContent = symbol;
+          el.appendChild(main);
+          if (numeral) {
+            const num = document.createElementNS(SVG_NS, 'tspan');
+            num.setAttribute('class', 'pp-chord-numeral');
+            num.setAttribute('dx', '6');
+            num.textContent = numeral;
+            el.appendChild(num);
+          }
+          labelLayer.appendChild(el);
         }
       }
 

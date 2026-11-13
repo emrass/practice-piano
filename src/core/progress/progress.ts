@@ -4,7 +4,7 @@ import { median } from '../eval/types';
 import { tierForLevel } from '../generator/tiers';
 import { findTier, LESSONS, type LessonId } from '../lessons';
 import { RHYTHM_TIMING_PASS } from '../rhythm/analysis';
-import { applyRepertoireRun, type RepertoireChange, type RepertoireItem } from '../scales/repertoire';
+import { applyRepertoireRun, type LadderRun, type RepertoireChange, type RepertoireItem } from '../scales/repertoire';
 
 export const PROGRESS_SCHEMA_VERSION = 1;
 export const MASTERY_ACCURACY = 0.9;
@@ -37,7 +37,8 @@ export interface Aggregate {
  * (key = "h4" for a dyad of 4 semitones, "triad", "seventh").
  * Rhythm (and sight reading in Flow mode) records 'rhythmFigure' (key = figure, e.g. "6,2"),
  * 'beatPosition' (downbeat / beat / offbeat / sixteenth); Rhythm also 'rhythmHand' and
- * 'rhythmTexture'.
+ * 'rhythmTexture'. Scales record 'scaleKey'; chords 'chordQuality' (maj, m7…), 'chordRoot'
+ * (pitch class "0"–"11") and 'chordInversion' ("0"–"3").
  */
 export type StatDimension =
   | 'note'
@@ -48,7 +49,10 @@ export type StatDimension =
   | 'beatPosition'
   | 'rhythmHand'
   | 'rhythmTexture'
-  | 'scaleKey';
+  | 'scaleKey'
+  | 'chordQuality'
+  | 'chordRoot'
+  | 'chordInversion';
 
 export interface TierProgress {
   attempts: number;
@@ -187,6 +191,7 @@ function accuracyFactor(acc: number): number {
 /** Pass = mastery accuracy; Rhythm additionally needs the timing. */
 export function isPass(result: ExerciseResult): boolean {
   if (result.lesson === 'scales') return result.mode === 'flow' ? !!result.scale?.clean : result.pitchAccuracy >= MASTERY_ACCURACY;
+  if (result.lesson === 'chords') return result.mode === 'flow' ? !!result.chords?.clean : result.pitchAccuracy >= MASTERY_ACCURACY;
   if (result.pitchAccuracy < MASTERY_ACCURACY) return false;
   if (result.lesson === 'rhythm') return (result.timingAccuracy ?? 0) >= RHYTHM_TIMING_PASS;
   return true;
@@ -198,8 +203,9 @@ export function isPass(result: ExerciseResult): boolean {
  */
 function repertoireAward(progress: ProgressState, result: ExerciseResult): Award {
   const flow = result.mode === 'flow';
-  const npm = result.scale?.npm ?? 120;
-  const tempo = Math.min(2, Math.max(0.5, npm / 240));
+  // Tempo relative to 4 notes per second (scales) or 60 bpm with a chord per bar (chords).
+  const ratio = result.chords ? result.chords.bpm / 60 : (result.scale?.npm ?? 120) / 240;
+  const tempo = Math.min(2, Math.max(0.5, ratio));
   const xp = Math.round(result.totalNotes * accuracyFactor(result.pitchAccuracy) * (flow ? (0.6 + 0.6 * (result.timingAccuracy ?? 0)) * tempo : 0.5));
   return {
     xp,
@@ -321,6 +327,12 @@ export function applyResult(progress: ProgressState, result: ExerciseResult, now
       const key = result.scale.itemId.split('/')[1];
       addObservation(next.stats, 'scaleKey', key, result.pitchAccuracy >= MASTERY_ACCURACY, undefined, result.timingAccuracy ?? undefined);
     }
+  } else if (lesson === 'chords') {
+    for (const o of result.chords?.outcomes ?? []) {
+      addObservation(next.stats, 'chordQuality', o.quality, o.correct, o.reactionMs, o.timingScore, o.deltaMs);
+      addObservation(next.stats, 'chordRoot', String(o.rootPc), o.correct, o.reactionMs, o.timingScore, o.deltaMs);
+      addObservation(next.stats, 'chordInversion', String(o.inversion), o.correct, o.reactionMs, o.timingScore, o.deltaMs);
+    }
   } else if (lesson === 'rhythm') {
     for (const n of result.notes) {
       recordTimeObservations(next.stats, n);
@@ -370,11 +382,20 @@ function recordTierRun(next: ProgressState, award: Award, result: ExerciseResult
   }
 }
 
+/** What a repertoire run tells the item's tempo ladder. */
+export function ladderRun(result: ExerciseResult): LadderRun | null {
+  if (result.scale) return result.scale;
+  const c = result.chords;
+  if (c) return { itemId: c.itemId, npm: c.bpm, notesPerBeat: 1, goalNpm: c.goalBpm, clean: c.clean };
+  return null;
+}
+
 /** Repertoire lessons: tempo ladder, mastery and review date of the item. */
 function recordRepertoireRun(next: ProgressState, award: Award, result: ExerciseResult, now: Date): void {
-  if (!result.scale) return;
-  const id = result.scale.itemId;
-  const { item, change } = applyRepertoireRun(next.repertoire[id], { mode: result.mode, accuracy: result.pitchAccuracy, scale: result.scale }, now.getTime());
+  const ladder = ladderRun(result);
+  if (!ladder) return;
+  const id = ladder.itemId;
+  const { item, change } = applyRepertoireRun(next.repertoire[id], { mode: result.mode, accuracy: result.pitchAccuracy, ladder }, now.getTime());
   next.repertoire[id] = item;
   award.repertoire = change;
   award.newlyMastered = change.newlyMastered;
@@ -472,6 +493,39 @@ export function findWeakFigures(progress: ProgressState, minAttempts = 6, limit 
   return timeStats(progress, 'rhythmFigure')
     .filter((t) => t.attempts >= minAttempts && (t.accuracy < 0.85 || (t.timing ?? 0) < 0.65))
     .sort((a, b) => rhythmWeakness(b) - rhythmWeakness(a))
+    .slice(0, limit);
+}
+
+export interface WeakChordStat {
+  dimension: 'chordQuality' | 'chordRoot' | 'chordInversion';
+  key: string;
+  attempts: number;
+  accuracy: number;
+  medianReactionMs: number | null;
+  /** Higher = weaker. */
+  score: number;
+}
+
+/**
+ * Chord qualities, roots and inversions that are often wrong or slow to find. Slowness is
+ * relative to the player's own typical reaction across all chords.
+ */
+export function findWeakChords(progress: ProgressState, minAttempts = 8, limit = 6): WeakChordStat[] {
+  const dims = ['chordQuality', 'chordRoot', 'chordInversion'] as const;
+  const all = dims.flatMap((dimension) =>
+    Object.entries(progress.stats[dimension] ?? {}).map(([key, agg]) => ({ dimension, key, agg })),
+  );
+  const overall = median(all.map((a) => median(a.agg.reactions)).filter((v): v is number => v !== null));
+  return all
+    .filter((a) => a.agg.attempts >= minAttempts)
+    .map(({ dimension, key, agg }) => {
+      const accuracy = agg.correct / agg.attempts;
+      const med = median(agg.reactions);
+      const slowness = med !== null && overall ? Math.max(0, med / overall - 1) : 0;
+      return { dimension, key, attempts: agg.attempts, accuracy, medianReactionMs: med, score: (1 - accuracy) * 2 + slowness };
+    })
+    .filter((w) => w.accuracy < 0.85 || w.score > 0.4)
+    .sort((a, b) => b.score - a.score)
     .slice(0, limit);
 }
 

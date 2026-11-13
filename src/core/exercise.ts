@@ -23,6 +23,8 @@ export interface NoteEvent {
   figure?: string;
   /** Suggested fingering per pitch (scales & arpeggios). */
   fingers?: number[];
+  /** Chord symbol printed above the staff (chords & progressions). */
+  symbol?: string;
 }
 
 export interface Measure {

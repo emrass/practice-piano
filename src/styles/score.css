@@ -228,3 +228,19 @@
 .score-svg .pp-finger.is-thumb {
   fill: var(--accent);
 }
+
+/* Chords: symbols above the staff, Roman numerals quieter beside them. */
+.score-svg .pp-chord-symbol {
+  font-family: var(--serif);
+  font-size: 17px;
+  font-weight: 700;
+  fill: var(--ink);
+  stroke: none;
+}
+
+.score-svg .pp-chord-numeral {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--ink-3);
+}

@@ -6,6 +6,7 @@ import { midiLabel } from '../../core/music/pitch';
 import {
   dayKey,
   displayStreak,
+  findWeakChords,
   findWeakFigures,
   findWeakIntervals,
   findWeakSpots,
@@ -21,6 +22,9 @@ import { BEAT_POSITION_LABELS, TEXTURE_INFO, type BeatPosition, type RhythmTextu
 import { HANDS_LABEL, itemTitle, parseItemId } from '../../core/scales/catalog';
 import { nps } from '../../core/scales/generator';
 import { dueItems } from '../../core/scales/repertoire';
+import { chordItemTitle, parseChordItemId, QUALITIES, type ChordQuality } from '../../core/chords/catalog';
+import { median } from '../../core/eval/types';
+import { weakChordLabel } from '../../core/chords/analysis';
 import { BackupError } from '../../persistence/profileRepository';
 import { profileRepository } from '../state/useProfile';
 import type { Settings } from '../../core/settings';
@@ -222,6 +226,90 @@ function RepertoireStats(props: { progress: ProgressState; goalNps: number; now:
   );
 }
 
+/** Chords & progressions: accuracy and speed per chord quality, weak spots, and the items' ladders. */
+function ChordStats(props: { progress: ProgressState; goalBpm: number; now: number; onReview: () => void; onPracticeWeakSpots: () => void }) {
+  const { progress } = props;
+  const qualities = Object.entries(progress.stats.chordQuality ?? {}).sort(
+    (a, b) => Object.keys(QUALITIES).indexOf(a[0]) - Object.keys(QUALITIES).indexOf(b[0]),
+  );
+  const weak = findWeakChords(progress);
+  const entries = Object.entries(progress.repertoire)
+    .map(([id, it]) => ({ id, it, item: parseChordItemId(id) }))
+    .filter((e) => e.item)
+    .sort((a, b) => b.it.lastAt - a.it.lastAt);
+  const due = dueItems(progress.repertoire, props.now).filter((id) => parseChordItemId(id));
+  const mastered = entries.filter((e) => e.it.mastered).length;
+  return (
+    <>
+      <section className="panel-section">
+        <div className="section-title">Chord qualities</div>
+        {qualities.length ? (
+          <div className="clef-bars interval-bars">
+            {qualities.map(([q, agg]) => {
+              const acc = agg.correct / Math.max(1, agg.attempts);
+              const med = median(agg.reactions);
+              return (
+                <div key={q} className="clef-bar" title={`${agg.correct}/${agg.attempts} right first time${med ? ` · found in ${(med / 1000).toFixed(1)} s (median)` : ''}`}>
+                  <span>{QUALITIES[q as ChordQuality]?.name ?? q}</span>
+                  <div className="progress-track">
+                    <div className="progress-fill" style={{ width: `${acc * 100}%` }} />
+                  </div>
+                  <span>{pct(acc)}</span>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="field-hint">Accuracy and speed per chord quality appear after your first drill.</p>
+        )}
+        {weak.length ? (
+          <ul className="weak-list">
+            {weak.map((w) => (
+              <li key={`${w.dimension}${w.key}`}>
+                <span className="weak-note">{weakChordLabel(w)}</span>
+                <span>{pct(w.accuracy)}</span>
+                <span className="muted">{w.medianReactionMs ? `${(w.medianReactionMs / 1000).toFixed(1)}s` : ''}</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        <button type="button" className="btn btn-block" disabled={weak.length === 0} onClick={props.onPracticeWeakSpots}>
+          Drill weak chords
+        </button>
+      </section>
+      <section className="panel-section">
+        <div className="section-title">
+          Your chords <span className="muted">· {mastered}/{entries.length} mastered</span>
+        </div>
+        {entries.length ? (
+          <ul className="repertoire-list">
+            {entries.map(({ id, it, item }) => {
+              const days = Math.ceil((it.dueAt - props.now) / DAY);
+              return (
+                <li key={id} className={it.mastered ? 'is-mastered' : ''}>
+                  <span className="rep-name">{chordItemTitle(item!)}</span>
+                  <span className="rep-tempo" title="Ladder tempo">
+                    ♩ {it.ladderNpm}
+                  </span>
+                  <span className="rep-state">{it.mastered ? '★' : days <= 0 ? 'due' : `${days}d`}</span>
+                  <div className="progress-track">
+                    <div className={`progress-fill ${it.mastered ? 'is-mastered' : ''}`} style={{ width: `${Math.min(100, (it.ladderNpm / props.goalBpm) * 100)}%` }} />
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <p className="field-hint">Drills and progressions you play appear here with their tempo ladder, and come back for review on a spaced schedule.</p>
+        )}
+        <button type="button" className="btn btn-block" disabled={due.length === 0} onClick={props.onReview}>
+          Review due items{due.length ? ` (${due.length})` : ''}
+        </button>
+      </section>
+    </>
+  );
+}
+
 export function ProgressPanel(props: {
   lesson: LessonId;
   progress: ProgressState;
@@ -231,11 +319,13 @@ export function ProgressPanel(props: {
   storageKind: string;
   now: number;
   onReviewScales?: () => void;
+  onReviewChords?: () => void;
 }) {
   const { progress } = props;
   const ear = props.lesson === 'ear';
   const rhythm = props.lesson === 'rhythm';
   const scales = props.lesson === 'scales';
+  const chords = props.lesson === 'chords';
   const summary = recentSummary(progress, 20, props.lesson);
   const weak = useMemo(() => findWeakSpots(progress), [progress]);
   const weakIntervals = useMemo(() => findWeakIntervals(progress), [progress]);
@@ -301,11 +391,11 @@ export function ProgressPanel(props: {
           </div>
           <div className="tile">
             <span className="tile-v">{pct(summary.pitchAccuracy)}</span>
-            <span className="tile-k">{ear ? 'Found (last 20)' : rhythm ? 'Hits (last 20)' : scales ? 'Notes (last 20)' : 'Pitch (last 20)'}</span>
+            <span className="tile-k">{ear ? 'Found (last 20)' : rhythm ? 'Hits (last 20)' : scales ? 'Notes (last 20)' : chords ? 'Chords (last 20)' : 'Pitch (last 20)'}</span>
           </div>
           <div className="tile">
             <span className="tile-v">{ear ? summary.replays : pct(summary.timingAccuracy)}</span>
-            <span className="tile-k">{ear ? 'Avg replays (last 20)' : rhythm || scales ? 'Timing (last 20)' : 'Timing (Flow)'}</span>
+            <span className="tile-k">{ear ? 'Avg replays (last 20)' : rhythm || scales || chords ? 'Timing (last 20)' : 'Timing (Flow)'}</span>
           </div>
           {rhythm ? (
             <div className="tile" title="Average offset of your hits: early = rushing, late = dragging">
@@ -337,7 +427,17 @@ export function ProgressPanel(props: {
       {rhythm ? <RhythmStats progress={progress} onPracticeWeakSpots={props.onPracticeWeakSpots} /> : null}
       {scales ? <RepertoireStats progress={progress} goalNps={props.settings.scaleGoalNps} now={props.now} onReview={() => props.onReviewScales?.()} /> : null}
 
-      {ear || rhythm || scales ? null : (
+      {chords ? (
+        <ChordStats
+          progress={progress}
+          goalBpm={props.settings.chordsGoalBpm}
+          now={props.now}
+          onReview={() => props.onReviewChords?.()}
+          onPracticeWeakSpots={props.onPracticeWeakSpots}
+        />
+      ) : null}
+
+      {ear || rhythm || scales || chords ? null : (
       <>
       <section className="panel-section">
         <div className="section-title">Weak spots</div>

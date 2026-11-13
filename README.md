@@ -1,6 +1,6 @@
 # practice-piano.com
 
-An interactive **sight-reading, ear-training, rhythm and scales studio** for your digital piano. It generates
+An interactive **sight-reading, ear-training, rhythm, scales and chords studio** for your digital piano. It generates
 fresh, musical passages for any level from "first note ever" to advanced, engraves them with
 VexFlow, listens to your piano over MIDI and scores pitch, timing and reaction time.
 
@@ -14,6 +14,9 @@ Lessons:
   independence.
 - **Scales & arpeggios** — a fixed repertoire with standard fingering, a tempo ladder per item
   and spaced review.
+- **Chords & progressions** — chord drills from symbols or notation (with inversions) and
+  standard progressions in every key, judged by the notes you hold in any voicing, with a
+  voice-leading score.
 
 The didactic concept behind the lessons (and the planned ones) is in
 [docs/DIDACTICS.md](docs/DIDACTICS.md).
@@ -114,6 +117,15 @@ contains the current web code.
   ladder (+4 bpm after a clean run, −4 after a messy one; mastered at your goal speed). Results
   show timing steadiness, touch evenness, thumb accents, hand sync and timing bumps at thumb
   crossings. *Play from memory* hides the notation.
+- **Chords & progressions** — drills of triads, sus chords and sevenths in shuffled order, read
+  from a chord chart (symbols) or from the staff, in root position, a given inversion (slash
+  chords) or any voicing; or progressions (I–IV–V–I, ii–V–I, pop, doo-wop, Andalusian, canon,
+  circle of fifths, 12-bar blues…) in all keys, right hand alone or with the left-hand root, with
+  symbols and Roman numerals over smooth suggested voicings. Any octave and doubling counts.
+  *Wait* times how fast you find each chord; *Flow* wants it on beat 1 with the metronome and
+  uses the same tempo ladder and spaced review as scales. Results show keys-together spread,
+  timing tendency, the voice-leading score and the chords to look at; weak qualities, roots and
+  inversions come back more often.
 - **Progress** — XP that rewards accuracy (steep accuracy curve, reduced XP for repeats, level
   multiplier capped until tiers are mastered), a first-sight bonus, tier mastery at ≥ 90 % pitch
   accuracy on distinct passages, daily streaks, median reaction time, timing accuracy,
@@ -129,6 +141,7 @@ src/
     ear/         ear-training tiers and phrase generator
     rhythm/      rhythm tiers, generator (tasks, textures), analysis (tendency, drift)
     scales/      scale catalogue, fingering, generator, analysis (evenness, bumps), ladder & review
+    chords/      chord & progression catalogue, voicings, generator, chord engines, analysis
     eval/        Wait / Flow scoring engines
     progress/    XP, mastery, streaks, weak spots, extensible stats
     midi/ input/ keyboard/ settings.ts

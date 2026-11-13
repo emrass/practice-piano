@@ -33,6 +33,8 @@ export interface PracticeState {
   /** Rhythm mode: what the current bar is (Echo call / response, Pulse click / silent). */
   rhythm?: { phase: 'call' | 'response' | 'click' | 'silent' | null };
   ear?: { playing: boolean; listened: boolean; replays: number; hints: number };
+  /** Chords: the chord asked for, and a nudge when the right notes have the wrong bass. */
+  chords?: { index: number; bassHint: string | null };
 }
 
 export interface PracticeOptions {

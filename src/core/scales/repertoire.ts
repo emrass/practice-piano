@@ -1,4 +1,3 @@
-import type { ScaleSummary } from '../eval/types';
 
 /**
  * Per-item progress for fixed-repertoire lessons (DIDACTICS §2): a tempo ladder instead of a
@@ -8,7 +7,7 @@ import type { ScaleSummary } from '../eval/types';
 export interface RepertoireItem {
   attempts: number;
   cleanRuns: number;
-  /** Current ladder tempo in notes per minute. */
+  /** Current ladder tempo: notes per minute (scales) or bpm (chords). */
   ladderNpm: number;
   bestCleanNpm: number;
   /** Leitner box 0–5: the review interval doubles with each clean run. */
@@ -29,6 +28,16 @@ export interface RepertoireChange {
   newlyMastered: boolean;
   mastered: boolean;
   dueInDays: number;
+}
+
+/** What a run tells the ladder. Scales count notes per minute; chords count beats per minute (one chord per bar). */
+export interface LadderRun {
+  itemId: string;
+  npm: number;
+  /** Ladder step = 4 bpm × this (notes per beat; 1 for chords). */
+  notesPerBeat: number;
+  goalNpm: number;
+  clean: boolean;
 }
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -53,10 +62,10 @@ function clampNpm(npm: number): number {
  */
 export function applyRepertoireRun(
   prev: RepertoireItem | undefined,
-  run: { mode: 'wait' | 'flow' | string; accuracy: number; scale: ScaleSummary },
+  run: { mode: 'wait' | 'flow' | string; accuracy: number; ladder: LadderRun },
   now: number,
 ): { item: RepertoireItem; change: RepertoireChange } {
-  const s = run.scale;
+  const s = run.ladder;
   const item: RepertoireItem = { ...(prev ?? newRepertoireItem(s.npm, now)) };
   const fromNpm = item.ladderNpm;
   item.attempts++;
