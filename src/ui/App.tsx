@@ -28,7 +28,7 @@ import { scaleResult } from '../core/scales/analysis';
 import { itemId, parseItemId, SCALE_TYPES, type ScaleItem } from '../core/scales/catalog';
 import { generateScaleExercise, initialNpm, type ScaleExercise } from '../core/scales/generator';
 import { dueItems, setLadder } from '../core/repertoire/repertoire';
-import { earSettingsFrom, rhythmSettingsFrom, type Settings } from '../core/settings';
+import type { Settings, SettingsPatch } from '../core/settings';
 import { useStore } from '../lib/store';
 import { inputBus } from '../input/inputBus';
 import { KeySound } from '../input/keySound';
@@ -154,41 +154,41 @@ function Studio({ profile }: { profile: Profile }) {
         ? null
         : generateExercise(
         {
-          level: s.level,
-          hands: s.hands,
-          bars: s.bars,
-          keyId: s.keyId,
-          timeSignature: s.timeSignature,
-          rhythmComplexity: s.rhythmComplexity,
-          maxPolyphony: s.maxPolyphony,
-          bpm: s.bpm,
+          level: s.sight.level,
+          hands: s.sight.hands,
+          bars: s.sight.bars,
+          keyId: s.sight.keyId,
+          timeSignature: s.sight.timeSignature,
+          rhythmComplexity: s.sight.rhythmComplexity,
+          maxPolyphony: s.sight.maxPolyphony,
+          bpm: s.sight.bpm,
           keyboardSize: s.keyboardSize,
           focus: s.weakSpotFocus ? focus : undefined,
           // Rhythm figures are only measured in Flow mode, so only featured there.
-          focusFigures: s.weakSpotFocus && s.mode === 'flow' ? focusFigures : undefined,
+          focusFigures: s.weakSpotFocus && s.sight.mode === 'flow' ? focusFigures : undefined,
         },
         seed,
       ),
     // prettier-ignore
-    [lesson, s.level, s.hands, s.bars, s.keyId, s.timeSignature, s.rhythmComplexity, s.maxPolyphony, s.bpm, s.keyboardSize, s.weakSpotFocus, s.mode, focus, focusFigures, seed],
+    [lesson, s.sight.level, s.sight.hands, s.sight.bars, s.sight.keyId, s.sight.timeSignature, s.sight.rhythmComplexity, s.sight.maxPolyphony, s.sight.bpm, s.keyboardSize, s.weakSpotFocus, s.sight.mode, focus, focusFigures, seed],
   );
   const rhythmExercise: RhythmExercise | null = useMemo(
     () =>
       lesson !== 'rhythm'
         ? null
-        : generateRhythmExercise({ ...rhythmSettingsFrom(s), focusFigures: s.weakSpotFocus ? focusFigures : undefined }, seed),
+        : generateRhythmExercise({ ...s.rhythm, focusFigures: s.weakSpotFocus ? focusFigures : undefined }, seed),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       lesson,
-      s.rhythmLevel,
-      s.rhythmTask,
-      s.rhythmHands,
-      s.rhythmTexture,
-      s.rhythmBars,
-      s.rhythmTimeSignature,
-      s.rhythmBpm,
-      s.rhythmRhKey,
-      s.rhythmLhKey,
+      s.rhythm.level,
+      s.rhythm.task,
+      s.rhythm.hands,
+      s.rhythm.texture,
+      s.rhythm.bars,
+      s.rhythm.timeSignature,
+      s.rhythm.bpm,
+      s.rhythm.rhKey,
+      s.rhythm.lhKey,
       s.weakSpotFocus,
       focusFigures,
       seed,
@@ -198,63 +198,64 @@ function Studio({ profile }: { profile: Profile }) {
     () =>
       lesson !== 'ear'
         ? null
-        : generateEarExercise({ ...earSettingsFrom(s), focusIntervals: s.weakSpotFocus ? focusIntervals : undefined }, seed),
+        : generateEarExercise({ ...s.ear, focusIntervals: s.weakSpotFocus ? focusIntervals : undefined }, seed),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [lesson, s.earLevel, s.earLength, s.earReference, s.earKeyId, s.weakSpotFocus, focusIntervals, seed],
+    [lesson, s.ear.level, s.ear.length, s.ear.reference, s.ear.keyId, s.weakSpotFocus, focusIntervals, seed],
   );
   const scaleItem: ScaleItem | null = useMemo(() => {
     if (lesson !== 'scales') return null;
-    const picked = s.scaleSource === 'review' && reviewPick ? parseItemId(reviewPick) : null;
+    const picked = s.scales.source === 'review' && reviewPick ? parseItemId(reviewPick) : null;
     if (picked) return picked;
-    const def = SCALE_TYPES[s.scaleType];
-    const tonic = s.scaleTonic === 'shuffle' ? (shuffleTonic && def.tonics.includes(shuffleTonic) ? shuffleTonic : def.tonics[0]) : s.scaleTonic;
-    return { type: s.scaleType, tonic, hands: s.scaleHands };
-  }, [lesson, s.scaleSource, s.scaleType, s.scaleTonic, s.scaleHands, reviewPick, shuffleTonic]);
+    const def = SCALE_TYPES[s.scales.type];
+    const tonic = s.scales.tonic === 'shuffle' ? (shuffleTonic && def.tonics.includes(shuffleTonic) ? shuffleTonic : def.tonics[0]) : s.scales.tonic;
+    return { type: s.scales.type, tonic, hands: s.scales.hands };
+  }, [lesson, s.scales.source, s.scales.type, s.scales.tonic, s.scales.hands, reviewPick, shuffleTonic]);
   const scaleExercise: ScaleExercise | null = useMemo(
     () => {
       if (!scaleItem) return null;
       // The ladder tempo is read when the exercise is made (not on every progress change, so the
       // results of a run stay on screen); retries and tempo changes make a new one.
-      const npm = progress.repertoire[itemId(scaleItem)]?.ladderTempo ?? initialNpm(scaleItem, s.scaleNoteValue);
-      return generateScaleExercise(scaleItem, { octaves: s.scaleOctaves, noteValue: s.scaleNoteValue, npm });
+      const npm = progress.repertoire[itemId(scaleItem)]?.ladderTempo ?? initialNpm(scaleItem, s.scales.noteValue);
+      return generateScaleExercise(scaleItem, { octaves: s.scales.octaves, noteValue: s.scales.noteValue, npm });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [scaleItem, s.scaleOctaves, s.scaleNoteValue, seed, retryToken, ladderToken],
+    [scaleItem, s.scales.octaves, s.scales.noteValue, seed, retryToken, ladderToken],
   );
   const chordItem: ChordItem | null = useMemo(() => {
     if (lesson !== 'chords') return null;
-    const picked = s.chordsSource === 'review' && chordReviewPick ? parseChordItemId(chordReviewPick) : null;
+    const picked = s.chords.source === 'review' && chordReviewPick ? parseChordItemId(chordReviewPick) : null;
     if (picked) return picked;
-    if (s.chordsTask === 'drill') return { task: 'drill', set: s.chordsSet, prompt: s.chordsPrompt, inversions: s.chordsInversions };
-    const def = findProgression(s.chordsProgression) ?? PROGRESSIONS[0];
+    if (s.chords.task === 'drill') return { task: 'drill', set: s.chords.set, prompt: s.chords.prompt, inversions: s.chords.inversions };
+    const def = findProgression(s.chords.progression) ?? PROGRESSIONS[0];
     const keys = keysFor(def.mode);
-    const key = s.chordsKey === 'shuffle' ? (shuffleChordKey && keys.includes(shuffleChordKey) ? shuffleChordKey : keys[0]) : s.chordsKey;
-    return { task: 'progression', progression: def.id, key, hands: s.chordsHands };
-  }, [lesson, s.chordsSource, s.chordsTask, s.chordsSet, s.chordsPrompt, s.chordsInversions, s.chordsProgression, s.chordsKey, s.chordsHands, chordReviewPick, shuffleChordKey]);
+    const key = s.chords.key === 'shuffle' ? (shuffleChordKey && keys.includes(shuffleChordKey) ? shuffleChordKey : keys[0]) : s.chords.key;
+    return { task: 'progression', progression: def.id, key, hands: s.chords.hands };
+  }, [lesson, s.chords.source, s.chords.task, s.chords.set, s.chords.prompt, s.chords.inversions, s.chords.progression, s.chords.key, s.chords.hands, chordReviewPick, shuffleChordKey]);
   const chordExercise: ChordExercise | null = useMemo(
     () => {
       if (!chordItem) return null;
       // Ladder tempo read when the exercise is made, as for scales.
       const bpm = progress.repertoire[chordItemId(chordItem)]?.ladderTempo ?? initialChordBpm(chordItem);
       const focus = s.weakSpotFocus && chordItem.task === 'drill' ? chordFocus : undefined;
-      return generateChordExercise(chordItem, { bpm, count: s.chordsCount, focus }, seed);
+      return generateChordExercise(chordItem, { bpm, count: s.chords.count, focus }, seed);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [chordItem, s.chordsCount, s.weakSpotFocus, chordFocus, seed, retryToken, ladderToken],
+    [chordItem, s.chords.count, s.weakSpotFocus, chordFocus, seed, retryToken, ladderToken],
   );
   const exercise: Exercise = (earExercise ?? rhythmExercise ?? scaleExercise ?? chordExercise ?? sightExercise)!;
   const firstSight = (progress.attempts[exercise.id] ?? 0) === 0;
 
   const update = useCallback(
-    (patch: Partial<Settings>) => {
-      if (patch.scaleSource === 'review') setReviewPick(dueScaleItems(progressRef.current, Date.now())[0] ?? null);
-      if (patch.chordsSource === 'review') setChordReviewPick(dueChordItems(progressRef.current, Date.now())[0] ?? null);
-      if (patch.chordsKey === 'shuffle') {
-        const def = findProgression(patch.chordsProgression ?? s.chordsProgression) ?? PROGRESSIONS[0];
+    (patch: SettingsPatch) => {
+      if (patch.scales?.source === 'review') setReviewPick(dueScaleItems(progressRef.current, Date.now())[0] ?? null);
+      if (patch.chords?.source === 'review') setChordReviewPick(dueChordItems(progressRef.current, Date.now())[0] ?? null);
+      if (patch.chords?.key === 'shuffle') {
+        const def = findProgression(patch.chords.progression ?? s.chords.progression) ?? PROGRESSIONS[0];
         setShuffleChordKey(randomTonic(keysFor(def.mode), null));
       }
-      if (patch.scaleTonic === 'shuffle') setShuffleTonic(randomTonic(SCALE_TYPES[patch.scaleType ?? s.scaleType].tonics, null));
-      if (patch.scaleType && s.scaleTonic === 'shuffle') setShuffleTonic(randomTonic(SCALE_TYPES[patch.scaleType].tonics, null));
+      const scaleType = patch.scales?.type;
+      if (patch.scales?.tonic === 'shuffle') setShuffleTonic(randomTonic(SCALE_TYPES[scaleType ?? s.scales.type].tonics, null));
+      if (scaleType && s.scales.tonic === 'shuffle') setShuffleTonic(randomTonic(SCALE_TYPES[scaleType].tonics, null));
       if (patch.weakSpotFocus) {
         setFocus(weakFocus(progressRef.current));
         setFocusIntervals(weakIntervalFocus(progressRef.current));
@@ -263,7 +264,7 @@ function Studio({ profile }: { profile: Profile }) {
       }
       updateSettings(patch);
     },
-    [updateSettings, s.scaleType, s.scaleTonic, s.chordsProgression],
+    [updateSettings, s.scales.type, s.scales.tonic, s.chords.progression],
   );
 
   const nextExercise = useCallback(() => {
@@ -275,25 +276,25 @@ function Studio({ profile }: { profile: Profile }) {
     }
     if (lesson === 'chords') {
       const current = chordItem ? chordItemId(chordItem) : null;
-      if (s.chordsSource === 'review') {
+      if (s.chords.source === 'review') {
         const due = dueChordItems(progressRef.current, Date.now());
         setChordReviewPick(due.find((id) => id !== current) ?? due[0] ?? null);
-      } else if (chordItem?.task === 'progression' && s.chordsKey === 'shuffle') {
+      } else if (chordItem?.task === 'progression' && s.chords.key === 'shuffle') {
         const def = findProgression(chordItem.progression) ?? PROGRESSIONS[0];
         setShuffleChordKey(randomTonic(keysFor(def.mode), chordItem.key));
       }
     }
     if (lesson === 'scales') {
       const current = scaleItem ? itemId(scaleItem) : null;
-      if (s.scaleSource === 'review') {
+      if (s.scales.source === 'review') {
         const due = dueScaleItems(progressRef.current, Date.now());
         setReviewPick(due.find((id) => id !== current) ?? due[0] ?? null);
-      } else if (s.scaleTonic === 'shuffle') {
-        setShuffleTonic(randomTonic(SCALE_TYPES[s.scaleType].tonics, scaleItem?.tonic ?? null));
+      } else if (s.scales.tonic === 'shuffle') {
+        setShuffleTonic(randomTonic(SCALE_TYPES[s.scales.type].tonics, scaleItem?.tonic ?? null));
       }
     }
     setSeed(randomSeed());
-  }, [s.weakSpotFocus, lesson, scaleItem, s.scaleSource, s.scaleTonic, s.scaleType, chordItem, s.chordsSource, s.chordsKey]);
+  }, [s.weakSpotFocus, lesson, scaleItem, s.scales.source, s.scales.tonic, s.scales.type, chordItem, s.chords.source, s.chords.key]);
 
   /** Repertoire lessons: move the current item's tempo ladder by hand (± bpm in the note value played). */
   const changeTempo = useCallback(
@@ -340,8 +341,8 @@ function Studio({ profile }: { profile: Profile }) {
           ? new ChordController(
               {
                 exercise: chordExercise,
-                mode: s.chordsMode,
-                goalBpm: s.chordsGoalBpm,
+                mode: s.chords.mode,
+                goalBpm: s.chords.goalBpm,
                 latencyMs: s.latencyMs,
                 playheadDelayMs: s.playheadDelayMs,
                 metronomeVolume: s.metronomeVolume,
@@ -366,8 +367,8 @@ function Studio({ profile }: { profile: Profile }) {
           : new PracticeController(
         {
           exercise,
-          mode: lesson === 'scales' ? s.scaleMode : s.mode,
-          decorate: scaleExercise ? (raw) => scaleResult(scaleExercise, raw, s.scaleGoalNps * 60) : undefined,
+          mode: lesson === 'scales' ? s.scales.mode : s.sight.mode,
+          decorate: scaleExercise ? (raw) => scaleResult(scaleExercise, raw, s.scales.goalNps * 60) : undefined,
           graceMs: s.chordGraceMs,
           sustainCountsAsHeld: s.sustainScoring === 'hold',
           latencyMs: s.latencyMs,
@@ -380,7 +381,7 @@ function Studio({ profile }: { profile: Profile }) {
       ),
     // Volume is applied live below; a retry creates a fresh session on the same passage.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [exercise, s.mode, s.scaleMode, s.scaleGoalNps, s.chordsMode, s.chordsGoalBpm, s.chordGraceMs, s.sustainScoring, s.latencyMs, s.playheadDelayMs, s.countInBars, retryToken, s.synthVolume],
+    [exercise, s.sight.mode, s.scales.mode, s.scales.goalNps, s.chords.mode, s.chords.goalBpm, s.chordGraceMs, s.sustainScoring, s.latencyMs, s.playheadDelayMs, s.countInBars, retryToken, s.synthVolume],
   );
   useEffect(() => controller.attach(), [controller]);
   useEffect(() => inputBus.subscribe((ev) => keySound.handle(ev)), []);
@@ -435,10 +436,10 @@ function Studio({ profile }: { profile: Profile }) {
         case 'easier':
         case 'harder': {
           if (LESSONS[lesson].repertoire) return changeTempo(action === 'harder' ? 4 : -4);
-          const key = lesson === 'ear' ? 'earLevel' : lesson === 'rhythm' ? 'rhythmLevel' : 'level';
-          const current = s[key];
+          const group = lesson === 'ear' ? 'ear' : lesson === 'rhythm' ? 'rhythm' : 'sight';
+          const current = s[group].level;
           const level = Math.min(100, Math.max(1, current + (action === 'harder' ? 1 : -1)));
-          if (level !== current) update({ [key]: level });
+          if (level !== current) update({ [group]: { level } });
           return nextExercise();
         }
       }
@@ -584,7 +585,7 @@ function Studio({ profile }: { profile: Profile }) {
       : lesson === 'ear'
         ? fitKeyboardRange(48, 84, s.keyboardSize)
         : lesson === 'rhythm'
-          ? fitKeyboardRange(Math.min(s.rhythmLhKey, s.rhythmRhKey), Math.max(s.rhythmLhKey, s.rhythmRhKey), s.keyboardSize)
+          ? fitKeyboardRange(Math.min(s.rhythm.lhKey, s.rhythm.rhKey), Math.max(s.rhythm.lhKey, s.rhythm.rhKey), s.keyboardSize)
           : fitKeyboardRange(exercise.range.min, exercise.range.max, s.keyboardSize);
   const streak = displayStreak(progress.streak, dayKey(new Date()));
   const nowMs = new Date().getTime();
@@ -602,7 +603,7 @@ function Studio({ profile }: { profile: Profile }) {
   const hasModes = lesson === 'sight' || lesson === 'scales' || lesson === 'chords';
   // Chord drills by symbol (the notation would give the answer) and progressions from the chart.
   const chordChart =
-    chordExercise && (chordExercise.chords.item.task === 'drill' ? chordExercise.chords.item.prompt === 'symbol' : !s.chordsNotation);
+    chordExercise && (chordExercise.chords.item.task === 'drill' ? chordExercise.chords.item.prompt === 'symbol' : !s.chords.notation);
 
   const panels = (
     <>
@@ -675,12 +676,12 @@ function Studio({ profile }: { profile: Profile }) {
             storageKind={profile.storageKind}
             now={nowMs}
             onReviewChords={() => {
-              update({ chordsSource: 'review' });
+              update({ chords: { source: 'review' } });
               setSeed(randomSeed());
               setTab('exercise');
             }}
             onReviewScales={() => {
-              update({ scaleSource: 'review' });
+              update({ scales: { source: 'review' } });
               setSeed(randomSeed());
               setTab('exercise');
             }}
@@ -689,7 +690,7 @@ function Studio({ profile }: { profile: Profile }) {
               setFocusIntervals(weakIntervalFocus(progressRef.current));
               setFocusFigures(weakFigureFocus(progressRef.current));
               setChordFocus(weakChordFocus(progressRef.current));
-              updateSettings(lesson === 'chords' ? { weakSpotFocus: true, chordsTask: 'drill', chordsSource: 'pick' } : { weakSpotFocus: true });
+              updateSettings(lesson === 'chords' ? { weakSpotFocus: true, chords: { task: 'drill', source: 'pick' } } : { weakSpotFocus: true });
               setSeed(randomSeed());
               setTab('exercise');
             }}
@@ -735,8 +736,8 @@ function Studio({ profile }: { profile: Profile }) {
         <div className={`topbar-mode ${hasModes ? '' : 'is-hidden'}`} aria-hidden={!hasModes}>
           <Segmented<'wait' | 'flow'>
             label="Practice mode"
-            value={lesson === 'scales' ? s.scaleMode : lesson === 'chords' ? s.chordsMode : s.mode === 'flow' ? 'flow' : 'wait'}
-            onChange={(mode) => update(lesson === 'scales' ? { scaleMode: mode } : lesson === 'chords' ? { chordsMode: mode } : { mode })}
+            value={lesson === 'scales' ? s.scales.mode : lesson === 'chords' ? s.chords.mode : s.sight.mode === 'flow' ? 'flow' : 'wait'}
+            onChange={(mode) => update(lesson === 'scales' ? { scales: { mode } } : lesson === 'chords' ? { chords: { mode } } : { sight: { mode } })}
             options={[
               { value: 'wait', label: 'Wait', title: 'Self-paced: the cursor waits for the right notes' },
               { value: 'flow', label: 'Flow', title: 'Play in time with the metronome' },
@@ -793,12 +794,12 @@ function Studio({ profile }: { profile: Profile }) {
             }
           />
           <div className="score-card">
-            {scaleExercise && !s.scaleNotation ? (
+            {scaleExercise && !s.scales.notation ? (
               <MemoryCard exercise={scaleExercise} controller={controller} />
             ) : chordExercise && chordChart ? (
               <ChordChart exercise={chordExercise} controller={controller} />
             ) : (
-              <ScoreView exercise={exercise} showNoteNames={s.showNoteNames} controller={controller} showFingering={!!scaleExercise && s.showFingering} />
+              <ScoreView exercise={exercise} showNoteNames={s.showNoteNames} controller={controller} showFingering={!!scaleExercise && s.scales.showFingering} />
             )}
             <ResultsLayer
               controller={controller}

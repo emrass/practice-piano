@@ -13,7 +13,7 @@ import {
 } from '../../core/rhythm/generator';
 import { rhythmTierForLevel } from '../../core/rhythm/tiers';
 import type { ProgressState, TimeStat } from '../../core/progress/progress';
-import type { Settings } from '../../core/settings';
+import type { Settings, SettingsPatch } from '../../core/settings';
 import { inputBus } from '../../input/inputBus';
 import { CommitSlider, Field, Segmented, Select, Toggle } from './controls';
 
@@ -37,22 +37,22 @@ function useKeyLearning(onLearn: (hand: 'rh' | 'lh', midi: number) => void) {
 export function RhythmPanel(props: {
   settings: Settings;
   progress: ProgressState;
-  update: (patch: Partial<Settings>) => void;
+  update: (patch: SettingsPatch) => void;
   onNew: () => void;
   weakFigures: TimeStat[];
 }) {
   const { settings: s, update } = props;
   const [preview, setPreview] = useState<number | null>(null);
-  const shown = preview ?? s.rhythmLevel;
+  const shown = preview ?? s.rhythm.level;
   const tier = rhythmTierForLevel(shown);
   const profile = rhythmProfile(shown);
   const tierState = props.progress.tiers[tier.id];
-  const { rhythmRhKey, rhythmLhKey } = s;
+  const { rhKey: rhythmRhKey, lhKey: rhythmLhKey } = s.rhythm;
   const learn = useCallback(
     (hand: 'rh' | 'lh', midi: number) => {
       const other = hand === 'rh' ? rhythmLhKey : rhythmRhKey;
       if (midi === other) return; // one key per hand
-      update(hand === 'rh' ? { rhythmRhKey: midi } : { rhythmLhKey: midi });
+      update(hand === 'rh' ? { rhythm: { rhKey: midi } } : { rhythm: { lhKey: midi } });
     },
     [rhythmRhKey, rhythmLhKey, update],
   );
@@ -60,10 +60,10 @@ export function RhythmPanel(props: {
 
   const meters = profile.timePool.map((t) => t.id).join(', ');
   const tempo = profile.bpm(TIME_SIGNATURES['4/4'], null);
-  const overrides = [s.rhythmTimeSignature !== 'auto', s.rhythmBpm !== null].filter(Boolean).length;
+  const overrides = [s.rhythm.timeSignature !== 'auto', s.rhythm.bpm !== null].filter(Boolean).length;
 
   const keyRow = (hand: 'rh' | 'lh') => {
-    const midi = hand === 'rh' ? s.rhythmRhKey : s.rhythmLhKey;
+    const midi = hand === 'rh' ? s.rhythm.rhKey : s.rhythm.lhKey;
     const active = learning === hand;
     return (
       <div className={`key-assign ${active ? 'is-learning' : ''}`}>
@@ -85,11 +85,11 @@ export function RhythmPanel(props: {
           label="Rhythm level"
           min={1}
           max={100}
-          value={s.rhythmLevel}
+          value={s.rhythm.level}
           onPreview={setPreview}
           onCommit={(rhythmLevel) => {
             setPreview(null);
-            update({ rhythmLevel });
+            update({ rhythm: { level: rhythmLevel } });
           }}
           format={(v) => <span className="level-num">{v}</span>}
         />
@@ -112,19 +112,19 @@ export function RhythmPanel(props: {
       </section>
 
       <section className="panel-section">
-        <Field label="Task" hint={TASK_INFO[s.rhythmTask].help}>
+        <Field label="Task" hint={TASK_INFO[s.rhythm.task].help}>
           <Segmented<RhythmTask>
             label="Task"
-            value={s.rhythmTask}
-            onChange={(rhythmTask) => update({ rhythmTask })}
+            value={s.rhythm.task}
+            onChange={(rhythmTask) => update({ rhythm: { task: rhythmTask } })}
             options={(['read', 'echo', 'pulse'] as const).map((t) => ({ value: t, label: TASK_INFO[t].name, title: TASK_INFO[t].help }))}
           />
         </Field>
         <Field label="Hands">
           <Segmented<RhythmHands>
             label="Hands"
-            value={s.rhythmHands}
-            onChange={(rhythmHands) => update({ rhythmHands })}
+            value={s.rhythm.hands}
+            onChange={(rhythmHands) => update({ rhythm: { hands: rhythmHands } })}
             options={[
               { value: 'rh', label: 'Right' },
               { value: 'lh', label: 'Left' },
@@ -132,26 +132,26 @@ export function RhythmPanel(props: {
             ]}
           />
         </Field>
-        {s.rhythmHands === 'both' ? (
+        {s.rhythm.hands === 'both' ? (
           <Select<'auto' | RhythmTexture>
             label="Texture"
-            value={s.rhythmTexture}
-            onChange={(rhythmTexture) => update({ rhythmTexture })}
+            value={s.rhythm.texture}
+            onChange={(rhythmTexture) => update({ rhythm: { texture: rhythmTexture } })}
             options={[
               { value: 'auto', label: 'Auto (by level)' },
               ...RHYTHM_TEXTURES.map((t) => ({
                 value: t,
-                label: `${TEXTURE_INFO[t].name}${TEXTURE_INFO[t].minLevel > s.rhythmLevel ? ` · from level ${TEXTURE_INFO[t].minLevel}` : ''}`,
+                label: `${TEXTURE_INFO[t].name}${TEXTURE_INFO[t].minLevel > s.rhythm.level ? ` · from level ${TEXTURE_INFO[t].minLevel}` : ''}`,
               })),
             ]}
           />
         ) : null}
-        {s.rhythmHands === 'both' && s.rhythmTexture !== 'auto' ? <p className="field-hint">{TEXTURE_INFO[s.rhythmTexture].help}</p> : null}
+        {s.rhythm.hands === 'both' && s.rhythm.texture !== 'auto' ? <p className="field-hint">{TEXTURE_INFO[s.rhythm.texture].help}</p> : null}
         <Field label="Length">
           <Segmented<number>
             label="Length"
-            value={s.rhythmBars}
-            onChange={(bars) => update({ rhythmBars: bars as Settings['rhythmBars'] })}
+            value={s.rhythm.bars}
+            onChange={(bars) => update({ rhythm: { bars: bars as Settings['rhythm']['bars'] } })}
             options={[4, 8].map((b) => ({ value: b, label: `${b} bars` }))}
           />
         </Field>
@@ -162,8 +162,8 @@ export function RhythmPanel(props: {
 
       <section className="panel-section">
         <div className="section-title">Your keys</div>
-        {s.rhythmHands !== 'lh' ? keyRow('rh') : null}
-        {s.rhythmHands !== 'rh' ? keyRow('lh') : null}
+        {s.rhythm.hands !== 'lh' ? keyRow('rh') : null}
+        {s.rhythm.hands !== 'rh' ? keyRow('lh') : null}
         <p className="field-hint">Only these keys count, so a stray note is never held against you.</p>
       </section>
 
@@ -186,8 +186,8 @@ export function RhythmPanel(props: {
         </summary>
         <Select<'auto' | TimeSignatureId>
           label="Time"
-          value={s.rhythmTimeSignature}
-          onChange={(rhythmTimeSignature) => update({ rhythmTimeSignature })}
+          value={s.rhythm.timeSignature}
+          onChange={(rhythmTimeSignature) => update({ rhythm: { timeSignature: rhythmTimeSignature } })}
           options={[{ value: 'auto', label: 'Auto' }, ...TIME_SIGNATURE_IDS.map((t) => ({ value: t, label: t }))]}
         />
         <div className="bpm-row">
@@ -195,11 +195,11 @@ export function RhythmPanel(props: {
             label="Tempo"
             min={30}
             max={200}
-            value={s.rhythmBpm ?? tempo}
-            onCommit={(rhythmBpm) => update({ rhythmBpm })}
-            format={(v) => (s.rhythmBpm === null ? `Auto · ${v} bpm` : `${v} bpm`)}
+            value={s.rhythm.bpm ?? tempo}
+            onCommit={(rhythmBpm) => update({ rhythm: { bpm: rhythmBpm } })}
+            format={(v) => (s.rhythm.bpm === null ? `Auto · ${v} bpm` : `${v} bpm`)}
           />
-          <button type="button" className="btn btn-small" disabled={s.rhythmBpm === null} onClick={() => update({ rhythmBpm: null })}>
+          <button type="button" className="btn btn-small" disabled={s.rhythm.bpm === null} onClick={() => update({ rhythm: { bpm: null } })}>
             Auto
           </button>
         </div>

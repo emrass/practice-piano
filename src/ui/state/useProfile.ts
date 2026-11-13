@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { emptyProgress, type ProgressState } from '../../core/progress/progress';
-import { DEFAULT_SETTINGS, type Settings } from '../../core/settings';
+import { applySettingsPatch, DEFAULT_SETTINGS, type Settings, type SettingsPatch } from '../../core/settings';
 import { LocalIdentityProvider } from '../../persistence/identity';
 import { ProfileRepository } from '../../persistence/profileRepository';
 import { createDefaultStorage } from '../../persistence/storage';
@@ -13,7 +13,7 @@ export interface Profile {
   settings: Settings;
   progress: ProgressState;
   storageKind: string;
-  updateSettings: (patch: Partial<Settings>) => void;
+  updateSettings: (patch: SettingsPatch) => void;
   setProgress: (progress: ProgressState) => void;
   replaceAll: (settings: Settings, progress: ProgressState) => void;
 }
@@ -40,9 +40,9 @@ export function useProfile(): Profile {
     };
   }, []);
 
-  const updateSettings = useCallback((patch: Partial<Settings>) => {
+  const updateSettings = useCallback((patch: SettingsPatch) => {
     setSettings((prev) => {
-      const next = { ...prev, ...patch };
+      const next = applySettingsPatch(prev, patch);
       latest.current = next;
       return next;
     });

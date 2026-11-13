@@ -6,22 +6,22 @@ import { KEYBOARD_RANGES, KEYBOARD_SIZES, type KeyboardSize } from '../../core/k
 import { KEYS } from '../../core/music/keys';
 import { TIME_SIGNATURE_IDS, type TimeSignatureId } from '../../core/music/rhythm';
 import type { ProgressState } from '../../core/progress/progress';
-import type { Settings } from '../../core/settings';
+import type { Settings, SettingsPatch } from '../../core/settings';
 import { CommitSlider, Field, Segmented, Select, Toggle } from './controls';
 
 export function ExercisePanel(props: {
   settings: Settings;
   progress: ProgressState;
-  update: (patch: Partial<Settings>) => void;
+  update: (patch: SettingsPatch) => void;
   onNew: () => void;
   weakNotesLabel: string | null;
 }) {
   const { settings: s, update } = props;
   const [preview, setPreview] = useState<number | null>(null);
-  const shownLevel = preview ?? s.level;
+  const shownLevel = preview ?? s.sight.level;
   const tier = tierForLevel(shownLevel);
   const tierState = props.progress.tiers[tier.id];
-  const advancedCount = [s.keyId !== 'auto', s.timeSignature !== 'auto', s.rhythmComplexity !== 'auto', s.maxPolyphony !== 'auto', s.bpm !== null].filter(Boolean).length;
+  const advancedCount = [s.sight.keyId !== 'auto', s.sight.timeSignature !== 'auto', s.sight.rhythmComplexity !== 'auto', s.sight.maxPolyphony !== 'auto', s.sight.bpm !== null].filter(Boolean).length;
 
   return (
     <div className="panel-body">
@@ -31,11 +31,11 @@ export function ExercisePanel(props: {
           label="Difficulty"
           min={1}
           max={100}
-          value={s.level}
+          value={s.sight.level}
           onPreview={setPreview}
           onCommit={(level) => {
             setPreview(null);
-            update({ level });
+            update({ sight: { level } });
           }}
           format={(v) => <span className="level-num">{v}</span>}
         />
@@ -60,8 +60,8 @@ export function ExercisePanel(props: {
         <Field label="Hands">
           <Segmented<HandsMode>
             label="Hands"
-            value={s.hands}
-            onChange={(hands) => update({ hands })}
+            value={s.sight.hands}
+            onChange={(hands) => update({ sight: { hands } })}
             options={[
               { value: 'rh', label: 'RH', title: 'Right hand — treble clef' },
               { value: 'lh', label: 'LH', title: 'Left hand — bass clef' },
@@ -73,8 +73,8 @@ export function ExercisePanel(props: {
         <Field label="Length">
           <Segmented<number>
             label="Length"
-            value={s.bars}
-            onChange={(bars) => update({ bars: bars as Settings['bars'] })}
+            value={s.sight.bars}
+            onChange={(bars) => update({ sight: { bars: bars as Settings['sight']['bars'] } })}
             options={[4, 8, 16].map((b) => ({ value: b, label: `${b} bars` }))}
           />
         </Field>
@@ -99,26 +99,26 @@ export function ExercisePanel(props: {
         <div className="grid-2">
           <Select
             label="Key"
-            value={s.keyId}
-            onChange={(keyId) => update({ keyId })}
+            value={s.sight.keyId}
+            onChange={(keyId) => update({ sight: { keyId } })}
             options={[{ value: 'auto', label: 'Auto' }, ...KEYS.map((k) => ({ value: k.id, label: k.label }))]}
           />
           <Select<'auto' | TimeSignatureId>
             label="Time"
-            value={s.timeSignature}
-            onChange={(timeSignature) => update({ timeSignature })}
+            value={s.sight.timeSignature}
+            onChange={(timeSignature) => update({ sight: { timeSignature } })}
             options={[{ value: 'auto', label: 'Auto' }, ...TIME_SIGNATURE_IDS.map((t) => ({ value: t, label: t }))]}
           />
           <Select<string>
             label="Rhythm"
-            value={String(s.rhythmComplexity)}
-            onChange={(v) => update({ rhythmComplexity: v === 'auto' ? 'auto' : Number(v) })}
+            value={String(s.sight.rhythmComplexity)}
+            onChange={(v) => update({ sight: { rhythmComplexity: v === 'auto' ? 'auto' : Number(v) } })}
             options={[{ value: 'auto', label: 'Auto' }, ...RHYTHM_COMPLEXITY_LABELS.map((l, i) => ({ value: String(i), label: l }))]}
           />
           <Select<string>
             label="Max notes / hand"
-            value={String(s.maxPolyphony)}
-            onChange={(v) => update({ maxPolyphony: v === 'auto' ? 'auto' : Number(v) })}
+            value={String(s.sight.maxPolyphony)}
+            onChange={(v) => update({ sight: { maxPolyphony: v === 'auto' ? 'auto' : Number(v) } })}
             options={[{ value: 'auto', label: 'Auto' }, ...[1, 2, 3, 4].map((n) => ({ value: String(n), label: n === 1 ? 'Single notes' : `Up to ${n}` }))]}
           />
         </div>
@@ -127,11 +127,11 @@ export function ExercisePanel(props: {
             label="Tempo"
             min={30}
             max={200}
-            value={s.bpm ?? bpmForLevel(s.level)}
-            onCommit={(bpm) => update({ bpm })}
-            format={(v) => (s.bpm === null ? `Auto · ${v} bpm` : `${v} bpm`)}
+            value={s.sight.bpm ?? bpmForLevel(s.sight.level)}
+            onCommit={(bpm) => update({ sight: { bpm } })}
+            format={(v) => (s.sight.bpm === null ? `Auto · ${v} bpm` : `${v} bpm`)}
           />
-          <button type="button" className="btn btn-small" disabled={s.bpm === null} onClick={() => update({ bpm: null })}>
+          <button type="button" className="btn btn-small" disabled={s.sight.bpm === null} onClick={() => update({ sight: { bpm: null } })}>
             Auto
           </button>
         </div>

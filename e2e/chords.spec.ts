@@ -13,7 +13,7 @@ const targets = (ex: Record<string, unknown>) =>
 
 test.describe('Chords & progressions', () => {
   test('Drill (Wait): any octave counts, a wrong key first is noted, the chart shows symbols', async ({ app, page }) => {
-    await app.open({ settings: { lesson: 'chords', chordsTask: 'drill', chordsSet: 'triads', chordsPrompt: 'symbol', chordsInversions: 'any', chordsMode: 'wait' } });
+    await app.open({ settings: { lesson: 'chords', chords: { task: 'drill', set: 'triads', prompt: 'symbol', inversions: 'any', mode: 'wait' } } });
     await expect(page.locator('.chord-chart .chord-card')).toHaveCount(8);
     const ts = await app.exercise(targets);
     for (let i = 0; i < ts.length; i++) {
@@ -28,7 +28,7 @@ test.describe('Chords & progressions', () => {
   });
 
   test('Drill (Wait): right notes over the wrong bass get a hint', async ({ app, page }) => {
-    await app.open({ settings: { lesson: 'chords', chordsTask: 'drill', chordsSet: 'triads', chordsPrompt: 'symbol', chordsInversions: 'inversions', chordsMode: 'wait' } });
+    await app.open({ settings: { lesson: 'chords', chords: { task: 'drill', set: 'triads', prompt: 'symbol', inversions: 'inversions', mode: 'wait' } } });
     const ts = await app.exercise(targets);
     // Find an inverted chord: play its tones with the root lowest.
     const i = ts.findIndex((t) => t.bassPc !== null && t.bassPc !== t.voicing.map((k) => k % 12).sort((a, b) => a - b)[0]);
@@ -45,7 +45,7 @@ test.describe('Chords & progressions', () => {
   test('Progression (Flow): on the beat moves the ladder; symbols and numerals are engraved', async ({ app, page }) => {
     // Start the item on the ladder at 120 bpm so the run is short.
     await app.open({
-      settings: { lesson: 'chords', chordsTask: 'progression', chordsProgression: 'I-IV-V-I', chordsKey: 'F', chordsHands: 'lh-bass', chordsMode: 'flow', countInBars: 1 },
+      settings: { lesson: 'chords', countInBars: 1, chords: { task: 'progression', progression: 'I-IV-V-I', key: 'F', hands: 'lh-bass', mode: 'flow' } },
       progress: progressWith({ 'chords/prog/I-IV-V-I/F/lh-bass': repertoireItem(120, 0) }),
     });
     await expect(page.locator('.score-card .pp-chord-symbol').first()).toContainText('F');
@@ -66,7 +66,7 @@ test.describe('Chords & progressions', () => {
 
   test('Review plays due items first', async ({ app }) => {
     await app.open({
-      settings: { lesson: 'chords', chordsSource: 'review' },
+      settings: { lesson: 'chords', chords: { source: 'review' } },
       progress: progressWith({ 'chords/prog/canon/Eb/rh': repertoireItem(68, -1) }),
     });
     expect(await app.exercise((ex) => (ex.chords as { itemId: string }).itemId)).toBe('chords/prog/canon/Eb/rh');

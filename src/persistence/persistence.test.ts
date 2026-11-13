@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_SETTINGS, normalizeSettings } from '../core/settings';
+import { DEFAULT_SETTINGS, applySettingsPatch, normalizeSettings } from '../core/settings';
 import { applyResult, emptyProgress } from '../core/progress/progress';
 import { LocalIdentityProvider } from './identity';
 import { BackupError, parseBackup, ProfileRepository } from './profileRepository';
@@ -35,10 +35,10 @@ describe('ProfileRepository', () => {
     const fresh = await r.load();
     expect(fresh.settings).toEqual(DEFAULT_SETTINGS);
     expect(fresh.progress).toEqual(emptyProgress());
-    await r.saveSettings({ ...fresh.settings, level: 42, hands: 'both' });
+    await r.saveSettings(applySettingsPatch(fresh.settings, { sight: { level: 42, hands: 'both' } }));
     const again = await r.load();
-    expect(again.settings.level).toBe(42);
-    expect(again.settings.hands).toBe('both');
+    expect(again.settings.sight.level).toBe(42);
+    expect(again.settings.sight.hands).toBe('both');
   });
 
   it('scopes data by a stable local user id', async () => {
@@ -54,7 +54,7 @@ describe('ProfileRepository', () => {
   it('round-trips a JSON backup into a different install', async () => {
     const a = repo().repo;
     const progress = applyResult(emptyProgress(), sampleResult, new Date(2026, 0, 1)).progress;
-    await a.saveSettings({ ...DEFAULT_SETTINGS, level: 37, theme: 'dark' });
+    await a.saveSettings(applySettingsPatch(DEFAULT_SETTINGS, { sight: { level: 37 }, theme: 'dark' }));
     await a.saveProgress(progress);
     const json = await a.exportBackup(new Date('2026-01-02T00:00:00Z'));
     expect(JSON.parse(json)).toMatchObject({ format: 'practice-piano.backup', version: 1, exportedAt: '2026-01-02T00:00:00.000Z' });
@@ -62,7 +62,7 @@ describe('ProfileRepository', () => {
     const b = repo().repo;
     await b.importBackup(json);
     const loaded = await b.load();
-    expect(loaded.settings.level).toBe(37);
+    expect(loaded.settings.sight.level).toBe(37);
     expect(loaded.settings.theme).toBe('dark');
     expect(loaded.progress.xp).toBe(progress.xp);
     expect(loaded.progress.history).toHaveLength(1);
@@ -77,10 +77,10 @@ describe('ProfileRepository', () => {
   it('reset clears only this user', async () => {
     const { storage, repo: r } = repo();
     await storage.setItem('users/someone-else/settings', '{}');
-    await r.saveSettings({ ...DEFAULT_SETTINGS, level: 80 });
+    await r.saveSettings(applySettingsPatch(DEFAULT_SETTINGS, { sight: { level: 80 } }));
     await r.saveProgress(applyResult(emptyProgress(), sampleResult, new Date()).progress);
     const after = await r.reset();
-    expect(after.settings.level).toBe(1);
+    expect(after.settings.sight.level).toBe(1);
     expect(after.progress.xp).toBe(0);
     expect(await storage.getItem('users/someone-else/settings')).toBe('{}');
   });
@@ -115,17 +115,37 @@ describe('LocalStorageAdapter', () => {
 
 describe('normalizeSettings', () => {
   it('clamps and validates every field', () => {
-    const s = normalizeSettings({ level: 500, hands: 'feet', bars: 7, latencyMs: -5, rhythmComplexity: 9, maxPolyphony: 0, bpm: 999, keyboardSize: 100 });
-    expect(s.level).toBe(100);
-    expect(s.hands).toBe('rh');
-    expect(s.bars).toBe(4);
+    const s = normalizeSettings({
+      sight: { level: 500, hands: 'feet', bars: 7, rhythmComplexity: 9, maxPolyphony: 0, bpm: 999 },
+      latencyMs: -5,
+      keyboardSize: 100,
+    });
+    expect(s.sight.level).toBe(100);
+    expect(s.sight.hands).toBe('rh');
+    expect(s.sight.bars).toBe(4);
     expect(s.latencyMs).toBe(0);
-    expect(s.rhythmComplexity).toBe(4);
-    expect(s.maxPolyphony).toBe(1);
-    expect(s.bpm).toBe(240);
+    expect(s.sight.rhythmComplexity).toBe(4);
+    expect(s.sight.maxPolyphony).toBe(1);
+    expect(s.sight.bpm).toBe(240);
     expect(s.keyboardSize).toBe(88);
-    expect(normalizeSettings({ rhythmComplexity: 0 }).rhythmComplexity).toBe(0);
-    expect(normalizeSettings({ rhythmComplexity: 'auto' }).rhythmComplexity).toBe('auto');
+    expect(normalizeSettings({ sight: { rhythmComplexity: 0 } }).sight.rhythmComplexity).toBe(0);
+    expect(normalizeSettings({ sight: { rhythmComplexity: 'auto' } }).sight.rhythmComplexity).toBe('auto');
+  });
+
+  it('keeps each lesson in its own group and does not carry over the old flat fields', () => {
+    const s = normalizeSettings({ level: 42, scaleType: 'blues', chords: { goalBpm: 96 }, rhythm: { rhKey: 60, lhKey: 60 } });
+    expect(s.sight.level).toBe(1);
+    expect(s.scales.type).toBe('major');
+    expect(s.chords.goalBpm).toBe(96);
+    expect(s.rhythm.lhKey).not.toBe(s.rhythm.rhKey);
+    expect(s).not.toHaveProperty('level');
+  });
+
+  it('patches lesson groups field by field', () => {
+    const s = applySettingsPatch(DEFAULT_SETTINGS, { chords: { mode: 'flow' }, theme: 'dark' });
+    expect(s.chords).toEqual({ ...DEFAULT_SETTINGS.chords, mode: 'flow' });
+    expect(s.theme).toBe('dark');
+    expect(DEFAULT_SETTINGS.chords.mode).toBe('wait');
   });
 });
 

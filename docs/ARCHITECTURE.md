@@ -195,7 +195,11 @@ gets plain objects back.
 A lesson type needs (1) an entry in `core/lessons.ts` with its tier list, (2) a generator producing
 an `Exercise` (scales, chord progressions and rhythm drills fit the same measures/steps model),
 and (3) a controller implementing `ui/practice/session.ts` (usually a thin layer over
-`WaitEngine` or `FlowEngine`) plus a settings panel. Controllers extend `SessionBase`
+`WaitEngine` or `FlowEngine`) plus a settings panel. Its settings get their own group in
+`core/settings.ts` (`settings.<lesson>`, validated by a `normalize<Lesson>` function); shared
+settings (display, audio, input) stay at the top level. Changes go through
+`applySettingsPatch`, which merges lesson groups field by field
+(`update({ chords: { mode: 'flow' } })`). Controllers extend `SessionBase`
 (`ui/practice/sessionBase.ts`), which holds the shared plumbing: state store and finished
 event, input subscription, self-clearing flashes, the frame loop, metronome and count-in
 (`startCountIn` / `showCountIn`), and `StepMarks` for Flow step marks. The renderer, keyboard, input, piano

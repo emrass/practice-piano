@@ -1,5 +1,5 @@
 import { midiLabel } from '../../core/music/pitch';
-import { LATENCY_PRESETS, type Settings } from '../../core/settings';
+import { LATENCY_PRESETS, type Settings, type SettingsPatch } from '../../core/settings';
 import { useStore } from '../../lib/store';
 import { inputBus } from '../../input/inputBus';
 import { audioEngine } from '../../platform/audio/audioEngine';
@@ -40,7 +40,7 @@ export function InputMonitor(props: { preferFlats?: boolean }) {
 
 export function InputAudioPanel(props: {
   settings: Settings;
-  update: (patch: Partial<Settings>) => void;
+  update: (patch: SettingsPatch) => void;
   midi: MidiService;
   qwertyBase: number;
   onCalibrate: () => void;

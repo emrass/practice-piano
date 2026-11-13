@@ -329,7 +329,7 @@ export function ProgressPanel(props: {
   const summary = recentSummary(progress, 20, props.lesson);
   const weak = useMemo(() => findWeakSpots(progress), [progress]);
   const weakIntervals = useMemo(() => findWeakIntervals(progress), [progress]);
-  const lessonLevel = ear ? props.settings.earLevel : rhythm ? props.settings.rhythmLevel : props.settings.level;
+  const lessonLevel = ear ? props.settings.ear.level : rhythm ? props.settings.rhythm.level : props.settings.sight.level;
   const overallTendency = useMemo(() => {
     const all = timeStats(progress, 'rhythmHand');
     const n = all.reduce((a, t) => a + (t.tendencyMs === null ? 0 : t.attempts), 0);
@@ -425,12 +425,12 @@ export function ProgressPanel(props: {
       ) : null}
 
       {rhythm ? <RhythmStats progress={progress} onPracticeWeakSpots={props.onPracticeWeakSpots} /> : null}
-      {scales ? <RepertoireStats progress={progress} goalNps={props.settings.scaleGoalNps} now={props.now} onReview={() => props.onReviewScales?.()} /> : null}
+      {scales ? <RepertoireStats progress={progress} goalNps={props.settings.scales.goalNps} now={props.now} onReview={() => props.onReviewScales?.()} /> : null}
 
       {chords ? (
         <ChordStats
           progress={progress}
-          goalBpm={props.settings.chordsGoalBpm}
+          goalBpm={props.settings.chords.goalBpm}
           now={props.now}
           onReview={() => props.onReviewChords?.()}
           onPracticeWeakSpots={props.onPracticeWeakSpots}

@@ -221,8 +221,8 @@ describe('scales on the repertoire ladder', () => {
 
 describe('scale settings', () => {
   it('keeps type, key and hands consistent', () => {
-    expect(normalizeSettings({ scaleType: 'harmonic-minor', scaleTonic: 'Db' }).scaleTonic).toBe('A');
-    expect(normalizeSettings({ scaleType: 'blues', scaleHands: 'contrary' }).scaleHands).toBe('together');
-    expect(normalizeSettings({ scaleTonic: 'shuffle' }).scaleTonic).toBe('shuffle');
+    expect(normalizeSettings({ scales: { type: 'harmonic-minor', tonic: 'Db' } }).scales.tonic).toBe('A');
+    expect(normalizeSettings({ scales: { type: 'blues', hands: 'contrary' } }).scales.hands).toBe('together');
+    expect(normalizeSettings({ scales: { tonic: 'shuffle' } }).scales.tonic).toBe('shuffle');
   });
 });

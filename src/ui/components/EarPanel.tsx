@@ -3,7 +3,7 @@ import { earProfile, type EarReference } from '../../core/ear/generator';
 import { earTierForLevel } from '../../core/ear/tiers';
 import { KEYS } from '../../core/music/keys';
 import { INTERVAL_NAMES, type ProgressState } from '../../core/progress/progress';
-import type { Settings } from '../../core/settings';
+import type { Settings, SettingsPatch } from '../../core/settings';
 import { CommitSlider, Field, Segmented, Select, Toggle } from './controls';
 
 const CONTENT_TEXT = { melody: 'Melodies', dyads: 'Two-note intervals', triads: 'Triads', mixed: 'Melodies with chords' } as const;
@@ -11,13 +11,13 @@ const CONTENT_TEXT = { melody: 'Melodies', dyads: 'Two-note intervals', triads: 
 export function EarPanel(props: {
   settings: Settings;
   progress: ProgressState;
-  update: (patch: Partial<Settings>) => void;
+  update: (patch: SettingsPatch) => void;
   onNew: () => void;
   weakIntervals: number[];
 }) {
   const { settings: s, update } = props;
   const [preview, setPreview] = useState<number | null>(null);
-  const shown = preview ?? s.earLevel;
+  const shown = preview ?? s.ear.level;
   const tier = earTierForLevel(shown);
   const profile = earProfile(shown);
   const tierState = props.progress.tiers[tier.id];
@@ -30,11 +30,11 @@ export function EarPanel(props: {
           label="Ear level"
           min={1}
           max={100}
-          value={s.earLevel}
+          value={s.ear.level}
           onPreview={setPreview}
           onCommit={(earLevel) => {
             setPreview(null);
-            update({ earLevel });
+            update({ ear: { level: earLevel } });
           }}
           format={(v) => <span className="level-num">{v}</span>}
         />
@@ -78,29 +78,29 @@ export function EarPanel(props: {
         />
       </section>
 
-      <details className="panel-section advanced" open={s.earLength !== 'auto' || s.earReference !== 'auto' || s.earKeyId !== 'auto' || undefined}>
+      <details className="panel-section advanced" open={s.ear.length !== 'auto' || s.ear.reference !== 'auto' || s.ear.keyId !== 'auto' || undefined}>
         <summary>
-          Overrides <span className="muted">{[s.earLength !== 'auto', s.earReference !== 'auto', s.earKeyId !== 'auto'].filter(Boolean).length || 'all auto'}</span>
+          Overrides <span className="muted">{[s.ear.length !== 'auto', s.ear.reference !== 'auto', s.ear.keyId !== 'auto'].filter(Boolean).length || 'all auto'}</span>
         </summary>
         <div className="grid-2">
           <Select<string>
             label="Length"
-            value={String(s.earLength)}
-            onChange={(v) => update({ earLength: v === 'auto' ? 'auto' : Number(v) })}
+            value={String(s.ear.length)}
+            onChange={(v) => update({ ear: { length: v === 'auto' ? 'auto' : Number(v) } })}
             options={[{ value: 'auto', label: 'Auto' }, ...[2, 3, 4, 5, 6, 7, 8].map((n) => ({ value: String(n), label: `${n} notes` }))]}
           />
           <Select
             label="Key"
-            value={s.earKeyId}
-            onChange={(earKeyId) => update({ earKeyId })}
+            value={s.ear.keyId}
+            onChange={(earKeyId) => update({ ear: { keyId: earKeyId } })}
             options={[{ value: 'auto', label: 'Auto' }, ...KEYS.map((k) => ({ value: k.id, label: k.label }))]}
           />
         </div>
         <Field label="Reference">
           <Segmented<EarReference>
             label="Reference"
-            value={s.earReference}
-            onChange={(earReference) => update({ earReference })}
+            value={s.ear.reference}
+            onChange={(earReference) => update({ ear: { reference: earReference } })}
             options={[
               { value: 'auto', label: 'Auto' },
               { value: 'first-note', label: 'First note', title: 'The first note is shown on the staff' },

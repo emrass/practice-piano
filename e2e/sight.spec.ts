@@ -2,7 +2,7 @@ import { expect, test } from './support';
 
 test.describe('Sight reading', () => {
   test('Wait: the cursor waits; a wrong key is counted, the passage passes', async ({ app }) => {
-    await app.open({ settings: { lesson: 'sight', mode: 'wait', level: 8, bars: 4, hands: 'rh' } });
+    await app.open({ settings: { lesson: 'sight', sight: { mode: 'wait', level: 8, bars: 4, hands: 'rh' } } });
     await app.playSteps({ wrongAt: 2 });
     await expect(app.results()).toBeVisible();
     await expect(app.results()).toContainText('Wrong notes');
@@ -16,7 +16,7 @@ test.describe('Sight reading', () => {
   });
 
   test('Flow: notes on time with the playhead score timing', async ({ app }) => {
-    await app.open({ settings: { lesson: 'sight', mode: 'flow', level: 20, bars: 4, hands: 'both', bpm: 132, countInBars: 1 } });
+    await app.open({ settings: { lesson: 'sight', countInBars: 1, sight: { mode: 'flow', level: 20, bars: 4, hands: 'both', bpm: 132 } } });
     const run = await app.playFlow({ jitterMs: 8 });
     await app.waitUntil(run.endMs + 1500);
     await expect(app.results()).toBeVisible();

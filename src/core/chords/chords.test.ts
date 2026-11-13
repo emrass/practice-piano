@@ -230,12 +230,12 @@ describe('chord analysis and progress', () => {
     for (let k = 0; k < 4; k++) {
       p = applyResult(p, chordResult(ex, weakRun, { mode: 'wait', goalBpm: 80, durationMs: 1000, wrongPresses: 1, completedAt: 0 }), new Date(2026, 10, 13)).progress;
     }
-    expect(findWeakChords(p, 4).some((w) => w.dimension === "chordQuality" && w.key === ts[0].spec.quality)).toBe(true);
+    expect(findWeakChords(p, 4).some((w) => w.dimension === 'chordQuality' && w.key === ts[0].spec.quality)).toBe(true);
   });
 
   it('keeps progression and key consistent in settings', () => {
-    expect(normalizeSettings({ chordsProgression: 'andalusian', chordsKey: 'Db' }).chordsKey).toBe('A');
-    expect(normalizeSettings({ chordsProgression: 'nope' }).chordsProgression).toBe('I-IV-V-I');
-    expect(normalizeSettings({ chordsKey: 'shuffle' }).chordsKey).toBe('shuffle');
+    expect(normalizeSettings({ chords: { progression: 'andalusian', key: 'Db' } }).chords.key).toBe('A');
+    expect(normalizeSettings({ chords: { progression: 'nope' } }).chords.progression).toBe('I-IV-V-I');
+    expect(normalizeSettings({ chords: { key: 'shuffle' } }).chords.key).toBe('shuffle');
   });
 });

@@ -13,7 +13,7 @@ import {
 import { weakChordLabel } from '../../core/chords/analysis';
 import type { ChordExercise } from '../../core/chords/generator';
 import type { ProgressState, WeakChordStat } from '../../core/progress/progress';
-import { progressionChoice, type Settings } from '../../core/settings';
+import { progressionChoice, type Settings, type SettingsPatch } from '../../core/settings';
 import { tonicLabel } from '../../core/scales/catalog';
 import { CommitSlider, Field, Segmented, Select, Toggle } from './controls';
 
@@ -28,7 +28,7 @@ function dueText(dueAt: number, now: number): string {
 export function ChordsPanel(props: {
   settings: Settings;
   progress: ProgressState;
-  update: (patch: Partial<Settings>) => void;
+  update: (patch: SettingsPatch) => void;
   onNew: () => void;
   exercise: ChordExercise;
   onTempo: (deltaBpm: number) => void;
@@ -38,12 +38,12 @@ export function ChordsPanel(props: {
 }) {
   const { settings: s, update, exercise: ex, now } = props;
   const item = props.progress.repertoire[ex.chords.itemId];
-  const review = s.chordsSource === 'review';
-  const drill = s.chordsTask === 'drill';
-  const def = findProgression(s.chordsProgression) ?? PROGRESSIONS[0];
-  const goal = s.chordsGoalBpm;
+  const review = s.chords.source === 'review';
+  const drill = s.chords.task === 'drill';
+  const def = findProgression(s.chords.progression) ?? PROGRESSIONS[0];
+  const goal = s.chords.goalBpm;
   const bpm = ex.chords.bpm;
-  const nextLabel = review ? 'Next due item' : drill ? 'New chords' : s.chordsKey === 'shuffle' ? 'Next key' : 'Again';
+  const nextLabel = review ? 'Next due item' : drill ? 'New chords' : s.chords.key === 'shuffle' ? 'Next key' : 'Again';
 
   return (
     <div className="panel-body">
@@ -51,8 +51,8 @@ export function ChordsPanel(props: {
         <Field label="Practise">
           <Segmented<'drill' | 'progression'>
             label="Task"
-            value={s.chordsTask}
-            onChange={(chordsTask) => update({ chordsTask, chordsSource: 'pick' })}
+            value={s.chords.task}
+            onChange={(chordsTask) => update({ chords: { task: chordsTask, source: 'pick' } })}
             options={[
               { value: 'drill', label: 'Chord drill', title: 'Find chords from a set, in shuffled order' },
               { value: 'progression', label: 'Progressions', title: 'Standard progressions in every key, with smooth voice leading' },
@@ -63,16 +63,16 @@ export function ChordsPanel(props: {
           <>
             <Select<ChordSetId>
               label="Chords"
-              value={s.chordsSet}
-              onChange={(chordsSet) => update({ chordsSet, chordsSource: 'pick' })}
+              value={s.chords.set}
+              onChange={(chordsSet) => update({ chords: { set: chordsSet, source: 'pick' } })}
               options={CHORD_SET_IDS.map((id) => ({ value: id, label: `${CHORD_SETS[id].name} (${chordSetExamples(id)})` }))}
             />
             <div className="grid-2">
               <Field label="Shown as">
                 <Segmented<ChordPrompt>
                   label="Shown as"
-                  value={s.chordsPrompt}
-                  onChange={(chordsPrompt) => update({ chordsPrompt, chordsSource: 'pick' })}
+                  value={s.chords.prompt}
+                  onChange={(chordsPrompt) => update({ chords: { prompt: chordsPrompt, source: 'pick' } })}
                   options={[
                     { value: 'symbol', label: 'Symbol', title: 'Read the chord name (Cm7) and find it' },
                     { value: 'notation', label: 'Notes', title: 'Read the chord on the staff and play it' },
@@ -81,15 +81,15 @@ export function ChordsPanel(props: {
               </Field>
               <Select<number>
                 label="Length"
-                value={s.chordsCount}
-                onChange={(n) => update({ chordsCount: n as Settings['chordsCount'] })}
+                value={s.chords.count}
+                onChange={(n) => update({ chords: { count: n as Settings['chords']['count'] } })}
                 options={[8, 12, 16].map((n) => ({ value: n, label: `${n} chords` }))}
               />
             </div>
             <Select<InversionRule>
               label="Voicing"
-              value={s.chordsInversions}
-              onChange={(chordsInversions) => update({ chordsInversions, chordsSource: 'pick' })}
+              value={s.chords.inversions}
+              onChange={(chordsInversions) => update({ chords: { inversions: chordsInversions, source: 'pick' } })}
               options={[
                 { value: 'root', label: 'Root position — root in the bass' },
                 { value: 'inversions', label: 'Inversions — the bass note asked for' },
@@ -102,14 +102,14 @@ export function ChordsPanel(props: {
             <Select<string>
               label="Progression"
               value={def.id}
-              onChange={(id) => update({ ...progressionChoice(id, s.chordsKey), chordsSource: 'pick' })}
+              onChange={(id) => update({ chords: { ...progressionChoice(id, s.chords.key), source: 'pick' } })}
               options={PROGRESSIONS.map((p) => ({ value: p.id, label: p.name }))}
             />
             <div className="grid-2">
               <Select<string>
                 label="Key"
-                value={s.chordsKey}
-                onChange={(chordsKey) => update({ chordsKey, chordsSource: 'pick' })}
+                value={s.chords.key}
+                onChange={(chordsKey) => update({ chords: { key: chordsKey, source: 'pick' } })}
                 options={[
                   { value: 'shuffle', label: 'Shuffle keys' },
                   ...keysFor(def.mode).map((k) => ({ value: k, label: `${tonicLabel(k)} ${def.mode}` })),
@@ -118,8 +118,8 @@ export function ChordsPanel(props: {
               <Field label="Hands">
                 <Segmented<ChordHands>
                   label="Hands"
-                  value={s.chordsHands}
-                  onChange={(chordsHands) => update({ chordsHands, chordsSource: 'pick' })}
+                  value={s.chords.hands}
+                  onChange={(chordsHands) => update({ chords: { hands: chordsHands, source: 'pick' } })}
                   options={[
                     { value: 'rh', label: 'RH', title: 'Right hand plays the chords' },
                     { value: 'lh-bass', label: '+ LH root', title: 'Left hand plays the root, right hand the chord' },
@@ -176,7 +176,7 @@ export function ChordsPanel(props: {
                 : 'Drills and progressions you have played come back on a spaced schedule'
           }
           checked={review}
-          onChange={(on) => update({ chordsSource: on ? 'review' : 'pick' })}
+          onChange={(on) => update({ chords: { source: on ? 'review' : 'pick' } })}
         />
         {drill ? (
           <Toggle
@@ -194,15 +194,15 @@ export function ChordsPanel(props: {
           <Toggle
             label="Play from the chord chart"
             hint="Hide the notation — chord symbols and numerals only, voice it yourself"
-            checked={!s.chordsNotation}
-            onChange={(chart) => update({ chordsNotation: !chart })}
+            checked={!s.chords.notation}
+            onChange={(chart) => update({ chords: { notation: !chart } })}
           />
         )}
         <Toggle label="Keyboard guide" hint="Show a suggested voicing when you are stuck (after 5 s or a wrong key)" checked={s.showKeyboardGuide} onChange={(showKeyboardGuide) => update({ showKeyboardGuide })} />
         <Select<number>
           label="Mastery goal"
           value={goal}
-          onChange={(chordsGoalBpm) => update({ chordsGoalBpm })}
+          onChange={(chordsGoalBpm) => update({ chords: { goalBpm: chordsGoalBpm } })}
           options={[60, 72, 80, 96, 112, 120].map((n) => ({ value: n, label: `♩ = ${n} (a chord every ${(240 / n).toFixed(1)} s)` }))}
         />
         <CommitSlider

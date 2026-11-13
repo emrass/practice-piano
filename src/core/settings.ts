@@ -1,10 +1,8 @@
-import type { HandsMode } from './exercise';
-import type { PracticeMode } from './eval/types';
 import { KEYS } from './music/keys';
 import { TIME_SIGNATURE_IDS, type TimeSignatureId } from './music/rhythm';
 import { KEYBOARD_SIZES, type KeyboardSize } from './keyboard/range';
 import type { GeneratorSettings } from './generator/generator';
-import type { EarReference, EarSettings } from './ear/generator';
+import type { EarSettings } from './ear/generator';
 import { LESSON_IDS, type LessonId } from './lessons';
 import {
   CHORD_SET_IDS,
@@ -19,79 +17,87 @@ import {
 import { SCALE_TYPE_IDS, SCALE_TYPES, type NoteValue, type ScaleHands, type ScaleTypeId } from './scales/catalog';
 import { RHYTHM_TEXTURES, type RhythmHands, type RhythmSettings, type RhythmTask, type RhythmTexture } from './rhythm/generator';
 
-export const SETTINGS_SCHEMA_VERSION = 1;
+export const SETTINGS_SCHEMA_VERSION = 2;
 
 export type AudioSetup = 'speakers' | 'headphones' | 'calibrated' | 'custom';
 export type SustainScoring = 'ignore' | 'hold';
 export type Theme = 'light' | 'dark';
 
-export interface Settings {
-  schemaVersion: number;
-  lesson: LessonId;
-  // Ear training
-  earLevel: number;
-  earLength: 'auto' | number;
-  earReference: EarReference;
-  earKeyId: string;
-  /** Volume of the built-in piano sound (ear training playback), 0–1. */
-  synthVolume: number;
-  // Rhythm
-  rhythmLevel: number;
-  rhythmTask: RhythmTask;
-  rhythmHands: RhythmHands;
-  rhythmTexture: 'auto' | RhythmTexture;
-  rhythmBars: 4 | 8;
-  rhythmTimeSignature: 'auto' | TimeSignatureId;
-  rhythmBpm: number | null;
-  /** Designated keys (MIDI) for the right and left hand. */
-  rhythmRhKey: number;
-  rhythmLhKey: number;
-  // Scales & arpeggios
-  scaleType: ScaleTypeId;
+/** Sight reading: the generator's settings (keyboard size comes from Display) and the mode. */
+export interface SightSettings extends Omit<GeneratorSettings, 'keyboardSize' | 'focus' | 'focusFigures'> {
+  bars: 4 | 8 | 16;
+  mode: 'wait' | 'flow';
+}
+
+/** Ear training: what the phrase generator takes (weak-spot focus is added per run). */
+export type EarLessonSettings = Omit<EarSettings, 'focusIntervals'>;
+
+/** Rhythm: what the rhythm generator takes, designated keys included (focus is added per run). */
+export interface RhythmLessonSettings extends Omit<RhythmSettings, 'focusFigures'> {
+  task: RhythmTask;
+  hands: RhythmHands;
+  texture: 'auto' | RhythmTexture;
+  bars: 4 | 8;
+  timeSignature: 'auto' | TimeSignatureId;
+}
+
+export interface ScaleSettings {
+  type: ScaleTypeId;
   /** A tonic from the type's list, or 'shuffle' for a different key each run. */
-  scaleTonic: string;
-  scaleHands: ScaleHands;
-  scaleOctaves: 1 | 2;
-  scaleNoteValue: NoteValue;
+  tonic: string;
+  hands: ScaleHands;
+  octaves: 1 | 2;
+  noteValue: NoteValue;
   /** Wait = learn (self-paced), Flow = play with the metronome on the tempo ladder. */
-  scaleMode: 'wait' | 'flow';
+  mode: 'wait' | 'flow';
   /** 'review' practises the items that are due (spaced repetition). */
-  scaleSource: 'pick' | 'review';
+  source: 'pick' | 'review';
   /** Mastery goal in notes per second. */
-  scaleGoalNps: number;
+  goalNps: number;
   showFingering: boolean;
   /** false = play from memory (notation hidden). */
-  scaleNotation: boolean;
-  // Chords & progressions
-  chordsTask: 'drill' | 'progression';
-  chordsSet: ChordSetId;
+  notation: boolean;
+}
+
+export interface ChordSettings {
+  task: 'drill' | 'progression';
+  set: ChordSetId;
   /** Drill: chords named by symbol, or written on the staff. */
-  chordsPrompt: ChordPrompt;
-  chordsInversions: InversionRule;
+  prompt: ChordPrompt;
+  inversions: InversionRule;
   /** Drill length in chords. */
-  chordsCount: 8 | 12 | 16;
-  chordsProgression: string;
+  count: 8 | 12 | 16;
+  progression: string;
   /** A key the progression's mode has, or 'shuffle'. */
-  chordsKey: string;
-  chordsHands: ChordHands;
-  chordsMode: 'wait' | 'flow';
-  chordsSource: 'pick' | 'review';
+  key: string;
+  hands: ChordHands;
+  mode: 'wait' | 'flow';
+  source: 'pick' | 'review';
   /** Mastery goal in bpm (one chord per bar). */
-  chordsGoalBpm: number;
+  goalBpm: number;
   /** Progressions: show the suggested voicing on the staff (off = play from the chord chart). */
-  chordsNotation: boolean;
-  // Sight-reading exercise
-  level: number;
-  hands: HandsMode;
-  bars: 4 | 8 | 16;
-  keyId: string; // 'auto' | key id
-  timeSignature: 'auto' | TimeSignatureId;
-  rhythmComplexity: 'auto' | number;
-  maxPolyphony: 'auto' | number;
-  bpm: number | null; // null = auto
+  notation: boolean;
+}
+
+/** The lessons' own settings, one group per lesson. */
+export interface LessonSettings {
+  sight: SightSettings;
+  ear: EarLessonSettings;
+  rhythm: RhythmLessonSettings;
+  scales: ScaleSettings;
+  chords: ChordSettings;
+}
+
+/** Everything else is shared by all lessons. */
+export interface Settings extends LessonSettings {
+  schemaVersion: number;
+  lesson: LessonId;
+  /** Volume of the built-in piano sound (ear training playback, key sound), 0–1. */
+  synthVolume: number;
+  /** Draw more of what you miss (weak notes, intervals, figures, chords). */
   weakSpotFocus: boolean;
   // Practice
-  mode: PracticeMode;
+  /** Wait mode: keys of a chord may arrive this far apart. */
   chordGraceMs: number;
   sustainScoring: SustainScoring;
   countInBars: 1 | 2;
@@ -116,6 +122,21 @@ export interface Settings {
   midiInputId: string; // 'auto' | device id
   /** Play C/D/E/F/G after an exercise to retry / next / close / easier / harder. */
   pianoShortcuts: boolean;
+}
+
+/** A change to settings: shared fields as they are, lesson groups field by field. */
+export type SettingsPatch = Partial<Omit<Settings, keyof LessonSettings>> & { [K in keyof LessonSettings]?: Partial<LessonSettings[K]> };
+
+const LESSON_GROUPS = ['sight', 'ear', 'rhythm', 'scales', 'chords'] as const satisfies readonly (keyof LessonSettings)[];
+
+/** Apply a patch: lesson groups merge field by field, everything else is replaced. */
+export function applySettingsPatch(prev: Settings, patch: SettingsPatch): Settings {
+  const next = { ...prev, ...patch } as Settings;
+  for (const g of LESSON_GROUPS) {
+    const part = patch[g];
+    if (part) (next as unknown as Record<string, unknown>)[g] = { ...prev[g], ...part };
+  }
+  return next;
 }
 
 export interface LatencyCalibration {
@@ -146,52 +167,57 @@ export const LATENCY_PRESETS: Readonly<Record<'speakers' | 'headphones', { laten
 export const DEFAULT_SETTINGS: Settings = {
   schemaVersion: SETTINGS_SCHEMA_VERSION,
   lesson: 'sight',
-  earLevel: 1,
-  earLength: 'auto',
-  earReference: 'auto',
-  earKeyId: 'auto',
+  sight: {
+    level: 1,
+    hands: 'rh',
+    bars: 4,
+    keyId: 'auto',
+    timeSignature: 'auto',
+    rhythmComplexity: 'auto',
+    maxPolyphony: 'auto',
+    bpm: null,
+    mode: 'wait',
+  },
+  ear: { level: 1, length: 'auto', reference: 'auto', keyId: 'auto' },
+  rhythm: {
+    level: 1,
+    task: 'read',
+    hands: 'rh',
+    texture: 'auto',
+    bars: 4,
+    timeSignature: 'auto',
+    bpm: null,
+    rhKey: 72,
+    lhKey: 48,
+  },
+  scales: {
+    type: 'major',
+    tonic: 'C',
+    hands: 'rh',
+    octaves: 1,
+    noteValue: 'eighth',
+    mode: 'wait',
+    source: 'pick',
+    goalNps: 4,
+    showFingering: true,
+    notation: true,
+  },
+  chords: {
+    task: 'drill',
+    set: 'triads',
+    prompt: 'symbol',
+    inversions: 'root',
+    count: 8,
+    progression: 'I-IV-V-I',
+    key: 'C',
+    hands: 'rh',
+    mode: 'wait',
+    source: 'pick',
+    goalBpm: 80,
+    notation: true,
+  },
   synthVolume: 0.8,
-  rhythmLevel: 1,
-  rhythmTask: 'read',
-  rhythmHands: 'rh',
-  rhythmTexture: 'auto',
-  rhythmBars: 4,
-  rhythmTimeSignature: 'auto',
-  rhythmBpm: null,
-  rhythmRhKey: 72,
-  rhythmLhKey: 48,
-  scaleType: 'major',
-  scaleTonic: 'C',
-  scaleHands: 'rh',
-  scaleOctaves: 1,
-  scaleNoteValue: 'eighth',
-  scaleMode: 'wait',
-  scaleSource: 'pick',
-  scaleGoalNps: 4,
-  showFingering: true,
-  scaleNotation: true,
-  chordsTask: 'drill',
-  chordsSet: 'triads',
-  chordsPrompt: 'symbol',
-  chordsInversions: 'root',
-  chordsCount: 8,
-  chordsProgression: 'I-IV-V-I',
-  chordsKey: 'C',
-  chordsHands: 'rh',
-  chordsMode: 'wait',
-  chordsSource: 'pick',
-  chordsGoalBpm: 80,
-  chordsNotation: true,
-  level: 1,
-  hands: 'rh',
-  bars: 4,
-  keyId: 'auto',
-  timeSignature: 'auto',
-  rhythmComplexity: 'auto',
-  maxPolyphony: 'auto',
-  bpm: null,
   weakSpotFocus: false,
-  mode: 'wait',
   chordGraceMs: 75,
   sustainScoring: 'ignore',
   countInBars: 1,
@@ -223,66 +249,38 @@ function oneOf<T>(v: unknown, allowed: readonly T[], d: T): T {
   return allowed.includes(v as T) ? (v as T) : d;
 }
 
-/** Validate & fill settings loaded from storage / import, so bad data never crashes the app. */
+const bool = (v: unknown, d: boolean) => (typeof v === 'boolean' ? v : d);
+const group = (v: unknown): Record<string, unknown> => (v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : {});
+const optionalBpm = (v: unknown) => (v === null || v === undefined ? null : Math.round(clampNum(v, 30, 240, 80)));
+
+/**
+ * Validate & fill settings loaded from storage / import, so bad data never crashes the app.
+ * Lesson settings from before the per-lesson groups (schema 1) are not carried over.
+ */
 export function normalizeSettings(raw: unknown): Settings {
   const d = DEFAULT_SETTINGS;
-  if (!raw || typeof raw !== 'object') return { ...d };
+  if (!raw || typeof raw !== 'object') return structuredClone(d);
   const r = raw as Record<string, unknown>;
   const latencyMs = Math.round(clampNum(r.latencyMs, 0, 300, d.latencyMs));
   return {
     schemaVersion: SETTINGS_SCHEMA_VERSION,
     lesson: oneOf(r.lesson, LESSON_IDS, d.lesson),
-    earLevel: Math.round(clampNum(r.earLevel, 1, 100, d.earLevel)),
-    earLength: autoOrInt(r.earLength, 2, 8),
-    earReference: oneOf(r.earReference, ['auto', 'first-note', 'key-only'] as const, d.earReference),
-    earKeyId: oneOf(r.earKeyId, ['auto', ...KEYS.map((k) => k.id)], d.earKeyId),
+    sight: normalizeSight(group(r.sight)),
+    ear: normalizeEar(group(r.ear)),
+    rhythm: normalizeRhythm(group(r.rhythm)),
+    scales: normalizeScales(group(r.scales)),
+    chords: normalizeChords(group(r.chords)),
     synthVolume: clampNum(r.synthVolume, 0, 1, d.synthVolume),
-    rhythmLevel: Math.round(clampNum(r.rhythmLevel, 1, 100, d.rhythmLevel)),
-    rhythmTask: oneOf(r.rhythmTask, ['read', 'echo', 'pulse'] as const, d.rhythmTask),
-    rhythmHands: oneOf(r.rhythmHands, ['rh', 'lh', 'both'] as const, d.rhythmHands),
-    rhythmTexture: oneOf(r.rhythmTexture, ['auto', ...RHYTHM_TEXTURES] as const, d.rhythmTexture),
-    rhythmBars: oneOf(r.rhythmBars, [4, 8] as const, d.rhythmBars),
-    rhythmTimeSignature: oneOf(r.rhythmTimeSignature, ['auto', ...TIME_SIGNATURE_IDS] as const, d.rhythmTimeSignature),
-    rhythmBpm: r.rhythmBpm === null || r.rhythmBpm === undefined ? null : Math.round(clampNum(r.rhythmBpm, 30, 240, 80)),
-    ...designatedKeys(r.rhythmRhKey, r.rhythmLhKey),
-    ...scaleChoice(r.scaleType, r.scaleTonic, r.scaleHands),
-    scaleOctaves: oneOf(r.scaleOctaves, [1, 2] as const, d.scaleOctaves),
-    scaleNoteValue: oneOf(r.scaleNoteValue, ['quarter', 'eighth', 'sixteenth'] as const, d.scaleNoteValue),
-    scaleMode: oneOf(r.scaleMode, ['wait', 'flow'] as const, d.scaleMode),
-    scaleSource: oneOf(r.scaleSource, ['pick', 'review'] as const, d.scaleSource),
-    scaleGoalNps: Math.round(clampNum(r.scaleGoalNps, 1, 12, d.scaleGoalNps)),
-    showFingering: typeof r.showFingering === 'boolean' ? r.showFingering : d.showFingering,
-    scaleNotation: typeof r.scaleNotation === 'boolean' ? r.scaleNotation : d.scaleNotation,
-    chordsTask: oneOf(r.chordsTask, ['drill', 'progression'] as const, d.chordsTask),
-    chordsSet: oneOf(r.chordsSet, CHORD_SET_IDS, d.chordsSet),
-    chordsPrompt: oneOf(r.chordsPrompt, ['symbol', 'notation'] as const, d.chordsPrompt),
-    chordsInversions: oneOf(r.chordsInversions, ['any', 'root', 'inversions'] as const, d.chordsInversions),
-    chordsCount: oneOf(r.chordsCount, [8, 12, 16] as const, d.chordsCount),
-    ...progressionChoice(r.chordsProgression, r.chordsKey),
-    chordsHands: oneOf(r.chordsHands, ['rh', 'lh-bass'] as const, d.chordsHands),
-    chordsMode: oneOf(r.chordsMode, ['wait', 'flow'] as const, d.chordsMode),
-    chordsSource: oneOf(r.chordsSource, ['pick', 'review'] as const, d.chordsSource),
-    chordsGoalBpm: Math.round(clampNum(r.chordsGoalBpm, 40, 160, d.chordsGoalBpm)),
-    chordsNotation: typeof r.chordsNotation === 'boolean' ? r.chordsNotation : d.chordsNotation,
-    level: Math.round(clampNum(r.level, 1, 100, d.level)),
-    hands: oneOf(r.hands, ['rh', 'lh', 'alternating', 'both'] as const, d.hands),
-    bars: oneOf(r.bars, [4, 8, 16] as const, d.bars),
-    keyId: oneOf(r.keyId, ['auto', ...KEYS.map((k) => k.id)], d.keyId),
-    timeSignature: oneOf(r.timeSignature, ['auto', ...TIME_SIGNATURE_IDS] as const, d.timeSignature),
-    rhythmComplexity: autoOrInt(r.rhythmComplexity, 0, 4),
-    maxPolyphony: autoOrInt(r.maxPolyphony, 1, 4),
-    bpm: r.bpm === null || r.bpm === undefined ? null : Math.round(clampNum(r.bpm, 30, 240, 80)),
-    weakSpotFocus: typeof r.weakSpotFocus === 'boolean' ? r.weakSpotFocus : d.weakSpotFocus,
-    mode: oneOf(r.mode, ['wait', 'flow'] as const, d.mode),
+    weakSpotFocus: bool(r.weakSpotFocus, d.weakSpotFocus),
     chordGraceMs: Math.round(clampNum(r.chordGraceMs, 20, 200, d.chordGraceMs)),
     sustainScoring: oneOf(r.sustainScoring, ['ignore', 'hold'] as const, d.sustainScoring),
     countInBars: oneOf(r.countInBars, [1, 2] as const, d.countInBars),
     keyboardSize: oneOf(r.keyboardSize, KEYBOARD_SIZES, d.keyboardSize),
     keyboardView: oneOf(r.keyboardView, ['fit', 'full'] as const, d.keyboardView),
-    showNoteNames: typeof r.showNoteNames === 'boolean' ? r.showNoteNames : d.showNoteNames,
-    showKeyboardGuide: typeof r.showKeyboardGuide === 'boolean' ? r.showKeyboardGuide : d.showKeyboardGuide,
-    showQwertyHints: typeof r.showQwertyHints === 'boolean' ? r.showQwertyHints : d.showQwertyHints,
-    keySound: typeof r.keySound === 'boolean' ? r.keySound : d.keySound,
+    showNoteNames: bool(r.showNoteNames, d.showNoteNames),
+    showKeyboardGuide: bool(r.showKeyboardGuide, d.showKeyboardGuide),
+    showQwertyHints: bool(r.showQwertyHints, d.showQwertyHints),
+    keySound: bool(r.keySound, d.keySound),
     theme: oneOf(r.theme, ['light', 'dark'] as const, d.theme),
     audioSetup: oneOf(r.audioSetup, ['speakers', 'headphones', 'calibrated', 'custom'] as const, d.audioSetup),
     latencyMs,
@@ -296,37 +294,105 @@ export function normalizeSettings(raw: unknown): Settings {
     calibration: normalizeCalibration(r.calibration),
     metronomeVolume: clampNum(r.metronomeVolume, 0, 1, d.metronomeVolume),
     midiInputId: typeof r.midiInputId === 'string' && r.midiInputId ? r.midiInputId : d.midiInputId,
-    pianoShortcuts: typeof r.pianoShortcuts === 'boolean' ? r.pianoShortcuts : d.pianoShortcuts,
+    pianoShortcuts: bool(r.pianoShortcuts, d.pianoShortcuts),
+  };
+}
+
+function normalizeSight(r: Record<string, unknown>): SightSettings {
+  const d = DEFAULT_SETTINGS.sight;
+  return {
+    level: Math.round(clampNum(r.level, 1, 100, d.level)),
+    hands: oneOf(r.hands, ['rh', 'lh', 'alternating', 'both'] as const, d.hands),
+    bars: oneOf(r.bars, [4, 8, 16] as const, d.bars),
+    keyId: oneOf(r.keyId, ['auto', ...KEYS.map((k) => k.id)], d.keyId),
+    timeSignature: oneOf(r.timeSignature, ['auto', ...TIME_SIGNATURE_IDS] as const, d.timeSignature),
+    rhythmComplexity: autoOrInt(r.rhythmComplexity, 0, 4),
+    maxPolyphony: autoOrInt(r.maxPolyphony, 1, 4),
+    bpm: optionalBpm(r.bpm),
+    mode: oneOf(r.mode, ['wait', 'flow'] as const, d.mode),
+  };
+}
+
+function normalizeEar(r: Record<string, unknown>): EarLessonSettings {
+  const d = DEFAULT_SETTINGS.ear;
+  return {
+    level: Math.round(clampNum(r.level, 1, 100, d.level)),
+    length: autoOrInt(r.length, 2, 8),
+    reference: oneOf(r.reference, ['auto', 'first-note', 'key-only'] as const, d.reference),
+    keyId: oneOf(r.keyId, ['auto', ...KEYS.map((k) => k.id)], d.keyId),
+  };
+}
+
+function normalizeRhythm(r: Record<string, unknown>): RhythmLessonSettings {
+  const d = DEFAULT_SETTINGS.rhythm;
+  return {
+    level: Math.round(clampNum(r.level, 1, 100, d.level)),
+    task: oneOf(r.task, ['read', 'echo', 'pulse'] as const, d.task),
+    hands: oneOf(r.hands, ['rh', 'lh', 'both'] as const, d.hands),
+    texture: oneOf(r.texture, ['auto', ...RHYTHM_TEXTURES] as const, d.texture),
+    bars: oneOf(r.bars, [4, 8] as const, d.bars),
+    timeSignature: oneOf(r.timeSignature, ['auto', ...TIME_SIGNATURE_IDS] as const, d.timeSignature),
+    bpm: optionalBpm(r.bpm),
+    ...designatedKeys(r.rhKey, r.lhKey),
+  };
+}
+
+function normalizeScales(r: Record<string, unknown>): ScaleSettings {
+  const d = DEFAULT_SETTINGS.scales;
+  return {
+    ...scaleChoice(r.type, r.tonic, r.hands),
+    octaves: oneOf(r.octaves, [1, 2] as const, d.octaves),
+    noteValue: oneOf(r.noteValue, ['quarter', 'eighth', 'sixteenth'] as const, d.noteValue),
+    mode: oneOf(r.mode, ['wait', 'flow'] as const, d.mode),
+    source: oneOf(r.source, ['pick', 'review'] as const, d.source),
+    goalNps: Math.round(clampNum(r.goalNps, 1, 12, d.goalNps)),
+    showFingering: bool(r.showFingering, d.showFingering),
+    notation: bool(r.notation, d.notation),
+  };
+}
+
+function normalizeChords(r: Record<string, unknown>): ChordSettings {
+  const d = DEFAULT_SETTINGS.chords;
+  return {
+    task: oneOf(r.task, ['drill', 'progression'] as const, d.task),
+    set: oneOf(r.set, CHORD_SET_IDS, d.set),
+    prompt: oneOf(r.prompt, ['symbol', 'notation'] as const, d.prompt),
+    inversions: oneOf(r.inversions, ['any', 'root', 'inversions'] as const, d.inversions),
+    count: oneOf(r.count, [8, 12, 16] as const, d.count),
+    ...progressionChoice(r.progression, r.key),
+    hands: oneOf(r.hands, ['rh', 'lh-bass'] as const, d.hands),
+    mode: oneOf(r.mode, ['wait', 'flow'] as const, d.mode),
+    source: oneOf(r.source, ['pick', 'review'] as const, d.source),
+    goalBpm: Math.round(clampNum(r.goalBpm, 40, 160, d.goalBpm)),
+    notation: bool(r.notation, d.notation),
   };
 }
 
 /** A progression and a key of its mode (major keys for major progressions, minor for minor). */
-export function progressionChoice(progression: unknown, key: unknown): Pick<Settings, 'chordsProgression' | 'chordsKey'> {
-  const d = DEFAULT_SETTINGS;
-  const def = findProgression(progression as string) ?? findProgression(d.chordsProgression) ?? PROGRESSIONS[0];
+export function progressionChoice(progression: unknown, key: unknown): Pick<ChordSettings, 'progression' | 'key'> {
+  const def = findProgression(progression as string) ?? findProgression(DEFAULT_SETTINGS.chords.progression) ?? PROGRESSIONS[0];
   const keys = keysFor(def.mode);
-  const chordsKey = key === 'shuffle' || keys.includes(key as string) ? (key as string) : keys[0];
-  return { chordsProgression: def.id, chordsKey };
+  return { progression: def.id, key: key === 'shuffle' || keys.includes(key as string) ? (key as string) : keys[0] };
 }
 
 /** Scale type, key and hands that belong together (contrary motion only where it exists). */
-function scaleChoice(type: unknown, tonic: unknown, hands: unknown): Pick<Settings, 'scaleType' | 'scaleTonic' | 'scaleHands'> {
-  const d = DEFAULT_SETTINGS;
-  const scaleType = oneOf(type, SCALE_TYPE_IDS, d.scaleType);
+function scaleChoice(type: unknown, tonic: unknown, hands: unknown): Pick<ScaleSettings, 'type' | 'tonic' | 'hands'> {
+  const d = DEFAULT_SETTINGS.scales;
+  const scaleType = oneOf(type, SCALE_TYPE_IDS, d.type);
   const def = SCALE_TYPES[scaleType];
   const scaleTonic = tonic === 'shuffle' || def.tonics.includes(tonic as string) ? (tonic as string) : def.tonics[0];
-  let scaleHands = oneOf(hands, ['rh', 'lh', 'together', 'contrary'] as const, d.scaleHands);
+  let scaleHands = oneOf(hands, ['rh', 'lh', 'together', 'contrary'] as const, d.hands);
   if (scaleHands === 'contrary' && !def.contrary) scaleHands = 'together';
-  return { scaleType, scaleTonic, scaleHands };
+  return { type: scaleType, tonic: scaleTonic, hands: scaleHands };
 }
 
 /** Designated rhythm keys: valid MIDI notes, and never the same key for both hands. */
-function designatedKeys(rh: unknown, lh: unknown): { rhythmRhKey: number; rhythmLhKey: number } {
-  const d = DEFAULT_SETTINGS;
-  const rhythmRhKey = Math.round(clampNum(rh, 21, 108, d.rhythmRhKey));
-  let rhythmLhKey = Math.round(clampNum(lh, 21, 108, d.rhythmLhKey));
-  if (rhythmLhKey === rhythmRhKey) rhythmLhKey = rhythmRhKey >= 45 ? rhythmRhKey - 24 : rhythmRhKey + 24;
-  return { rhythmRhKey, rhythmLhKey };
+function designatedKeys(rh: unknown, lh: unknown): Pick<RhythmLessonSettings, 'rhKey' | 'lhKey'> {
+  const d = DEFAULT_SETTINGS.rhythm;
+  const rhKey = Math.round(clampNum(rh, 21, 108, d.rhKey));
+  let lhKey = Math.round(clampNum(lh, 21, 108, d.lhKey));
+  if (lhKey === rhKey) lhKey = rhKey >= 45 ? rhKey - 24 : rhKey + 24;
+  return { rhKey, lhKey };
 }
 
 function normalizeCalibration(raw: unknown): LatencyCalibration | null {
@@ -344,33 +410,6 @@ function normalizeCalibration(raw: unknown): LatencyCalibration | null {
 }
 
 export function generatorSettingsFrom(s: Settings): GeneratorSettings {
-  return {
-    level: s.level,
-    hands: s.hands,
-    bars: s.bars,
-    keyId: s.keyId,
-    timeSignature: s.timeSignature,
-    rhythmComplexity: s.rhythmComplexity,
-    maxPolyphony: s.maxPolyphony,
-    bpm: s.bpm,
-    keyboardSize: s.keyboardSize,
-  };
-}
-
-export function earSettingsFrom(s: Settings): EarSettings {
-  return { level: s.earLevel, length: s.earLength, reference: s.earReference, keyId: s.earKeyId };
-}
-
-export function rhythmSettingsFrom(s: Settings): RhythmSettings {
-  return {
-    level: s.rhythmLevel,
-    task: s.rhythmTask,
-    hands: s.rhythmHands,
-    texture: s.rhythmTexture,
-    bars: s.rhythmBars,
-    timeSignature: s.rhythmTimeSignature,
-    bpm: s.rhythmBpm,
-    rhKey: s.rhythmRhKey,
-    lhKey: s.rhythmLhKey,
-  };
+  const { mode: _mode, ...sight } = s.sight;
+  return { ...sight, keyboardSize: s.keyboardSize };
 }
