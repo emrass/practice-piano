@@ -1,7 +1,8 @@
 import type { Clef } from '../exercise';
 import type { ExerciseResult, PracticeMode } from '../eval/types';
 import { median } from '../eval/types';
-import { tierForLevel, TIERS } from '../generator/tiers';
+import { tierForLevel } from '../generator/tiers';
+import { findTier, LESSONS, type LessonId } from '../lessons';
 
 export const PROGRESS_SCHEMA_VERSION = 1;
 export const MASTERY_ACCURACY = 0.9;
@@ -24,8 +25,12 @@ export interface Aggregate {
   timingCount: number;
 }
 
-/** v1 records 'note' (key = "treble:60") and 'clef' (key = "treble"). */
-export type StatDimension = 'note' | 'clef';
+/**
+ * Sight reading records 'note' (key = "treble:60") and 'clef' (key = "treble").
+ * Ear training records 'interval' (melodic, key = semitones "0"–"12") and 'harmony'
+ * (key = "h4" for a dyad of 4 semitones, "triad", "seventh").
+ */
+export type StatDimension = 'note' | 'clef' | 'interval' | 'harmony';
 
 export interface TierProgress {
   attempts: number;
@@ -45,6 +50,9 @@ export interface DayLog {
 
 export interface HistoryEntry {
   at: number;
+  /** Absent on entries recorded before lessons existed (= sight reading). */
+  lesson?: LessonId;
+  replays?: number;
   exerciseId: string;
   mode: PracticeMode;
   level: number;
@@ -130,9 +138,9 @@ export function displayStreak(streak: ProgressState['streak'], today: string): n
   return 0;
 }
 
-export function highestMasteredTierIndex(progress: ProgressState): number {
+export function highestMasteredTierIndex(progress: ProgressState, lesson: LessonId = 'sight'): number {
   let best = -1;
-  TIERS.forEach((t, i) => {
+  LESSONS[lesson].tiers.forEach((t, i) => {
     if (progress.tiers[t.id]?.mastered) best = i;
   });
   return best;
@@ -142,9 +150,10 @@ export function highestMasteredTierIndex(progress: ProgressState): number {
  * The XP level multiplier only grows up to the top of the second tier above your highest
  * mastered tier, so cranking the slider without accuracy earns nothing extra.
  */
-export function xpLevelCeiling(progress: ProgressState): number {
-  const next = Math.min(TIERS.length - 1, highestMasteredTierIndex(progress) + 2);
-  return TIERS[next].maxLevel;
+export function xpLevelCeiling(progress: ProgressState, lesson: LessonId = 'sight'): number {
+  const tiers = LESSONS[lesson].tiers;
+  const next = Math.min(tiers.length - 1, highestMasteredTierIndex(progress, lesson) + 2);
+  return tiers[next].maxLevel;
 }
 
 function accuracyFactor(acc: number): number {
@@ -153,13 +162,16 @@ function accuracyFactor(acc: number): number {
 }
 
 export function computeAward(progress: ProgressState, result: ExerciseResult): Award {
-  const tier = tierForLevel(result.level);
+  const lesson: LessonId = result.lesson ?? 'sight';
+  const tier = findTier(result.tierId) ?? LESSONS[lesson].tierForLevel(result.level) ?? tierForLevel(result.level);
   const tierState = progress.tiers[tier.id];
   const firstAttempt = (progress.attempts[result.exerciseId] ?? 0) === 0;
-  const ceiling = xpLevelCeiling(progress);
+  const ceiling = xpLevelCeiling(progress, lesson);
   const effectiveLevel = Math.min(result.level, ceiling);
   const levelMult = 1 + effectiveLevel / 50;
-  const modeMult = result.mode === 'flow' ? 0.6 + 0.6 * (result.timingAccuracy ?? 0) : 1;
+  // Flow: timing matters. Ear: every extra listen costs a little (the first one is free).
+  const modeMult =
+    result.mode === 'flow' ? 0.6 + 0.6 * (result.timingAccuracy ?? 0) : result.mode === 'ear' ? 1 / (1 + 0.2 * (result.replays ?? 0)) : 1;
   const baseXp = Math.round(result.totalNotes * levelMult * accuracyFactor(result.pitchAccuracy) * modeMult);
   const passed = result.pitchAccuracy >= MASTERY_ACCURACY;
   const firstSightBonus = firstAttempt && passed ? Math.round(baseXp * 0.5) + 5 : 0;
@@ -247,13 +259,19 @@ export function applyResult(progress: ProgressState, result: ExerciseResult, now
     tier.masteredAt = now.getTime();
   }
 
-  for (const n of result.notes) {
-    addObservation(next.stats, 'note', noteStatKey(n.clef, n.midi), n.correct, n.reactionMs, n.timingScore);
-    addObservation(next.stats, 'clef', n.clef, n.correct, n.reactionMs, n.timingScore);
+  if ((result.lesson ?? 'sight') === 'ear') {
+    recordEarObservations(next.stats, result);
+  } else {
+    for (const n of result.notes) {
+      addObservation(next.stats, 'note', noteStatKey(n.clef, n.midi), n.correct, n.reactionMs, n.timingScore);
+      addObservation(next.stats, 'clef', n.clef, n.correct, n.reactionMs, n.timingScore);
+    }
   }
 
   next.history.push({
     at: now.getTime(),
+    lesson: result.lesson ?? 'sight',
+    replays: result.replays,
     exerciseId: result.exerciseId,
     mode: result.mode,
     level: result.level,
@@ -267,6 +285,49 @@ export function applyResult(progress: ProgressState, result: ExerciseResult, now
   });
   if (next.history.length > MAX_HISTORY) next.history.splice(0, next.history.length - MAX_HISTORY);
   return { progress: next, award };
+}
+
+/** Ear training: melodic intervals between single-note steps, and chord shapes. */
+function recordEarObservations(stats: ProgressState['stats'], result: ExerciseResult): void {
+  const byStep = new Map<number, { midis: number[]; correct: boolean }>();
+  for (const n of result.notes) {
+    if (n.step === undefined) continue;
+    const s = byStep.get(n.step) ?? { midis: [], correct: true };
+    s.midis.push(n.midi);
+    s.correct &&= n.correct;
+    byStep.set(n.step, s);
+  }
+  const steps = [...byStep.entries()].sort((a, b) => a[0] - b[0]).map(([, v]) => v);
+  steps.forEach((s, i) => {
+    if (s.midis.length === 1) {
+      const prev = steps[i - 1];
+      if (prev?.midis.length === 1) {
+        const semis = Math.min(12, Math.abs(s.midis[0] - prev.midis[0]));
+        addObservation(stats, 'interval', String(semis), s.correct);
+      }
+    } else {
+      const sorted = [...s.midis].sort((a, b) => a - b);
+      const key = sorted.length === 2 ? `h${sorted[1] - sorted[0]}` : sorted.length === 3 ? 'triad' : 'seventh';
+      addObservation(stats, 'harmony', key, s.correct);
+    }
+  });
+}
+
+export const INTERVAL_NAMES = ['Unison', 'm2', 'M2', 'm3', 'M3', 'P4', 'Tritone', 'P5', 'm6', 'M6', 'm7', 'M7', 'Octave'] as const;
+
+export interface WeakInterval {
+  semitones: number;
+  attempts: number;
+  accuracy: number;
+}
+
+/** Melodic intervals the player consistently misses (ear training weak spots). */
+export function findWeakIntervals(progress: ProgressState, minAttempts = 4, limit = 4): WeakInterval[] {
+  return Object.entries(progress.stats.interval ?? {})
+    .map(([k, a]) => ({ semitones: Number(k), attempts: a.attempts, accuracy: a.correct / Math.max(1, a.attempts) }))
+    .filter((w) => w.attempts >= minAttempts && w.accuracy < 0.8)
+    .sort((a, b) => a.accuracy - b.accuracy)
+    .slice(0, limit);
 }
 
 export interface WeakNote {
@@ -341,14 +402,15 @@ export function noteHeatmap(progress: ProgressState, clef?: Clef): Map<number, {
 }
 
 /** Recent aggregate metrics for the dashboard. */
-export function recentSummary(progress: ProgressState, count = 20) {
-  const recent = progress.history.slice(-count);
+export function recentSummary(progress: ProgressState, count = 20, lesson?: LessonId) {
+  const recent = progress.history.filter((h) => !lesson || (h.lesson ?? 'sight') === lesson).slice(-count);
   const avg = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
   return {
     exercises: recent.length,
     pitchAccuracy: avg(recent.map((h) => h.pitchAccuracy)),
     timingAccuracy: avg(recent.filter((h) => h.timingAccuracy !== null).map((h) => h.timingAccuracy as number)),
     medianReactionMs: median(recent.map((h) => h.medianReactionMs).filter((v): v is number => v !== null)),
+    replays: recent.length ? Math.round((recent.reduce((a, h) => a + (h.replays ?? 0), 0) / recent.length) * 10) / 10 : 0,
   };
 }
 

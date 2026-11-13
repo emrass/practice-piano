@@ -1,23 +1,66 @@
 /**
- * Web Audio output. v1 only produces metronome clicks (the player hears their own piano),
- * but the engine is the single place audio goes through, so a sampled / synthesised piano
- * can be added later by implementing NoteSynth and registering it here.
+ * Web Audio output: metronome clicks and a small synthesised piano voice used by ear
+ * training. Sight reading never plays notes (the player hears their own piano). A sampled
+ * piano can replace the voice later by implementing NoteSynth.
  */
 export interface NoteSynth {
-  noteOn(midi: number, velocity: number, when?: number): void;
-  noteOff(midi: number, when?: number): void;
+  /** Schedule one note; `when` and `duration` in AudioContext seconds. */
+  play(ctx: AudioContext, out: AudioNode, midi: number, when: number, duration: number, velocity: number): void;
 }
+
+/** Bright-but-soft additive voice with a hammer-like attack and a decaying low-pass. */
+export const simplePiano: NoteSynth = {
+  play(ctx, out, midi, when, duration, velocity) {
+    const freq = 440 * Math.pow(2, (midi - 69) / 12);
+    const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(Math.min(12000, freq * 9), when);
+    filter.frequency.exponentialRampToValueAtTime(Math.max(400, freq * 2.2), when + 1.2);
+    filter.Q.value = 0.4;
+    // Lower notes ring longer, like strings do.
+    const decay = 0.9 + Math.max(0, (72 - midi) / 30);
+    const peak = 0.22 * velocity;
+    const end = when + duration;
+    gain.gain.setValueAtTime(0.0001, when);
+    gain.gain.exponentialRampToValueAtTime(peak, when + 0.006);
+    gain.gain.exponentialRampToValueAtTime(peak * 0.35, when + 0.25);
+    gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, peak * 0.35 * Math.exp(-duration / decay)), end);
+    gain.gain.exponentialRampToValueAtTime(0.0001, end + 0.18);
+    const partials: [number, number, OscillatorType][] = [
+      [1, 1, 'triangle'],
+      [2, 0.35, 'sine'],
+      [3, 0.12, 'sine'],
+      [1.003, 0.4, 'sine'], // slight detune for warmth
+    ];
+    for (const [mult, level, type] of partials) {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = type;
+      osc.frequency.value = freq * mult;
+      g.gain.value = level;
+      osc.connect(g).connect(filter);
+      osc.start(when);
+      osc.stop(end + 0.25);
+    }
+    filter.connect(gain).connect(out);
+  },
+};
 
 type AudioContextCtor = typeof AudioContext;
 
 export class AudioEngine {
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
-  /** Reserved for a future piano sound. */
-  synth: NoteSynth | null = null;
+  synth: NoteSynth = simplePiano;
 
   get available(): boolean {
     return typeof window !== 'undefined' && ('AudioContext' in window || 'webkitAudioContext' in window);
+  }
+
+  /** True once audio has been unlocked by a user gesture and is running. */
+  get isRunning(): boolean {
+    return this.ctx?.state === 'running';
   }
 
   /** Must be called from a user gesture the first time (autoplay policies). */
@@ -38,6 +81,33 @@ export class AudioEngine {
   toContextTime(perfMs: number): number {
     const ctx = this.ctx!;
     return ctx.currentTime + (perfMs - performance.now()) / 1000;
+  }
+
+  /** Play notes (a chord if several) at a performance.now() time. */
+  playNotes(midis: readonly number[], perfMs: number, durationMs: number, volume = 0.8, out?: AudioNode): void {
+    const ctx = this.ctx;
+    if (!ctx || !this.master || volume <= 0) return;
+    const t = Math.max(ctx.currentTime, this.toContextTime(perfMs));
+    const v = volume / Math.sqrt(Math.max(1, midis.length));
+    for (const m of midis) this.synth.play(ctx, out ?? this.master, m, t, durationMs / 1000, v);
+  }
+
+  /**
+   * Schedule a whole passage. Returns a function that silences it immediately (used when
+   * the player asks for a replay or leaves the exercise mid-playback).
+   */
+  playSequence(events: readonly { at: number; dur: number; midis: readonly number[] }[], startPerfMs: number, volume = 0.8): () => void {
+    const ctx = this.ensure();
+    if (!ctx || !this.master) return () => {};
+    const bus = ctx.createGain();
+    bus.connect(this.master);
+    for (const e of events) this.playNotes(e.midis, startPerfMs + e.at, e.dur, volume, bus);
+    return () => {
+      const now = ctx.currentTime;
+      bus.gain.setValueAtTime(bus.gain.value, now);
+      bus.gain.linearRampToValueAtTime(0, now + 0.04);
+      setTimeout(() => bus.disconnect(), 80);
+    };
   }
 
   /** Short woodblock-like click. */

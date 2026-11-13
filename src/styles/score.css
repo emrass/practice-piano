@@ -162,3 +162,32 @@
   color: var(--bad);
   font-weight: 600;
 }
+
+/* Ear training: notes stay hidden until found. */
+.score-svg .vf-pp-note.is-hidden,
+.score-svg .pp-label.is-hidden {
+  opacity: 0;
+}
+
+.score-svg .pp-placeholder {
+  display: none;
+}
+
+.score-svg .pp-placeholder.is-shown {
+  display: inline;
+}
+
+.score-svg .pp-placeholder rect {
+  fill: var(--accent-soft);
+  stroke: var(--cursor-edge);
+  stroke-width: 1.2;
+  stroke-dasharray: 3 2;
+}
+
+.score-svg .pp-placeholder-mark {
+  font-family: var(--serif);
+  font-size: 16px;
+  font-weight: 700;
+  fill: var(--accent);
+  stroke: none;
+}

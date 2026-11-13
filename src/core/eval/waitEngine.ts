@@ -38,6 +38,9 @@ export class WaitEngine {
   private streak = 0;
   private bestStreak = 0;
   private cleanSteps = 0;
+  private assistedNotes = 0;
+  private hints = 0;
+  private stepAssisted = false;
   private readonly notes: NoteResult[] = [];
   private readonly reactions: number[] = [];
 
@@ -110,6 +113,22 @@ export class WaitEngine {
     if (this.sustainDown) this.sustained.add(midi);
   }
 
+  /**
+   * The player asked for help on the current step (ear training hint): the step can no
+   * longer count as found unaided, and its notes don't count toward accuracy.
+   */
+  assist(): void {
+    if (this.done || this.stepAssisted) return;
+    this.stepAssisted = true;
+    this.stepHadError = true;
+    this.hints++;
+    this.streak = 0;
+  }
+
+  get hintCount(): number {
+    return this.hints;
+  }
+
   setSustain(down: boolean, _time: number): void {
     this.sustainDown = down;
     if (!down) this.sustained.clear();
@@ -128,8 +147,11 @@ export class WaitEngine {
         clef: HAND_CLEF[n.hand],
         correct: clean,
         reactionMs: step.index > 0 ? reactionMs : undefined,
+        step: step.index,
       });
     }
+    if (this.stepAssisted) this.assistedNotes += step.midis.length;
+    this.stepAssisted = false;
     this.correct += step.midis.length;
     this.streak += clean ? step.midis.length : 0;
     this.bestStreak = Math.max(this.bestStreak, this.streak);
@@ -149,12 +171,12 @@ export class WaitEngine {
   liveStats(): LiveStats {
     const denom = this.correct + this.wrong;
     return {
-      correct: this.correct,
+      correct: this.correct - this.assistedNotes,
       wrong: this.wrong,
       missed: 0,
       streak: this.streak,
       bestStreak: this.bestStreak,
-      accuracy: denom === 0 ? 1 : this.correct / denom,
+      accuracy: denom === 0 ? 1 : Math.max(0, this.correct - this.assistedNotes) / denom,
       timing: null,
     };
   }
@@ -162,7 +184,7 @@ export class WaitEngine {
   result(ctx: ResultContext): ExerciseResult {
     const totalNotes = this.steps.reduce((a, s) => a + s.notes.length, 0);
     const expected = this.steps.reduce((a, s) => a + s.midis.length, 0);
-    const pitchAccuracy = expected + this.wrong === 0 ? 1 : this.correct / (expected + this.wrong);
+    const pitchAccuracy = expected + this.wrong === 0 ? 1 : Math.max(0, this.correct - this.assistedNotes) / (expected + this.wrong);
     return {
       mode: 'wait',
       exerciseId: ctx.exerciseId,
@@ -181,6 +203,7 @@ export class WaitEngine {
       durationMs: Math.max(0, (this.endTime || this.stepStart) - this.startTime),
       notes: [...this.notes],
       completedAt: ctx.completedAt,
+      hints: this.hints,
     };
   }
 }

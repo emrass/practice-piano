@@ -116,6 +116,21 @@ describe('WaitEngine', () => {
     expect(run(false)).toBe(false);
   });
 
+  it('counts hinted (assisted) steps as not found unaided', () => {
+    const e = new WaitEngine(buildSteps(fixture()), opts);
+    e.start(0);
+    e.assist();
+    e.assist(); // a second hint on the same step changes nothing
+    e.noteOn(60, 10);
+    e.noteOn(48, 10);
+    e.noteOn(64, 200);
+    [60, 64, 67, 48].forEach((m) => e.noteOn(m, 400));
+    const r = e.result(ctx);
+    expect(r.hints).toBe(1);
+    expect(r.pitchAccuracy).toBeCloseTo(5 / 7);
+    expect(r.notes.filter((n) => n.step === 0).every((n) => !n.correct)).toBe(true);
+  });
+
   it('produces accuracy, reaction times and per-note results', () => {
     const e = new WaitEngine(buildSteps(fixture()), opts);
     e.start(0);

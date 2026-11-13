@@ -1,5 +1,5 @@
 import { useStore } from '../../lib/store';
-import type { PracticeController } from '../practice/PracticeController';
+import type { Session } from '../practice/session';
 
 function pct(v: number | null | undefined): string {
   return v === null || v === undefined ? '—' : `${Math.round(v * 100)}%`;
@@ -8,7 +8,9 @@ function pct(v: number | null | undefined): string {
 const GRADE_TEXT = { perfect: 'Perfect', good: 'Good', early: 'Early', late: 'Late' } as const;
 
 export function PracticeBar(props: {
-  controller: PracticeController;
+  controller: Session;
+  onHint?: () => void;
+  onRetry?: () => void;
   onStartStop: () => void;
   onRestart: () => void;
   onNext: () => void;
@@ -20,10 +22,16 @@ export function PracticeBar(props: {
   const wrongFlash = s.wrong !== null;
   const gradeFlash = s.lastGrade !== null;
   const flow = s.mode === 'flow';
+  const ear = s.mode === 'ear' ? s.ear : undefined;
   const active = s.status === 'countin' || s.status === 'running';
 
   let message: string;
-  if (s.status === 'finished') message = props.pianoShortcuts ? 'Finished — on the piano: C retry · D next' : 'Finished — see your results';
+  if (ear && s.status !== 'finished') {
+    if (!ear.listened) message = props.pianoShortcuts ? 'Press Space or tap the pedal to listen' : 'Press Space to listen';
+    else if (ear.playing) message = 'Listening…';
+    else if (s.live.correct === 0 && s.live.wrong === 0) message = s.expected.length ? 'Play it back — start on the shown note' : 'Play it back — find the first note from the key';
+    else message = 'Keep going — notes appear as you find them';
+  } else if (s.status === 'finished') message = props.pianoShortcuts ? 'Finished — on the piano: C retry · D next' : 'Finished — see your results';
   else if (flow && s.status === 'ready') message = props.pianoShortcuts ? 'Press Space or tap the sustain pedal to start' : 'Press Start or Space to start';
   else if (flow && s.status === 'countin') message = 'Count-in… get ready';
   else if (flow) message = 'Play along with the playhead';
@@ -39,7 +47,21 @@ export function PracticeBar(props: {
   return (
     <div className="practice-bar">
       <div className="pb-actions">
-        {flow ? (
+        {ear && s.status === 'finished' ? (
+          <button type="button" className="btn btn-primary btn-start" onClick={props.onRetry}>
+            Retry <kbd>R</kbd>
+          </button>
+        ) : ear ? (
+          <>
+            <button type="button" className={`btn btn-primary btn-start ${ear.playing ? 'is-playing' : ''}`} onClick={() => props.controller.start()}>
+              {ear.listened ? 'Replay' : 'Listen'}
+              <kbd>Space</kbd>
+            </button>
+            <button type="button" className="btn" onClick={props.onHint} disabled={s.status !== 'running' || ear.playing}>
+              Hint <kbd>?</kbd>
+            </button>
+          </>
+        ) : flow ? (
           <button type="button" className={`btn btn-primary btn-start ${active ? 'is-stop' : ''}`} onClick={props.onStartStop}>
             {active ? 'Stop' : 'Start'}
             <kbd>Space</kbd>
@@ -50,7 +72,7 @@ export function PracticeBar(props: {
             <kbd>R</kbd>
           </button>
         )}
-        {s.status === 'finished' && props.resultsHidden ? (
+        {ear && s.status !== 'finished' ? null : s.status === 'finished' && props.resultsHidden ? (
           <button type="button" className="btn" onClick={props.onShowResults}>
             Results
           </button>
@@ -79,8 +101,8 @@ export function PracticeBar(props: {
           <dd>{pct(s.live.correct + s.live.wrong + s.live.missed === 0 ? null : s.live.accuracy)}</dd>
         </div>
         <div>
-          <dt>{flow ? 'Timing' : 'Wrong'}</dt>
-          <dd>{flow ? pct(s.live.timing) : s.live.wrong}</dd>
+          <dt>{flow ? 'Timing' : ear ? 'Replays' : 'Wrong'}</dt>
+          <dd>{flow ? pct(s.live.timing) : ear ? ear.replays : s.live.wrong}</dd>
         </div>
         <div>
           <dt>Streak</dt>

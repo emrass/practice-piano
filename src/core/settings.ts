@@ -4,6 +4,8 @@ import { KEYS } from './music/keys';
 import { TIME_SIGNATURE_IDS, type TimeSignatureId } from './music/rhythm';
 import { KEYBOARD_SIZES, type KeyboardSize } from './keyboard/range';
 import type { GeneratorSettings } from './generator/generator';
+import type { EarReference, EarSettings } from './ear/generator';
+import { LESSON_IDS, type LessonId } from './lessons';
 
 export const SETTINGS_SCHEMA_VERSION = 1;
 
@@ -13,7 +15,15 @@ export type Theme = 'light' | 'dark';
 
 export interface Settings {
   schemaVersion: number;
-  // Exercise
+  lesson: LessonId;
+  // Ear training
+  earLevel: number;
+  earLength: 'auto' | number;
+  earReference: EarReference;
+  earKeyId: string;
+  /** Volume of the built-in piano sound (ear training playback), 0–1. */
+  synthVolume: number;
+  // Sight-reading exercise
   level: number;
   hands: HandsMode;
   bars: 4 | 8 | 16;
@@ -76,6 +86,12 @@ export const LATENCY_PRESETS: Readonly<Record<'speakers' | 'headphones', { laten
 
 export const DEFAULT_SETTINGS: Settings = {
   schemaVersion: SETTINGS_SCHEMA_VERSION,
+  lesson: 'sight',
+  earLevel: 1,
+  earLength: 'auto',
+  earReference: 'auto',
+  earKeyId: 'auto',
+  synthVolume: 0.8,
   level: 1,
   hands: 'rh',
   bars: 4,
@@ -124,6 +140,12 @@ export function normalizeSettings(raw: unknown): Settings {
   const latencyMs = Math.round(clampNum(r.latencyMs, 0, 300, d.latencyMs));
   return {
     schemaVersion: SETTINGS_SCHEMA_VERSION,
+    lesson: oneOf(r.lesson, LESSON_IDS, d.lesson),
+    earLevel: Math.round(clampNum(r.earLevel, 1, 100, d.earLevel)),
+    earLength: autoOrInt(r.earLength, 2, 8),
+    earReference: oneOf(r.earReference, ['auto', 'first-note', 'key-only'] as const, d.earReference),
+    earKeyId: oneOf(r.earKeyId, ['auto', ...KEYS.map((k) => k.id)], d.earKeyId),
+    synthVolume: clampNum(r.synthVolume, 0, 1, d.synthVolume),
     level: Math.round(clampNum(r.level, 1, 100, d.level)),
     hands: oneOf(r.hands, ['rh', 'lh', 'alternating', 'both'] as const, d.hands),
     bars: oneOf(r.bars, [4, 8, 16] as const, d.bars),
@@ -185,4 +207,8 @@ export function generatorSettingsFrom(s: Settings): GeneratorSettings {
     bpm: s.bpm,
     keyboardSize: s.keyboardSize,
   };
+}
+
+export function earSettingsFrom(s: Settings): EarSettings {
+  return { level: s.earLevel, length: s.earLength, reference: s.earReference, keyId: s.earKeyId };
 }

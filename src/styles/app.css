@@ -330,9 +330,30 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
 }
 
-.topbar .segmented {
-  width: 230px;
-  flex: none;
+.topbar-lesson .segmented {
+  width: 250px;
+}
+
+.topbar-mode .segmented {
+  width: 140px;
+}
+
+/* Keeps its width when hidden so the top bar never shifts between lessons. */
+.topbar-mode.is-hidden {
+  visibility: hidden;
+}
+
+.label-short {
+  display: none;
+}
+
+.btn-start.is-playing {
+  background: var(--gold);
+  border-color: var(--gold);
+}
+
+.ear-profile {
+  min-height: 2.9em;
 }
 
 .select-field {
@@ -1259,8 +1280,18 @@ details.help p {
   .chip-streak {
     display: none;
   }
-  .topbar .segmented {
-    width: 180px;
+  .topbar-lesson .segmented {
+    width: 130px;
+  }
+  .topbar-mode .segmented {
+    width: 110px;
+  }
+  .label-long,
+  .topbar-mode.is-hidden {
+    display: none;
+  }
+  .label-short {
+    display: inline;
   }
   .chip-midi {
     max-width: 34px;

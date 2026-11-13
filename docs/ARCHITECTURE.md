@@ -122,9 +122,25 @@ starts Flow mode from the ready state.
 Lesson logic never touches storage or identity directly — the UI passes plain objects in and
 gets plain objects back.
 
+## Ear training
+
+- `core/ear/tiers.ts`, `core/ear/generator.ts` — `earProfile(level)` maps 1–100 to phrase length,
+  range, leap limit, keys, content (melody / dyads / triads / mixed), whether the first note is
+  shown and whether an I–IV–V–I cadence sets the key. `generateEarExercise` returns a normal
+  `Exercise` (quarter notes, chords as halves, last note fills the bar) plus a playback timeline.
+- `ui/practice/EarController.ts` implements the shared `Session` interface on top of
+  `WaitEngine`: input is ignored while the phrase plays; found steps become visible
+  (`visibleSteps`), `hint()` marks the step as assisted (it no longer counts as correct).
+- `platform/audio/audioEngine.ts` gained a small synthesised piano voice (`simplePiano`) and
+  `playSequence()` with a stop handle (replay cancels the previous playback).
+- Results carry `lesson: 'ear'`, `replays`, `hints`; progress records `interval` / `harmony`
+  stats instead of reading stats, ear tiers have their own mastery and XP ceiling, and each
+  replay scales XP by 1 / (1 + 0.2 × replays).
+
 ## Extending with new lesson types
 
-A lesson type needs (1) a generator producing an `Exercise` (scales, chord progressions and rhythm
-drills fit the same measures/steps model), (2) optionally its own engine implementing the same
-`noteOn/noteOff/setSustain/result` shape, and (3) a tier list. `PracticeController`, the renderer,
-input, scoring persistence and progress are reused.
+A lesson type needs (1) an entry in `core/lessons.ts` with its tier list, (2) a generator producing
+an `Exercise` (scales, chord progressions and rhythm drills fit the same measures/steps model),
+and (3) a controller implementing `ui/practice/session.ts` (usually a thin layer over
+`WaitEngine` or `FlowEngine`) plus a settings panel. The renderer, keyboard, input, piano
+shortcuts, results, persistence and progress are shared.

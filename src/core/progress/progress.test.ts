@@ -6,7 +6,9 @@ import {
   dayKey,
   displayStreak,
   emptyProgress,
+  findWeakIntervals,
   findWeakSpots,
+  INTERVAL_NAMES,
   noteHeatmap,
   normalizeProgress,
   updateStreak,
@@ -159,5 +161,49 @@ describe('normalizeProgress', () => {
     expect(p.streak.current).toBe(4);
     expect(p.history).toEqual([]);
     expect(p.tiers).toEqual({});
+  });
+});
+
+describe('ear training progress', () => {
+  const earNotes = (pattern: [number, boolean][]): NoteResult[] =>
+    pattern.map(([midi, correct], i) => ({ midi, hand: 'rh', clef: 'treble', correct, step: i }));
+
+  it('uses ear tiers, charges for replays and records intervals, not reading stats', () => {
+    const notes = earNotes([
+      [60, true],
+      [64, true],
+      [67, false],
+      [60, true],
+    ]);
+    const r = result({ lesson: 'ear', mode: 'ear', tierId: 'e03', level: 15, exerciseId: 'ear-x', replays: 0 }, notes);
+    const once = computeAward(emptyProgress(), r);
+    const thrice = computeAward(emptyProgress(), { ...r, replays: 2 });
+    expect(once.tierId).toBe('e03');
+    expect(thrice.baseXp).toBeLessThan(once.baseXp);
+    const p = applyResult(emptyProgress(), r, day1).progress;
+    expect(p.stats.interval['4']).toMatchObject({ attempts: 1, correct: 1 });
+    expect(p.stats.interval['3']).toMatchObject({ attempts: 1, correct: 0 });
+    expect(p.stats.note).toBeUndefined();
+    expect(p.history[0].lesson).toBe('ear');
+  });
+
+  it('keeps XP ceilings per lesson', () => {
+    const p: ProgressState = { ...emptyProgress(), tiers: { t12: { attempts: 5, passes: 5, passedExercises: [], bestAccuracy: 1, mastered: true } } };
+    expect(xpLevelCeiling(p, 'sight')).toBe(100);
+    expect(xpLevelCeiling(p, 'ear')).toBe(12);
+  });
+
+  it('finds weak intervals', () => {
+    let p = emptyProgress();
+    for (let i = 0; i < 5; i++) {
+      const notes = earNotes([
+        [60, true],
+        [67, i === 0],
+        [69, true],
+      ]);
+      p = applyResult(p, result({ lesson: 'ear', mode: 'ear', tierId: 'e05', exerciseId: `e${i}` }, notes), day1).progress;
+    }
+    expect(findWeakIntervals(p).map((w) => w.semitones)).toEqual([7]);
+    expect(INTERVAL_NAMES[7]).toBe('P5');
   });
 });

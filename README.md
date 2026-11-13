@@ -1,8 +1,14 @@
 # practice-piano.com
 
-An interactive **sight-reading studio** for your digital piano. It generates fresh, musical
-passages for any level from "first note ever" to advanced, engraves them with VexFlow, listens
-to your piano over MIDI and scores pitch, timing and reaction time.
+An interactive **sight-reading and ear-training studio** for your digital piano. It generates
+fresh, musical passages for any level from "first note ever" to advanced, engraves them with
+VexFlow, listens to your piano over MIDI and scores pitch, timing and reaction time.
+
+Lessons:
+
+- **Sight reading** — read and play generated passages (Wait or Flow mode).
+- **Ear training** — listen to a phrase played by the built-in piano sound and play it back;
+  the notes appear on the staff as you find them.
 
 It runs in two ways:
 
@@ -72,6 +78,12 @@ contains the current web code.
   the results, F for one level easier, G for one level harder (any octave; ignored until all keys
   are released, so final notes never trigger them).
 - **Sustain pedal** — CC 64 indicator, and an option to count pedalled notes as held.
+- **Ear training (levels 1–100)** — two-note echoes from middle C, stepwise tunes, five-finger
+  melodies, octave-wide leaps, new keys introduced by an I–IV–V–I cadence, minor keys, harmonic
+  intervals, triads, "key only" phrases with no starting note, then inversions, sevenths and
+  chromatic notes. `Space` or a sustain-pedal tap replays (each replay costs a little XP), `?`
+  reveals the next note (counts as a miss); the keyboard stays a fixed C3–C6 window so it never
+  gives the phrase away. Interval accuracy is tracked and weak intervals can be practised.
 - **Progress** — XP that rewards accuracy (steep accuracy curve, reduced XP for repeats, level
   multiplier capped until tiers are mastered), a first-sight bonus, tier mastery at ≥ 90 % pitch
   accuracy on distinct passages, daily streaks, median reaction time, timing accuracy,

@@ -243,6 +243,7 @@ export class FlowEngine {
       correct: n.state === 'hit',
       deltaMs: n.deltaMs,
       timingScore: n.score,
+      step: n.stepIndex,
     }));
     const total = this.notes.length;
     return {

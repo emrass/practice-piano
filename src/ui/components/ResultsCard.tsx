@@ -1,5 +1,5 @@
 import type { ExerciseResult } from '../../core/eval/types';
-import { TIERS } from '../../core/generator/tiers';
+import { findTier } from '../../core/lessons';
 import { PIANO_ACTIONS } from '../../core/input/pianoShortcuts';
 import type { Award } from '../../core/progress/progress';
 
@@ -16,20 +16,28 @@ export function ResultsCard(props: {
   onClose: () => void;
 }) {
   const { result, award } = props;
-  const tier = award ? TIERS.find((t) => t.id === award.tierId) : null;
+  const tier = award ? findTier(award.tierId) : null;
+  const ear = result.mode === 'ear';
   const passed = result.pitchAccuracy >= 0.9;
-  const headline = result.pitchAccuracy >= 0.98 ? 'Beautifully read!' : passed ? 'Passed!' : result.pitchAccuracy >= 0.75 ? 'Nearly there' : 'Keep practising';
+  const headline = result.pitchAccuracy >= 0.98 ? (ear ? 'Perfect ear!' : 'Beautifully read!') : passed ? 'Passed!' : result.pitchAccuracy >= 0.75 ? 'Nearly there' : 'Keep practising';
   return (
     <div className="results-backdrop" role="dialog" aria-modal="false" aria-labelledby="results-title">
       <div className="results-card">
-        <div className={`results-ribbon ${passed ? 'is-pass' : 'is-fail'}`}>{passed ? '≥ 90% — counts toward mastery' : 'Needs ≥ 90% pitch accuracy to pass'}</div>
+        <div className={`results-ribbon ${passed ? 'is-pass' : 'is-fail'}`}>
+          {passed ? '≥ 90% — counts toward mastery' : ear ? 'Needs ≥ 90% (hints count as misses) to pass' : 'Needs ≥ 90% pitch accuracy to pass'}
+        </div>
         <h2 id="results-title">{headline}</h2>
         <div className="results-grid">
           <div className="rg-item rg-main">
             <span className="rg-v">{pct(result.pitchAccuracy)}</span>
             <span className="rg-k">Pitch accuracy</span>
           </div>
-          {result.mode === 'flow' ? (
+          {ear ? (
+            <div className="rg-item">
+              <span className="rg-v">{result.replays ?? 0}</span>
+              <span className="rg-k">Replays</span>
+            </div>
+          ) : result.mode === 'flow' ? (
             <div className="rg-item">
               <span className="rg-v">{pct(result.timingAccuracy)}</span>
               <span className="rg-k">Timing{result.meanAbsTimingMs !== null ? ` · ±${Math.round(result.meanAbsTimingMs)} ms` : ''}</span>
@@ -44,18 +52,19 @@ export function ResultsCard(props: {
             <span className="rg-v">
               {result.cleanSteps}/{result.totalSteps}
             </span>
-            <span className="rg-k">{result.mode === 'flow' ? 'Steps fully hit' : 'First-try steps'}</span>
+            <span className="rg-k">{result.mode === 'flow' ? 'Steps fully hit' : ear ? 'Found unaided' : 'First-try steps'}</span>
           </div>
           <div className="rg-item">
-            <span className="rg-v">{result.wrongNotes + result.missedNotes}</span>
-            <span className="rg-k">{result.mode === 'flow' ? 'Wrong + missed' : 'Wrong notes'}</span>
+            <span className="rg-v">{ear ? `${result.wrongNotes}/${result.hints ?? 0}` : result.wrongNotes + result.missedNotes}</span>
+            <span className="rg-k">{result.mode === 'flow' ? 'Wrong + missed' : ear ? 'Wrong / hints' : 'Wrong notes'}</span>
           </div>
         </div>
         {award ? (
           <div className="results-xp">
             <span className="xp-total">+{award.xp} XP</span>
             {award.firstSightBonus > 0 ? <span className="xp-bonus">incl. first-sight bonus +{award.firstSightBonus}</span> : null}
-            {!award.firstAttempt ? <span className="xp-note">Repeat passage — reduced XP. New passages train sight reading best.</span> : null}
+            {!award.firstAttempt ? <span className="xp-note">Repeat passage — reduced XP. New passages train {ear ? 'your ear' : 'sight reading'} best.</span> : null}
+            {ear && (result.replays ?? 0) > 0 ? <span className="xp-note">Each replay reduces XP a little — try to catch it in one listen.</span> : null}
             {award.levelCapped ? <span className="xp-note">XP multiplier capped at level {award.effectiveLevel} — master lower tiers to raise it.</span> : null}
           </div>
         ) : null}
@@ -92,7 +101,7 @@ export function ResultsCard(props: {
             Retry <kbd>R</kbd>
           </button>
           <button type="button" className="btn btn-primary" onClick={props.onNext} autoFocus>
-            Next exercise <kbd>Enter</kbd>
+            {ear ? 'Next phrase' : 'Next exercise'} <kbd>Enter</kbd>
           </button>
         </div>
       </div>

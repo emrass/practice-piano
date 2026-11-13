@@ -1,9 +1,18 @@
 import { useMemo, useRef, useState } from 'react';
 import type { Clef } from '../../core/exercise';
-import { TIERS } from '../../core/generator/tiers';
+import { LESSONS, type LessonId } from '../../core/lessons';
 import { isBlackKey } from '../../core/keyboard/range';
 import { midiLabel } from '../../core/music/pitch';
-import { dayKey, displayStreak, findWeakSpots, noteHeatmap, recentSummary, type ProgressState } from '../../core/progress/progress';
+import {
+  dayKey,
+  displayStreak,
+  findWeakIntervals,
+  findWeakSpots,
+  INTERVAL_NAMES,
+  noteHeatmap,
+  recentSummary,
+  type ProgressState,
+} from '../../core/progress/progress';
 import { BackupError } from '../../persistence/profileRepository';
 import { profileRepository } from '../state/useProfile';
 import type { Settings } from '../../core/settings';
@@ -50,7 +59,35 @@ function Heatmap(props: { progress: ProgressState; clef: Clef }) {
   );
 }
 
+function IntervalBars(props: { progress: ProgressState }) {
+  const stats = props.progress.stats.interval ?? {};
+  const harmony = props.progress.stats.harmony ?? {};
+  const rows = INTERVAL_NAMES.map((name, semis) => ({ name, agg: stats[String(semis)] })).filter((r) => r.agg);
+  const chordRows = Object.entries(harmony).map(([k, agg]) => ({
+    name: k.startsWith('h') ? `${INTERVAL_NAMES[Math.min(12, Number(k.slice(1)))]} (harmonic)` : k === 'triad' ? 'Triads' : 'Sevenths',
+    agg,
+  }));
+  if (!rows.length && !chordRows.length) return <p className="field-hint">Interval accuracy appears after your first phrases.</p>;
+  return (
+    <div className="clef-bars interval-bars">
+      {[...rows, ...chordRows].map((r) => {
+        const acc = r.agg.correct / Math.max(1, r.agg.attempts);
+        return (
+          <div key={r.name} className="clef-bar" title={`${r.agg.correct}/${r.agg.attempts} found unaided`}>
+            <span>{r.name}</span>
+            <div className="progress-track">
+              <div className="progress-fill" style={{ width: `${acc * 100}%` }} />
+            </div>
+            <span>{pct(acc)}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function ProgressPanel(props: {
+  lesson: LessonId;
   progress: ProgressState;
   settings: Settings;
   onPracticeWeakSpots: () => void;
@@ -58,8 +95,11 @@ export function ProgressPanel(props: {
   storageKind: string;
 }) {
   const { progress } = props;
-  const summary = recentSummary(progress);
+  const ear = props.lesson === 'ear';
+  const summary = recentSummary(progress, 20, props.lesson);
   const weak = useMemo(() => findWeakSpots(progress), [progress]);
+  const weakIntervals = useMemo(() => findWeakIntervals(progress), [progress]);
+  const lessonLevel = ear ? props.settings.earLevel : props.settings.level;
   const streak = displayStreak(progress.streak, dayKey(new Date()));
   const [message, setMessage] = useState<string | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
@@ -116,11 +156,11 @@ export function ProgressPanel(props: {
           </div>
           <div className="tile">
             <span className="tile-v">{pct(summary.pitchAccuracy)}</span>
-            <span className="tile-k">Pitch (last 20)</span>
+            <span className="tile-k">{ear ? 'Found (last 20)' : 'Pitch (last 20)'}</span>
           </div>
           <div className="tile">
-            <span className="tile-v">{pct(summary.timingAccuracy)}</span>
-            <span className="tile-k">Timing (Flow)</span>
+            <span className="tile-v">{ear ? summary.replays : pct(summary.timingAccuracy)}</span>
+            <span className="tile-k">{ear ? 'Avg replays (last 20)' : 'Timing (Flow)'}</span>
           </div>
           <div className="tile">
             <span className="tile-v">{summary.medianReactionMs === null ? '—' : `${(summary.medianReactionMs / 1000).toFixed(2)}s`}</span>
@@ -129,6 +169,21 @@ export function ProgressPanel(props: {
         </div>
       </section>
 
+      {ear ? (
+        <section className="panel-section">
+          <div className="section-title">Intervals</div>
+          <IntervalBars progress={progress} />
+          {weakIntervals.length ? (
+            <p className="field-hint">Weakest: {weakIntervals.map((w) => `${INTERVAL_NAMES[w.semitones]} (${pct(w.accuracy)})`).join(', ')}</p>
+          ) : null}
+          <button type="button" className="btn btn-block" disabled={weakIntervals.length === 0} onClick={props.onPracticeWeakSpots}>
+            Practise weak intervals
+          </button>
+        </section>
+      ) : null}
+
+      {ear ? null : (
+      <>
       <section className="panel-section">
         <div className="section-title">Weak spots</div>
         {weak.notes.length === 0 ? (
@@ -169,13 +224,15 @@ export function ProgressPanel(props: {
         <Heatmap progress={progress} clef="treble" />
         <Heatmap progress={progress} clef="bass" />
       </section>
+      </>
+      )}
 
       <section className="panel-section">
-        <div className="section-title">Tier mastery</div>
+        <div className="section-title">Tier mastery · {LESSONS[props.lesson].name}</div>
         <ol className="tier-ladder">
-          {TIERS.map((t) => {
+          {LESSONS[props.lesson].tiers.map((t) => {
             const st = progress.tiers[t.id];
-            const current = props.settings.level >= t.minLevel && props.settings.level <= t.maxLevel;
+            const current = lessonLevel >= t.minLevel && lessonLevel <= t.maxLevel;
             return (
               <li key={t.id} className={`${st?.mastered ? 'is-mastered' : ''} ${current ? 'is-current' : ''}`}>
                 <span className="tl-range">

@@ -1,5 +1,6 @@
+import type { EarExercise } from '../../core/ear/generator';
 import type { Exercise } from '../../core/exercise';
-import { TIERS } from '../../core/generator/tiers';
+import { findTier } from '../../core/lessons';
 import { RHYTHM_COMPLEXITY_LABELS } from '../../core/generator/difficulty';
 
 const HANDS_LABEL = { rh: 'Right hand', lh: 'Left hand', alternating: 'Alternating', both: 'Both hands' } as const;
@@ -7,15 +8,25 @@ const HANDS_LABEL = { rh: 'Right hand', lh: 'Left hand', alternating: 'Alternati
 /** Fixed-geometry facts about the current exercise (cells never change width). */
 export function MetaStrip(props: { exercise: Exercise; firstSight: boolean; focus: boolean }) {
   const ex = props.exercise;
-  const tier = TIERS.find((t) => t.id === ex.meta.tierId);
-  const items: [string, string][] = [
-    ['Key', ex.key.label],
-    ['Time', ex.timeSignature.id],
-    ['Tempo', `${ex.bpm} bpm${ex.timeSignature.id === '6/8' ? ' (♩.)' : ''}`],
-    ['Length', `${ex.bars} bars`],
-    ['Hands', HANDS_LABEL[ex.hands]],
-    ['Rhythm', RHYTHM_COMPLEXITY_LABELS[ex.meta.rhythmComplexity] ?? '—'],
-  ];
+  const tier = findTier(ex.meta.tierId);
+  const ear = (ex as Partial<EarExercise>).ear;
+  const items: [string, string][] = ear
+    ? [
+        ['Key', ex.key.label],
+        ['Phrase', `${ex.steps.length} ${ear.content === 'melody' || ear.content === 'mixed' ? 'notes' : 'chords'}`],
+        ['Tempo', `${ex.bpm} bpm`],
+        ['Reference', ear.firstNoteGiven ? 'First note' : 'Key only'],
+        ['Cadence', ear.cadence.length ? 'Yes' : 'No'],
+        ['Content', { melody: 'Melody', dyads: 'Intervals', triads: 'Triads', mixed: 'Mixed' }[ear.content]],
+      ]
+    : [
+        ['Key', ex.key.label],
+        ['Time', ex.timeSignature.id],
+        ['Tempo', `${ex.bpm} bpm${ex.timeSignature.id === '6/8' ? ' (♩.)' : ''}`],
+        ['Length', `${ex.bars} bars`],
+        ['Hands', HANDS_LABEL[ex.hands]],
+        ['Rhythm', RHYTHM_COMPLEXITY_LABELS[ex.meta.rhythmComplexity] ?? '—'],
+      ];
   return (
     <div className="meta-strip">
       <div className="meta-tier">

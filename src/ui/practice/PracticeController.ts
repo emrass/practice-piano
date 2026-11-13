@@ -7,6 +7,7 @@ import { msPerTick } from '../../core/music/rhythm';
 import { createStore, Emitter, type Store } from '../../lib/store';
 import type { InputBus } from '../../input/inputBus';
 import { type AudioEngine, Metronome } from '../../platform/audio/audioEngine';
+import type { Session } from './session';
 
 export type StepMark = 'good' | 'ok' | 'bad' | 'missed';
 export type PracticeStatus = 'ready' | 'countin' | 'running' | 'finished';
@@ -24,6 +25,9 @@ export interface PracticeState {
   wrong: { midi: number; at: number } | null;
   lastGrade: { grade: TimingGrade; deltaMs: number; at: number } | null;
   result: ExerciseResult | null;
+  /** Ear training: steps with index < visibleSteps are shown; undefined = all shown. */
+  visibleSteps?: number;
+  ear?: { playing: boolean; listened: boolean; replays: number; hints: number };
 }
 
 export interface PracticeOptions {
@@ -44,7 +48,7 @@ const EMPTY_LIVE: LiveStats = { correct: 0, wrong: 0, missed: 0, streak: 0, best
  * drives the metronome and publishes UI state. Rendering (score, playhead) reads from it
  * but never re-renders it at frame rate.
  */
-export class PracticeController {
+export class PracticeController implements Session {
   readonly state: Store<PracticeState>;
   /** Fires once per completed run. */
   readonly finished = new Emitter<ExerciseResult>();
@@ -231,7 +235,8 @@ export class PracticeController {
     return { exerciseId: ex.id, level: ex.meta.level, tierId: ex.meta.tierId, completedAt: Date.now() };
   }
 
-  private finish(result: ExerciseResult) {
+  private finish(raw: ExerciseResult) {
+    const result: ExerciseResult = { ...raw, lesson: 'sight' };
     this.stopLoop();
     this.metronome.stop();
     this.state.set({ ...this.state.get(), status: 'finished', result, expected: [], beat: null, countIn: null });

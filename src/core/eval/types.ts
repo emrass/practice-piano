@@ -1,6 +1,7 @@
 import type { Clef, Hand } from '../exercise';
+import type { LessonId } from '../lessons';
 
-export type PracticeMode = 'wait' | 'flow';
+export type PracticeMode = 'wait' | 'flow' | 'ear';
 
 export interface NoteResult {
   midi: number;
@@ -14,9 +15,13 @@ export interface NoteResult {
   deltaMs?: number;
   /** Flow mode: 0–1 rhythmic quality of a hit. */
   timingScore?: number;
+  /** Index of the step (onset) this note belongs to. */
+  step?: number;
 }
 
 export interface ExerciseResult {
+  /** Lesson type; absent on results created before lessons existed (= sight reading). */
+  lesson?: LessonId;
   mode: PracticeMode;
   exerciseId: string;
   level: number;
@@ -38,6 +43,9 @@ export interface ExerciseResult {
   durationMs: number;
   notes: NoteResult[];
   completedAt: number;
+  /** Ear training: extra listens after the first, and notes revealed by hints. */
+  replays?: number;
+  hints?: number;
 }
 
 export interface LiveStats {

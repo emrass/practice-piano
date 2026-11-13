@@ -3,7 +3,8 @@ import type { Exercise } from '../../core/exercise';
 import { useStore } from '../../lib/store';
 import { systemForTick, tickToX } from '../notation/layout';
 import { renderScore, type RenderedScore } from '../notation/renderScore';
-import type { PracticeController, StepMark } from '../practice/PracticeController';
+import type { StepMark } from '../practice/PracticeController';
+import type { Session } from '../practice/session';
 
 const MARK_CLASSES: Record<StepMark, string> = {
   good: 'is-good',
@@ -18,7 +19,7 @@ const ALL_MARK_CLASSES = Object.values(MARK_CLASSES);
  * exercise, width or label setting changes; per-note feedback is applied by toggling
  * classes, and the Flow playhead moves via requestAnimationFrame + transform.
  */
-export function ScoreView(props: { exercise: Exercise; showNoteNames: boolean; controller: PracticeController }) {
+export function ScoreView(props: { exercise: Exercise; showNoteNames: boolean; controller: Session }) {
   const { exercise, showNoteNames, controller } = props;
   const scrollRef = useRef<HTMLDivElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
@@ -51,7 +52,12 @@ export function ScoreView(props: { exercise: Exercise; showNoteNames: boolean; c
     const host = hostRef.current;
     if (!host || width < 100) return;
     try {
-      const rendered = renderScore(host, exercise, { width, height: viewHeight, showNoteNames });
+      const rendered = renderScore(host, exercise, {
+        width,
+        height: viewHeight,
+        showNoteNames,
+        placeholders: controller.state.get().visibleSteps !== undefined,
+      });
       renderedRef.current = rendered;
       setHeight(Math.round(rendered.layout.height * rendered.scale));
       setRenderError(null);
@@ -60,25 +66,33 @@ export function ScoreView(props: { exercise: Exercise; showNoteNames: boolean; c
       renderedRef.current = null;
       setRenderError(err instanceof Error ? err.message : String(err));
     }
-  }, [exercise, width, viewHeight, showNoteNames]);
+  }, [exercise, width, viewHeight, showNoteNames, controller]);
 
   // Per-step feedback classes + current-step cursor (Wait mode).
   useLayoutEffect(() => {
     const r = renderedRef.current;
     if (!r) return;
+    const hiddenFrom = state.visibleSteps ?? Infinity;
+    const cursorMode = state.mode === 'wait' || state.mode === 'ear';
     for (const [index, groups] of r.stepElements) {
       const mark = state.marks[index];
-      const current = state.status !== 'finished' && index === state.stepIndex && state.mode === 'wait';
+      const current = state.status !== 'finished' && index === state.stepIndex && cursorMode;
       for (const g of groups) {
         g.classList.remove(...ALL_MARK_CLASSES);
         if (mark) g.classList.add(MARK_CLASSES[mark]);
         g.classList.toggle('is-current', current);
+        g.classList.toggle('is-hidden', index >= hiddenFrom);
       }
     }
+    r.svg?.querySelectorAll<SVGElement>('[data-step]').forEach((el) => {
+      const hidden = Number(el.dataset.step) >= hiddenFrom;
+      if (el.classList.contains('pp-placeholder')) el.classList.toggle('is-shown', hidden);
+      else el.classList.toggle('is-hidden', hidden);
+    });
     const cursor = cursorRef.current;
     if (!cursor) return;
     const step = exercise.steps[state.stepIndex];
-    if (state.mode !== 'wait' || !step || state.status === 'finished') {
+    if ((state.mode !== 'wait' && state.mode !== 'ear') || !step || state.status === 'finished') {
       cursor.style.opacity = '0';
       return;
     }
@@ -97,7 +111,7 @@ export function ScoreView(props: { exercise: Exercise; showNoteNames: boolean; c
         scroller.scrollTo({ top: Math.max(0, top - 6), behavior: 'smooth' });
       }
     }
-  }, [state.marks, state.stepIndex, state.status, state.mode, exercise, width, viewHeight, showNoteNames, height]);
+  }, [state.marks, state.stepIndex, state.status, state.mode, state.visibleSteps, exercise, width, viewHeight, showNoteNames, height]);
 
   // Wrong-note flash on the cursor.
   useEffect(() => {

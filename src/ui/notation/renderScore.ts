@@ -33,6 +33,8 @@ export interface RenderOptions {
   /** Visible height; used to zoom short exercises. 0 = no zoom. */
   height: number;
   showNoteNames: boolean;
+  /** Draw a "?" marker at every step, shown while that step's notes are hidden (ear training). */
+  placeholders?: boolean;
 }
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -108,8 +110,9 @@ function createNote(e: NoteEvent, clef: Clef, ticksPerBar: number, stemDir: numb
   return note;
 }
 
-function addText(svg: SVGSVGElement, parent: SVGElement, x: number, y: number, text: string, cls: string) {
+function addText(svg: SVGSVGElement, parent: SVGElement, x: number, y: number, text: string, cls: string, step?: number) {
   const el = document.createElementNS(SVG_NS, 'text');
+  if (step !== undefined) el.setAttribute('data-step', String(step));
   el.setAttribute('x', x.toFixed(1));
   el.setAttribute('y', y.toFixed(1));
   el.setAttribute('class', cls);
@@ -263,7 +266,7 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
           const cx = (note.getNoteHeadBeginX() + note.getNoteHeadEndX()) / 2;
           let y = rowY;
           for (const p of [...event.pitches].reverse()) {
-            addText(svg, labelLayer, cx, y, pitchLabel(p), `pp-label pp-label-${HAND_CLEF[hand]}`);
+            addText(svg, labelLayer, cx, y, pitchLabel(p), `pp-label pp-label-${HAND_CLEF[hand]}`, stepByTick.get(event.startTick));
             y += 12;
           }
         }
@@ -271,5 +274,27 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
     }
   }
   if (svg && labelLayer) svg.appendChild(labelLayer);
+  if (svg && opts.placeholders) {
+    const layer = document.createElementNS(SVG_NS, 'g');
+    layer.setAttribute('class', 'pp-placeholders');
+    for (const step of ex.steps) {
+      const { system, x } = tickToX(layout, step.tick);
+      const clef = step.notes[0].hand === 'lh' ? 'bass' : 'treble';
+      const y = (system.staveY[clef] ?? system.staveY[ex.staves[0]]!) + 60; // middle staff line
+      const g = document.createElementNS(SVG_NS, 'g');
+      g.setAttribute('class', 'pp-placeholder');
+      g.setAttribute('data-step', String(step.index));
+      const r = document.createElementNS(SVG_NS, 'rect');
+      r.setAttribute('x', String(x - 4));
+      r.setAttribute('y', String(y - 13));
+      r.setAttribute('width', '20');
+      r.setAttribute('height', '26');
+      r.setAttribute('rx', '6');
+      g.appendChild(r);
+      addText(svg, g, x + 6, y + 5, '?', 'pp-placeholder-mark');
+      layer.appendChild(g);
+    }
+    svg.appendChild(layer);
+  }
   return { layout, scale, svg, stepElements, noteX };
 }

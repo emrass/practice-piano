@@ -1,21 +1,24 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Exercise } from '../core/exercise';
 import type { ExerciseResult } from '../core/eval/types';
+import { generateEarExercise, type EarExercise } from '../core/ear/generator';
 import { generateExercise, type FocusNote } from '../core/generator/generator';
+import { LESSONS, type LessonId } from '../core/lessons';
 import { randomSeed } from '../core/generator/rng';
 import { PIANO_ACTIONS, type PianoAction, PianoShortcutGate } from '../core/input/pianoShortcuts';
 import { clampQwertyBase, OCTAVE_DOWN_CODE, OCTAVE_UP_CODE, qwertyBaseFor, qwertyToMidi } from '../core/input/qwerty';
 import { fitKeyboardRange, KEYBOARD_RANGES } from '../core/keyboard/range';
 import { prefersFlats } from '../core/music/keys';
 import { midiLabel } from '../core/music/pitch';
-import { applyResult, type Award, dayKey, displayStreak, findWeakSpots, type ProgressState } from '../core/progress/progress';
-import type { Settings } from '../core/settings';
+import { applyResult, type Award, dayKey, displayStreak, findWeakIntervals, findWeakSpots, type ProgressState } from '../core/progress/progress';
+import { earSettingsFrom, type Settings } from '../core/settings';
 import { useStore } from '../lib/store';
 import { inputBus } from '../input/inputBus';
 import { audioEngine } from '../platform/audio/audioEngine';
 import { MidiService } from '../platform/midi/midiService';
 import { isNativeApp } from '../platform/native';
 import { Segmented } from './components/controls';
+import { EarPanel } from './components/EarPanel';
 import { ExercisePanel } from './components/ExercisePanel';
 import { InputAudioPanel, InputMonitor } from './components/InputAudioPanel';
 import { LatencyCalibration } from './components/LatencyCalibration';
@@ -25,7 +28,9 @@ import { PracticeBar } from './components/PracticeBar';
 import { ProgressPanel } from './components/ProgressPanel';
 import { ResultsCard } from './components/ResultsCard';
 import { ScoreView } from './components/ScoreView';
+import { EarController } from './practice/EarController';
 import { PracticeController } from './practice/PracticeController';
+import type { Session } from './practice/session';
 import { type Profile, useProfile } from './state/useProfile';
 
 const midiService = new MidiService(inputBus);
@@ -34,6 +39,10 @@ type Tab = 'exercise' | 'input' | 'progress';
 
 function weakFocus(progress: ProgressState): FocusNote[] {
   return findWeakSpots(progress).notes.map((n) => ({ midi: n.midi, clef: n.clef }));
+}
+
+function weakIntervalFocus(progress: ProgressState): number[] {
+  return findWeakIntervals(progress).map((w) => w.semitones);
 }
 
 function isTypingTarget(t: EventTarget | null): boolean {
@@ -59,6 +68,8 @@ function Studio({ profile }: { profile: Profile }) {
   const { settings: s, progress, updateSettings, setProgress } = profile;
   const [seed, setSeed] = useState(randomSeed);
   const [focus, setFocus] = useState<FocusNote[]>(() => (s.weakSpotFocus ? weakFocus(progress) : []));
+  const [focusIntervals, setFocusIntervals] = useState<number[]>(() => (s.weakSpotFocus ? weakIntervalFocus(progress) : []));
+  const lesson: LessonId = s.lesson;
   const [retryToken, setRetryToken] = useState(0);
   const [tab, setTab] = useState<Tab>('exercise');
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -71,9 +82,11 @@ function Studio({ profile }: { profile: Profile }) {
   }, [progress]);
 
   // ---- Exercise -------------------------------------------------------------------
-  const exercise: Exercise = useMemo(
+  const sightExercise: Exercise | null = useMemo(
     () =>
-      generateExercise(
+      lesson !== 'sight'
+        ? null
+        : generateExercise(
         {
           level: s.level,
           hands: s.hands,
@@ -88,20 +101,35 @@ function Studio({ profile }: { profile: Profile }) {
         },
         seed,
       ),
-    [s.level, s.hands, s.bars, s.keyId, s.timeSignature, s.rhythmComplexity, s.maxPolyphony, s.bpm, s.keyboardSize, s.weakSpotFocus, focus, seed],
+    [lesson, s.level, s.hands, s.bars, s.keyId, s.timeSignature, s.rhythmComplexity, s.maxPolyphony, s.bpm, s.keyboardSize, s.weakSpotFocus, focus, seed],
   );
+  const earExercise: EarExercise | null = useMemo(
+    () =>
+      lesson !== 'ear'
+        ? null
+        : generateEarExercise({ ...earSettingsFrom(s), focusIntervals: s.weakSpotFocus ? focusIntervals : undefined }, seed),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [lesson, s.earLevel, s.earLength, s.earReference, s.earKeyId, s.weakSpotFocus, focusIntervals, seed],
+  );
+  const exercise: Exercise = (earExercise ?? sightExercise)!;
   const firstSight = (progress.attempts[exercise.id] ?? 0) === 0;
 
   const update = useCallback(
     (patch: Partial<Settings>) => {
-      if (patch.weakSpotFocus) setFocus(weakFocus(progressRef.current));
+      if (patch.weakSpotFocus) {
+        setFocus(weakFocus(progressRef.current));
+        setFocusIntervals(weakIntervalFocus(progressRef.current));
+      }
       updateSettings(patch);
     },
     [updateSettings],
   );
 
   const nextExercise = useCallback(() => {
-    if (s.weakSpotFocus) setFocus(weakFocus(progressRef.current));
+    if (s.weakSpotFocus) {
+      setFocus(weakFocus(progressRef.current));
+      setFocusIntervals(weakIntervalFocus(progressRef.current));
+    }
     setSeed(randomSeed());
   }, [s.weakSpotFocus]);
 
@@ -116,9 +144,15 @@ function Studio({ profile }: { profile: Profile }) {
     [setProgress],
   );
 
-  const controller = useMemo(
+  const controller: Session = useMemo(
     () =>
-      new PracticeController(
+      earExercise
+        ? new EarController(
+            { exercise: earExercise, graceMs: s.chordGraceMs, sustainCountsAsHeld: s.sustainScoring === 'hold', volume: s.synthVolume },
+            inputBus,
+            audioEngine,
+          )
+        : new PracticeController(
         {
           exercise,
           mode: s.mode,
@@ -134,9 +168,16 @@ function Studio({ profile }: { profile: Profile }) {
       ),
     // Volume is applied live below; a retry creates a fresh session on the same passage.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [exercise, s.mode, s.chordGraceMs, s.sustainScoring, s.latencyMs, s.playheadDelayMs, s.countInBars, retryToken],
+    [exercise, s.mode, s.chordGraceMs, s.sustainScoring, s.latencyMs, s.playheadDelayMs, s.countInBars, retryToken, s.synthVolume],
   );
   useEffect(() => controller.attach(), [controller]);
+  // Ear training: once audio has been unlocked by a first gesture, new phrases play by themselves.
+  useEffect(() => {
+    if (controller instanceof EarController && audioEngine.isRunning) {
+      const t = setTimeout(() => controller.start(), 350);
+      return () => clearTimeout(t);
+    }
+  }, [controller]);
   useEffect(() => {
     // Development hook for end-to-end tests (stripped from production builds).
     if (import.meta.env.DEV) (window as unknown as { __ppDebug?: unknown }).__ppDebug = { controller, exercise };
@@ -145,9 +186,14 @@ function Studio({ profile }: { profile: Profile }) {
   useEffect(() => controller.setMetronomeVolume(s.metronomeVolume), [controller, s.metronomeVolume]);
 
   const startStop = useCallback(() => {
-    if (controller.state.get().mode !== 'flow') return;
+    const mode = controller.state.get().mode;
+    if (mode === 'ear') return controller.start(); // listen / replay
+    if (mode !== 'flow') return;
     if (controller.isActive) controller.stop();
     else controller.start();
+  }, [controller]);
+  const hint = useCallback(() => {
+    if (controller instanceof EarController) controller.hint();
   }, [controller]);
   const retry = useCallback(() => setRetryToken((t) => t + 1), []);
   const resultsHidden = hiddenResultsFor === controller;
@@ -171,13 +217,14 @@ function Studio({ profile }: { profile: Profile }) {
           return hideResults();
         case 'easier':
         case 'harder': {
-          const level = Math.min(100, Math.max(1, s.level + (action === 'harder' ? 1 : -1)));
-          if (level !== s.level) update({ level });
+          const current = lesson === 'ear' ? s.earLevel : s.level;
+          const level = Math.min(100, Math.max(1, current + (action === 'harder' ? 1 : -1)));
+          if (level !== current) update(lesson === 'ear' ? { earLevel: level } : { level });
           return nextExercise();
         }
       }
     },
-    [retry, nextExercise, hideResults, s.level, update],
+    [retry, nextExercise, hideResults, s.level, s.earLevel, lesson, update],
   );
 
   useEffect(
@@ -189,6 +236,10 @@ function Studio({ profile }: { profile: Profile }) {
         const st = controller.state.get();
         if (tapped && st.mode === 'flow' && st.status === 'ready') {
           controller.start();
+          return;
+        }
+        if (tapped && st.mode === 'ear' && st.status !== 'finished') {
+          controller.start(); // listen / replay without leaving the keys
           return;
         }
         if (!action || st.status !== 'finished') return;
@@ -239,7 +290,11 @@ function Studio({ profile }: { profile: Profile }) {
         return;
       }
       if (e.code === 'KeyN') return nextExercise();
-      if (e.code === 'KeyR') return finished || controller.state.get().mode === 'flow' ? retry() : controller.start();
+      if (e.code === 'KeyR') return finished || controller.state.get().mode !== 'wait' ? retry() : controller.start();
+      if (e.code === 'Slash') {
+        e.preventDefault();
+        return hint();
+      }
       if (e.key === 'Shift') {
         inputBus.publish({ kind: 'sustain', down: true, time: performance.now(), source: 'qwerty' });
         return;
@@ -280,7 +335,7 @@ function Studio({ profile }: { profile: Profile }) {
       window.removeEventListener('blur', onBlur);
       onBlur();
     };
-  }, [controller, startStop, nextExercise, retry, qwertyBase, exercise.id, calibrating, hideResults]);
+  }, [controller, startStop, nextExercise, retry, hint, qwertyBase, exercise.id, calibrating, hideResults]);
 
   // ---- Theme ------------------------------------------------------------------------
   useEffect(() => {
@@ -288,7 +343,13 @@ function Studio({ profile }: { profile: Profile }) {
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', s.theme === 'dark' ? '#1b1815' : '#f5efe3');
   }, [s.theme]);
 
-  const kbRange = s.keyboardView === 'full' ? KEYBOARD_RANGES[s.keyboardSize] : fitKeyboardRange(exercise.range.min, exercise.range.max, s.keyboardSize);
+  // Ear training must not give the phrase away, so its keyboard window is fixed (C3–C6).
+  const kbRange =
+    s.keyboardView === 'full'
+      ? KEYBOARD_RANGES[s.keyboardSize]
+      : lesson === 'ear'
+        ? fitKeyboardRange(48, 84, s.keyboardSize)
+        : fitKeyboardRange(exercise.range.min, exercise.range.max, s.keyboardSize);
   const streak = displayStreak(progress.streak, dayKey(new Date()));
   const weakLabel = focus.length ? focus.slice(0, 4).map((f) => midiLabel(f.midi)).join(', ') : findWeakSpots(progress).notes.length ? 'your weakest notes' : null;
   const connectedInputs = midiState.inputs.filter((i) => i.connected);
@@ -317,15 +378,28 @@ function Studio({ profile }: { profile: Profile }) {
         ))}
       </div>
       <div className="sidebar-scroll">
-        {tab === 'exercise' ? <ExercisePanel settings={s} progress={progress} update={update} onNew={nextExercise} weakNotesLabel={weakLabel} /> : null}
+        {tab === 'exercise' && lesson === 'sight' ? (
+          <ExercisePanel settings={s} progress={progress} update={update} onNew={nextExercise} weakNotesLabel={weakLabel} />
+        ) : null}
+        {tab === 'exercise' && lesson === 'ear' ? (
+          <EarPanel
+            settings={s}
+            progress={progress}
+            update={update}
+            onNew={nextExercise}
+            weakIntervals={focusIntervals.length ? focusIntervals : weakIntervalFocus(progress)}
+          />
+        ) : null}
         {tab === 'input' ? <InputAudioPanel settings={s} update={update} midi={midiService} qwertyBase={qwertyBase} onCalibrate={openCalibration} /> : null}
         {tab === 'progress' ? (
           <ProgressPanel
+            lesson={lesson}
             progress={progress}
             settings={s}
             storageKind={profile.storageKind}
             onPracticeWeakSpots={() => {
               setFocus(weakFocus(progressRef.current));
+              setFocusIntervals(weakIntervalFocus(progressRef.current));
               updateSettings({ weakSpotFocus: true });
               setSeed(randomSeed());
               setTab('exercise');
@@ -349,15 +423,37 @@ function Studio({ profile }: { profile: Profile }) {
             practice-piano<span className="brand-tld">.com</span>
           </span>
         </div>
-        <Segmented
-          label="Practice mode"
-          value={s.mode}
-          onChange={(mode) => update({ mode })}
-          options={[
-            { value: 'wait', label: 'Wait mode', title: 'Self-paced: the cursor waits for the right notes' },
-            { value: 'flow', label: 'Flow mode', title: 'Play in time with the metronome' },
-          ]}
-        />
+        <div className="topbar-lesson">
+          <Segmented<LessonId>
+            label="Lesson"
+            value={lesson}
+            onChange={(next) => {
+              controller.stop();
+              update({ lesson: next });
+              setSeed(randomSeed());
+            }}
+            options={(Object.keys(LESSONS) as LessonId[]).map((id) => ({
+              value: id,
+              label: (
+                <>
+                  <span className="label-long">{LESSONS[id].name}</span>
+                  <span className="label-short">{LESSONS[id].short}</span>
+                </>
+              ),
+            }))}
+          />
+        </div>
+        <div className={`topbar-mode ${lesson === 'sight' ? '' : 'is-hidden'}`} aria-hidden={lesson !== 'sight'}>
+          <Segmented
+            label="Practice mode"
+            value={s.mode}
+            onChange={(mode) => update({ mode })}
+            options={[
+              { value: 'wait', label: 'Wait', title: 'Self-paced: the cursor waits for the right notes' },
+              { value: 'flow', label: 'Flow', title: 'Play in time with the metronome' },
+            ]}
+          />
+        </div>
         <div className="topbar-right">
           <span className="chip chip-streak" title="Daily practice streak">
             <span className="chip-icon">◆</span>
@@ -413,6 +509,8 @@ function Studio({ profile }: { profile: Profile }) {
           </div>
           <PracticeBar
             controller={controller}
+            onHint={hint}
+            onRetry={retry}
             onStartStop={startStop}
             onRestart={() => controller.start()}
             onNext={nextExercise}
@@ -451,7 +549,7 @@ function Studio({ profile }: { profile: Profile }) {
 }
 
 function ResultsLayer(props: {
-  controller: PracticeController;
+  controller: Session;
   award: Award | null;
   hidden: boolean;
   pianoShortcuts: boolean;
@@ -476,7 +574,7 @@ function ResultsLayer(props: {
 const ACTION_LABELS = new Map(PIANO_ACTIONS.map((a) => [a.pc, a.label]));
 
 function KeyboardDock(props: {
-  controller: PracticeController;
+  controller: Session;
   min: number;
   max: number;
   settings: Settings;
