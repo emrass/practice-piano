@@ -46,6 +46,40 @@
   color: #e6b450;
 }
 
+.kb-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.kb-sound {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 22px;
+  margin-left: 6px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #a89880;
+  cursor: pointer;
+}
+
+.kb-sound:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e8dcc8;
+}
+
+.kb-sound.is-on {
+  color: #e6b450;
+}
+
+.kb-sound:focus-visible {
+  outline: 2px solid #e6b450;
+  outline-offset: 1px;
+}
+
 .keyboard-head .muted:not(.kb-range) {
   font-size: 12px;
 }

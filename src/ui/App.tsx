@@ -709,6 +709,7 @@ function Studio({ profile }: { profile: Profile }) {
             min={kbRange.min}
             max={kbRange.max}
             settings={s}
+            onToggleKeySound={() => update({ keySound: !s.keySound })}
             preferFlats={prefersFlats(exercise.key)}
             qwertyBase={s.showQwertyHints && !rhythmExercise ? qwertyBase : null}
             markers={
@@ -796,8 +797,10 @@ function KeyboardDock(props: {
   qwertyBase: number | null;
   /** Rhythm mode: the designated keys. */
   markers?: Map<number, string>;
+  onToggleKeySound: () => void;
 }) {
   const held = useStore(inputBus.held);
+  const soundOn = props.settings.keySound;
   const state = useStore(props.controller.state);
   const expected = props.settings.showKeyboardGuide && state.status !== 'finished' ? state.expected : [];
   const actions = props.settings.pianoShortcuts && state.status === 'finished' ? ACTION_LABELS : undefined;
@@ -805,9 +808,28 @@ function KeyboardDock(props: {
     <div className="keyboard-dock">
       <div className="keyboard-head">
         <InputMonitor />
-        <span className="muted kb-range">
-          {midiLabel(props.min)}–{midiLabel(props.max)}
-        </span>
+        <div className="kb-right">
+          <span className="muted kb-range">
+            {midiLabel(props.min)}–{midiLabel(props.max)}
+          </span>
+          <button
+            type="button"
+            className={`kb-sound ${soundOn ? 'is-on' : ''}`}
+            aria-pressed={soundOn}
+            aria-label="Key sound for on-screen and computer keys"
+            title={soundOn ? 'Key sound on — on-screen and computer keys play a piano sound' : 'Key sound off — turn on to hear on-screen and computer keys'}
+            onClick={props.onToggleKeySound}
+          >
+            <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
+              <path d="M3 7.5h3l4-3.5v12l-4-3.5H3z" fill="currentColor" />
+              {soundOn ? (
+                <path d="M13 7a4 4 0 0 1 0 6M15.5 4.8a7 7 0 0 1 0 10.4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              ) : (
+                <path d="M13.2 7.6l4.4 4.8M17.6 7.6l-4.4 4.8" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              )}
+            </svg>
+          </button>
+        </div>
       </div>
       <PianoKeyboard
         min={props.min}
