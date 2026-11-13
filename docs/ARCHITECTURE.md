@@ -100,8 +100,8 @@ starts Flow mode from the ready state.
 `applyResult(progress, result, now)` is pure and returns the new state plus an `Award`:
 
 - XP = notes × level multiplier × accuracy factor ((acc − 0.5)/0.5)² × Flow timing factor;
-  repeats earn 40 %; the level multiplier is capped at the top of the second tier above the
-  highest mastered one.
+  repeats earn 40 %. The level multiplier (1 + level/50) is never capped: learners pick their
+  level freely and the accuracy factor keeps sloppy runs at high levels cheap.
 - First-sight bonus: +50 % (+5) on a first attempt with ≥ 90 % pitch accuracy.
 - Tier mastery: N distinct passages passed at ≥ 90 % pitch accuracy.
 - Stats are stored as `stats[dimension][key] → Aggregate` (attempts, correct, recent reaction

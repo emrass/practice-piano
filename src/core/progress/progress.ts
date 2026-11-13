@@ -112,9 +112,6 @@ export interface Award {
   tierPasses: number;
   tierRequired: number;
   newlyMastered: boolean;
-  /** Level used for the XP multiplier (capped until higher tiers are mastered). */
-  effectiveLevel: number;
-  levelCapped: boolean;
   streak: number;
   /** Repertoire lessons: what this run did to the item's ladder and review date. */
   repertoire?: RepertoireChange;
@@ -165,24 +162,6 @@ export function displayStreak(streak: ProgressState['streak'], today: string): n
   return 0;
 }
 
-export function highestMasteredTierIndex(progress: ProgressState, lesson: LessonId = 'sight'): number {
-  let best = -1;
-  LESSONS[lesson].tiers.forEach((t, i) => {
-    if (progress.tiers[t.id]?.mastered) best = i;
-  });
-  return best;
-}
-
-/**
- * The XP level multiplier only grows up to the top of the second tier above your highest
- * mastered tier, so cranking the slider without accuracy earns nothing extra.
- */
-export function xpLevelCeiling(progress: ProgressState, lesson: LessonId = 'sight'): number {
-  const tiers = LESSONS[lesson].tiers;
-  const next = Math.min(tiers.length - 1, highestMasteredTierIndex(progress, lesson) + 2);
-  return tiers[next].maxLevel;
-}
-
 function accuracyFactor(acc: number): number {
   const x = Math.min(1, Math.max(0, (acc - 0.5) / 0.5));
   return x * x;
@@ -217,8 +196,6 @@ function repertoireAward(progress: ProgressState, result: ExerciseResult): Award
     tierPasses: 0,
     tierRequired: 0,
     newlyMastered: false,
-    effectiveLevel: 0,
-    levelCapped: false,
     streak: progress.streak.current,
   };
 }
@@ -229,9 +206,9 @@ export function computeAward(progress: ProgressState, result: ExerciseResult): A
   const tier = findTier(result.tierId) ?? LESSONS[lesson].tierForLevel(result.level) ?? tierForLevel(result.level);
   const tierState = progress.tiers[tier.id];
   const firstAttempt = (progress.attempts[result.exerciseId] ?? 0) === 0;
-  const ceiling = xpLevelCeiling(progress, lesson);
-  const effectiveLevel = Math.min(result.level, ceiling);
-  const levelMult = 1 + effectiveLevel / 50;
+  // Harder material pays more per note; the accuracy factor decides how much of it is earned.
+  // No cap: learners choose their level freely (DIDACTICS principle 4).
+  const levelMult = 1 + result.level / 50;
   // Flow: timing matters. Ear: every extra listen costs a little (the first one is free).
   const modeMult =
     result.mode === 'flow' ? 0.6 + 0.6 * (result.timingAccuracy ?? 0) : result.mode === 'ear' ? 1 / (1 + 0.2 * (result.replays ?? 0)) : 1;
@@ -252,8 +229,6 @@ export function computeAward(progress: ProgressState, result: ExerciseResult): A
     tierPasses,
     tierRequired: tier.passesRequired,
     newlyMastered,
-    effectiveLevel,
-    levelCapped: effectiveLevel < result.level,
     streak: progress.streak.current,
   };
 }

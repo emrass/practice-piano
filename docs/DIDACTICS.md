@@ -15,7 +15,9 @@ changes to a practice mode should start here.
    - *Auto* — the app chooses the level or the items that are due.
 3. **Always new material**, but "new" means different things (§2).
 4. **Accuracy before speed.** Mastery is gated on accuracy (≥ 90 %); tempo and level rise only
-   on top of clean playing. XP never rewards just turning the difficulty up.
+   on top of clean playing. XP scales with level and accuracy: harder material pays more per
+   note, but only clean playing earns much of it. Learners choose their level freely; XP never
+   penalises that choice.
 5. **Measure what a teacher listens for**, and only what MIDI can really tell: pitch, timing,
    evenness (time and velocity), hand synchronisation, reaction time. Fingering is shown, never
    graded.

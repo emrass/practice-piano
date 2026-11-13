@@ -12,7 +12,6 @@ import {
   noteHeatmap,
   normalizeProgress,
   updateStreak,
-  xpLevelCeiling,
   type ProgressState,
 } from './progress';
 
@@ -103,18 +102,18 @@ describe('XP & mastery', () => {
     expect(last.progress.tiers.t01.mastered).toBe(true);
   });
 
-  it('caps the XP level multiplier until tiers are mastered (no reward for just cranking difficulty)', () => {
+  it('pays more per note at higher levels, without any mastery gate', () => {
     const p = emptyProgress();
-    expect(xpLevelCeiling(p)).toBe(6); // top of tier 2
     const low = computeAward(p, result({ level: 5 }));
     const high = computeAward(p, result({ level: 95, exerciseId: 'hard' }));
-    expect(high.levelCapped).toBe(true);
-    expect(high.baseXp).toBe(low.baseXp);
-    const mastered: ProgressState = {
-      ...p,
-      tiers: { t12: { attempts: 6, passes: 6, passedExercises: [], bestAccuracy: 1, mastered: true } },
-    };
-    expect(computeAward(mastered, result({ level: 95 })).levelCapped).toBe(false);
+    expect(high.baseXp).toBeGreaterThan(low.baseXp);
+  });
+
+  it('rewards clean playing over a sloppy run at a higher level', () => {
+    const p = emptyProgress();
+    const cleanLow = computeAward(p, result({ level: 20 }));
+    const sloppyHigh = computeAward(p, result({ level: 95, exerciseId: 'hard', pitchAccuracy: 0.7 }));
+    expect(sloppyHigh.baseXp).toBeLessThan(cleanLow.baseXp);
   });
 
   it('scales Flow mode XP with timing accuracy', () => {
@@ -185,12 +184,6 @@ describe('ear training progress', () => {
     expect(p.stats.interval['3']).toMatchObject({ attempts: 1, correct: 0 });
     expect(p.stats.note).toBeUndefined();
     expect(p.history[0].lesson).toBe('ear');
-  });
-
-  it('keeps XP ceilings per lesson', () => {
-    const p: ProgressState = { ...emptyProgress(), tiers: { t12: { attempts: 5, passes: 5, passedExercises: [], bestAccuracy: 1, mastered: true } } };
-    expect(xpLevelCeiling(p, 'sight')).toBe(100);
-    expect(xpLevelCeiling(p, 'ear')).toBe(12);
   });
 
   it('finds weak intervals', () => {

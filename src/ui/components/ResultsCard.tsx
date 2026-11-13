@@ -40,7 +40,6 @@ export function ResultsCard(props: {
                 {note}
               </span>
             ))}
-            {award.levelCapped ? <span className="xp-note">XP multiplier capped at level {award.effectiveLevel} — master lower tiers to raise it.</span> : null}
           </div>
         ) : null}
         {award && tier && !view.repertoire ? (
