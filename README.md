@@ -42,7 +42,8 @@ npm run dev          # http://localhost:5173 — open in Chrome, allow MIDI
 
 No piano nearby? Every exercise can be played with the **on-screen keyboard** (mouse/touch)
 or the **computer keyboard** (`A`–`'` white keys, `W E T Y U O P` black keys, `Z`/`X` octave,
-`Shift` = sustain pedal).
+`Shift` = sustain pedal). Turn on *Key sound* under Input & audio to hear them; it is off by
+default because a MIDI piano makes its own sound.
 
 | Command | What it does |
 |---|---|
@@ -133,7 +134,7 @@ src/
     midi/ input/ keyboard/ settings.ts
   persistence/   storage + identity ports, local adapters, backup format
   platform/      Web MIDI / CoreMIDI bridge backends, Web Audio metronome
-  input/         input bus (MIDI, on-screen keys and QWERTY all publish here)
+  input/         input bus (MIDI, on-screen keys and QWERTY all publish here), key sound
   ui/            React components, VexFlow renderer, practice controller
   styles/        vanilla CSS
 native/          Xcode project (SwiftUI + WKWebView + CoreMIDI + CoreAudioKit)

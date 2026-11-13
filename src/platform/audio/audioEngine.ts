@@ -1,7 +1,8 @@
 /**
  * Web Audio output: metronome clicks and a small synthesised piano voice used by ear
- * training. Sight reading never plays notes (the player hears their own piano). A sampled
- * piano can replace the voice later by implementing NoteSynth.
+ * training, Rhythm Echo calls and (optionally) the on-screen and computer keys. MIDI input
+ * never sounds: the player hears their own piano. A sampled piano can replace the voice
+ * later by implementing NoteSynth.
  */
 export interface NoteSynth {
   /** Schedule one note; `when` and `duration` in AudioContext seconds. */
@@ -52,6 +53,7 @@ type AudioContextCtor = typeof AudioContext;
 export class AudioEngine {
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
+  private readonly live = new Map<number, GainNode>();
   synth: NoteSynth = simplePiano;
 
   get available(): boolean {
@@ -108,6 +110,33 @@ export class AudioEngine {
       bus.gain.linearRampToValueAtTime(0, now + 0.04);
       setTimeout(() => bus.disconnect(), 80);
     };
+  }
+
+  /** Live note for as long as a key is held (on-screen keys); released by stopNote. */
+  startNote(midi: number, velocity: number, volume = 0.8): void {
+    const ctx = this.ensure();
+    if (!ctx || !this.master || volume <= 0) return;
+    this.stopNote(midi);
+    const bus = ctx.createGain();
+    bus.connect(this.master);
+    // A long natural decay; the key release cuts it short.
+    this.synth.play(ctx, bus, midi, ctx.currentTime, 4, Math.max(0.2, Math.min(1, velocity)) * volume);
+    this.live.set(midi, bus);
+  }
+
+  stopNote(midi: number): void {
+    const bus = this.live.get(midi);
+    const ctx = this.ctx;
+    if (!bus || !ctx) return;
+    this.live.delete(midi);
+    const now = ctx.currentTime;
+    bus.gain.setValueAtTime(bus.gain.value, now);
+    bus.gain.exponentialRampToValueAtTime(0.0001, now + 0.25);
+    setTimeout(() => bus.disconnect(), 400);
+  }
+
+  stopAllNotes(): void {
+    for (const midi of [...this.live.keys()]) this.stopNote(midi);
   }
 
   /** Short woodblock-like click. */

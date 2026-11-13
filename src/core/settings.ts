@@ -73,6 +73,8 @@ export interface Settings {
   showNoteNames: boolean;
   showKeyboardGuide: boolean;
   showQwertyHints: boolean;
+  /** Play the synth for on-screen and computer keys (off: a MIDI piano makes its own sound). */
+  keySound: boolean;
   theme: Theme;
   // Audio / latency
   audioSetup: AudioSetup;
@@ -158,6 +160,7 @@ export const DEFAULT_SETTINGS: Settings = {
   showNoteNames: true,
   showKeyboardGuide: true,
   showQwertyHints: false,
+  keySound: false,
   theme: 'light',
   audioSetup: 'speakers',
   latencyMs: 15,
@@ -228,6 +231,7 @@ export function normalizeSettings(raw: unknown): Settings {
     showNoteNames: typeof r.showNoteNames === 'boolean' ? r.showNoteNames : d.showNoteNames,
     showKeyboardGuide: typeof r.showKeyboardGuide === 'boolean' ? r.showKeyboardGuide : d.showKeyboardGuide,
     showQwertyHints: typeof r.showQwertyHints === 'boolean' ? r.showQwertyHints : d.showQwertyHints,
+    keySound: typeof r.keySound === 'boolean' ? r.keySound : d.keySound,
     theme: oneOf(r.theme, ['light', 'dark'] as const, d.theme),
     audioSetup: oneOf(r.audioSetup, ['speakers', 'headphones', 'calibrated', 'custom'] as const, d.audioSetup),
     latencyMs,

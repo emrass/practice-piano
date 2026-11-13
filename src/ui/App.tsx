@@ -28,6 +28,7 @@ import { dueItems, setLadder } from '../core/scales/repertoire';
 import { earSettingsFrom, rhythmSettingsFrom, type Settings } from '../core/settings';
 import { useStore } from '../lib/store';
 import { inputBus } from '../input/inputBus';
+import { KeySound } from '../input/keySound';
 import { audioEngine } from '../platform/audio/audioEngine';
 import { MidiService } from '../platform/midi/midiService';
 import { isNativeApp } from '../platform/native';
@@ -75,6 +76,9 @@ function randomTonic(tonics: readonly string[], not: string | null): string {
   const pool = tonics.filter((t) => t !== not);
   return pool[Math.floor(Math.random() * pool.length)] ?? tonics[0];
 }
+
+/** Optional sound for the on-screen and computer keys (MIDI pianos make their own). */
+const keySound = new KeySound(audioEngine);
 
 function isTypingTarget(t: EventTarget | null): boolean {
   if (!(t instanceof HTMLElement)) return false;
@@ -296,6 +300,11 @@ function Studio({ profile }: { profile: Profile }) {
     [exercise, s.mode, s.scaleMode, s.scaleGoalNps, s.chordGraceMs, s.sustainScoring, s.latencyMs, s.playheadDelayMs, s.countInBars, retryToken, s.synthVolume],
   );
   useEffect(() => controller.attach(), [controller]);
+  useEffect(() => inputBus.subscribe((ev) => keySound.handle(ev)), []);
+  useEffect(() => {
+    keySound.setEnabled(s.keySound);
+    keySound.volume = s.synthVolume;
+  }, [s.keySound, s.synthVolume]);
   // Ear training: once audio has been unlocked by a first gesture, new phrases play by themselves.
   useEffect(() => {
     if (controller instanceof EarController && audioEngine.isRunning) {
