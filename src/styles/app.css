@@ -350,6 +350,13 @@
   width: 760px;
 }
 
+/* Size each lesson from its own label, then share out the spare room. Equal fifths (the
+   default `flex: 1 1 0`) left "Chords & progressions" about 129px, which fits SF Pro but cuts
+   the label off in wider fallback fonts such as DejaVu Sans (Linux) or Roboto. */
+.topbar-lesson .segmented button {
+  flex: 1 1 auto;
+}
+
 .topbar-mode .segmented {
   width: 140px;
 }
