@@ -37,6 +37,19 @@ for (const width of [390, 820, 1024, 1180, 1280, 1440]) {
   }
 }
 
+for (const width of [360, 390, 1440]) {
+  test(`Results card fits at ${width}px`, async ({ app, page }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await app.open({ settings: { lesson: 'sight', pianoShortcuts: true, sight: { mode: 'wait', level: 3, bars: 4, hands: 'rh' } } });
+    await app.playSteps();
+    const card = page.locator('.results-card');
+    await expect(card).toBeVisible();
+    expect(await card.evaluate((el) => el.scrollWidth <= el.clientWidth + 1), 'results card overflows sideways').toBe(true);
+    const box = await card.boundingBox();
+    expect(box!.x + box!.width).toBeLessThanOrEqual(width);
+  });
+}
+
 test('Key sound toggle above the keys flips the setting and persists', async ({ app, page }) => {
   await app.open({ settings: { lesson: 'sight', keySound: false } });
   const button = page.locator('.kb-sound');

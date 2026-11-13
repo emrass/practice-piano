@@ -951,6 +951,8 @@ details.help p {
 
 .results-card {
   width: min(480px, 100%);
+  /* One track that may shrink below its content, so long rows wrap instead of widening the card. */
+  grid-template-columns: minmax(0, 1fr);
   max-height: 100%;
   overflow: auto;
   background: var(--card);
@@ -988,7 +990,7 @@ details.help p {
 
 .results-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -1078,6 +1080,7 @@ details.help p {
 
 .results-actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: 8px;
 }
@@ -1439,7 +1442,7 @@ details.help p {
     font-size: 17px;
   }
   .results-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -1465,6 +1468,7 @@ details.help p {
 
 @media (max-width: 480px) {
   .pb-actions .btn kbd,
+  .results-actions .btn kbd,
   .pb-stats div:nth-child(2) {
     display: none;
   }
