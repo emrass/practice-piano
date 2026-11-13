@@ -38,7 +38,7 @@ for (const width of [390, 820, 1024, 1180, 1280, 1440]) {
 }
 
 for (const width of [360, 390, 1440]) {
-  test(`Results card fits at ${width}px`, async ({ app, page }) => {
+  test(`Results card and piano-shortcut labels fit at ${width}px`, async ({ app, page }) => {
     await page.setViewportSize({ width, height: 800 });
     await app.open({ settings: { lesson: 'sight', pianoShortcuts: true, sight: { mode: 'wait', level: 3, bars: 4, hands: 'rh' } } });
     await app.playSteps();
@@ -47,6 +47,10 @@ for (const width of [360, 390, 1440]) {
     expect(await card.evaluate((el) => el.scrollWidth <= el.clientWidth + 1), 'results card overflows sideways').toBe(true);
     const box = await card.boundingBox();
     expect(box!.x + box!.width).toBeLessThanOrEqual(width);
+    const labels = await page.locator('.key-action').evaluateAll((ls) => ls.map((l) => l.getBoundingClientRect()).map((r) => ({ l: r.left, r: r.right, t: r.top, b: r.bottom })));
+    expect(labels).toHaveLength(5);
+    const overlaps = labels.some((a, i) => labels.slice(i + 1).some((b) => a.l < b.r - 1 && b.l < a.r - 1 && a.t < b.b - 1 && b.t < a.b - 1));
+    expect(overlaps, 'two shortcut labels overlap').toBe(false);
   });
 }
 

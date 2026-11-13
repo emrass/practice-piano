@@ -113,7 +113,8 @@
   border-left: 1px solid var(--key-white-edge);
   border-bottom: 1px solid var(--key-white-edge);
   border-radius: 0 0 5px 5px;
-  z-index: 1;
+  /* No stacking context of its own, so a shortcut label wider than its key can paint over the
+     neighbouring white keys (black keys still cover everything). */
 }
 
 .key-black {
@@ -248,6 +249,28 @@
   color: #fff8f0;
   white-space: nowrap;
   pointer-events: none;
+  z-index: 2;
+}
+
+/* Narrow keys (phones, long ranges): the labels are wider than their keys, so they drop to the
+   bottom of the key (over the note name) and every other one sits a row up, clear of its
+   neighbours and still under the black keys. */
+.key-white.is-action {
+  container-type: inline-size;
+}
+
+@container (max-width: 44px) {
+  .key-action {
+    bottom: 5px;
+    font-size: 9.5px;
+    padding: 2px 4px;
+  }
+  .key-action.is-alt {
+    bottom: 24px;
+  }
+  .key-action ~ .key-label {
+    visibility: hidden;
+  }
 }
 
 /* Rhythm mode: the designated keys. */
@@ -269,7 +292,7 @@
   color: #fff8f0;
   white-space: nowrap;
   pointer-events: none;
-  z-index: 3;
+  z-index: 2;
 }
 
 .key-black .key-marker {

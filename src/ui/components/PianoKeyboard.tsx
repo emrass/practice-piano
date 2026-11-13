@@ -64,6 +64,8 @@ export const PianoKeyboard = memo(function PianoKeyboard(props: PianoKeyboardPro
   const whiteCount = keys.filter((k) => !k.black).length;
   // Label shortcut keys in the octave nearest the middle of the view; highlight all octaves.
   const labelOctaveC = Math.floor((props.min + props.max) / 2 / 12) * 12;
+  // Every other shortcut label sits a row higher when keys are too narrow for them side by side.
+  const actionOrder = useMemo(() => [...(props.actions?.keys() ?? [])], [props.actions]);
 
   const press = (pointerId: number, midi: number) => {
     const prev = pointers.current.get(pointerId);
@@ -132,7 +134,9 @@ export const PianoKeyboard = memo(function PianoKeyboard(props: PianoKeyboardPro
             aria-label={pitchLabel(spelled, true)}
           >
             {heat && heat.attempts > 0 ? <span className="key-heat" style={{ background: heatColor(heat.accuracy) }} /> : null}
-            {action && k.midi >= labelOctaveC && k.midi < labelOctaveC + 12 ? <span className="key-action">{action}</span> : null}
+            {action && k.midi >= labelOctaveC && k.midi < labelOctaveC + 12 ? (
+              <span className={`key-action ${actionOrder.indexOf(k.midi % 12) % 2 ? 'is-alt' : ''}`}>{action}</span>
+            ) : null}
             {marker ? (
               <span className="key-marker">
                 {marker.split(' · ')[0]}
