@@ -192,15 +192,28 @@ gets plain objects back.
 
 ## Extending with new lesson types
 
-A lesson type needs (1) an entry in `core/lessons.ts` with its tier list, (2) a generator producing
-an `Exercise` (scales, chord progressions and rhythm drills fit the same measures/steps model),
-and (3) a controller implementing `ui/practice/session.ts` (usually a thin layer over
-`WaitEngine` or `FlowEngine`) plus a settings panel. Its settings get their own group in
-`core/settings.ts` (`settings.<lesson>`, validated by a `normalize<Lesson>` function); shared
-settings (display, audio, input) stay at the top level. Changes go through
-`applySettingsPatch`, which merges lesson groups field by field
-(`update({ chords: { mode: 'flow' } })`). Controllers extend `SessionBase`
-(`ui/practice/sessionBase.ts`), which holds the shared plumbing: state store and finished
-event, input subscription, self-clearing flashes, the frame loop, metronome and count-in
-(`startCountIn` / `showCountIn`), and `StepMarks` for Flow step marks. The renderer, keyboard, input, piano
-shortcuts, results, persistence and progress are shared.
+A lesson is a set of modules, one of each kind, and App.tsx only picks the active one:
+
+- **Core** — an entry in `core/lessons.ts` (tiers, or `repertoire: true`), a generator producing an
+  `Exercise` (scales, chords and rhythm drills fit the same measures/steps model), and analysis
+  that puts the lesson's summary on `ExerciseResult` (`result.lesson`, plus e.g. `result.chords`).
+- **Settings** — a group in `core/settings.ts` (`settings.<lesson>`, validated by a
+  `normalize<Lesson>` function); shared settings (display, audio, input) stay at the top level.
+  Changes go through `applySettingsPatch`, which merges lesson groups field by field
+  (`update({ chords: { mode: 'flow' } })`).
+- **Session** — a controller extending `SessionBase` (`ui/practice/sessionBase.ts`: state store
+  and finished event, input subscription, self-clearing flashes, frame loop, metronome and
+  count-in, `StepMarks`), usually a thin layer over `WaitEngine` / `FlowEngine` or the lesson's
+  own engines.
+- **Lesson hook** — `ui/lessons/<lesson>.tsx` returns a `LessonRuntime` (`ui/lessons/types.ts`): the
+  current exercise and its session, `next` / `step` (easier / harder), how it reacts to settings
+  changes (`onPatch`), its settings panel, an optional stage that replaces the score (chord chart,
+  play from memory), the Wait / Flow switch, keyboard span and mappings, review and weak-spot
+  actions for the Progress tab. Shared pieces live in `ui/lessons/shared.ts` (weak-spot focus,
+  review queue and manual tempo ladder for repertoire lessons). `useLesson` in
+  `ui/lessons/index.ts` runs every lesson's hook (hooks can't be conditional); only the active one
+  builds an exercise.
+- **Results and Progress** — a `ResultsView` in `ui/results/` (ribbon, headline, measurements, Next
+  label) and a `ProgressView` in `ui/progress/` (summary tile labels, the lesson's section).
+
+The renderer, keyboard, input, piano shortcuts, persistence and progress logic are shared.

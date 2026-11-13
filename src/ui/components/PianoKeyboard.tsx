@@ -18,7 +18,7 @@ export interface PianoKeyboardProps {
   /** Piano-shortcut labels by pitch class (shown after an exercise). */
   actions?: Map<number, string>;
   /** Labels for specific keys (Rhythm mode's designated keys). */
-  markers?: Map<number, string>;
+  markers?: ReadonlyMap<number, string>;
 }
 
 interface KeyGeom {

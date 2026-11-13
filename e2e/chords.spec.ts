@@ -30,12 +30,12 @@ test.describe('Chords & progressions', () => {
   test('Drill (Wait): right notes over the wrong bass get a hint', async ({ app, page }) => {
     await app.open({ settings: { lesson: 'chords', chords: { task: 'drill', set: 'triads', prompt: 'symbol', inversions: 'inversions', mode: 'wait' } } });
     const ts = await app.exercise(targets);
-    // Find an inverted chord: play its tones with the root lowest.
+    // Find an inverted chord: play its tones with another chord tone lowest.
     const i = ts.findIndex((t) => t.bassPc !== null && t.bassPc !== t.voicing.map((k) => k % 12).sort((a, b) => a - b)[0]);
     for (let j = 0; j < i; j++) await app.tap(ts[j].voicing);
     const t = ts[i];
-    const root = Math.min(...t.voicing.filter((k) => k % 12 !== t.bassPc));
-    const keys = [root - 12, ...t.voicing];
+    const other = Math.min(...t.voicing.filter((k) => k % 12 !== t.bassPc));
+    const keys = [other - 12, ...t.voicing];
     await app.noteOn(keys);
     await expect(page.locator('.chord-hint')).toContainText('in the bass');
     await app.noteOff(keys);

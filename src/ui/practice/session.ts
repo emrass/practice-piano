@@ -50,5 +50,7 @@ export interface Session {
   /** Flow playhead position in ticks, null when there is no moving playhead. */
   playheadTick(now?: number): number | null;
   setMetronomeVolume(volume: number): void;
+  /** Ear training: reveal the next note. */
+  hint?(): void;
   dispose(): void;
 }

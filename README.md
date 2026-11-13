@@ -154,7 +154,8 @@ src/
   persistence/   storage + identity ports, local adapters, backup format
   platform/      Web MIDI / CoreMIDI bridge backends, Web Audio metronome
   input/         input bus (MIDI, on-screen keys and QWERTY all publish here), key sound
-  ui/            React components, VexFlow renderer, practice controller
+  ui/            React app: lessons/ (one module per lesson), practice/ (sessions), results/,
+                 progress/ (per-lesson views), components/, VexFlow renderer
   styles/        vanilla CSS
 e2e/             browser tests: fake Web MIDI piano, seeded profile, one spec per lesson + layout
 native/          Xcode project (SwiftUI + WKWebView + CoreMIDI + CoreAudioKit)
