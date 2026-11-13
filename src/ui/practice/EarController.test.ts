@@ -30,7 +30,7 @@ describe('EarController', () => {
   it('shows only the given first note, ignores input until the phrase has played', () => {
     const { c, exercise, press, played } = setup();
     expect(c.state.get().visibleSteps).toBe(1);
-    expect(c.state.get().expected).toEqual(exercise.steps[0].midis);
+    expect(c.state.get().revealed).toEqual(exercise.steps[0].midis);
     press(exercise.steps[0].midis[0]); // before listening
     expect(c.state.get().stepIndex).toBe(0);
     c.start();
@@ -48,10 +48,10 @@ describe('EarController', () => {
     listenFully(); // one replay
     press(exercise.steps[0].midis[0]);
     expect(c.state.get().visibleSteps).toBe(1);
-    expect(c.state.get().expected).toEqual([]); // next note stays secret
+    expect(c.state.get().revealed).toEqual([]); // next note stays secret
     press(1); // a wrong guess
     c.hint();
-    expect(c.state.get().expected).toEqual(exercise.steps[1].midis);
+    expect(c.state.get().revealed).toEqual(exercise.steps[1].midis);
     expect(c.state.get().visibleSteps).toBe(2);
     for (const step of exercise.steps.slice(1)) step.midis.forEach(press);
     const s = c.state.get();
@@ -66,7 +66,7 @@ describe('EarController', () => {
   it('hides the first note in key-only mode and plays the cadence', () => {
     const { c, exercise } = setup(85, 'key-only');
     expect(c.state.get().visibleSteps).toBe(0);
-    expect(c.state.get().expected).toEqual([]);
+    expect(c.state.get().revealed).toEqual([]);
     expect(exercise.ear.cadence.length).toBe(4);
   });
 });

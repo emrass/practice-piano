@@ -226,6 +226,7 @@ function initialState(opts: PracticeOptions): PracticeState {
     mode: opts.mode,
     stepIndex: 0,
     expected: first ? first.midis : [],
+    revealed: [],
     countIn: null,
     beat: null,
     live: EMPTY_LIVE,

@@ -34,7 +34,9 @@ export class EarController extends SessionBase {
       status: 'ready',
       mode: 'ear',
       stepIndex: 0,
-      expected: given ? opts.exercise.steps[0].midis : [],
+      // Nothing is guided: the phrase is the question. The given first note is part of it.
+      expected: [],
+      revealed: given ? opts.exercise.steps[0].midis : [],
       countIn: null,
       beat: null,
       live: EMPTY_LIVE,
@@ -94,7 +96,7 @@ export class EarController extends SessionBase {
     this.state.set({
       ...s,
       visibleSteps: Math.max(s.visibleSteps ?? 0, s.stepIndex + 1),
-      expected: step.midis,
+      revealed: step.midis,
       ear: { ...s.ear!, hints: this.engine.hintCount },
       live: this.engine.liveStats(),
     });
@@ -126,7 +128,7 @@ export class EarController extends SessionBase {
           ...next,
           stepIndex: f.toStep,
           visibleSteps: visible,
-          expected: step && f.toStep < visible ? step.midis : [],
+          revealed: step && f.toStep < visible ? step.midis : [],
           marks: { ...next.marks, [f.fromStep]: f.clean ? 'good' : 'ok' },
         };
       }
@@ -142,7 +144,7 @@ export class EarController extends SessionBase {
     const raw = this.engine.result({ exerciseId: ex.id, level: ex.meta.level, tierId: ex.meta.tierId, completedAt: Date.now() });
     const result: ExerciseResult = { ...raw, lesson: 'ear', mode: 'ear', replays: s.ear?.replays ?? 0, hints: this.engine.hintCount };
     this.silence();
-    this.state.set({ ...s, status: 'finished', result, expected: [], visibleSteps: ex.steps.length, ear: { ...s.ear!, playing: false } });
+    this.state.set({ ...s, status: 'finished', result, revealed: [], visibleSteps: ex.steps.length, ear: { ...s.ear!, playing: false } });
     this.finished.emit(result);
   }
 

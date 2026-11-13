@@ -10,8 +10,10 @@ export interface PracticeState {
   status: PracticeStatus;
   mode: PracticeMode;
   stepIndex: number;
-  /** Keys the guide should highlight. */
+  /** Keys the keyboard guide highlights (shown only while the guide is on). */
   expected: number[];
+  /** Keys shown whatever the guide setting: a hint asked for, a given starting note. */
+  revealed: number[];
   countIn: { beat: number; total: number } | null;
   beat: { index: number; beatsPerBar: number } | null;
   live: LiveStats;

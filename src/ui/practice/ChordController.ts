@@ -274,6 +274,7 @@ function initialState(opts: ChordPracticeOptions): PracticeState {
     mode: opts.mode,
     stepIndex: 0,
     expected: guideFor(opts, 0),
+    revealed: [],
     countIn: null,
     beat: null,
     live: EMPTY_LIVE,

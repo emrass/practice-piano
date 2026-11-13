@@ -525,7 +525,10 @@ function KeyboardDock(props: {
   const held = useStore(inputBus.held);
   const soundOn = props.settings.keySound;
   const state = useStore(props.controller.state);
-  const expected = props.settings.showKeyboardGuide && state.status !== 'finished' ? state.expected : [];
+  const expected = useMemo(
+    () => (state.status === 'finished' ? [] : [...new Set([...(props.settings.showKeyboardGuide ? state.expected : []), ...state.revealed])]),
+    [state.status, state.expected, state.revealed, props.settings.showKeyboardGuide],
+  );
   const actions = props.settings.pianoShortcuts && state.status === 'finished' ? ACTION_LABELS : undefined;
   const spelling = props.spelling?.(state);
   return (

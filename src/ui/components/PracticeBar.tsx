@@ -30,7 +30,7 @@ export function PracticeBar(props: {
   if (ear && s.status !== 'finished') {
     if (!ear.listened) message = props.pianoShortcuts ? 'Press Space or tap the pedal to listen' : 'Press Space to listen';
     else if (ear.playing) message = 'Listening…';
-    else if (s.live.correct === 0 && s.live.wrong === 0) message = s.expected.length ? 'Play it back — start on the shown note' : 'Play it back — find the first note from the key';
+    else if (s.live.correct === 0 && s.live.wrong === 0) message = s.revealed.length ? 'Play it back — start on the shown note' : 'Play it back — find the first note from the key';
     else message = 'Keep going — notes appear as you find them';
   } else if (s.status === 'finished') message = props.pianoShortcuts ? 'Finished — on the piano: C retry · D next' : 'Finished — see your results';
   else if (flow && s.status === 'ready') message = props.pianoShortcuts ? 'Press Space or tap the sustain pedal to start' : 'Press Start or Space to start';

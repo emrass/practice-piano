@@ -17,3 +17,15 @@ test('Ear training: listen, play the phrase back, notes appear as they are found
   }).toPass({ timeout: 5000 });
   expect(await app.status()).not.toBe('finished');
 });
+
+test('Ear training: a hint shows on the keys with the keyboard guide off', async ({ app, page }) => {
+  await app.open({ settings: { lesson: 'ear', showKeyboardGuide: false, ear: { level: 15, reference: 'key-only' } } });
+  const total = await app.exercise((ex) => (ex.ear as { totalMs: number }).totalMs);
+  await page.keyboard.press('Space');
+  await page.waitForTimeout(total + 300);
+  const [first] = await app.steps();
+  await expect(page.locator('.key.is-expected')).toHaveCount(0);
+  await page.keyboard.press('Slash');
+  await expect(page.locator('.key.is-expected')).toHaveCount(first.length);
+  for (const k of first) await expect(page.locator(`.key[data-midi="${k}"]`)).toHaveClass(/is-expected/);
+});
