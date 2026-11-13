@@ -2,11 +2,9 @@ import type { EarExercise } from '../../core/ear/generator';
 import type { ExerciseResult } from '../../core/eval/types';
 import { WaitEngine } from '../../core/eval/waitEngine';
 import type { NoteInput } from '../../core/input/events';
-import { createStore, Emitter, type Store } from '../../lib/store';
 import type { InputBus } from '../../input/inputBus';
 import type { AudioEngine } from '../../platform/audio/audioEngine';
-import type { PracticeState } from './PracticeController';
-import type { Session } from './session';
+import { EMPTY_LIVE, SessionBase } from './sessionBase';
 
 export interface EarOptions {
   exercise: EarExercise;
@@ -16,30 +14,23 @@ export interface EarOptions {
   volume: number;
 }
 
-const EMPTY_LIVE = { correct: 0, wrong: 0, missed: 0, streak: 0, bestStreak: 0, accuracy: 1, timing: null };
-
 /**
  * Ear training: play the phrase (after an optional key-setting cadence), then let the
  * player find it on the keyboard step by step. Notes stay hidden on the staff until they
  * are found (or revealed by a hint). Input is ignored while the phrase is playing.
  */
-export class EarController implements Session {
-  readonly state: Store<PracticeState>;
-  readonly finished = new Emitter<ExerciseResult>();
+export class EarController extends SessionBase {
   private readonly engine: WaitEngine;
   private stopAudio: (() => void) | null = null;
   private playTimer: ReturnType<typeof setTimeout> | null = null;
-  private flashTimer: ReturnType<typeof setTimeout> | null = null;
-  private unsub: (() => void) | null = null;
 
   constructor(
     private readonly opts: EarOptions,
-    private readonly bus: InputBus,
-    private readonly audio: AudioEngine,
+    bus: InputBus,
+    audio: AudioEngine,
   ) {
-    this.engine = new WaitEngine(opts.exercise.steps, { graceMs: opts.graceMs, sustainCountsAsHeld: opts.sustainCountsAsHeld });
     const given = opts.exercise.ear.firstNoteGiven;
-    this.state = createStore<PracticeState>({
+    super(bus, audio, {
       status: 'ready',
       mode: 'ear',
       stepIndex: 0,
@@ -54,6 +45,7 @@ export class EarController implements Session {
       visibleSteps: given ? 1 : 0,
       ear: { playing: false, listened: false, replays: 0, hints: 0 },
     });
+    this.engine = new WaitEngine(opts.exercise.steps, { graceMs: opts.graceMs, sustainCountsAsHeld: opts.sustainCountsAsHeld });
   }
 
   get exercise(): EarExercise {
@@ -62,11 +54,6 @@ export class EarController implements Session {
 
   get isActive(): boolean {
     return this.state.get().ear?.playing ?? false;
-  }
-
-  attach(): () => void {
-    this.unsub = this.bus.subscribe((ev) => this.handleInput(ev));
-    return () => this.dispose();
   }
 
   /** Listen (first time) or replay. Must run inside a user gesture the very first time. */
@@ -113,14 +100,6 @@ export class EarController implements Session {
     });
   }
 
-  playheadTick(): number | null {
-    return null;
-  }
-
-  setMetronomeVolume(): void {
-    /* Ear training has no metronome. */
-  }
-
   private silence() {
     this.stopAudio?.();
     this.stopAudio = null;
@@ -139,14 +118,7 @@ export class EarController implements Session {
     const feedback = this.engine.noteOn(ev.midi, ev.time);
     let next = this.state.get();
     for (const f of feedback) {
-      if (f.type === 'wrong') {
-        const wrong = { midi: f.midi, at: performance.now() };
-        next = { ...next, wrong };
-        if (this.flashTimer) clearTimeout(this.flashTimer);
-        this.flashTimer = setTimeout(() => {
-          if (this.state.get().wrong === wrong) this.state.set({ ...this.state.get(), wrong: null });
-        }, 500);
-      }
+      if (f.type === 'wrong') next = { ...next, ...this.flash('wrong', { midi: f.midi, at: performance.now() }, 500) };
       if (f.type === 'advance') {
         const visible = Math.max(next.visibleSteps ?? 0, f.fromStep + 1);
         const step = this.opts.exercise.steps[f.toStep];
@@ -176,8 +148,6 @@ export class EarController implements Session {
 
   dispose(): void {
     this.silence();
-    if (this.flashTimer) clearTimeout(this.flashTimer);
-    this.unsub?.();
-    this.unsub = null;
+    super.dispose();
   }
 }

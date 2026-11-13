@@ -3,7 +3,7 @@ import type { Exercise } from '../../core/exercise';
 import { useStore } from '../../lib/store';
 import { systemForTick, tickToX } from '../notation/layout';
 import { renderScore, type RenderedScore } from '../notation/renderScore';
-import type { StepMark } from '../practice/PracticeController';
+import type { StepMark } from '../practice/session';
 import type { Session } from '../practice/session';
 
 const MARK_CLASSES: Record<StepMark, string> = {

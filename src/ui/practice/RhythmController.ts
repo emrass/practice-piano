@@ -5,11 +5,10 @@ import type { NoteInput } from '../../core/input/events';
 import { msPerTick } from '../../core/music/rhythm';
 import { rhythmResult } from '../../core/rhythm/analysis';
 import type { RhythmExercise } from '../../core/rhythm/generator';
-import { createStore, Emitter, type Store } from '../../lib/store';
 import type { InputBus } from '../../input/inputBus';
-import { type AudioEngine, Metronome } from '../../platform/audio/audioEngine';
-import type { PracticeState, StepMark } from './PracticeController';
-import type { Session } from './session';
+import type { AudioEngine } from '../../platform/audio/audioEngine';
+import type { PracticeState, StepMark } from './session';
+import { EMPTY_LIVE, type FlowClock, SessionBase, StepMarks } from './sessionBase';
 
 export interface RhythmControllerOptions {
   exercise: RhythmExercise;
@@ -21,9 +20,22 @@ export interface RhythmControllerOptions {
   synthVolume: number;
 }
 
-export type RhythmPhase = 'call' | 'response' | 'click' | 'silent';
+/** Placeholder until the constructor has the exercise's bars and keys. */
+const PLACEHOLDER_STATE: PracticeState = {
+  status: 'ready',
+  mode: 'flow',
+  stepIndex: 0,
+  expected: [],
+  countIn: null,
+  beat: null,
+  live: EMPTY_LIVE,
+  marks: {},
+  wrong: null,
+  lastGrade: null,
+  result: null,
+};
 
-const EMPTY_LIVE = { correct: 0, wrong: 0, missed: 0, streak: 0, bestStreak: 0, accuracy: 1, timing: null };
+export type RhythmPhase = 'call' | 'response' | 'click' | 'silent';
 
 /**
  * Rhythm mode session (docs/DIDACTICS.md §4.3). Like Flow mode — count-in, metronome, timing
@@ -31,32 +43,24 @@ const EMPTY_LIVE = { correct: 0, wrong: 0, missed: 0, streak: 0, bestStreak: 0, 
  * the notation after each answer, Pulse silences the metronome (and the playhead) for whole bars.
  * Only the designated keys count; other keys only flash, so a stray note is never punished.
  */
-export class RhythmController implements Session {
-  readonly state: Store<PracticeState>;
-  readonly finished = new Emitter<ExerciseResult>();
+export class RhythmController extends SessionBase {
   private flow: FlowEngine | null = null;
-  private readonly metronome: Metronome;
+  private clock: FlowClock | null = null;
   private readonly tickMs: number;
   private readonly callBars: Set<number>;
   private readonly mutedBars: Set<number>;
   private readonly keys: Map<number, 'rh' | 'lh'>;
   private readonly lastResponseBars: number[];
-  private raf = 0;
-  private unsub: (() => void) | null = null;
-  private countInStart = 0;
-  private countInBeats = 0;
-  private beatMs = 0;
   private stopPlayback: (() => void) | null = null;
-  private flashTimers: ReturnType<typeof setTimeout>[] = [];
-  private stepHits = new Map<number, { hit: number; missed: number; imperfect: boolean }>();
+  private readonly marks = new StepMarks();
 
   constructor(
     private readonly opts: RhythmControllerOptions,
-    private readonly bus: InputBus,
-    private readonly audio: AudioEngine,
+    bus: InputBus,
+    audio: AudioEngine,
   ) {
+    super(bus, audio, PLACEHOLDER_STATE);
     const ex = opts.exercise;
-    this.metronome = new Metronome(audio);
     this.tickMs = msPerTick(ex.bpm, ex.timeSignature);
     this.callBars = new Set(ex.rhythm.callBars);
     this.mutedBars = new Set(ex.rhythm.mutedBars);
@@ -68,7 +72,7 @@ export class RhythmController implements Session {
     for (let b = 0; b < ex.bars; b++) {
       if (!this.callBars.has(b) && (b === ex.bars - 1 || this.callBars.has(b + 1)) && this.callBars.size) this.lastResponseBars.push(b);
     }
-    this.state = createStore<PracticeState>(this.initialState());
+    this.state.set(this.initialState());
   }
 
   get exercise(): Exercise {
@@ -111,16 +115,6 @@ export class RhythmController implements Session {
     };
   }
 
-  attach(): () => void {
-    this.unsub = this.bus.subscribe((ev) => this.handleInput(ev));
-    return () => this.dispose();
-  }
-
-  get isActive(): boolean {
-    const s = this.state.get().status;
-    return s === 'countin' || s === 'running';
-  }
-
   get msPerTick(): number {
     return this.tickMs;
   }
@@ -129,12 +123,16 @@ export class RhythmController implements Session {
     this.halt();
     const ex = this.opts.exercise;
     const ts = ex.timeSignature;
-    this.audio.ensure();
-    this.beatMs = this.tickMs * ts.beatTicks;
-    const bars = Math.max(this.opts.countInBars, Math.ceil(3 / ts.beatsPerBar));
-    this.countInBeats = bars * ts.beatsPerBar;
-    this.countInStart = performance.now() + 250;
-    const t0 = this.countInStart + this.countInBeats * this.beatMs;
+    const muted = this.mutedBars;
+    this.clock = this.startCountIn({
+      timeSignature: ts,
+      tickMs: this.tickMs,
+      countInBars: this.opts.countInBars,
+      totalTicks: ex.totalTicks,
+      volume: this.opts.metronomeVolume,
+      muted: muted.size ? (beat, countIn) => beat >= countIn && muted.has(Math.floor((beat - countIn) / ts.beatsPerBar)) : undefined,
+    });
+    const t0 = this.clock.startTime;
     this.flow = new FlowEngine(this.judgedSteps(), {
       msPerTick: this.tickMs,
       latencyMs: this.opts.latencyMs,
@@ -142,17 +140,7 @@ export class RhythmController implements Session {
       judgeReleases: false,
     });
     this.flow.setStartTime(t0);
-    this.stepHits = new Map();
-    const countIn = this.countInBeats;
-    const muted = this.mutedBars;
-    this.metronome.start({
-      startTime: this.countInStart,
-      beatMs: this.beatMs,
-      beatsPerBar: ts.beatsPerBar,
-      totalBeats: countIn + Math.ceil(ex.totalTicks / ts.beatTicks),
-      volume: this.opts.metronomeVolume,
-      muted: muted.size ? (beat) => beat >= countIn && muted.has(Math.floor((beat - countIn) / ts.beatsPerBar)) : undefined,
-    });
+    this.marks.reset();
     if (this.callBars.size) {
       const calls = allEvents(ex)
         .filter((e) => e.pitches.length && this.callBars.has(e.measureIndex))
@@ -163,13 +151,12 @@ export class RhythmController implements Session {
         }));
       this.stopPlayback = this.audio.playSequence(calls, t0, this.opts.synthVolume);
     }
-    this.state.set({ ...this.initialState(), status: 'countin', countIn: { beat: 0, total: this.countInBeats } });
-    this.loop();
+    this.state.set({ ...this.initialState(), status: 'countin', countIn: { beat: 0, total: this.clock.countInBeats } });
+    this.runFrames(this.frame);
   }
 
   private halt() {
-    if (this.raf) cancelAnimationFrame(this.raf);
-    this.raf = 0;
+    this.stopFrames();
     this.metronome.stop();
     this.stopPlayback?.();
     this.stopPlayback = null;
@@ -179,10 +166,6 @@ export class RhythmController implements Session {
     this.halt();
     this.flow = null;
     this.state.set(this.initialState());
-  }
-
-  setMetronomeVolume(v: number): void {
-    this.metronome.setVolume(v);
   }
 
   /** Bar index under the (visual) playhead; -1 during the count-in. */
@@ -205,17 +188,17 @@ export class RhythmController implements Session {
     return null;
   }
 
-  private loop = () => {
+  private frame = (): boolean => {
     const flow = this.flow;
-    if (!flow) return;
+    const clock = this.clock;
+    if (!flow || !clock) return false;
     const now = performance.now();
     const visualNow = now - this.opts.playheadDelayMs;
     const ex = this.opts.exercise;
     const ts = ex.timeSignature;
     const s = this.state.get();
     if (visualNow < flow.startTime) {
-      const beat = visualNow < this.countInStart ? 0 : Math.floor((visualNow - this.countInStart) / this.beatMs) + 1;
-      if (s.countIn?.beat !== beat) this.state.set({ ...s, status: 'countin', countIn: { beat, total: this.countInBeats } });
+      this.showCountIn(clock, visualNow);
     } else {
       const misses = flow.update(now);
       const tick = (visualNow - flow.startTime) / this.tickMs;
@@ -243,30 +226,17 @@ export class RhythmController implements Session {
       }
       if (misses.length) {
         const marks = { ...s.marks };
-        for (const m of misses) {
-          if (m.type !== 'miss') continue;
-          const h = this.bumpStep(m.stepIndex, 'missed');
-          marks[m.stepIndex] = h.hit === 0 ? 'missed' : 'bad';
-        }
+        for (const m of misses) if (m.type === 'miss') marks[m.stepIndex] = this.marks.miss(m.stepIndex);
         Object.assign(patch, { marks, live: flow.liveStats() });
       }
-      if (Object.keys(patch).length) this.state.set({ ...this.state.get(), ...patch });
+      if (Object.keys(patch).length) this.patch(patch);
       if (flow.isFinished(now)) {
         this.finish(flow.result({ exerciseId: ex.id, level: ex.meta.level, tierId: ex.meta.tierId, completedAt: Date.now() }));
-        return;
+        return false;
       }
     }
-    this.raf = requestAnimationFrame(this.loop);
+    return true;
   };
-
-  private bumpStep(stepIndex: number, kind: 'hit' | 'missed', imperfect = false) {
-    const h = this.stepHits.get(stepIndex) ?? { hit: 0, missed: 0, imperfect: false };
-    if (kind === 'hit') h.hit++;
-    else h.missed++;
-    h.imperfect ||= imperfect;
-    this.stepHits.set(stepIndex, h);
-    return h;
-  }
 
   private finish(raw: ExerciseResult) {
     const result = rhythmResult(this.opts.exercise, raw);
@@ -282,15 +252,6 @@ export class RhythmController implements Session {
       rhythm: { phase: null },
     });
     this.finished.emit(result);
-  }
-
-  private flash<K extends 'wrong' | 'lastGrade'>(key: K, value: NonNullable<PracticeState[K]>, ms: number): Partial<PracticeState> {
-    const timer = setTimeout(() => {
-      if (this.state.get()[key] === value) this.state.set({ ...this.state.get(), [key]: null });
-    }, ms);
-    this.flashTimers.push(timer);
-    if (this.flashTimers.length > 20) this.flashTimers.shift();
-    return { [key]: value } as Partial<PracticeState>;
   }
 
   /**
@@ -322,12 +283,10 @@ export class RhythmController implements Session {
       if (f.type === 'extra') next = { ...next, ...this.flash('wrong', { midi: f.midi, at: performance.now() }, 400) };
       if (f.type === 'hit') {
         const step = this.opts.exercise.steps[f.stepIndex];
-        const h = this.bumpStep(f.stepIndex, 'hit', f.grade === 'early' || f.grade === 'late');
-        const complete = h.hit >= (step?.notes.length ?? 1);
-        const mark: StepMark = h.missed > 0 ? 'bad' : complete ? (h.imperfect ? 'ok' : 'good') : (next.marks[f.stepIndex] ?? 'ok');
+        const mark = this.marks.hit(f.stepIndex, step?.notes.length ?? 1, f.grade === 'early' || f.grade === 'late');
         next = {
           ...next,
-          marks: complete || h.missed > 0 ? { ...next.marks, [f.stepIndex]: mark } : next.marks,
+          marks: mark ? { ...next.marks, [f.stepIndex]: mark } : next.marks,
           ...this.flash('lastGrade', { grade: f.grade, deltaMs: f.deltaMs, at: performance.now() }, 900),
         };
       }
@@ -336,9 +295,7 @@ export class RhythmController implements Session {
   }
 
   dispose(): void {
-    this.flashTimers.splice(0).forEach(clearTimeout);
     this.halt();
-    this.unsub?.();
-    this.unsub = null;
+    super.dispose();
   }
 }

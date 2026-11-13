@@ -4,14 +4,13 @@ import { bassOf } from '../../core/chords/catalog';
 import { ChordFlowEngine, type ChordJudgement, ChordWaitEngine } from '../../core/chords/engine';
 import type { ChordExercise } from '../../core/chords/generator';
 import type { TimingGrade } from '../../core/eval/flowEngine';
-import type { ExerciseResult, LiveStats } from '../../core/eval/types';
+import type { LiveStats } from '../../core/eval/types';
 import type { NoteInput } from '../../core/input/events';
 import { msPerTick } from '../../core/music/rhythm';
-import { createStore, Emitter, type Store } from '../../lib/store';
 import type { InputBus } from '../../input/inputBus';
-import { type AudioEngine, Metronome } from '../../platform/audio/audioEngine';
-import type { PracticeState, StepMark } from './PracticeController';
-import type { Session } from './session';
+import type { AudioEngine } from '../../platform/audio/audioEngine';
+import type { PracticeState, StepMark } from './session';
+import { EMPTY_LIVE, type FlowClock, SessionBase } from './sessionBase';
 
 export interface ChordPracticeOptions {
   exercise: ChordExercise;
@@ -31,30 +30,25 @@ const REVEAL_AFTER_MS = 5000;
  * exactly its notes, and the right bass where asked); Flow wants it on the downbeat with the
  * metronome. Shares the practice state shape, so score, bar, keyboard and results just work.
  */
-export class ChordController implements Session {
-  readonly state: Store<PracticeState>;
-  readonly finished = new Emitter<ExerciseResult>();
+export class ChordController extends SessionBase {
   private wait: ChordWaitEngine | null = null;
   private flow: ChordFlowEngine | null = null;
-  private readonly metronome: Metronome;
+  private clock: FlowClock | null = null;
   private readonly tickMs: number;
   private readonly barMs: number;
-  private raf = 0;
-  private unsub: (() => void) | null = null;
-  private countInStart = 0;
-  private countInBeats = 0;
   private firstInputAt: number | null = null;
-  private timers: ReturnType<typeof setTimeout>[] = [];
+  private revealTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Flow: keys outside the chord pressed inside a chord's window. */
+  private wrongFlows = 0;
 
   constructor(
     private readonly opts: ChordPracticeOptions,
-    private readonly bus: InputBus,
-    private readonly audio: AudioEngine,
+    bus: InputBus,
+    audio: AudioEngine,
   ) {
-    this.metronome = new Metronome(audio);
+    super(bus, audio, initialState(opts));
     this.tickMs = msPerTick(opts.exercise.bpm, opts.exercise.timeSignature);
     this.barMs = this.tickMs * opts.exercise.timeSignature.ticksPerBar;
-    this.state = createStore<PracticeState>(this.initialState());
     if (opts.mode === 'wait') this.resetWait();
   }
 
@@ -68,21 +62,8 @@ export class ChordController implements Session {
   }
 
   private targetKeys(i: number): number[] {
-    const t = this.opts.exercise.chords.targets[i];
-    if (!t) return [];
-    return t.bassMidi !== null ? [t.bassMidi, ...t.voicing] : [...t.voicing];
+    return targetKeys(this.opts.exercise, i);
   }
-
-  /**
-   * The keyboard guide would give the answer away, so it is help for when you are stuck:
-   * Wait shows it after a few seconds or a wrong key; Flow only for progressions.
-   */
-  private guideFor(i: number): number[] {
-    if (this.opts.mode === 'flow') return this.opts.exercise.chords.item.task === 'progression' ? this.targetKeys(i) : [];
-    return [];
-  }
-
-  private revealTimer: ReturnType<typeof setTimeout> | null = null;
 
   private scheduleReveal(i: number) {
     if (this.revealTimer) clearTimeout(this.revealTimer);
@@ -95,79 +76,43 @@ export class ChordController implements Session {
     this.state.set({ ...s, expected: this.targetKeys(i) });
   }
 
-  private initialState(): PracticeState {
-    return {
-      status: 'ready',
-      mode: this.opts.mode,
-      stepIndex: 0,
-      expected: this.guideFor(0),
-      countIn: null,
-      beat: null,
-      live: { correct: 0, wrong: 0, missed: 0, streak: 0, bestStreak: 0, accuracy: 1, timing: null },
-      marks: {},
-      wrong: null,
-      lastGrade: null,
-      result: null,
-      chords: { index: 0, bassHint: null },
-    };
-  }
-
-  attach(): () => void {
-    this.unsub = this.bus.subscribe((ev) => this.handleInput(ev));
-    return () => this.dispose();
-  }
-
   private resetWait() {
     this.wait = new ChordWaitEngine(this.opts.exercise.chords.targets);
     this.wait.start(performance.now());
     this.firstInputAt = null;
-    this.state.set({ ...this.initialState(), status: 'running' });
+    this.state.set({ ...initialState(this.opts), status: 'running' });
     this.scheduleReveal(0);
   }
 
   start(): void {
-    this.stopLoop();
+    this.stopFrames();
     this.metronome.stop();
     if (this.opts.mode === 'wait') return this.resetWait();
     const ex = this.opts.exercise;
-    const ts = ex.timeSignature;
-    this.audio.ensure();
-    const beatMs = this.tickMs * ts.beatTicks;
-    this.countInBeats = this.opts.countInBars * ts.beatsPerBar;
-    this.countInStart = performance.now() + 250;
-    const t0 = this.countInStart + this.countInBeats * beatMs;
-    this.flow = new ChordFlowEngine(ex.chords.targets, { barMs: this.barMs, latencyMs: this.opts.latencyMs });
-    this.flow.setStartTime(t0);
-    this.metronome.start({
-      startTime: this.countInStart,
-      beatMs,
-      beatsPerBar: ts.beatsPerBar,
-      totalBeats: this.countInBeats + ex.bars * ts.beatsPerBar,
+    this.clock = this.startCountIn({
+      timeSignature: ex.timeSignature,
+      tickMs: this.tickMs,
+      countInBars: this.opts.countInBars,
+      totalTicks: ex.totalTicks,
       volume: this.opts.metronomeVolume,
     });
-    this.state.set({ ...this.initialState(), status: 'countin', countIn: { beat: 0, total: this.countInBeats } });
-    this.loop();
+    this.flow = new ChordFlowEngine(ex.chords.targets, { barMs: this.barMs, latencyMs: this.opts.latencyMs });
+    this.flow.setStartTime(this.clock.startTime);
+    this.wrongFlows = 0;
+    this.state.set({ ...initialState(this.opts), status: 'countin', countIn: { beat: 0, total: this.clock.countInBeats } });
+    this.runFrames(this.frame);
   }
 
   stop(): void {
-    this.stopLoop();
+    this.stopFrames();
     this.metronome.stop();
     this.flow = null;
-    if (this.opts.mode === 'flow') this.state.set(this.initialState());
-  }
-
-  setMetronomeVolume(v: number): void {
-    this.metronome.setVolume(v);
+    if (this.opts.mode === 'flow') this.state.set(initialState(this.opts));
   }
 
   playheadTick(now = performance.now()): number | null {
     if (!this.flow) return null;
     return (now - this.opts.playheadDelayMs - this.flow.startTime) / this.tickMs;
-  }
-
-  private stopLoop() {
-    if (this.raf) cancelAnimationFrame(this.raf);
-    this.raf = 0;
   }
 
   private live(results: readonly ChordJudgement[], wrong: number): LiveStats {
@@ -190,15 +135,6 @@ export class ChordController implements Session {
     };
   }
 
-  private flash<K extends 'wrong' | 'lastGrade'>(key: K, value: NonNullable<PracticeState[K]>, ms: number): Partial<PracticeState> {
-    const timer = setTimeout(() => {
-      if (this.state.get()[key] === value) this.state.set({ ...this.state.get(), [key]: null });
-    }, ms);
-    this.timers.push(timer);
-    if (this.timers.length > 20) this.timers.shift();
-    return { [key]: value } as Partial<PracticeState>;
-  }
-
   private grade(j: ChordJudgement, perfectMs: number): TimingGrade {
     const d = j.deltaMs ?? 0;
     if (Math.abs(d) <= perfectMs) return 'perfect';
@@ -206,19 +142,17 @@ export class ChordController implements Session {
     return d < 0 ? 'early' : 'late';
   }
 
-  private wrongFlows = 0;
-
-  private loop = () => {
+  private frame = (): boolean => {
     const flow = this.flow;
-    if (!flow) return;
+    const clock = this.clock;
+    if (!flow || !clock) return false;
     const now = performance.now();
     const visualNow = now - this.opts.playheadDelayMs;
     const ts = this.opts.exercise.timeSignature;
-    const beatMs = this.tickMs * ts.beatTicks;
+    const beatMs = clock.beatMs;
     const s = this.state.get();
     if (visualNow < flow.startTime) {
-      const beat = visualNow < this.countInStart ? 0 : Math.floor((visualNow - this.countInStart) / beatMs) + 1;
-      if (s.countIn?.beat !== beat) this.state.set({ ...s, status: 'countin', countIn: { beat, total: this.countInBeats } });
+      this.showCountIn(clock, visualNow);
     } else {
       const judged = flow.update(now);
       const n = this.opts.exercise.chords.targets.length;
@@ -228,7 +162,7 @@ export class ChordController implements Session {
       const next: Partial<PracticeState> = {};
       if (s.status !== 'running') Object.assign(next, { status: 'running', countIn: null });
       if (s.beat?.index !== beatIndex) next.beat = { index: beatIndex, beatsPerBar: ts.beatsPerBar };
-      if (idx !== s.stepIndex) Object.assign(next, { stepIndex: idx, expected: this.guideFor(idx), chords: { index: idx, bassHint: null } });
+      if (idx !== s.stepIndex) Object.assign(next, { stepIndex: idx, expected: guideFor(this.opts, idx), chords: { index: idx, bassHint: null } });
       if (judged.length) {
         const marks = { ...s.marks };
         for (const j of judged) {
@@ -238,13 +172,13 @@ export class ChordController implements Session {
         }
         Object.assign(next, { marks, live: this.live(flow.results, this.wrongFlows) });
       }
-      if (Object.keys(next).length) this.state.set({ ...this.state.get(), ...next });
+      if (Object.keys(next).length) this.patch(next);
       if (flow.finished) {
         this.finish(flow.results, this.wrongFlows + flow.extraPresses(), n * this.barMs);
-        return;
+        return false;
       }
     }
-    this.raf = requestAnimationFrame(this.loop);
+    return true;
   };
 
   handleInput(ev: NoteInput): void {
@@ -307,7 +241,7 @@ export class ChordController implements Session {
       wrongPresses,
       completedAt: Date.now(),
     });
-    this.stopLoop();
+    this.stopFrames();
     this.metronome.stop();
     if (this.revealTimer) clearTimeout(this.revealTimer);
     this.state.set({ ...this.state.get(), status: 'finished', result, expected: [], beat: null, countIn: null, live: this.live(results, wrongPresses) });
@@ -315,11 +249,38 @@ export class ChordController implements Session {
   }
 
   dispose(): void {
-    this.timers.splice(0).forEach(clearTimeout);
     if (this.revealTimer) clearTimeout(this.revealTimer);
-    this.stopLoop();
-    this.metronome.stop();
-    this.unsub?.();
-    this.unsub = null;
+    super.dispose();
   }
+}
+
+function targetKeys(ex: ChordExercise, i: number): number[] {
+  const t = ex.chords.targets[i];
+  if (!t) return [];
+  return t.bassMidi !== null ? [t.bassMidi, ...t.voicing] : [...t.voicing];
+}
+
+/**
+ * The keyboard guide would give the answer away, so it is help for when you are stuck:
+ * Wait shows it after a few seconds or a wrong key; Flow only for progressions.
+ */
+function guideFor(opts: ChordPracticeOptions, i: number): number[] {
+  return opts.mode === 'flow' && opts.exercise.chords.item.task === 'progression' ? targetKeys(opts.exercise, i) : [];
+}
+
+function initialState(opts: ChordPracticeOptions): PracticeState {
+  return {
+    status: 'ready',
+    mode: opts.mode,
+    stepIndex: 0,
+    expected: guideFor(opts, 0),
+    countIn: null,
+    beat: null,
+    live: EMPTY_LIVE,
+    marks: {},
+    wrong: null,
+    lastGrade: null,
+    result: null,
+    chords: { index: 0, bassHint: null },
+  };
 }

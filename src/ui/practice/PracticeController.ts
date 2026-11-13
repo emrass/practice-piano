@@ -1,41 +1,14 @@
 import type { Exercise } from '../../core/exercise';
-import { FlowEngine, type TimingGrade } from '../../core/eval/flowEngine';
-import type { ExerciseResult, LiveStats, PracticeMode } from '../../core/eval/types';
+import { FlowEngine } from '../../core/eval/flowEngine';
+import type { ExerciseResult, PracticeMode } from '../../core/eval/types';
 import { WaitEngine } from '../../core/eval/waitEngine';
 import type { NoteInput } from '../../core/input/events';
 import { msPerTick } from '../../core/music/rhythm';
-import { createStore, Emitter, type Store } from '../../lib/store';
-import type { InputBus } from '../../input/inputBus';
-import { type AudioEngine, Metronome } from '../../platform/audio/audioEngine';
-import type { Session } from './session';
 import { annotateRhythm } from '../../core/rhythm/analysis';
-
-export type StepMark = 'good' | 'ok' | 'bad' | 'missed' | 'call';
-export type PracticeStatus = 'ready' | 'countin' | 'running' | 'finished';
-
-export interface PracticeState {
-  status: PracticeStatus;
-  mode: PracticeMode;
-  stepIndex: number;
-  /** Keys the guide should highlight. */
-  expected: number[];
-  countIn: { beat: number; total: number } | null;
-  beat: { index: number; beatsPerBar: number } | null;
-  live: LiveStats;
-  marks: Record<number, StepMark>;
-  wrong: { midi: number; at: number } | null;
-  lastGrade: { grade: TimingGrade; deltaMs: number; at: number } | null;
-  result: ExerciseResult | null;
-  /** Ear training: steps with index < visibleSteps are shown; undefined = all shown. */
-  visibleSteps?: number;
-  /** Rhythm Echo: bars with index < visibleBars are shown; undefined = all shown. */
-  visibleBars?: number;
-  /** Rhythm mode: what the current bar is (Echo call / response, Pulse click / silent). */
-  rhythm?: { phase: 'call' | 'response' | 'click' | 'silent' | null };
-  ear?: { playing: boolean; listened: boolean; replays: number; hints: number };
-  /** Chords: the chord asked for, and a nudge when the right notes have the wrong bass. */
-  chords?: { index: number; bassHint: string | null };
-}
+import type { InputBus } from '../../input/inputBus';
+import type { AudioEngine } from '../../platform/audio/audioEngine';
+import type { PracticeState } from './session';
+import { EMPTY_LIVE, type FlowClock, SessionBase, StepMarks } from './sessionBase';
 
 export interface PracticeOptions {
   exercise: Exercise;
@@ -50,55 +23,26 @@ export interface PracticeOptions {
   decorate?: (raw: ExerciseResult) => ExerciseResult;
 }
 
-const EMPTY_LIVE: LiveStats = { correct: 0, wrong: 0, missed: 0, streak: 0, bestStreak: 0, accuracy: 1, timing: null };
-
 /**
  * Runs one practice session over one exercise: routes input to the Wait/Flow engine,
  * drives the metronome and publishes UI state. Rendering (score, playhead) reads from it
- * but never re-renders it at frame rate.
+ * but never re-renders it at frame rate. Sight reading and scales use it.
  */
-export class PracticeController implements Session {
-  readonly state: Store<PracticeState>;
-  /** Fires once per completed run. */
-  readonly finished = new Emitter<ExerciseResult>();
-  private flashTimers: ReturnType<typeof setTimeout>[] = [];
+export class PracticeController extends SessionBase {
   private wait: WaitEngine | null = null;
   private flow: FlowEngine | null = null;
-  private readonly metronome: Metronome;
-  private raf = 0;
-  private unsub: (() => void) | null = null;
-  private countInStart = 0;
-  private beatMs = 0;
-  private countInBeats = 0;
-  private stepHits = new Map<number, { hit: number; missed: number; imperfect: boolean }>();
+  private clock: FlowClock | null = null;
+  private readonly marks = new StepMarks();
   private readonly tickMs: number;
 
   constructor(
     private readonly opts: PracticeOptions,
-    private readonly bus: InputBus,
-    private readonly audio: AudioEngine,
+    bus: InputBus,
+    audio: AudioEngine,
   ) {
-    this.metronome = new Metronome(audio);
+    super(bus, audio, initialState(opts));
     this.tickMs = msPerTick(opts.exercise.bpm, opts.exercise.timeSignature);
-    this.state = createStore<PracticeState>(this.initialState());
     if (opts.mode === 'wait') this.resetWait();
-  }
-
-  private initialState(): PracticeState {
-    const first = this.opts.exercise.steps[0];
-    return {
-      status: 'ready',
-      mode: this.opts.mode,
-      stepIndex: 0,
-      expected: first ? first.midis : [],
-      countIn: null,
-      beat: null,
-      live: EMPTY_LIVE,
-      marks: {},
-      wrong: null,
-      lastGrade: null,
-      result: null,
-    };
   }
 
   get exercise(): Exercise {
@@ -114,68 +58,46 @@ export class PracticeController implements Session {
     return this.flow ? this.flow.startTime : null;
   }
 
-  attach(): () => void {
-    this.unsub = this.bus.subscribe((ev) => this.handleInput(ev));
-    return () => this.dispose();
-  }
-
   private resetWait() {
     this.wait = new WaitEngine(this.opts.exercise.steps, {
       graceMs: this.opts.graceMs,
       sustainCountsAsHeld: this.opts.sustainCountsAsHeld,
     });
-    this.state.set({ ...this.initialState(), status: 'running' });
+    this.state.set({ ...initialState(this.opts), status: 'running' });
   }
 
   /** Flow: start count-in. Wait: restart from the first note. */
   start(): void {
-    this.stopLoop();
+    this.stopFrames();
     this.metronome.stop();
     if (this.opts.mode === 'wait') {
       this.resetWait();
       return;
     }
     const ex = this.opts.exercise;
-    const ts = ex.timeSignature;
-    this.audio.ensure();
-    this.beatMs = this.tickMs * ts.beatTicks;
-    const bars = Math.max(this.opts.countInBars, Math.ceil(3 / ts.beatsPerBar));
-    this.countInBeats = bars * ts.beatsPerBar;
-    this.countInStart = performance.now() + 250;
-    const t0 = this.countInStart + this.countInBeats * this.beatMs;
+    this.clock = this.startCountIn({
+      timeSignature: ex.timeSignature,
+      tickMs: this.tickMs,
+      countInBars: this.opts.countInBars,
+      totalTicks: ex.totalTicks,
+      volume: this.opts.metronomeVolume,
+    });
     this.flow = new FlowEngine(ex.steps, {
       msPerTick: this.tickMs,
       latencyMs: this.opts.latencyMs,
       sustainCountsAsHeld: this.opts.sustainCountsAsHeld,
     });
-    this.flow.setStartTime(t0);
-    this.stepHits = new Map();
-    const exerciseBeats = Math.ceil(ex.totalTicks / ts.beatTicks);
-    this.metronome.start({
-      startTime: this.countInStart,
-      beatMs: this.beatMs,
-      beatsPerBar: ts.beatsPerBar,
-      totalBeats: this.countInBeats + exerciseBeats,
-      volume: this.opts.metronomeVolume,
-    });
-    this.state.set({ ...this.initialState(), status: 'countin', countIn: { beat: 0, total: this.countInBeats } });
-    this.loop();
+    this.flow.setStartTime(this.clock.startTime);
+    this.marks.reset();
+    this.state.set({ ...initialState(this.opts), status: 'countin', countIn: { beat: 0, total: this.clock.countInBeats } });
+    this.runFrames(this.frame);
   }
 
   stop(): void {
-    this.stopLoop();
+    this.stopFrames();
     this.metronome.stop();
     this.flow = null;
-    if (this.opts.mode === 'flow') this.state.set(this.initialState());
-  }
-
-  get isActive(): boolean {
-    const s = this.state.get().status;
-    return s === 'countin' || s === 'running';
-  }
-
-  setMetronomeVolume(v: number) {
-    this.metronome.setVolume(v);
+    if (this.opts.mode === 'flow') this.state.set(initialState(this.opts));
   }
 
   /** Visual playhead position in ticks (Flow mode), honouring the optional audio delay. */
@@ -185,59 +107,41 @@ export class PracticeController implements Session {
     return (visualNow - this.flow.startTime) / this.tickMs;
   }
 
-  private stopLoop() {
-    if (this.raf) cancelAnimationFrame(this.raf);
-    this.raf = 0;
-  }
-
-  private loop = () => {
+  private frame = (): boolean => {
     const flow = this.flow;
-    if (!flow) return;
+    const clock = this.clock;
+    if (!flow || !clock) return false;
     const now = performance.now();
     const visualNow = now - this.opts.playheadDelayMs;
+    if (visualNow < flow.startTime) {
+      this.showCountIn(clock, visualNow);
+      return true;
+    }
     const ts = this.opts.exercise.timeSignature;
     const s = this.state.get();
-    if (visualNow < flow.startTime) {
-      const beat = visualNow < this.countInStart ? 0 : Math.floor((visualNow - this.countInStart) / this.beatMs) + 1;
-      if (s.countIn?.beat !== beat) this.state.set({ ...s, status: 'countin', countIn: { beat, total: this.countInBeats } });
-    } else {
-      const misses = flow.update(now);
-      const tick = (visualNow - flow.startTime) / this.tickMs;
-      const beatIndex = Math.floor(tick / ts.beatTicks) % ts.beatsPerBar;
-      const steps = this.opts.exercise.steps;
-      // Guide/cursor: the next step that is due (or just due).
-      let idx = steps.findIndex((st) => st.tick * this.tickMs >= tick * this.tickMs - flow.timing.perfectMs);
-      if (idx < 0) idx = steps.length;
-      const next: Partial<PracticeState> = {};
-      if (s.status !== 'running') Object.assign(next, { status: 'running', countIn: null });
-      if (s.beat?.index !== beatIndex) next.beat = { index: beatIndex, beatsPerBar: ts.beatsPerBar };
-      if (idx !== s.stepIndex) Object.assign(next, { stepIndex: idx, expected: steps[idx]?.midis ?? [] });
-      if (misses.length) {
-        const marks = { ...s.marks };
-        for (const m of misses) {
-          if (m.type !== 'miss') continue;
-          const h = this.bumpStep(m.stepIndex, 'missed');
-          marks[m.stepIndex] = h.hit === 0 ? 'missed' : 'bad';
-        }
-        Object.assign(next, { marks, live: flow.liveStats() });
-      }
-      if (Object.keys(next).length) this.state.set({ ...this.state.get(), ...next });
-      if (flow.isFinished(now)) {
-        this.finish(flow.result(this.resultContext()));
-        return;
-      }
+    const misses = flow.update(now);
+    const tick = (visualNow - flow.startTime) / this.tickMs;
+    const beatIndex = Math.floor(tick / ts.beatTicks) % ts.beatsPerBar;
+    const steps = this.opts.exercise.steps;
+    // Guide/cursor: the next step that is due (or just due).
+    let idx = steps.findIndex((st) => st.tick * this.tickMs >= tick * this.tickMs - flow.timing.perfectMs);
+    if (idx < 0) idx = steps.length;
+    const next: Partial<PracticeState> = {};
+    if (s.status !== 'running') Object.assign(next, { status: 'running', countIn: null });
+    if (s.beat?.index !== beatIndex) next.beat = { index: beatIndex, beatsPerBar: ts.beatsPerBar };
+    if (idx !== s.stepIndex) Object.assign(next, { stepIndex: idx, expected: steps[idx]?.midis ?? [] });
+    if (misses.length) {
+      const marks = { ...s.marks };
+      for (const m of misses) if (m.type === 'miss') marks[m.stepIndex] = this.marks.miss(m.stepIndex);
+      Object.assign(next, { marks, live: flow.liveStats() });
     }
-    this.raf = requestAnimationFrame(this.loop);
+    if (Object.keys(next).length) this.patch(next);
+    if (flow.isFinished(now)) {
+      this.finish(flow.result(this.resultContext()));
+      return false;
+    }
+    return true;
   };
-
-  private bumpStep(stepIndex: number, kind: 'hit' | 'missed', imperfect = false) {
-    const h = this.stepHits.get(stepIndex) ?? { hit: 0, missed: 0, imperfect: false };
-    if (kind === 'hit') h.hit++;
-    else h.missed++;
-    h.imperfect ||= imperfect;
-    this.stepHits.set(stepIndex, h);
-    return h;
-  }
 
   private resultContext() {
     const ex = this.opts.exercise;
@@ -248,20 +152,10 @@ export class PracticeController implements Session {
     const result: ExerciseResult = this.opts.decorate
       ? this.opts.decorate(raw)
       : { ...raw, lesson: 'sight', notes: annotateRhythm(this.opts.exercise, raw.notes) };
-    this.stopLoop();
+    this.stopFrames();
     this.metronome.stop();
-    this.state.set({ ...this.state.get(), status: 'finished', result, expected: [], beat: null, countIn: null });
+    this.patch({ status: 'finished', result, expected: [], beat: null, countIn: null });
     this.finished.emit(result);
-  }
-
-  /** Transient feedback (wrong key, timing grade) clears itself after a moment. */
-  private flash<K extends 'wrong' | 'lastGrade'>(key: K, value: NonNullable<PracticeState[K]>, ms: number): Partial<PracticeState> {
-    const timer = setTimeout(() => {
-      if (this.state.get()[key] === value) this.state.set({ ...this.state.get(), [key]: null });
-    }, ms);
-    this.flashTimers.push(timer);
-    if (this.flashTimers.length > 20) this.flashTimers.shift();
-    return { [key]: value } as Partial<PracticeState>;
   }
 
   handleInput(ev: NoteInput): void {
@@ -312,24 +206,31 @@ export class PracticeController implements Session {
       if (f.type === 'extra') s = { ...s, ...this.flash('wrong', { midi: f.midi, at: performance.now() }, 500) };
       if (f.type === 'hit') {
         const step = this.opts.exercise.steps[f.stepIndex];
-        const h = this.bumpStep(f.stepIndex, 'hit', f.grade === 'early' || f.grade === 'late');
-        const complete = h.hit >= (step?.notes.length ?? 1);
-        const mark: StepMark = h.missed > 0 ? 'bad' : complete ? (h.imperfect ? 'ok' : 'good') : (s.marks[f.stepIndex] ?? 'ok');
+        const mark = this.marks.hit(f.stepIndex, step?.notes.length ?? 1, f.grade === 'early' || f.grade === 'late');
         s = {
           ...s,
-          marks: complete || h.missed > 0 ? { ...s.marks, [f.stepIndex]: mark } : s.marks,
+          marks: mark ? { ...s.marks, [f.stepIndex]: mark } : s.marks,
           ...this.flash('lastGrade', { grade: f.grade, deltaMs: f.deltaMs, at: performance.now() }, 900),
         };
       }
     }
     this.state.set({ ...s, live: flow.liveStats() });
   }
+}
 
-  dispose(): void {
-    this.flashTimers.splice(0).forEach(clearTimeout);
-    this.stopLoop();
-    this.metronome.stop();
-    this.unsub?.();
-    this.unsub = null;
-  }
+function initialState(opts: PracticeOptions): PracticeState {
+  const first = opts.exercise.steps[0];
+  return {
+    status: 'ready',
+    mode: opts.mode,
+    stepIndex: 0,
+    expected: first ? first.midis : [],
+    countIn: null,
+    beat: null,
+    live: EMPTY_LIVE,
+    marks: {},
+    wrong: null,
+    lastGrade: null,
+    result: null,
+  };
 }

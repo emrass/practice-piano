@@ -1,12 +1,40 @@
 import type { Exercise } from '../../core/exercise';
-import type { ExerciseResult } from '../../core/eval/types';
+import type { TimingGrade } from '../../core/eval/flowEngine';
+import type { ExerciseResult, LiveStats, PracticeMode } from '../../core/eval/types';
 import type { Emitter, Store } from '../../lib/store';
-import type { PracticeState } from './PracticeController';
+
+export type StepMark = 'good' | 'ok' | 'bad' | 'missed' | 'call';
+export type PracticeStatus = 'ready' | 'countin' | 'running' | 'finished';
+
+export interface PracticeState {
+  status: PracticeStatus;
+  mode: PracticeMode;
+  stepIndex: number;
+  /** Keys the guide should highlight. */
+  expected: number[];
+  countIn: { beat: number; total: number } | null;
+  beat: { index: number; beatsPerBar: number } | null;
+  live: LiveStats;
+  marks: Record<number, StepMark>;
+  wrong: { midi: number; at: number } | null;
+  lastGrade: { grade: TimingGrade; deltaMs: number; at: number } | null;
+  result: ExerciseResult | null;
+  /** Ear training: steps with index < visibleSteps are shown; undefined = all shown. */
+  visibleSteps?: number;
+  /** Rhythm Echo: bars with index < visibleBars are shown; undefined = all shown. */
+  visibleBars?: number;
+  /** Rhythm mode: what the current bar is (Echo call / response, Pulse click / silent). */
+  rhythm?: { phase: 'call' | 'response' | 'click' | 'silent' | null };
+  ear?: { playing: boolean; listened: boolean; replays: number; hints: number };
+  /** Chords: the chord asked for, and a nudge when the right notes have the wrong bass. */
+  chords?: { index: number; bassHint: string | null };
+}
 
 /**
  * What the UI needs from any lesson's practice session (sight-reading Wait/Flow, ear
- * training, and future lesson types). Score view, practice bar, keyboard, results and
- * piano shortcuts all work against this interface.
+ * training, rhythm, scales, chords). Score view, practice bar, keyboard, results and piano
+ * shortcuts all work against this interface; `SessionBase` (sessionBase.ts) holds the
+ * plumbing the controllers share.
  */
 export interface Session {
   readonly state: Store<PracticeState>;

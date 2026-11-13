@@ -39,7 +39,7 @@ function setup(over: Partial<RhythmSettings>) {
   controller.attach();
   const results: ExerciseResult[] = [];
   controller.finished.on((r) => results.push(r));
-  const tick = (controller as unknown as { loop: () => void }).loop;
+  const tick = (controller as unknown as { frame: () => boolean }).frame;
   return { exercise, bus, controller, results, frame: () => tick() };
 }
 
