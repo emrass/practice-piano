@@ -57,6 +57,11 @@ default because a MIDI piano makes its own sound.
 | `npm run build` | type-check + production build → `dist/` |
 | `npm run build:native` | production build into `native/PracticePiano/Web` |
 | `npm run check` | all of the above, in order |
+| `npm run e2e` | browser tests (Playwright): each lesson played end to end through a fake MIDI piano |
+
+The browser tests need Chromium once: `npx playwright install chromium`. Where that download
+is not possible, point `PLAYWRIGHT_CHROMIUM_PATH` at an installed Chromium. CI (`checks.yml`)
+runs `npm run check` and the browser tests on every push and pull request.
 
 ## iPadOS & macOS app
 
@@ -150,6 +155,7 @@ src/
   input/         input bus (MIDI, on-screen keys and QWERTY all publish here), key sound
   ui/            React components, VexFlow renderer, practice controller
   styles/        vanilla CSS
+e2e/             browser tests: fake Web MIDI piano, seeded profile, one spec per lesson + layout
 native/          Xcode project (SwiftUI + WKWebView + CoreMIDI + CoreAudioKit)
 docs/            architecture, native build guide, requirements, didactic concept
 ```
