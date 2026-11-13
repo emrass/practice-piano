@@ -2,7 +2,7 @@ import { HANDS_LABEL, NOTE_VALUE_LABEL, SCALE_TYPE_IDS, SCALE_TYPES, tonicLabel,
 import { nps, tempoText, type ScaleExercise } from '../../core/scales/generator';
 import type { ProgressState } from '../../core/progress/progress';
 import type { Settings, SettingsPatch } from '../../core/settings';
-import { CommitSlider, Field, Segmented, Select, Toggle } from './controls';
+import { CommitSlider, Field, ReviewNote, Segmented, Select, Toggle } from './controls';
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -21,6 +21,8 @@ export function ScalesPanel(props: {
   onTempo: (deltaBpm: number) => void;
   dueCount: number;
   now: number;
+  /** A due item from the review queue is on screen (the settings show that item). */
+  reviewing: boolean;
 }) {
   const { settings: s, update, exercise: ex } = props;
   const def = SCALE_TYPES[s.scales.type];
@@ -97,6 +99,7 @@ export function ScalesPanel(props: {
             options={(['quarter', 'eighth', 'sixteenth'] as const).map((v) => ({ value: v, label: NOTE_VALUE_LABEL[v] }))}
           />
         </div>
+        {props.reviewing ? <ReviewNote mode={s.scales.mode} /> : null}
         <button type="button" className="btn btn-primary btn-block" onClick={props.onNew}>
           {review ? 'Next due item' : s.scales.tonic === 'shuffle' ? 'Next key' : 'Again'} <kbd>N</kbd>
         </button>

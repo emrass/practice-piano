@@ -208,6 +208,21 @@
   line-height: 1.5;
 }
 
+/* Over the Next button while a due review item is on screen. */
+.review-note {
+  margin: 0;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: var(--paper-2);
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+
+.review-note.is-wait {
+  background: color-mix(in srgb, var(--warn) 14%, var(--paper-2));
+}
+
 .status-line {
   margin: 0;
   font-size: 12.5px;
@@ -1816,6 +1831,11 @@ details.help p {
 
 .scale-ladder.is-down {
   background: color-mix(in srgb, var(--bad) 12%, var(--paper-2));
+}
+
+.scale-ladder.is-wait {
+  font-weight: 500;
+  color: var(--ink-3);
 }
 
 .scale-notes {

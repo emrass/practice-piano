@@ -7,7 +7,7 @@ import { audioEngine } from '../../platform/audio/audioEngine';
 import { MemoryCard } from '../components/MemoryCard';
 import { ScalesPanel } from '../components/ScalesPanel';
 import { PracticeController } from '../practice/PracticeController';
-import { randomFrom, useRepertoire } from './shared';
+import { randomFrom, reviewView, useRepertoire } from './shared';
 import type { LessonContext, LessonRuntime } from './types';
 
 const isScaleItem = (id: string) => parseItemId(id) !== null;
@@ -64,6 +64,9 @@ export function useScalesLesson(ctx: LessonContext, active: boolean): LessonRunt
   );
   if (!session || !item || !exercise) return null;
 
+  // A due item is on screen: the panel shows it, and editing it goes back to picking from it.
+  const reviewing = sc.source === 'review' && rep.reviewPick === itemId(item);
+  const view = reviewView(s, ctx.update, 'scales', reviewing ? { type: item.type, tonic: item.tonic, hands: item.hands } : null);
   const next = () => {
     if (sc.source === 'review') rep.pickNext(itemId(item));
     else if (sc.tonic === 'shuffle') setShuffleTonic(randomFrom(SCALE_TYPES[sc.type].tonics, item.tonic));
@@ -85,14 +88,15 @@ export function useScalesLesson(ctx: LessonContext, active: boolean): LessonRunt
     },
     panel: (
       <ScalesPanel
-        settings={s}
+        settings={view.settings}
         progress={ctx.progress}
-        update={ctx.update}
+        update={view.update}
         onNew={next}
         exercise={exercise}
         onTempo={tempo}
         dueCount={rep.dueCount}
         now={ctx.now}
+        reviewing={reviewing}
       />
     ),
     stage: sc.notation ? undefined : (session) => <MemoryCard exercise={exercise} session={session} />,

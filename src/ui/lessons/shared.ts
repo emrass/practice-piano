@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import type { ProgressState } from '../../core/progress/progress';
 import { dueItems, setLadder } from '../../core/repertoire/repertoire';
+import type { LessonSettings, Settings, SettingsPatch } from '../../core/settings';
 import type { LessonContext } from './types';
 
 /**
@@ -77,4 +78,28 @@ export function stepLevel(ctx: LessonContext, group: 'sight' | 'ear' | 'rhythm',
   const level = Math.min(100, Math.max(1, current + direction));
   if (level !== current) ctx.update({ [group]: { level } });
   next();
+}
+
+/**
+ * While a review item is on screen the lesson panel shows that item, not the player's own pick:
+ * the item's fields are laid over the lesson's settings. Changing any of them goes back to
+ * picking, starting from the reviewed item (so changing just the hands of a reviewed D major
+ * scale gives D major with the new hands, not the old pick with them).
+ */
+export function reviewView<G extends 'scales' | 'chords'>(
+  settings: Settings,
+  update: (patch: SettingsPatch) => void,
+  group: G,
+  reviewed: Partial<LessonSettings[G]> | null,
+): { settings: Settings; update: (patch: SettingsPatch) => void } {
+  if (!reviewed) return { settings, update };
+  const fields = Object.keys(reviewed);
+  return {
+    settings: { ...settings, [group]: { ...settings[group], ...reviewed } },
+    update: (patch) => {
+      const part = patch[group] as Partial<LessonSettings[G]> | undefined;
+      if (!part || !Object.keys(part).some((k) => fields.includes(k))) return update(patch);
+      update({ ...patch, [group]: { ...reviewed, ...part, source: 'pick' } });
+    },
+  };
 }

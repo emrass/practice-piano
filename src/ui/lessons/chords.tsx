@@ -7,7 +7,7 @@ import { audioEngine } from '../../platform/audio/audioEngine';
 import { ChordChart } from '../components/ChordChart';
 import { ChordsPanel } from '../components/ChordsPanel';
 import { ChordController } from '../practice/ChordController';
-import { randomFrom, useFocus, useRepertoire } from './shared';
+import { randomFrom, reviewView, useFocus, useRepertoire } from './shared';
 import type { LessonContext, LessonRuntime } from './types';
 
 const isChordItem = (id: string) => parseChordItemId(id) !== null;
@@ -78,6 +78,9 @@ export function useChordsLesson(ctx: LessonContext, active: boolean): LessonRunt
   );
   if (!session || !item || !exercise) return null;
 
+  // A due item is on screen: the panel shows it, and editing it goes back to picking from it.
+  const reviewing = c.source === 'review' && rep.reviewPick === chordItemId(item);
+  const view = reviewView(s, ctx.update, 'chords', reviewing ? item : null);
   const next = () => {
     if (s.weakSpotFocus) refreshFocus();
     if (c.source === 'review') rep.pickNext(chordItemId(item));
@@ -101,15 +104,16 @@ export function useChordsLesson(ctx: LessonContext, active: boolean): LessonRunt
     },
     panel: (
       <ChordsPanel
-        settings={s}
+        settings={view.settings}
         progress={ctx.progress}
-        update={ctx.update}
+        update={view.update}
         onNew={next}
         exercise={exercise}
         onTempo={tempo}
         dueCount={rep.dueCount}
         now={ctx.now}
         weak={findWeakChords(ctx.progress)}
+        reviewing={reviewing}
       />
     ),
     stage: chart ? (session) => <ChordChart exercise={exercise} controller={session} /> : undefined,

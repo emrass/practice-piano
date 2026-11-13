@@ -85,6 +85,8 @@ export const chordsResults: ResultsView = {
             {change.newlyMastered ? ` · ★ mastered at ${c.bpm} bpm` : ''}
             {change.dueInDays > 0 ? ` · review in ${change.dueInDays} day${change.dueInDays === 1 ? '' : 's'}` : ''}
           </div>
+        ) : change ? (
+          <div className="scale-ladder is-wait">Practice run — the tempo ladder and review date move only in Flow</div>
         ) : null}
         {c.trouble.length || (c.voiceLeading !== null && c.voiceLeading < 0.8) ? (
           <ul className="scale-notes">

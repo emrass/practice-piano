@@ -30,4 +30,29 @@ test.describe('Scales & arpeggios', () => {
     await expect(page.locator('.memory-card')).toBeVisible();
     await expect(page.locator('.score-card svg')).toHaveCount(0);
   });
+
+  test('Review shows the due item in the panel; Wait leaves it due; editing it picks from it', async ({ app, page }) => {
+    // The pick is G major RH; D major hands together is due.
+    const due = { 'major/D/together': { ladderTempo: 160, dueAt: 1, lastAt: 1, attempts: 2, box: 1 } };
+    await app.open({ settings: scale({ mode: 'wait', source: 'review' }), progress: { repertoire: due } });
+    const panel = page.locator('.sidebar');
+    await expect(panel.locator('.item-status-title')).toContainText('D major');
+    await expect(panel.getByLabel('Key', { exact: true })).toHaveValue('D');
+    await expect(panel.getByRole('radiogroup', { name: 'Hands' }).getByRole('radio', { checked: true })).toHaveText('Together');
+    await expect(panel.locator('.review-note.is-wait')).toContainText('stays due');
+
+    await app.playSteps();
+    await expect(app.results()).toContainText('move only in Flow');
+    const item = ((await app.savedProgress()).repertoire as Record<string, { dueAt: number }>)['major/D/together'];
+    expect(item.dueAt).toBeLessThan(Date.now());
+    await page.keyboard.press('Escape');
+
+    // Switching to Flow changes the note; changing the hands starts a pick from D major.
+    await page.getByRole('radio', { name: 'Flow', exact: true }).click();
+    await expect(panel.locator('.review-note')).not.toHaveClass(/is-wait/);
+    await panel.getByRole('radiogroup', { name: 'Hands' }).getByRole('radio', { name: 'RH', exact: true }).click();
+    await expect.poll(async () => (await app.savedSettings()).scales).toMatchObject({ source: 'pick', type: 'major', tonic: 'D', hands: 'rh' });
+    await expect(panel.locator('.review-note')).toHaveCount(0);
+    await expect(panel.locator('.item-status-title')).toContainText('D major');
+  });
 });

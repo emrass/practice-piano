@@ -77,6 +77,8 @@ export const scalesResults: ResultsView = {
             {change.newlyMastered ? ` · ★ mastered at ${nps(scale.npm)}` : ''}
             {change.dueInDays > 0 ? ` · review in ${change.dueInDays} day${change.dueInDays === 1 ? '' : 's'}` : ''}
           </div>
+        ) : change ? (
+          <div className="scale-ladder is-wait">Practice run — the tempo ladder and review date move only in Flow</div>
         ) : null}
         {scale.bumps.length || scale.thumbAccent ? (
           <ul className="scale-notes">

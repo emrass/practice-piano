@@ -15,7 +15,7 @@ import type { ChordExercise } from '../../core/chords/generator';
 import type { ProgressState, WeakChordStat } from '../../core/progress/progress';
 import { progressionChoice, type Settings, type SettingsPatch } from '../../core/settings';
 import { tonicLabel } from '../../core/scales/catalog';
-import { CommitSlider, Field, Segmented, Select, Toggle } from './controls';
+import { CommitSlider, Field, ReviewNote, Segmented, Select, Toggle } from './controls';
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -35,6 +35,8 @@ export function ChordsPanel(props: {
   dueCount: number;
   now: number;
   weak: WeakChordStat[];
+  /** A due item from the review queue is on screen (the settings show that item). */
+  reviewing: boolean;
 }) {
   const { settings: s, update, exercise: ex, now } = props;
   const item = props.progress.repertoire[ex.chords.itemId];
@@ -129,6 +131,7 @@ export function ChordsPanel(props: {
             </div>
           </>
         )}
+        {props.reviewing ? <ReviewNote mode={s.chords.mode} /> : null}
         <button type="button" className="btn btn-primary btn-block" onClick={props.onNew}>
           {nextLabel} <kbd>N</kbd>
         </button>

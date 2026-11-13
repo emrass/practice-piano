@@ -155,3 +155,14 @@ export function Select<T extends string | number>(props: {
   );
 }
 
+
+/** Over the Next button while a due item is on screen: which runs count as reviewing it. */
+export function ReviewNote(props: { mode: 'wait' | 'flow' }) {
+  return props.mode === 'flow' ? (
+    <p className="review-note">Reviewing a due item — this run sets when it comes back.</p>
+  ) : (
+    <p className="review-note is-wait">
+      Reviewing a due item. <b>Wait</b> runs don’t count as a review: it stays due until you play it in <b>Flow</b>.
+    </p>
+  );
+}
