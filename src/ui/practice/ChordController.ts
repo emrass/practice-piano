@@ -23,7 +23,8 @@ export interface ChordPracticeOptions {
 }
 
 const pc = (m: number) => ((m % 12) + 12) % 12;
-const REVEAL_AFTER_MS = 5000;
+/** Wait: point at the Hint button when a chord has not been found after this long. */
+const NUDGE_AFTER_MS = 5000;
 
 /**
  * Chords & progressions: one chord per bar. Wait waits for each chord (any voicing that has
@@ -37,7 +38,7 @@ export class ChordController extends SessionBase {
   private readonly tickMs: number;
   private readonly barMs: number;
   private firstInputAt: number | null = null;
-  private revealTimer: ReturnType<typeof setTimeout> | null = null;
+  private nudgeTimer: ReturnType<typeof setTimeout> | null = null;
   /** Flow: keys outside the chord pressed inside a chord's window. */
   private wrongFlows = 0;
 
@@ -65,15 +66,33 @@ export class ChordController extends SessionBase {
     return targetKeys(this.opts.exercise, i);
   }
 
-  private scheduleReveal(i: number) {
-    if (this.revealTimer) clearTimeout(this.revealTimer);
-    this.revealTimer = setTimeout(() => this.reveal(i), REVEAL_AFTER_MS);
+  private scheduleNudge(i: number) {
+    this.clearNudge();
+    this.nudgeTimer = setTimeout(() => {
+      const s = this.state.get();
+      if (s.status === 'running' && s.stepIndex === i) this.state.set(this.nudged(s));
+    }, NUDGE_AFTER_MS);
   }
 
-  private reveal(i: number) {
+  private clearNudge() {
+    if (this.nudgeTimer) clearTimeout(this.nudgeTimer);
+    this.nudgeTimer = null;
+  }
+
+  /** Stuck (a while without the chord, or a wrong key): point at the hint, unless it is already shown. */
+  private nudged(s: PracticeState): PracticeState {
+    if (!s.hint || s.revealed.length || s.hint.nudge) return s;
+    return { ...s, hint: { ...s.hint, nudge: true } };
+  }
+
+  /** Wait: show the chord asked for on the keys; it no longer counts as right first time. */
+  hint(): void {
+    const w = this.wait;
     const s = this.state.get();
-    if (s.status !== 'running' || s.stepIndex !== i || s.expected.length) return;
-    this.state.set({ ...s, expected: this.targetKeys(i) });
+    if (!w || s.status !== 'running' || w.finished || s.revealed.length) return;
+    w.assist();
+    this.clearNudge();
+    this.state.set({ ...s, revealed: this.targetKeys(w.index), hint: { count: w.hintCount, nudge: false } });
   }
 
   private resetWait() {
@@ -81,7 +100,7 @@ export class ChordController extends SessionBase {
     this.wait.start(performance.now());
     this.firstInputAt = null;
     this.state.set({ ...initialState(this.opts), status: 'running' });
-    this.scheduleReveal(0);
+    this.scheduleNudge(0);
   }
 
   start(): void {
@@ -194,11 +213,11 @@ export class ChordController extends SessionBase {
     const r = ev.kind === 'noteOn' ? w.noteOn(ev.midi, ev.time) : w.noteOff(ev.midi, ev.time);
     let s = this.state.get();
     if (r.type === 'wrong' && ev.kind === 'noteOn') {
-      s = { ...s, expected: this.targetKeys(w.index), ...this.flash('wrong', { midi: ev.midi, at: performance.now() }, 500) };
+      s = this.nudged({ ...s, ...this.flash('wrong', { midi: ev.midi, at: performance.now() }, 500) });
     }
     if (r.type === 'bass') {
       const t = this.opts.exercise.chords.targets[w.index];
-      s = { ...s, expected: this.targetKeys(w.index), chords: { index: w.index, bassHint: `Right notes — put ${pitchLabel(bassOf(t.spec))} in the bass` } };
+      s = this.nudged({ ...s, chords: { index: w.index, bassHint: `Right notes — put ${pitchLabel(bassOf(t.spec))} in the bass` } });
     }
     if (r.type === 'match' && r.judgement) {
       const j = r.judgement;
@@ -206,13 +225,15 @@ export class ChordController extends SessionBase {
       s = {
         ...s,
         stepIndex: w.index,
-        expected: [],
+        expected: guideFor(this.opts, w.index),
+        revealed: [],
+        hint: { count: w.hintCount, nudge: false },
         marks: { ...s.marks, [j.index]: mark },
         chords: { index: w.index, bassHint: null },
       };
     }
     this.state.set({ ...s, live: this.live(w.results, w.wrongPresses) });
-    if (r.type === 'match' && !w.finished) this.scheduleReveal(w.index);
+    if (r.type === 'match' && !w.finished) this.scheduleNudge(w.index);
     if (w.finished) this.finish(w.results, w.wrongPresses, ev.time - (this.firstInputAt ?? ev.time));
   }
 
@@ -243,13 +264,13 @@ export class ChordController extends SessionBase {
     });
     this.stopFrames();
     this.metronome.stop();
-    if (this.revealTimer) clearTimeout(this.revealTimer);
-    this.state.set({ ...this.state.get(), status: 'finished', result, expected: [], beat: null, countIn: null, live: this.live(results, wrongPresses) });
+    this.clearNudge();
+    this.state.set({ ...this.state.get(), status: 'finished', result, expected: [], revealed: [], beat: null, countIn: null, live: this.live(results, wrongPresses) });
     this.finished.emit(result);
   }
 
   dispose(): void {
-    if (this.revealTimer) clearTimeout(this.revealTimer);
+    this.clearNudge();
     super.dispose();
   }
 }
@@ -261,11 +282,12 @@ function targetKeys(ex: ChordExercise, i: number): number[] {
 }
 
 /**
- * The keyboard guide would give the answer away, so it is help for when you are stuck:
- * Wait shows it after a few seconds or a wrong key; Flow only for progressions.
+ * The keyboard guide shows a progression's suggested voicing (reading it is the exercise, as
+ * in sight reading). In a drill the chord is the question, so it is never guided: Wait offers
+ * a hint instead.
  */
 function guideFor(opts: ChordPracticeOptions, i: number): number[] {
-  return opts.mode === 'flow' && opts.exercise.chords.item.task === 'progression' ? targetKeys(opts.exercise, i) : [];
+  return opts.exercise.chords.item.task === 'progression' ? targetKeys(opts.exercise, i) : [];
 }
 
 function initialState(opts: ChordPracticeOptions): PracticeState {
@@ -275,6 +297,7 @@ function initialState(opts: ChordPracticeOptions): PracticeState {
     stepIndex: 0,
     expected: guideFor(opts, 0),
     revealed: [],
+    hint: opts.mode === 'wait' ? { count: 0, nudge: false } : undefined,
     countIn: null,
     beat: null,
     live: EMPTY_LIVE,

@@ -132,7 +132,12 @@ function Studio({ profile }: { profile: Profile }) {
     if (controller.isActive) controller.stop();
     else controller.start();
   }, [controller]);
-  const hint = useCallback(() => controller.hint?.(), [controller]);
+  // A hint while the guide already lights the keys would only cost the step.
+  const guideOn = s.showKeyboardGuide;
+  const hint = useCallback(() => {
+    if (guideOn && controller.state.get().expected.length) return;
+    controller.hint?.();
+  }, [controller, guideOn]);
   const retry = useCallback(() => setRetryToken((t) => t + 1), []);
   const resultsHidden = hiddenResultsFor === controller;
   const hideResults = useCallback(() => setHiddenResultsFor(controller), [controller]);
@@ -450,6 +455,7 @@ function Studio({ profile }: { profile: Profile }) {
             resultsHidden={resultsHidden}
             onShowResults={() => setHiddenResultsFor(null)}
             pianoShortcuts={s.pianoShortcuts}
+            keyboardGuide={s.showKeyboardGuide}
           />
           <KeyboardDock
             controller={controller}

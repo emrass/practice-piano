@@ -48,6 +48,39 @@ describe('PracticeController (Wait mode)', () => {
     controller.dispose();
   });
 
+  it('a hint shows the current step until it is played, and the step is no longer first try', () => {
+    const { exercise, bus, controller } = setup();
+    const results: ExerciseResult[] = [];
+    controller.finished.on((r) => results.push(r));
+    expect(controller.state.get().revealed).toEqual([]);
+    controller.hint();
+    controller.hint(); // once per step
+    expect(controller.state.get().revealed).toEqual(exercise.steps[0].midis);
+    expect(controller.state.get().hint).toEqual({ count: 1, nudge: false });
+    let t = 0;
+    for (const step of exercise.steps) {
+      t += 400;
+      for (const m of step.midis) bus.publish({ kind: 'noteOn', midi: m, velocity: 80, time: t, source: 'screen' });
+      for (const m of step.midis) bus.publish({ kind: 'noteOff', midi: m, time: t + 50, source: 'screen' });
+      if (step.index === 0) expect(controller.state.get().revealed).toEqual([]);
+    }
+    const s = controller.state.get();
+    expect(s.marks[0]).toBe('ok');
+    expect(s.marks[1]).toBe('good');
+    expect(results[0].hints).toBe(1);
+    expect(results[0].cleanSteps).toBe(exercise.steps.length - 1);
+    expect(results[0].pitchAccuracy).toBeLessThan(1);
+    controller.dispose();
+  });
+
+  it('offers no hint in Flow', () => {
+    const { controller } = setup('flow');
+    expect(controller.state.get().hint).toBeUndefined();
+    controller.hint();
+    expect(controller.state.get().revealed).toEqual([]);
+    controller.dispose();
+  });
+
   it('restarts cleanly', () => {
     const { exercise, bus, controller } = setup();
     bus.publish({ kind: 'noteOn', midi: exercise.steps[0].midis[0], velocity: 80, time: 1, source: 'qwerty' });

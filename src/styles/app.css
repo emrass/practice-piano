@@ -363,6 +363,12 @@
   display: none;
 }
 
+.btn.is-nudge {
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
 .btn-start.is-playing {
   background: var(--gold);
   border-color: var(--gold);
@@ -753,7 +759,7 @@ details.help p {
 /* ---------- Practice bar ---------- */
 /* One row (actions · status · stats) when the bar is wide, the message wrapping to two lines
    if it must. When the bar gets narrower than that allows (~860px of its own width, ~1040px
-   in Flow, which also shows the timing grade) the status gets a full row on top and the
+   in Flow, which also shows the timing grade, and in Wait with its Hint button) the status gets a full row on top and the
    actions and stats share the row under it, the stats wrapping below if they must. */
 .practice-bar {
   container: practice-bar / inline-size;
@@ -901,13 +907,16 @@ details.help p {
   }
 }
 
-/* Flow also carries the timing grade, so its status needs the full row sooner. */
+/* Flow also carries the timing grade, and Wait a third button (Hint), so their status needs
+   the full row sooner. */
 @container practice-bar (max-width: 1040px) {
-  .pb-status.is-timed {
+  .pb-status.is-timed,
+  .pb-status.has-hint {
     flex-basis: 100%;
     order: -1;
   }
-  .pb-status.is-timed ~ .pb-stats {
+  .pb-status.is-timed ~ .pb-stats,
+  .pb-status.has-hint ~ .pb-stats {
     margin-left: auto;
   }
 }

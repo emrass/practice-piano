@@ -94,6 +94,20 @@ export class PracticeController extends SessionBase {
     this.runFrames(this.frame);
   }
 
+  /** Wait: show the current step's keys until it is played (the step no longer counts as first try). */
+  hint(): void {
+    const engine = this.wait;
+    const s = this.state.get();
+    if (!engine || s.status !== 'running' || engine.done || s.revealed.length) return;
+    engine.assist();
+    this.state.set({
+      ...s,
+      revealed: engine.currentStep?.midis ?? [],
+      hint: { count: engine.hintCount, nudge: false },
+      live: engine.liveStats(),
+    });
+  }
+
   stop(): void {
     this.stopFrames();
     this.metronome.stop();
@@ -155,7 +169,7 @@ export class PracticeController extends SessionBase {
       : { ...raw, lesson: 'sight', notes: annotateRhythm(this.opts.exercise, raw.notes) };
     this.stopFrames();
     this.metronome.stop();
-    this.patch({ status: 'finished', result, expected: [], beat: null, countIn: null });
+    this.patch({ status: 'finished', result, expected: [], revealed: [], beat: null, countIn: null });
     this.finished.emit(result);
   }
 
@@ -179,7 +193,7 @@ export class PracticeController extends SessionBase {
       if (f.type === 'wrong') s = { ...s, ...this.flash('wrong', { midi: f.midi, at: performance.now() }, 500) };
       if (f.type === 'advance') {
         const step = this.opts.exercise.steps[f.toStep];
-        s = { ...s, stepIndex: f.toStep, expected: step ? step.midis : [], marks: { ...s.marks, [f.fromStep]: f.clean ? 'good' : 'ok' } };
+        s = { ...s, stepIndex: f.toStep, expected: step ? step.midis : [], revealed: [], marks: { ...s.marks, [f.fromStep]: f.clean ? 'good' : 'ok' } };
       }
     }
     s = { ...s, live: engine.liveStats() };
@@ -227,6 +241,7 @@ function initialState(opts: PracticeOptions): PracticeState {
     stepIndex: 0,
     expected: first ? first.midis : [],
     revealed: [],
+    hint: opts.mode === 'wait' ? { count: 0, nudge: false } : undefined,
     countIn: null,
     beat: null,
     live: EMPTY_LIVE,

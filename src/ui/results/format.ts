@@ -7,6 +7,12 @@ export function signedMs(ms: number | null, early: string, late: string): string
   return `${Math.abs(ms)} ms ${ms < 0 ? early : late}`;
 }
 
+/** ' · 2 hints' after a Wait run's wrong-note count, nothing when no hint was asked for. */
+export function hintNote(result: ExerciseResult): string {
+  const n = result.hints ?? 0;
+  return n ? ` · ${n} hint${n === 1 ? '' : 's'}` : '';
+}
+
 /** A 0–1 share as a whole percentage, '—' when unknown. */
 export function pct(v: number | null): string {
   return v === null ? '—' : `${Math.round(v * 100)}%`;

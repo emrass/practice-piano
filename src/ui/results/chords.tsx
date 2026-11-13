@@ -1,9 +1,10 @@
-import { gradeHeadline, pct, signedMs } from './format';
+import { gradeHeadline, hintNote, pct, signedMs } from './format';
 import type { ResultsView } from './types';
 
 const TROUBLE_TEXT = {
   missed: 'missed',
   retry: 'a wrong key first',
+  hint: 'needed a hint',
   bass: 'wrong note in the bass',
   slow: 'slow to find',
   late: 'late',
@@ -58,7 +59,7 @@ export const chordsResults: ResultsView = {
           ) : (
             <div className="rg-item">
               <span className="rg-v">{result.wrongNotes}</span>
-              <span className="rg-k">Wrong keys</span>
+              <span className="rg-k">Wrong keys{hintNote(result)}</span>
             </div>
           )}
           {c.voiceLeading !== null && c.movement ? (

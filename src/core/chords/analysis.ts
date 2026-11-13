@@ -90,7 +90,10 @@ export function summarizeChords(ex: ChordExercise, judgements: readonly ChordJud
     trouble.push(t);
   };
   for (const o of outcomes) if (o.wrongBass) add({ symbol: o.symbol, reason: 'bass' });
-  for (const o of outcomes) if (!o.correct && !o.wrongBass) add({ symbol: o.symbol, reason: flow ? 'missed' : 'retry' });
+  outcomes.forEach((o, i) => {
+    if (o.correct || o.wrongBass) return;
+    add({ symbol: o.symbol, reason: byIndex.get(targets[i].index)?.hinted ? 'hint' : flow ? 'missed' : 'retry' });
+  });
   if (!flow && typical !== null) {
     judgements
       .filter((j) => j.reactionMs !== undefined && j.reactionMs > Math.max(2 * typical, typical + 1500))
@@ -158,6 +161,7 @@ export function chordResult(
     durationMs: ctx.durationMs,
     notes: [],
     completedAt: ctx.completedAt,
+    hints: flow ? undefined : judgements.filter((j) => j.hinted).length,
     chords,
   };
 }

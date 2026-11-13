@@ -162,6 +162,27 @@ describe('chord engines', () => {
     expect(inv.noteOn(72, 20).type).toBe('bass'); // D F A C: right notes, D in the bass
   });
 
+  it('Wait: a hint costs the chord its first-time credit and is reported', () => {
+    const ex = generateChordExercise(drill(), opts, 3);
+    const ts = ex.chords.targets;
+    const w = new ChordWaitEngine(ts);
+    w.start(0);
+    w.assist();
+    w.assist(); // once per chord
+    ts.forEach((t, i) => {
+      t.voicing.forEach((k) => w.noteOn(k, 500 * (i + 1)));
+      t.voicing.forEach((k) => w.noteOff(k, 500 * (i + 1) + 100));
+    });
+    expect(w.finished).toBe(true);
+    expect(w.results[0]).toMatchObject({ correct: false, hinted: true, wrongPresses: 0 });
+    expect(w.results[1]).toMatchObject({ correct: true, hinted: false });
+    expect(w.hintCount).toBe(1);
+    const result = chordResult(ex, w.results, { mode: 'wait', goalBpm: 80, durationMs: 1000, wrongPresses: 0, completedAt: 0 });
+    expect(result.hints).toBe(1);
+    expect(result.chords!.trouble).toContainEqual({ symbol: ts[0].symbol, reason: 'hint' });
+    expect(result.chords!.trouble.some((t) => t.reason === 'retry')).toBe(false);
+  });
+
   it('Flow: judges each bar, allows held common tones, measures timing and spread', () => {
     const ex = generateChordExercise(prog('I-IV-V-I', 'C'), opts, 1);
     const ts = ex.chords.targets;

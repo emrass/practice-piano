@@ -15,6 +15,24 @@ test.describe('Sight reading', () => {
     expect(await app.status()).not.toBe('finished');
   });
 
+  test('Wait: with the guide off, a hint shows the note and costs the step', async ({ app, page }) => {
+    await app.open({ settings: { lesson: 'sight', showKeyboardGuide: false, sight: { mode: 'wait', level: 8, bars: 4, hands: 'rh' } } });
+    const steps = await app.steps();
+    const hintButton = page.locator('.practice-bar .btn', { hasText: 'Hint' });
+    await expect(page.locator('.key.is-expected')).toHaveCount(0);
+    await hintButton.click();
+    await expect(page.locator('.key.is-expected')).toHaveCount(steps[0].length);
+    await app.playSteps();
+    await expect(app.results()).toBeVisible();
+    await expect(app.results()).toContainText('Wrong notes · 1 hint');
+    await expect(app.results()).toContainText(`${steps.length - 1}/${steps.length}`);
+  });
+
+  test('Wait: while the guide lights the keys, a hint is not offered', async ({ app, page }) => {
+    await app.open({ settings: { lesson: 'sight', showKeyboardGuide: true, sight: { mode: 'wait', level: 8, bars: 4, hands: 'rh' } } });
+    await expect(page.locator('.practice-bar .btn', { hasText: 'Hint' })).toBeDisabled();
+  });
+
   test('Flow: notes on time with the playhead score timing', async ({ app }) => {
     await app.open({ settings: { lesson: 'sight', countInBars: 1, sight: { mode: 'flow', level: 20, bars: 4, hands: 'both', bpm: 132 } } });
     const run = await app.playFlow({ jitterMs: 8 });

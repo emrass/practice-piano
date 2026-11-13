@@ -23,6 +23,8 @@ export interface ChordJudgement {
   wrongPresses: number;
   /** The right notes were down with the wrong one in the bass. */
   wrongBass: boolean;
+  /** Wait: the player asked for a hint before finding it. */
+  hinted?: boolean;
 }
 
 /** All the chord's notes (and nothing else) are down, but another chord tone is lowest. */
@@ -47,6 +49,8 @@ export class ChordWaitEngine {
   private wrong = 0;
   private wrongTotal = 0;
   private bassWrong = false;
+  private hinted = false;
+  private hints = 0;
   /** A key went down since the last match (so a repeated chord must be struck again). */
   private fresh = false;
   readonly results: ChordJudgement[] = [];
@@ -67,6 +71,17 @@ export class ChordWaitEngine {
 
   get wrongPresses(): number {
     return this.wrongTotal;
+  }
+
+  get hintCount(): number {
+    return this.hints;
+  }
+
+  /** The player asked to see the current chord: it no longer counts as right first time. */
+  assist(): void {
+    if (this.finished || this.hinted) return;
+    this.hinted = true;
+    this.hints++;
   }
 
   noteOn(midi: number, time: number): { type: 'wrong' | 'bass' | 'match' | 'none'; judgement?: ChordJudgement } {
@@ -99,17 +114,19 @@ export class ChordWaitEngine {
     if (!target || !this.fresh || !matches(target, keys)) return { type: 'none' };
     const judgement: ChordJudgement = {
       index: target.index,
-      correct: this.wrong === 0 && !this.bassWrong,
+      correct: this.wrong === 0 && !this.bassWrong && !this.hinted,
       reactionMs: Math.max(0, time - this.activeSince),
       played: keys,
       wrongPresses: this.wrong,
       wrongBass: this.bassWrong,
+      hinted: this.hinted,
     };
     this.results.push(judgement);
     this.current++;
     this.activeSince = time;
     this.wrong = 0;
     this.bassWrong = false;
+    this.hinted = false;
     this.fresh = false;
     return { type: 'match', judgement };
   }

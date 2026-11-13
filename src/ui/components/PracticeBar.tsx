@@ -17,6 +17,8 @@ export function PracticeBar(props: {
   resultsHidden: boolean;
   onShowResults: () => void;
   pianoShortcuts: boolean;
+  /** The keyboard guide setting (a hint adds nothing while the guide lights the keys). */
+  keyboardGuide: boolean;
 }) {
   const s = useStore(props.controller.state);
   const wrongFlash = s.wrong !== null;
@@ -25,6 +27,10 @@ export function PracticeBar(props: {
   const ear = s.mode === 'ear' ? s.ear : undefined;
   const active = s.status === 'countin' || s.status === 'running';
   const phase = s.rhythm?.phase ?? null;
+  const guideShowing = props.keyboardGuide && s.expected.length > 0;
+  // Stays in place (disabled) once finished, so the bar does not reflow under the results.
+  const hint = s.hint ?? null;
+  const nudge = !!hint?.nudge && !guideShowing && s.status === 'running';
 
   let message: string;
   if (ear && s.status !== 'finished') {
@@ -40,9 +46,9 @@ export function PracticeBar(props: {
   else if (phase === 'silent') message = 'Silent — keep the beat going';
   else if (phase === 'click') message = 'Feel the pulse…';
   else if (s.chords && flow) message = 'Play each chord on beat 1';
-  else if (s.chords) message = s.chords.bassHint ?? (s.chords.index === 0 ? 'Play the chord — any octave' : 'Take your time');
+  else if (s.chords) message = s.chords.bassHint ?? (nudge ? 'Stuck? Press ? for a hint' : s.chords.index === 0 ? 'Play the chord — any octave' : 'Take your time');
   else if (flow) message = 'Play along with the playhead';
-  else if (s.live.correct === 0 && s.live.wrong === 0) message = 'Play the highlighted note';
+  else if (s.live.correct === 0 && s.live.wrong === 0) message = guideShowing || s.revealed.length ? 'Play the highlighted note' : 'Play the first note';
   else message = 'Take your time — the cursor waits for you';
 
   const dots = s.countIn
@@ -79,6 +85,17 @@ export function PracticeBar(props: {
             <kbd>R</kbd>
           </button>
         )}
+        {hint ? (
+          <button
+            type="button"
+            className={`btn ${nudge ? 'is-nudge' : ''}`}
+            onClick={props.onHint}
+            disabled={s.status !== 'running' || guideShowing || s.revealed.length > 0}
+            title={guideShowing ? 'The keyboard guide already shows the keys' : 'Show the keys to play — this step then no longer counts as first try'}
+          >
+            Hint <kbd>?</kbd>
+          </button>
+        ) : null}
         {ear && s.status !== 'finished' ? null : s.status === 'finished' && props.resultsHidden ? (
           <button type="button" className="btn" onClick={props.onShowResults}>
             Results
@@ -90,7 +107,7 @@ export function PracticeBar(props: {
         )}
       </div>
 
-      <div className={`pb-status ${wrongFlash ? 'is-wrong' : ''} ${flow ? 'is-timed' : ''}`}>
+      <div className={`pb-status ${wrongFlash ? 'is-wrong' : ''} ${flow ? 'is-timed' : ''} ${hint ? 'has-hint' : ''}`}>
         <div className={`beat-dots ${s.countIn ? 'is-countin' : ''}`} aria-hidden="true">
           {dots.map((cls, i) => (
             <span key={i} className={`beat-dot ${cls} ${i === 0 ? 'is-downbeat' : ''}`} />

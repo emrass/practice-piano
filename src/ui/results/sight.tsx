@@ -1,9 +1,10 @@
-import { gradeHeadline, pct } from './format';
+import { gradeHeadline, hintNote, pct } from './format';
 import type { ResultsView } from './types';
 
 /** Sight reading (also results without a lesson). Body is defined inline so this file only exports the view (react-refresh). */
 export const sightResults: ResultsView = {
-  ribbon: (_result, passed) => (passed ? '≥ 90% — counts toward mastery' : 'Needs ≥ 90% pitch accuracy to pass'),
+  ribbon: (result, passed) =>
+    passed ? '≥ 90% — counts toward mastery' : `Needs ≥ 90% pitch accuracy${result.hints ? ' (hints count as misses)' : ''} to pass`,
   headline: (result, passed) => gradeHeadline(result, passed, 'Beautifully read!'),
   nextLabel: 'Next exercise',
   repertoire: false,
@@ -35,7 +36,7 @@ export const sightResults: ResultsView = {
         </div>
         <div className="rg-item">
           <span className="rg-v">{result.wrongNotes + result.missedNotes}</span>
-          <span className="rg-k">{flow ? 'Wrong + missed' : 'Wrong notes'}</span>
+          <span className="rg-k">{flow ? 'Wrong + missed' : `Wrong notes${hintNote(result)}`}</span>
         </div>
       </div>
     );

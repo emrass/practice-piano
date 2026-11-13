@@ -204,7 +204,10 @@ A lesson is a set of modules, one of each kind, and App.tsx only picks the activ
 - **Session** — a controller extending `SessionBase` (`ui/practice/sessionBase.ts`: state store
   and finished event, input subscription, self-clearing flashes, frame loop, metronome and
   count-in, `StepMarks`), usually a thin layer over `WaitEngine` / `FlowEngine` or the lesson's
-  own engines.
+  own engines. Its state keeps two kinds of keys for the keyboard: `expected` (what the keyboard
+  guide lights while it is on) and `revealed` (shown whatever the setting: a hint asked for, a
+  note the exercise gives). Wait sessions that offer a hint implement `hint()` and keep
+  `state.hint` (count, and `nudge` when the player looks stuck).
 - **Lesson hook** — `ui/lessons/<lesson>.tsx` returns a `LessonRuntime` (`ui/lessons/types.ts`): the
   current exercise and its session, `next` / `step` (easier / harder), how it reacts to settings
   changes (`onPatch`), its settings panel, an optional stage that replaces the score (chord chart,

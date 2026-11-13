@@ -28,6 +28,8 @@ export interface PracticeState {
   /** Rhythm mode: what the current bar is (Echo call / response, Pulse click / silent). */
   rhythm?: { phase: 'call' | 'response' | 'click' | 'silent' | null };
   ear?: { playing: boolean; listened: boolean; replays: number; hints: number };
+  /** Wait runs that offer a hint: how many were asked for, and whether to point at it (stuck). */
+  hint?: { count: number; nudge: boolean };
   /** Chords: the chord asked for, and a nudge when the right notes have the wrong bass. */
   chords?: { index: number; bassHint: string | null };
 }
@@ -52,7 +54,7 @@ export interface Session {
   /** Flow playhead position in ticks, null when there is no moving playhead. */
   playheadTick(now?: number): number | null;
   setMetronomeVolume(volume: number): void;
-  /** Ear training: reveal the next note. */
+  /** Wait runs and ear training: show the current step's keys; it no longer counts as unaided. */
   hint?(): void;
   dispose(): void;
 }

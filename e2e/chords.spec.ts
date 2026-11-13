@@ -27,6 +27,25 @@ test.describe('Chords & progressions', () => {
     await expect(app.results()).toContainText(`${ts[2].symbol}: a wrong key first`);
   });
 
+  test('Drill (Wait): a wrong key points at the hint, which shows the chord and is noted', async ({ app, page }) => {
+    await app.open({ settings: { lesson: 'chords', chords: { task: 'drill', set: 'triads', prompt: 'symbol', inversions: 'root', mode: 'wait' } } });
+    const ts = await app.exercise(targets);
+    const hintButton = page.locator('.practice-bar .btn', { hasText: 'Hint' });
+    await app.tap([wrongKey(ts[0].voicing)]);
+    // The chord is the question: a wrong key does not give it away, it points at the hint.
+    await expect(page.locator('.key.is-expected')).toHaveCount(0);
+    await expect(hintButton).toHaveClass(/is-nudge/);
+    await expect(page.locator('.pb-message')).toContainText('Stuck? Press ? for a hint');
+    await page.keyboard.press('Slash');
+    await expect(page.locator('.key.is-expected')).toHaveCount(ts[0].voicing.length);
+    await expect(hintButton).toBeDisabled();
+    for (const t of ts) await app.tap(t.voicing);
+    await expect(app.results()).toBeVisible();
+    await expect(app.results()).toContainText('7/8');
+    await expect(app.results()).toContainText('1 hint');
+    await expect(app.results()).toContainText(`${ts[0].symbol}: needed a hint`);
+  });
+
   test('Drill (Wait): right notes over the wrong bass get a hint', async ({ app, page }) => {
     await app.open({ settings: { lesson: 'chords', chords: { task: 'drill', set: 'triads', prompt: 'symbol', inversions: 'inversions', mode: 'wait' } } });
     const ts = await app.exercise(targets);

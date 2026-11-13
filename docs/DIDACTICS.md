@@ -21,6 +21,13 @@ changes to a practice mode should start here.
    graded.
 6. **Feedback that teaches.** Weak spots name the musical thing ("you rush the sixteenth after a
    dotted eighth", "timing bump at the thumb crossing"), not just a score.
+7. **Help is asked for, and it counts.** Two kinds of help on the keyboard:
+   - The *keyboard guide* (a setting, on or off for every lesson) lights the next keys where
+     finding them from the notation is the exercise: sight reading, scales, rhythm Read and
+     Pulse, chord progressions. Where the keys are the answer (ear training, chord drills,
+     rhythm Echo) there is no guide.
+   - A *hint* (`?`, Wait only) shows the keys of the current step once, until it is played. The
+     step then no longer counts as first try. In Flow there is no time to ask, so there is no hint.
 
 ## 2. Two kinds of material
 
@@ -228,8 +235,10 @@ chord must be struck again. Flow: one chord per 4/4 bar on beat 1; keys pressed 
 line (−0.3 / +0.4 of a bar, at most 300 / 450 ms) plus keys held over from before (common tones)
 make the chord; holding the previous chord through the bar line does not count.
 
-**Keyboard guide** would give the answer away, so it is help for when you are stuck: in Wait it
-shows the suggested voicing after 5 s or a wrong key; in Flow only for progressions.
+**Keyboard guide and hints.** In progressions the guide shows the suggested voicing, as it shows
+the notes in sight reading. In drills it would give the answer away, so there is none: after 5 s
+without the chord, or a wrong key, the Hint button is pointed out ("Stuck? Press ? for a hint"),
+and a chord found after a hint is not right first time ("needed a hint").
 
 **Voicings.** The suggested voicing is close position; progressions move to the nearest voicing
 each time (smallest total semitone movement, kept between G3 and G5).

@@ -1,5 +1,5 @@
 import { nps } from '../../core/scales/generator';
-import { gradeHeadline, pct } from './format';
+import { gradeHeadline, hintNote, pct } from './format';
 import type { ResultsView } from './types';
 
 const CROSSING_TEXT = { 'thumb-under': 'thumb under', 'finger-over': 'finger over' } as const;
@@ -63,7 +63,7 @@ export const scalesResults: ResultsView = {
           ) : (
             <div className="rg-item">
               <span className="rg-v">{result.wrongNotes + result.missedNotes}</span>
-              <span className="rg-k">{flow ? 'Wrong + missed' : 'Wrong notes'}</span>
+              <span className="rg-k">{flow ? 'Wrong + missed' : `Wrong notes${hintNote(result)}`}</span>
             </div>
           )}
         </div>

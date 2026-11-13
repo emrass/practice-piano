@@ -65,7 +65,7 @@ export interface ExerciseResult {
   durationMs: number;
   notes: NoteResult[];
   completedAt: number;
-  /** Ear training: extra listens after the first, and notes revealed by hints. */
+  /** Ear training: extra listens after the first. Wait runs and ear training: hints asked for. */
   replays?: number;
   hints?: number;
   rhythm?: RhythmSummary;
@@ -131,7 +131,7 @@ export interface ChordSummary {
   /** Average semitones the right hand moved per change, and the smallest possible. */
   movement: { played: number; minimal: number } | null;
   /** Chords to look at, worst first. */
-  trouble: { symbol: string; reason: 'missed' | 'retry' | 'bass' | 'slow' | 'late' | 'early' | 'rolled'; ms?: number }[];
+  trouble: { symbol: string; reason: 'missed' | 'retry' | 'hint' | 'bass' | 'slow' | 'late' | 'early' | 'rolled'; ms?: number }[];
   outcomes: ChordOutcome[];
 }
 
