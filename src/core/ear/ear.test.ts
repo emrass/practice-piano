@@ -35,18 +35,27 @@ describe('generateEarExercise', () => {
     expect(a.id.startsWith('ear-')).toBe(true);
   });
 
-  it('level 1 is a two-note echo starting on middle C, by step', () => {
+  it('level 1 is a two-note echo on C, D and E, by step', () => {
     for (const seed of SEEDS) {
       const ex = generateEarExercise(base, seed);
       expect(ex.steps).toHaveLength(2);
-      expect(ex.steps[0].midis).toEqual([60]);
-      expect([62, 60]).toContain(ex.steps[1].midis[0]);
+      const [a, b] = ex.steps.map((s) => s.midis[0]);
+      expect([60, 62, 64]).toContain(a);
+      expect([60, 62, 64]).toContain(b);
+      expect(Math.abs(a - b)).toBeLessThanOrEqual(2);
       expect(ex.key.id).toBe('C');
     }
   });
 
+  it('the first tiers have enough different phrases to keep them fresh', () => {
+    const distinct = (level: number) => new Set(Array.from({ length: 300 }, (_, i) => generateEarExercise({ ...base, level }, 7919 * (i + 1)).id)).size;
+    expect(distinct(1)).toBeGreaterThanOrEqual(6);
+    expect(distinct(8)).toBeGreaterThanOrEqual(20);
+    expect(distinct(15)).toBeGreaterThanOrEqual(30);
+  });
+
   it('melodies end on the tonic and respect the leap limit', () => {
-    for (const level of [10, 25, 38, 55, 85]) {
+    for (const level of [13, 25, 38, 55, 85]) {
       const p = earProfile(level);
       for (const seed of SEEDS) {
         const ex = generateEarExercise({ ...base, level }, seed);

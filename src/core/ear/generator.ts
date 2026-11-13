@@ -27,6 +27,8 @@ export interface EarProfile {
   chromaticProbability: number;
   firstNoteGiven: boolean;
   startOnTonic: boolean;
+  /** Finish on the tonic so the phrase sounds complete (from Five-Finger Tunes on). */
+  endOnTonic: boolean;
   cadence: boolean;
   bpm: number;
 }
@@ -52,7 +54,11 @@ export function earProfile(rawLevel: number): EarProfile {
     sevenths: false,
     chromaticProbability: 0,
     firstNoteGiven: true,
-    startOnTonic: level < 21,
+    // The first tiers draw from very few notes: fixing both ends on the tonic left one phrase
+    // (C–C) at level 1 and two at level 10, so the beginnings start anywhere in the range and
+    // only end on the tonic once there are enough notes for that to leave variety.
+    startOnTonic: false,
+    endOnTonic: level >= 13,
     cadence: level >= 41,
     bpm: Math.round(76 + (level - 1) * 0.3),
   };
@@ -149,12 +155,16 @@ function melodyLine(rng: Rng, p: EarProfile, key: KeySignature, tonic: number, l
   const out: Chosen[] = [];
   let prev: number;
   if (p.startOnTonic) prev = tonic;
-  else prev = rng.weighted([tonic, tonic + 2, tonic + 4, tonic - 3].filter((s) => s >= lo && s <= hi), [3, 1.5, 1.5, 1]);
+  else if (p.level <= 12) prev = rng.int(lo, hi); // first tiers: any note of the small range
+  else {
+    const starts = [tonic, tonic + 2, tonic + 4, tonic - 3].filter((s) => s >= lo && s <= hi);
+    prev = rng.weighted(starts, [3, 1.5, 1.5, 1].slice(0, starts.length));
+  }
   out.push({ step: prev, alter: 0 });
   let prevInterval = 0;
   for (let i = 1; i < length; i++) {
     const last = i === length - 1;
-    if (last) {
+    if (last && p.endOnTonic) {
       // End on the tonic (closest one within reach), so every phrase sounds finished.
       const tonics = [tonic - 7, tonic, tonic + 7].filter((s) => s >= lo && s <= hi && s !== prev && Math.abs(s - prev) <= Math.max(p.maxLeap, 4));
       if (tonics.length) {
@@ -177,8 +187,8 @@ function melodyLine(rng: Rng, p: EarProfile, key: KeySignature, tonic: number, l
       if (Math.abs(midi(s) - midi(prev)) === 6) w *= 0.1;
       if (Math.abs(prevInterval) >= 3 && Math.sign(s - prev) === Math.sign(prevInterval)) w *= 0.3;
       if (focus.has(Math.abs(midi(s) - midi(prev)))) w *= 2.5;
-      if (last) w *= scaleDegree(key, s) === 0 ? 6 : [2, 4].includes(scaleDegree(key, s)) ? 1.5 : 0.3;
-      if (i === length - 2 && [1, 6, 4].includes(scaleDegree(key, s))) w *= 2; // approach the final tonic
+      if (last && p.endOnTonic) w *= scaleDegree(key, s) === 0 ? 6 : [2, 4].includes(scaleDegree(key, s)) ? 1.5 : 0.3;
+      if (p.endOnTonic && i === length - 2 && [1, 6, 4].includes(scaleDegree(key, s))) w *= 2; // approach the final tonic
       cands.push(s);
       weights.push(w);
     }

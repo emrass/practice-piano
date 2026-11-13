@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { freshExercise } from '../../core/generator/fresh';
 import { generateExercise, type FocusNote } from '../../core/generator/generator';
 import { midiLabel } from '../../core/music/pitch';
 import { findWeakFigures, findWeakSpots, type ProgressState } from '../../core/progress/progress';
@@ -7,7 +8,7 @@ import { inputBus } from '../../input/inputBus';
 import { audioEngine } from '../../platform/audio/audioEngine';
 import { ExercisePanel } from '../components/ExercisePanel';
 import { PracticeController } from '../practice/PracticeController';
-import { stepLevel, useFocus } from './shared';
+import { seenIn, stepLevel, useFocus } from './shared';
 import type { LessonContext, LessonRuntime } from './types';
 
 const weakNotes = (p: ProgressState): FocusNote[] => findWeakSpots(p).notes.map((n) => ({ midi: n.midi, clef: n.clef }));
@@ -22,17 +23,23 @@ export function useSightLesson(ctx: LessonContext, active: boolean): LessonRunti
   const exercise = useMemo(
     () =>
       active
-        ? generateExercise(
-            {
-              ...generatorSettingsFrom(s),
-              focus: s.weakSpotFocus ? focus : undefined,
-              // Rhythm figures are only measured in Flow mode, so only featured there.
-              focusFigures: s.weakSpotFocus && sight.mode === 'flow' ? figures : undefined,
-            },
+        ? freshExercise(
+            (sd) =>
+              generateExercise(
+                {
+                  ...generatorSettingsFrom(s),
+                  focus: s.weakSpotFocus ? focus : undefined,
+                  // Rhythm figures are only measured in Flow mode, so only featured there.
+                  focusFigures: s.weakSpotFocus && sight.mode === 'flow' ? figures : undefined,
+                },
+                sd,
+              ),
             seed,
+            seenIn(ctx.progress),
           )
         : null,
-    // Only the fields that shape a passage (not e.g. the theme) make a new one.
+    // Only the fields that shape a passage (not e.g. the theme) make a new one; progress is read
+    // when it is made (an unseen passage first), not followed.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [active, sight, s.keyboardSize, s.weakSpotFocus, focus, figures, seed],
   );

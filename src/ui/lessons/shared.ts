@@ -16,6 +16,11 @@ export function useFocus<T>(ctx: LessonContext, compute: (progress: ProgressStat
   return [focus, refresh];
 }
 
+/** How often each exercise id has been played (fresh material: unseen first). */
+export function seenIn(progress: ProgressState): (id: string) => number {
+  return (id) => progress.attempts[id] ?? 0;
+}
+
 export function randomFrom(options: readonly string[], not: string | null): string {
   const pool = options.filter((t) => t !== not);
   return pool[Math.floor(Math.random() * pool.length)] ?? options[0];

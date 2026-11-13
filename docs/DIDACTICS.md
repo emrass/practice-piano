@@ -32,6 +32,11 @@ changes to a practice mode should start here.
 | Difficulty control | one **1–100 level** (a real continuum) | **item picker** (what) × **tempo ladder** (how fast) |
 | Mastery | tiers of levels, ≥ 90 % on distinct passages | per item: clean at target tempo, evenness thresholds |
 
+**Unseen first.** Random generation alone can repeat itself where the space is small (a
+two-note echo has only a handful of phrases). A new exercise therefore tries several seeds and
+takes the first passage, phrase or rhythm you have not played yet (the least-played one once
+everything has been met).
+
 Why not randomise everything? A C major scale is always a C major scale; random notes would
 destroy what is being practised. Random *chord sequences* would be unmusical. For fixed
 repertoire, research on practice favours **shuffled** (mixed-up) items over drilling one
@@ -79,7 +84,8 @@ Audiation into keys ("listen and play back"). Open-ended → random phrases, lev
 echoes → five-finger tunes → leaps → new keys (set by an I–IV–V–I cadence) → minor → harmonic
 intervals → triads → key-only → inversions, sevenths, chromatic notes. Notes appear as they are
 found; replays cost a little XP, hints count as misses. Weak spots: melodic intervals and chord
-types.
+types. The first tiers start anywhere in their small range (C–E, then C–G); phrases end on the
+tonic from Five-Finger Tunes on, when there are enough notes for that to leave variety.
 
 ### 4.3 Rhythm ✓ (v1)
 

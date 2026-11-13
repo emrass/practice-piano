@@ -1,11 +1,12 @@
 import { useMemo } from 'react';
+import { freshExercise } from '../../core/generator/fresh';
 import { findWeakFigures, type ProgressState } from '../../core/progress/progress';
 import { generateRhythmExercise } from '../../core/rhythm/generator';
 import { inputBus } from '../../input/inputBus';
 import { audioEngine } from '../../platform/audio/audioEngine';
 import { RhythmPanel } from '../components/RhythmPanel';
 import { RhythmController } from '../practice/RhythmController';
-import { stepLevel, useFocus } from './shared';
+import { seenIn, stepLevel, useFocus } from './shared';
 import type { LessonContext, LessonRuntime } from './types';
 
 const weakFigures = (p: ProgressState): string[] => findWeakFigures(p).map((w) => w.key);
@@ -15,7 +16,12 @@ export function useRhythmLesson(ctx: LessonContext, active: boolean): LessonRunt
   const { settings: s, seed, retryToken } = ctx;
   const [focus, refreshFocus] = useFocus(ctx, weakFigures, []);
   const exercise = useMemo(
-    () => (active ? generateRhythmExercise({ ...s.rhythm, focusFigures: s.weakSpotFocus ? focus : undefined }, seed) : null),
+    () =>
+      active
+        ? freshExercise((sd) => generateRhythmExercise({ ...s.rhythm, focusFigures: s.weakSpotFocus ? focus : undefined }, sd), seed, seenIn(ctx.progress))
+        : null,
+    // Progress is read when the rhythm is made, not followed (the finished one stays on screen).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [active, s.rhythm, s.weakSpotFocus, focus, seed],
   );
   // J taps the right-hand key, F the left (either one when only one hand plays).
