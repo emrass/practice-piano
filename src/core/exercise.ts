@@ -21,6 +21,8 @@ export interface NoteEvent {
   pitches: SpelledPitch[];
   /** Rhythm figure this event belongs to (see generator/rhythm.ts figureKey). */
   figure?: string;
+  /** Suggested fingering per pitch (scales & arpeggios). */
+  fingers?: number[];
 }
 
 export interface Measure {

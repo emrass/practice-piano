@@ -125,3 +125,20 @@ export class MeasureAccidentals {
 export function prefersFlats(key: KeySignature): boolean {
   return key.fifths < 0;
 }
+
+const LETTER_FIFTHS: Readonly<Record<Letter, number>> = { F: -1, C: 0, G: 1, D: 2, A: 3, E: 4, B: 5 };
+const MAJOR_BY_FIFTHS: Readonly<Record<string, string>> = {
+  '-7': 'Cb', '-6': 'Gb', '-5': 'Db', '-4': 'Ab', '-3': 'Eb', '-2': 'Bb', '-1': 'F', '0': 'C',
+  '1': 'G', '2': 'D', '3': 'A', '4': 'E', '5': 'B', '6': 'F#', '7': 'C#',
+};
+
+/**
+ * Any major or minor key (not only the generator's list), e.g. G♯ minor for scales.
+ * The VexFlow spec is the relative major's, which has the same signature.
+ */
+export function makeKeySignature(tonic: Letter, tonicAlter: number, mode: Mode): KeySignature {
+  const fifths = LETTER_FIFTHS[tonic] + 7 * tonicAlter - (mode === 'minor' ? 3 : 0);
+  const acc = tonicAlter === 1 ? '#' : tonicAlter === -1 ? 'b' : '';
+  const base = k(`${tonic}${acc}${mode === 'minor' ? 'm' : ''}`, tonic, tonicAlter, mode, fifths, 1);
+  return { ...base, vexKey: MAJOR_BY_FIFTHS[String(fifths)] ?? base.vexKey };
+}

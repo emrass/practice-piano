@@ -21,6 +21,10 @@ import {
   type ProgressState,
 } from '../core/progress/progress';
 import { generateRhythmExercise, type RhythmExercise } from '../core/rhythm/generator';
+import { scaleResult } from '../core/scales/analysis';
+import { itemId, parseItemId, SCALE_TYPES, type ScaleItem } from '../core/scales/catalog';
+import { generateScaleExercise, initialNpm, type ScaleExercise } from '../core/scales/generator';
+import { dueItems, setLadder } from '../core/scales/repertoire';
 import { earSettingsFrom, rhythmSettingsFrom, type Settings } from '../core/settings';
 import { useStore } from '../lib/store';
 import { inputBus } from '../input/inputBus';
@@ -42,6 +46,7 @@ import { EarController } from './practice/EarController';
 import { PracticeController } from './practice/PracticeController';
 import { RhythmController } from './practice/RhythmController';
 import { RhythmPanel } from './components/RhythmPanel';
+import { ScalesPanel } from './components/ScalesPanel';
 import type { Session } from './practice/session';
 import { type Profile, useProfile } from './state/useProfile';
 
@@ -59,6 +64,16 @@ function weakIntervalFocus(progress: ProgressState): number[] {
 
 function weakFigureFocus(progress: ProgressState): string[] {
   return findWeakFigures(progress).map((w) => w.key);
+}
+
+/** Scale items due for review, most overdue first. */
+function dueScaleItems(progress: ProgressState, now: number): string[] {
+  return dueItems(progress.repertoire, now).filter((id) => parseItemId(id) !== null);
+}
+
+function randomTonic(tonics: readonly string[], not: string | null): string {
+  const pool = tonics.filter((t) => t !== not);
+  return pool[Math.floor(Math.random() * pool.length)] ?? tonics[0];
 }
 
 function isTypingTarget(t: EventTarget | null): boolean {
@@ -88,6 +103,10 @@ function Studio({ profile }: { profile: Profile }) {
   const [focusFigures, setFocusFigures] = useState<string[]>(() => (s.weakSpotFocus ? weakFigureFocus(progress) : []));
   const lesson: LessonId = s.lesson;
   const [retryToken, setRetryToken] = useState(0);
+  // Scales: shuffled key, the item picked from the review queue, and manual ladder changes.
+  const [shuffleTonic, setShuffleTonic] = useState<string | null>(null);
+  const [reviewPick, setReviewPick] = useState<string | null>(() => dueScaleItems(progress, Date.now())[0] ?? null);
+  const [ladderToken, setLadderToken] = useState(0);
   const [tab, setTab] = useState<Tab>('exercise');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [award, setAward] = useState<{ exerciseId: string; award: Award } | null>(null);
@@ -153,11 +172,33 @@ function Studio({ profile }: { profile: Profile }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [lesson, s.earLevel, s.earLength, s.earReference, s.earKeyId, s.weakSpotFocus, focusIntervals, seed],
   );
-  const exercise: Exercise = (earExercise ?? rhythmExercise ?? sightExercise)!;
+  const scaleItem: ScaleItem | null = useMemo(() => {
+    if (lesson !== 'scales') return null;
+    const picked = s.scaleSource === 'review' && reviewPick ? parseItemId(reviewPick) : null;
+    if (picked) return picked;
+    const def = SCALE_TYPES[s.scaleType];
+    const tonic = s.scaleTonic === 'shuffle' ? (shuffleTonic && def.tonics.includes(shuffleTonic) ? shuffleTonic : def.tonics[0]) : s.scaleTonic;
+    return { type: s.scaleType, tonic, hands: s.scaleHands };
+  }, [lesson, s.scaleSource, s.scaleType, s.scaleTonic, s.scaleHands, reviewPick, shuffleTonic]);
+  const scaleExercise: ScaleExercise | null = useMemo(
+    () => {
+      if (!scaleItem) return null;
+      // The ladder tempo is read when the exercise is made (not on every progress change, so the
+      // results of a run stay on screen); retries and tempo changes make a new one.
+      const npm = progress.repertoire[itemId(scaleItem)]?.ladderNpm ?? initialNpm(scaleItem, s.scaleNoteValue);
+      return generateScaleExercise(scaleItem, { octaves: s.scaleOctaves, noteValue: s.scaleNoteValue, npm });
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [scaleItem, s.scaleOctaves, s.scaleNoteValue, seed, retryToken, ladderToken],
+  );
+  const exercise: Exercise = (earExercise ?? rhythmExercise ?? scaleExercise ?? sightExercise)!;
   const firstSight = (progress.attempts[exercise.id] ?? 0) === 0;
 
   const update = useCallback(
     (patch: Partial<Settings>) => {
+      if (patch.scaleSource === 'review') setReviewPick(dueScaleItems(progressRef.current, Date.now())[0] ?? null);
+      if (patch.scaleTonic === 'shuffle') setShuffleTonic(randomTonic(SCALE_TYPES[patch.scaleType ?? s.scaleType].tonics, null));
+      if (patch.scaleType && s.scaleTonic === 'shuffle') setShuffleTonic(randomTonic(SCALE_TYPES[patch.scaleType].tonics, null));
       if (patch.weakSpotFocus) {
         setFocus(weakFocus(progressRef.current));
         setFocusIntervals(weakIntervalFocus(progressRef.current));
@@ -165,7 +206,7 @@ function Studio({ profile }: { profile: Profile }) {
       }
       updateSettings(patch);
     },
-    [updateSettings],
+    [updateSettings, s.scaleType, s.scaleTonic],
   );
 
   const nextExercise = useCallback(() => {
@@ -174,8 +215,34 @@ function Studio({ profile }: { profile: Profile }) {
       setFocusIntervals(weakIntervalFocus(progressRef.current));
       setFocusFigures(weakFigureFocus(progressRef.current));
     }
+    if (lesson === 'scales') {
+      const current = scaleItem ? itemId(scaleItem) : null;
+      if (s.scaleSource === 'review') {
+        const due = dueScaleItems(progressRef.current, Date.now());
+        setReviewPick(due.find((id) => id !== current) ?? due[0] ?? null);
+      } else if (s.scaleTonic === 'shuffle') {
+        setShuffleTonic(randomTonic(SCALE_TYPES[s.scaleType].tonics, scaleItem?.tonic ?? null));
+      }
+    }
     setSeed(randomSeed());
-  }, [s.weakSpotFocus]);
+  }, [s.weakSpotFocus, lesson, scaleItem, s.scaleSource, s.scaleTonic, s.scaleType]);
+
+  /** Scales: move the current item's tempo ladder by hand (± bpm in the note value played). */
+  const changeTempo = useCallback(
+    (deltaBpm: number) => {
+      if (!scaleExercise) return;
+      const { itemId: id, notesPerBeat, npm } = scaleExercise.scale;
+      const cur = progressRef.current.repertoire[id];
+      const next = {
+        ...progressRef.current,
+        repertoire: { ...progressRef.current.repertoire, [id]: setLadder(cur, (cur?.ladderNpm ?? npm) + deltaBpm * notesPerBeat, Date.now()) },
+      };
+      progressRef.current = next;
+      setProgress(next);
+      setLadderToken((t) => t + 1);
+    },
+    [scaleExercise, setProgress],
+  );
 
   // ---- Practice session -------------------------------------------------------------
   const onFinished = useCallback(
@@ -212,7 +279,8 @@ function Studio({ profile }: { profile: Profile }) {
           : new PracticeController(
         {
           exercise,
-          mode: s.mode,
+          mode: lesson === 'scales' ? s.scaleMode : s.mode,
+          decorate: scaleExercise ? (raw) => scaleResult(scaleExercise, raw, s.scaleGoalNps * 60) : undefined,
           graceMs: s.chordGraceMs,
           sustainCountsAsHeld: s.sustainScoring === 'hold',
           latencyMs: s.latencyMs,
@@ -225,7 +293,7 @@ function Studio({ profile }: { profile: Profile }) {
       ),
     // Volume is applied live below; a retry creates a fresh session on the same passage.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [exercise, s.mode, s.chordGraceMs, s.sustainScoring, s.latencyMs, s.playheadDelayMs, s.countInBars, retryToken, s.synthVolume],
+    [exercise, s.mode, s.scaleMode, s.scaleGoalNps, s.chordGraceMs, s.sustainScoring, s.latencyMs, s.playheadDelayMs, s.countInBars, retryToken, s.synthVolume],
   );
   useEffect(() => controller.attach(), [controller]);
   // Ear training: once audio has been unlocked by a first gesture, new phrases play by themselves.
@@ -274,6 +342,7 @@ function Studio({ profile }: { profile: Profile }) {
           return hideResults();
         case 'easier':
         case 'harder': {
+          if (lesson === 'scales') return changeTempo(action === 'harder' ? 4 : -4);
           const key = lesson === 'ear' ? 'earLevel' : lesson === 'rhythm' ? 'rhythmLevel' : 'level';
           const current = s[key];
           const level = Math.min(100, Math.max(1, current + (action === 'harder' ? 1 : -1)));
@@ -282,7 +351,7 @@ function Studio({ profile }: { profile: Profile }) {
         }
       }
     },
-    [retry, nextExercise, hideResults, s, lesson, update],
+    [retry, nextExercise, hideResults, s, lesson, update, changeTempo],
   );
 
   useEffect(
@@ -426,6 +495,7 @@ function Studio({ profile }: { profile: Profile }) {
           ? fitKeyboardRange(Math.min(s.rhythmLhKey, s.rhythmRhKey), Math.max(s.rhythmLhKey, s.rhythmRhKey), s.keyboardSize)
           : fitKeyboardRange(exercise.range.min, exercise.range.max, s.keyboardSize);
   const streak = displayStreak(progress.streak, dayKey(new Date()));
+  const nowMs = new Date().getTime();
   const weakLabel = focus.length ? focus.slice(0, 4).map((f) => midiLabel(f.midi)).join(', ') : findWeakSpots(progress).notes.length ? 'your weakest notes' : null;
   const connectedInputs = midiState.inputs.filter((i) => i.connected);
   const midiLabelText =
@@ -474,6 +544,18 @@ function Studio({ profile }: { profile: Profile }) {
             weakFigures={findWeakFigures(progress)}
           />
         ) : null}
+        {tab === 'exercise' && scaleExercise ? (
+          <ScalesPanel
+            settings={s}
+            progress={progress}
+            update={update}
+            onNew={nextExercise}
+            exercise={scaleExercise}
+            onTempo={changeTempo}
+            dueCount={dueScaleItems(progress, nowMs).length}
+            now={nowMs}
+          />
+        ) : null}
         {tab === 'input' ? <InputAudioPanel settings={s} update={update} midi={midiService} qwertyBase={qwertyBase} onCalibrate={openCalibration} /> : null}
         {tab === 'progress' ? (
           <ProgressPanel
@@ -481,6 +563,12 @@ function Studio({ profile }: { profile: Profile }) {
             progress={progress}
             settings={s}
             storageKind={profile.storageKind}
+            now={nowMs}
+            onReviewScales={() => {
+              update({ scaleSource: 'review' });
+              setSeed(randomSeed());
+              setTab('exercise');
+            }}
             onPracticeWeakSpots={() => {
               setFocus(weakFocus(progressRef.current));
               setFocusIntervals(weakIntervalFocus(progressRef.current));
@@ -528,11 +616,11 @@ function Studio({ profile }: { profile: Profile }) {
             }))}
           />
         </div>
-        <div className={`topbar-mode ${lesson === 'sight' ? '' : 'is-hidden'}`} aria-hidden={lesson !== 'sight'}>
-          <Segmented
+        <div className={`topbar-mode ${lesson === 'sight' || lesson === 'scales' ? '' : 'is-hidden'}`} aria-hidden={lesson !== 'sight' && lesson !== 'scales'}>
+          <Segmented<'wait' | 'flow'>
             label="Practice mode"
-            value={s.mode}
-            onChange={(mode) => update({ mode })}
+            value={lesson === 'scales' ? s.scaleMode : s.mode === 'flow' ? 'flow' : 'wait'}
+            onChange={(mode) => update(lesson === 'scales' ? { scaleMode: mode } : { mode })}
             options={[
               { value: 'wait', label: 'Wait', title: 'Self-paced: the cursor waits for the right notes' },
               { value: 'flow', label: 'Flow', title: 'Play in time with the metronome' },
@@ -581,7 +669,11 @@ function Studio({ profile }: { profile: Profile }) {
         <main className="stage">
           <MetaStrip exercise={exercise} firstSight={firstSight} focus={s.weakSpotFocus && focus.length > 0} />
           <div className="score-card">
-            <ScoreView exercise={exercise} showNoteNames={s.showNoteNames} controller={controller} />
+            {scaleExercise && !s.scaleNotation ? (
+              <MemoryCard exercise={scaleExercise} controller={controller} />
+            ) : (
+              <ScoreView exercise={exercise} showNoteNames={s.showNoteNames} controller={controller} showFingering={!!scaleExercise && s.showFingering} />
+            )}
             <ResultsLayer
               controller={controller}
               award={award?.exerciseId === exercise.id ? award.award : null}
@@ -637,6 +729,26 @@ function Studio({ profile }: { profile: Profile }) {
           }}
         />
       ) : null}
+    </div>
+  );
+}
+
+/** Scales "from memory": no notation, just what to play and how far you are. */
+function MemoryCard(props: { exercise: ScaleExercise; controller: Session }) {
+  const state = useStore(props.controller.state);
+  const { scale } = props.exercise;
+  const total = props.exercise.steps.length;
+  const done = state.status === 'finished' ? total : Math.min(total, state.stepIndex);
+  return (
+    <div className="memory-card">
+      <div className="memory-title">{scale.title}</div>
+      <div className="memory-sub">
+        {scale.item.hands === 'rh' ? 'Right hand' : scale.item.hands === 'lh' ? 'Left hand' : scale.item.hands === 'together' ? 'Hands together' : 'Contrary motion'} ·{' '}
+        {scale.octaves} octave{scale.octaves > 1 ? 's' : ''} · up and down
+      </div>
+      <div className="progress-track memory-progress">
+        <div className="progress-fill" style={{ width: `${(done / Math.max(1, total)) * 100}%` }} />
+      </div>
     </div>
   );
 }

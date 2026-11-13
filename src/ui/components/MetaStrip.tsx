@@ -3,6 +3,8 @@ import type { Exercise } from '../../core/exercise';
 import { findTier } from '../../core/lessons';
 import { RHYTHM_COMPLEXITY_LABELS } from '../../core/generator/difficulty';
 import { isRhythmExercise, TASK_INFO, TEXTURE_INFO } from '../../core/rhythm/generator';
+import { HANDS_LABEL as SCALE_HANDS, NOTE_VALUE_LABEL } from '../../core/scales/catalog';
+import { isScaleExercise, nps } from '../../core/scales/generator';
 
 const HANDS_LABEL = { rh: 'Right hand', lh: 'Left hand', alternating: 'Alternating', both: 'Both hands' } as const;
 
@@ -12,7 +14,17 @@ export function MetaStrip(props: { exercise: Exercise; firstSight: boolean; focu
   const tier = findTier(ex.meta.tierId);
   const ear = (ex as Partial<EarExercise>).ear;
   const rhythm = isRhythmExercise(ex) ? ex.rhythm : null;
-  const items: [string, string][] = rhythm
+  const scale = isScaleExercise(ex) ? ex.scale : null;
+  const items: [string, string][] = scale
+    ? [
+        ['Key', ex.key.label === 'C major' && scale.item.type === 'chromatic' ? '—' : ex.key.label],
+        ['Hands', SCALE_HANDS[scale.item.hands]],
+        ['Range', `${scale.octaves} octave${scale.octaves > 1 ? 's' : ''}`],
+        ['Rhythm', NOTE_VALUE_LABEL[scale.noteValue]],
+        ['Tempo', `${ex.bpm} bpm${ex.timeSignature.beatTicks === 6 ? ' (♩.)' : ''}`],
+        ['Speed', nps(scale.npm)],
+      ]
+    : rhythm
     ? [
         ['Task', TASK_INFO[rhythm.task].name],
         ['Time', ex.timeSignature.id],
@@ -41,10 +53,18 @@ export function MetaStrip(props: { exercise: Exercise; firstSight: boolean; focu
   return (
     <div className="meta-strip">
       <div className="meta-tier">
-        <span className="meta-level">L{ex.meta.level}</span>
-        <span className="meta-tier-name" title={tier?.summary}>
-          {tier?.name}
-        </span>
+        {scale ? (
+          <span className="meta-tier-name meta-item-title" title={scale.title}>
+            {scale.title}
+          </span>
+        ) : (
+          <>
+            <span className="meta-level">L{ex.meta.level}</span>
+            <span className="meta-tier-name" title={tier?.summary}>
+              {tier?.name}
+            </span>
+          </>
+        )}
       </div>
       {items.map(([k, v]) => (
         <div className="meta-item" key={k}>
@@ -53,9 +73,11 @@ export function MetaStrip(props: { exercise: Exercise; firstSight: boolean; focu
         </div>
       ))}
       <div className="meta-badges">
-        <span className={`badge badge-sight ${props.firstSight ? '' : 'is-off'}`} title="Unseen passage: first-try success earns bonus XP">
-          {props.firstSight ? 'First sight' : 'Repeat'}
-        </span>
+        {scale ? null : (
+          <span className={`badge badge-sight ${props.firstSight ? '' : 'is-off'}`} title="Unseen passage: first-try success earns bonus XP">
+            {props.firstSight ? 'First sight' : 'Repeat'}
+          </span>
+        )}
         <span className={`badge badge-focus ${props.focus ? '' : 'is-hidden'}`}>Weak-spot focus</span>
       </div>
     </div>

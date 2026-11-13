@@ -20,8 +20,9 @@ const ALL_MARK_CLASSES = Object.values(MARK_CLASSES);
  * exercise, width or label setting changes; per-note feedback is applied by toggling
  * classes, and the Flow playhead moves via requestAnimationFrame + transform.
  */
-export function ScoreView(props: { exercise: Exercise; showNoteNames: boolean; controller: Session }) {
+export function ScoreView(props: { exercise: Exercise; showNoteNames: boolean; controller: Session; showFingering?: boolean }) {
   const { exercise, showNoteNames, controller } = props;
+  const showFingering = props.showFingering ?? false;
   const scrollRef = useRef<HTMLDivElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
   const cursorRef = useRef<HTMLDivElement>(null);
@@ -58,6 +59,7 @@ export function ScoreView(props: { exercise: Exercise; showNoteNames: boolean; c
         height: viewHeight,
         showNoteNames,
         placeholders: 'ear' in exercise,
+        showFingering,
       });
       renderedRef.current = rendered;
       setHeight(Math.round(rendered.layout.height * rendered.scale));
@@ -67,7 +69,7 @@ export function ScoreView(props: { exercise: Exercise; showNoteNames: boolean; c
       renderedRef.current = null;
       setRenderError(err instanceof Error ? err.message : String(err));
     }
-  }, [exercise, width, viewHeight, showNoteNames, controller]);
+  }, [exercise, width, viewHeight, showNoteNames, showFingering, controller]);
 
   // Per-step feedback classes + current-step cursor (Wait mode).
   useLayoutEffect(() => {

@@ -165,6 +165,27 @@ gets plain objects back.
   `offsetSqSum`) for tendency / steadiness; `findWeakFigures` drives weak-spot practice in both
   lessons. Sight reading records figures in Flow mode only (Wait mode has no timing).
 
+## Scales & arpeggios (fixed repertoire)
+
+- `core/scales/catalog.ts` — every type as degrees `(letter steps, semitones)` relative to the key
+  tonic, so spelling is always right (F𝄪 in G♯ harmonic minor, B♭♭ where needed); separate
+  descending degrees for melodic minor and blues; item ids `type/tonic/hands`.
+- `core/scales/fingering.ts` — standard patterns per degree with first/last overrides, chromatic
+  rule, `crossingAt()` (thumb under / finger over).
+- `core/scales/generator.ts` — `ScaleExercise` (= `Exercise` + `scale` info): up and down in
+  the chosen octaves, per-hand registers chosen for readable staves, triad arpeggios in 3/4 or
+  6/8, events carry `fingers`. Tempo comes from the ladder in notes per minute.
+- `core/scales/analysis.ts` — clean-run rule, steadiness, velocity spread and thumb accents,
+  hand sync, timing bumps grouped by place in the octave cycle. `FlowEngine` now records key
+  velocity and merges duplicate keys in a step (contrary-motion unison).
+- `core/scales/repertoire.ts` — pure ladder + Leitner review (`applyRepertoireRun`, `dueItems`,
+  `setLadder`); `ProgressState.repertoire` stores it. Repertoire lessons (`LESSONS.x.repertoire`)
+  skip level tiers and first-sight logic in `computeAward`/`applyResult`.
+- UI: the sight-reading `PracticeController` is reused (Wait / Flow) with a `decorate` hook that
+  turns the raw result into a scale result; `ScalesPanel` (picker, ladder, review, display),
+  fingering rows in `renderScore`, `MemoryCard` for playing from memory. The layout now fills
+  lines for odd bar counts.
+
 ## Extending with new lesson types
 
 A lesson type needs (1) an entry in `core/lessons.ts` with its tier list, (2) a generator producing

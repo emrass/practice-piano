@@ -44,6 +44,8 @@ export interface PracticeOptions {
   playheadDelayMs: number;
   metronomeVolume: number;
   countInBars: number;
+  /** Turns the engine's raw result into the lesson's result (default: sight reading). */
+  decorate?: (raw: ExerciseResult) => ExerciseResult;
 }
 
 const EMPTY_LIVE: LiveStats = { correct: 0, wrong: 0, missed: 0, streak: 0, bestStreak: 0, accuracy: 1, timing: null };
@@ -241,7 +243,9 @@ export class PracticeController implements Session {
   }
 
   private finish(raw: ExerciseResult) {
-    const result: ExerciseResult = { ...raw, lesson: 'sight', notes: annotateRhythm(this.opts.exercise, raw.notes) };
+    const result: ExerciseResult = this.opts.decorate
+      ? this.opts.decorate(raw)
+      : { ...raw, lesson: 'sight', notes: annotateRhythm(this.opts.exercise, raw.notes) };
     this.stopLoop();
     this.metronome.stop();
     this.state.set({ ...this.state.get(), status: 'finished', result, expected: [], beat: null, countIn: null });
@@ -300,7 +304,7 @@ export class PracticeController implements Session {
     if (ev.kind !== 'noteOn') return;
     // Ignore warm-up noodling during the count-in.
     if (ev.time - this.opts.latencyMs < flow.startTime - flow.timing.hitMs) return;
-    const feedback = flow.noteOn(ev.midi, ev.time);
+    const feedback = flow.noteOn(ev.midi, ev.time, ev.velocity);
     let s = this.state.get();
     for (const f of feedback) {
       if (f.type === 'extra') s = { ...s, ...this.flash('wrong', { midi: f.midi, at: performance.now() }, 500) };

@@ -18,6 +18,9 @@ import {
 } from '../../core/progress/progress';
 import { figureName } from '../../core/generator/rhythm';
 import { BEAT_POSITION_LABELS, TEXTURE_INFO, type BeatPosition, type RhythmTexture } from '../../core/rhythm/generator';
+import { HANDS_LABEL, itemTitle, parseItemId } from '../../core/scales/catalog';
+import { nps } from '../../core/scales/generator';
+import { dueItems } from '../../core/scales/repertoire';
 import { BackupError } from '../../persistence/profileRepository';
 import { profileRepository } from '../state/useProfile';
 import type { Settings } from '../../core/settings';
@@ -169,6 +172,56 @@ function RhythmStats(props: { progress: ProgressState; onPracticeWeakSpots: () =
   );
 }
 
+const DAY = 24 * 60 * 60 * 1000;
+
+/** Scales & arpeggios: every item played, with its ladder tempo, mastery and review date. */
+function RepertoireStats(props: { progress: ProgressState; goalNps: number; now: number; onReview: () => void }) {
+  const entries = Object.entries(props.progress.repertoire)
+    .map(([id, it]) => ({ id, it, item: parseItemId(id) }))
+    .filter((e) => e.item)
+    .sort((a, b) => b.it.lastAt - a.it.lastAt);
+  const due = dueItems(props.progress.repertoire, props.now).filter((id) => parseItemId(id));
+  const mastered = entries.filter((e) => e.it.mastered).length;
+  if (!entries.length) {
+    return (
+      <section className="panel-section">
+        <div className="section-title">Your scales</div>
+        <p className="field-hint">Items you play appear here with their tempo ladder, and come back for review on a spaced schedule.</p>
+      </section>
+    );
+  }
+  return (
+    <section className="panel-section">
+      <div className="section-title">
+        Your scales <span className="muted">· {mastered}/{entries.length} mastered</span>
+      </div>
+      <ul className="repertoire-list">
+        {entries.map(({ id, it, item }) => {
+          const days = Math.ceil((it.dueAt - props.now) / DAY);
+          return (
+            <li key={id} className={it.mastered ? 'is-mastered' : ''}>
+              <span className="rep-name">
+                {itemTitle(item!.type, item!.tonic)}
+                <small>{HANDS_LABEL[item!.hands]}</small>
+              </span>
+              <span className="rep-tempo" title="Ladder tempo">
+                {nps(it.ladderNpm)}
+              </span>
+              <span className="rep-state">{it.mastered ? '★' : days <= 0 ? 'due' : `${days}d`}</span>
+              <div className="progress-track">
+                <div className={`progress-fill ${it.mastered ? 'is-mastered' : ''}`} style={{ width: `${Math.min(100, (it.ladderNpm / (props.goalNps * 60)) * 100)}%` }} />
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+      <button type="button" className="btn btn-block" disabled={due.length === 0} onClick={props.onReview}>
+        Review due items{due.length ? ` (${due.length})` : ''}
+      </button>
+    </section>
+  );
+}
+
 export function ProgressPanel(props: {
   lesson: LessonId;
   progress: ProgressState;
@@ -176,10 +229,13 @@ export function ProgressPanel(props: {
   onPracticeWeakSpots: () => void;
   onDataReplaced: (settings: Settings, progress: ProgressState) => void;
   storageKind: string;
+  now: number;
+  onReviewScales?: () => void;
 }) {
   const { progress } = props;
   const ear = props.lesson === 'ear';
   const rhythm = props.lesson === 'rhythm';
+  const scales = props.lesson === 'scales';
   const summary = recentSummary(progress, 20, props.lesson);
   const weak = useMemo(() => findWeakSpots(progress), [progress]);
   const weakIntervals = useMemo(() => findWeakIntervals(progress), [progress]);
@@ -245,11 +301,11 @@ export function ProgressPanel(props: {
           </div>
           <div className="tile">
             <span className="tile-v">{pct(summary.pitchAccuracy)}</span>
-            <span className="tile-k">{ear ? 'Found (last 20)' : rhythm ? 'Hits (last 20)' : 'Pitch (last 20)'}</span>
+            <span className="tile-k">{ear ? 'Found (last 20)' : rhythm ? 'Hits (last 20)' : scales ? 'Notes (last 20)' : 'Pitch (last 20)'}</span>
           </div>
           <div className="tile">
             <span className="tile-v">{ear ? summary.replays : pct(summary.timingAccuracy)}</span>
-            <span className="tile-k">{ear ? 'Avg replays (last 20)' : rhythm ? 'Timing (last 20)' : 'Timing (Flow)'}</span>
+            <span className="tile-k">{ear ? 'Avg replays (last 20)' : rhythm || scales ? 'Timing (last 20)' : 'Timing (Flow)'}</span>
           </div>
           {rhythm ? (
             <div className="tile" title="Average offset of your hits: early = rushing, late = dragging">
@@ -279,8 +335,9 @@ export function ProgressPanel(props: {
       ) : null}
 
       {rhythm ? <RhythmStats progress={progress} onPracticeWeakSpots={props.onPracticeWeakSpots} /> : null}
+      {scales ? <RepertoireStats progress={progress} goalNps={props.settings.scaleGoalNps} now={props.now} onReview={() => props.onReviewScales?.()} /> : null}
 
-      {ear || rhythm ? null : (
+      {ear || rhythm || scales ? null : (
       <>
       <section className="panel-section">
         <div className="section-title">Weak spots</div>
@@ -325,6 +382,7 @@ export function ProgressPanel(props: {
       </>
       )}
 
+      {LESSONS[props.lesson].repertoire ? null : (
       <section className="panel-section">
         <div className="section-title">Tier mastery · {LESSONS[props.lesson].name}</div>
         <ol className="tier-ladder">
@@ -343,6 +401,7 @@ export function ProgressPanel(props: {
           })}
         </ol>
       </section>
+      )}
 
       <section className="panel-section">
         <div className="section-title">Your data</div>

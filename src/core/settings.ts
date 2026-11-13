@@ -6,6 +6,7 @@ import { KEYBOARD_SIZES, type KeyboardSize } from './keyboard/range';
 import type { GeneratorSettings } from './generator/generator';
 import type { EarReference, EarSettings } from './ear/generator';
 import { LESSON_IDS, type LessonId } from './lessons';
+import { SCALE_TYPE_IDS, SCALE_TYPES, type NoteValue, type ScaleHands, type ScaleTypeId } from './scales/catalog';
 import { RHYTHM_TEXTURES, type RhythmHands, type RhythmSettings, type RhythmTask, type RhythmTexture } from './rhythm/generator';
 
 export const SETTINGS_SCHEMA_VERSION = 1;
@@ -35,6 +36,22 @@ export interface Settings {
   /** Designated keys (MIDI) for the right and left hand. */
   rhythmRhKey: number;
   rhythmLhKey: number;
+  // Scales & arpeggios
+  scaleType: ScaleTypeId;
+  /** A tonic from the type's list, or 'shuffle' for a different key each run. */
+  scaleTonic: string;
+  scaleHands: ScaleHands;
+  scaleOctaves: 1 | 2;
+  scaleNoteValue: NoteValue;
+  /** Wait = learn (self-paced), Flow = play with the metronome on the tempo ladder. */
+  scaleMode: 'wait' | 'flow';
+  /** 'review' practises the items that are due (spaced repetition). */
+  scaleSource: 'pick' | 'review';
+  /** Mastery goal in notes per second. */
+  scaleGoalNps: number;
+  showFingering: boolean;
+  /** false = play from memory (notation hidden). */
+  scaleNotation: boolean;
   // Sight-reading exercise
   level: number;
   hands: HandsMode;
@@ -113,6 +130,16 @@ export const DEFAULT_SETTINGS: Settings = {
   rhythmBpm: null,
   rhythmRhKey: 72,
   rhythmLhKey: 48,
+  scaleType: 'major',
+  scaleTonic: 'C',
+  scaleHands: 'rh',
+  scaleOctaves: 1,
+  scaleNoteValue: 'eighth',
+  scaleMode: 'wait',
+  scaleSource: 'pick',
+  scaleGoalNps: 4,
+  showFingering: true,
+  scaleNotation: true,
   level: 1,
   hands: 'rh',
   bars: 4,
@@ -175,6 +202,14 @@ export function normalizeSettings(raw: unknown): Settings {
     rhythmTimeSignature: oneOf(r.rhythmTimeSignature, ['auto', ...TIME_SIGNATURE_IDS] as const, d.rhythmTimeSignature),
     rhythmBpm: r.rhythmBpm === null || r.rhythmBpm === undefined ? null : Math.round(clampNum(r.rhythmBpm, 30, 240, 80)),
     ...designatedKeys(r.rhythmRhKey, r.rhythmLhKey),
+    ...scaleChoice(r.scaleType, r.scaleTonic, r.scaleHands),
+    scaleOctaves: oneOf(r.scaleOctaves, [1, 2] as const, d.scaleOctaves),
+    scaleNoteValue: oneOf(r.scaleNoteValue, ['quarter', 'eighth', 'sixteenth'] as const, d.scaleNoteValue),
+    scaleMode: oneOf(r.scaleMode, ['wait', 'flow'] as const, d.scaleMode),
+    scaleSource: oneOf(r.scaleSource, ['pick', 'review'] as const, d.scaleSource),
+    scaleGoalNps: Math.round(clampNum(r.scaleGoalNps, 1, 12, d.scaleGoalNps)),
+    showFingering: typeof r.showFingering === 'boolean' ? r.showFingering : d.showFingering,
+    scaleNotation: typeof r.scaleNotation === 'boolean' ? r.scaleNotation : d.scaleNotation,
     level: Math.round(clampNum(r.level, 1, 100, d.level)),
     hands: oneOf(r.hands, ['rh', 'lh', 'alternating', 'both'] as const, d.hands),
     bars: oneOf(r.bars, [4, 8, 16] as const, d.bars),
@@ -208,6 +243,17 @@ export function normalizeSettings(raw: unknown): Settings {
     midiInputId: typeof r.midiInputId === 'string' && r.midiInputId ? r.midiInputId : d.midiInputId,
     pianoShortcuts: typeof r.pianoShortcuts === 'boolean' ? r.pianoShortcuts : d.pianoShortcuts,
   };
+}
+
+/** Scale type, key and hands that belong together (contrary motion only where it exists). */
+function scaleChoice(type: unknown, tonic: unknown, hands: unknown): Pick<Settings, 'scaleType' | 'scaleTonic' | 'scaleHands'> {
+  const d = DEFAULT_SETTINGS;
+  const scaleType = oneOf(type, SCALE_TYPE_IDS, d.scaleType);
+  const def = SCALE_TYPES[scaleType];
+  const scaleTonic = tonic === 'shuffle' || def.tonics.includes(tonic as string) ? (tonic as string) : def.tonics[0];
+  let scaleHands = oneOf(hands, ['rh', 'lh', 'together', 'contrary'] as const, d.scaleHands);
+  if (scaleHands === 'contrary' && !def.contrary) scaleHands = 'together';
+  return { scaleType, scaleTonic, scaleHands };
 }
 
 /** Designated rhythm keys: valid MIDI notes, and never the same key for both hands. */

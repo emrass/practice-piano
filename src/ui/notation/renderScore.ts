@@ -35,6 +35,8 @@ export interface RenderOptions {
   showNoteNames: boolean;
   /** Draw a "?" marker at every step, shown while that step's notes are hidden (ear training). */
   placeholders?: boolean;
+  /** Print fingering numbers where events carry them (scales): RH above, LH below the staff. */
+  showFingering?: boolean;
 }
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -149,7 +151,9 @@ function addText(svg: SVGSVGElement, parent: SVGElement, x: number, y: number, t
 export function renderScore(container: HTMLDivElement, ex: Exercise, opts: RenderOptions): RenderedScore {
   container.replaceChildren();
   const percussion = isPercussion(ex);
-  const showNames = opts.showNoteNames && !percussion;
+  const fingered = 'scale' in ex;
+  // Scales print fingering where note names would go; names stay on the keyboard.
+  const showNames = opts.showNoteNames && !percussion && !fingered;
   const headerWidth = measureHeaderWidth(ex);
   const scale = opts.height > 0 ? chooseScale(ex, opts.width, opts.height, headerWidth) : 1;
   const layout = computeLayout(ex, Math.floor(opts.width / scale), headerWidth);
@@ -287,6 +291,35 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
         beams.forEach((b) => b.setContext(ctx).draw());
         ctx.closeGroup();
       });
+
+      // Fingering: one row per staff, above the treble staff and below the bass staff.
+      if (opts.showFingering && svg && labelLayer && labelled.some((l) => l.event.fingers)) {
+        const above = clef === 'treble';
+        const staveTop = staveBottom - 40;
+        let rowY = above ? staveTop - 10 : staveBottom + 20;
+        for (const { note } of labelled) {
+          const ys = note.getYs();
+          if (above) {
+            rowY = Math.min(rowY, ...ys.map((y) => y - 12));
+            if (note.hasStem() && note.getStemDirection() === Stem.UP) {
+              const ext = note.getStemExtents();
+              rowY = Math.min(rowY, ext.topY - 8, ext.baseY - 8);
+            }
+          } else {
+            rowY = Math.max(rowY, ...ys.map((y) => y + 18));
+            if (note.hasStem() && note.getStemDirection() === Stem.DOWN) {
+              const ext = note.getStemExtents();
+              rowY = Math.max(rowY, ext.topY + 14, ext.baseY + 14);
+            }
+          }
+        }
+        for (const { note, event } of labelled) {
+          const f = event.fingers?.[0];
+          if (f === undefined) continue;
+          const cx = (note.getNoteHeadBeginX() + note.getNoteHeadEndX()) / 2;
+          addText(svg, labelLayer, cx, rowY, String(f), `pp-finger ${f === 1 ? 'is-thumb' : ''}`, stepByTick.get(event.startTick));
+        }
+      }
 
       // Note-name labels share one baseline per staff line, below stems, beams and ledger notes.
       if (showNames && svg && labelLayer && labelled.length) {

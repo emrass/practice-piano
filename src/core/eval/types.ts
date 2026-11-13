@@ -23,6 +23,8 @@ export interface NoteResult {
   beat?: string;
   /** Rhythm Pulse: the metronome was silent in this note's bar. */
   muted?: boolean;
+  /** Flow mode: key velocity of the hit (1–127). */
+  velocity?: number;
 }
 
 /** Rhythm-mode measurements (docs/DIDACTICS.md §4.3). */
@@ -67,6 +69,28 @@ export interface ExerciseResult {
   replays?: number;
   hints?: number;
   rhythm?: RhythmSummary;
+  scale?: ScaleSummary;
+}
+
+/** Scales & arpeggios measurements (docs/DIDACTICS.md §4.4). */
+export interface ScaleSummary {
+  itemId: string;
+  /** Tempo of the run in notes per minute, and the note value / beat it was played in. */
+  npm: number;
+  notesPerBeat: number;
+  goalNpm: number;
+  /** Flow: clean enough to move up the tempo ladder. */
+  clean: boolean;
+  /** Spread of timing offsets in ms (lower = more even). */
+  steadinessMs: number | null;
+  /** Velocity spread as a share of the mean (lower = more even); null without velocities. */
+  velocitySpread: number | null;
+  /** The thumb plays noticeably louder than the other fingers. */
+  thumbAccent: boolean;
+  /** Hands together: average onset difference between the hands (ms). */
+  syncMs: number | null;
+  /** Recurring timing bumps, worst first. */
+  bumps: { label: string; hand: Hand; finger: number | null; crossing: 'thumb-under' | 'finger-over' | null; ms: number }[];
 }
 
 export interface LiveStats {

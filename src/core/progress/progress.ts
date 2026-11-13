@@ -4,6 +4,7 @@ import { median } from '../eval/types';
 import { tierForLevel } from '../generator/tiers';
 import { findTier, LESSONS, type LessonId } from '../lessons';
 import { RHYTHM_TIMING_PASS } from '../rhythm/analysis';
+import { applyRepertoireRun, type RepertoireChange, type RepertoireItem } from '../scales/repertoire';
 
 export const PROGRESS_SCHEMA_VERSION = 1;
 export const MASTERY_ACCURACY = 0.9;
@@ -38,7 +39,16 @@ export interface Aggregate {
  * 'beatPosition' (downbeat / beat / offbeat / sixteenth); Rhythm also 'rhythmHand' and
  * 'rhythmTexture'.
  */
-export type StatDimension = 'note' | 'clef' | 'interval' | 'harmony' | 'rhythmFigure' | 'beatPosition' | 'rhythmHand' | 'rhythmTexture';
+export type StatDimension =
+  | 'note'
+  | 'clef'
+  | 'interval'
+  | 'harmony'
+  | 'rhythmFigure'
+  | 'beatPosition'
+  | 'rhythmHand'
+  | 'rhythmTexture'
+  | 'scaleKey';
 
 export interface TierProgress {
   attempts: number;
@@ -84,6 +94,8 @@ export interface ProgressState {
   /** exerciseId → completed attempts (for the first-sight bonus). */
   attempts: Record<string, number>;
   history: HistoryEntry[];
+  /** Fixed-repertoire items (scales & arpeggios): tempo ladder and review schedule. */
+  repertoire: Record<string, RepertoireItem>;
 }
 
 export interface Award {
@@ -100,6 +112,8 @@ export interface Award {
   effectiveLevel: number;
   levelCapped: boolean;
   streak: number;
+  /** Repertoire lessons: what this run did to the item's ladder and review date. */
+  repertoire?: RepertoireChange;
 }
 
 export function emptyProgress(): ProgressState {
@@ -113,6 +127,7 @@ export function emptyProgress(): ProgressState {
     stats: {},
     attempts: {},
     history: [],
+    repertoire: {},
   };
 }
 
@@ -171,13 +186,40 @@ function accuracyFactor(acc: number): number {
 
 /** Pass = mastery accuracy; Rhythm additionally needs the timing. */
 export function isPass(result: ExerciseResult): boolean {
+  if (result.lesson === 'scales') return result.mode === 'flow' ? !!result.scale?.clean : result.pitchAccuracy >= MASTERY_ACCURACY;
   if (result.pitchAccuracy < MASTERY_ACCURACY) return false;
   if (result.lesson === 'rhythm') return (result.timingAccuracy ?? 0) >= RHYTHM_TIMING_PASS;
   return true;
 }
 
+/**
+ * Repertoire XP: repetition is the point, so no first-sight bonus or repeat penalty; faster
+ * clean playing earns more (tempo relative to 4 notes per second).
+ */
+function repertoireAward(progress: ProgressState, result: ExerciseResult): Award {
+  const flow = result.mode === 'flow';
+  const npm = result.scale?.npm ?? 120;
+  const tempo = Math.min(2, Math.max(0.5, npm / 240));
+  const xp = Math.round(result.totalNotes * accuracyFactor(result.pitchAccuracy) * (flow ? (0.6 + 0.6 * (result.timingAccuracy ?? 0)) * tempo : 0.5));
+  return {
+    xp,
+    baseXp: xp,
+    firstSightBonus: 0,
+    firstAttempt: (progress.attempts[result.exerciseId] ?? 0) === 0,
+    passed: isPass(result),
+    tierId: result.tierId,
+    tierPasses: 0,
+    tierRequired: 0,
+    newlyMastered: false,
+    effectiveLevel: 0,
+    levelCapped: false,
+    streak: progress.streak.current,
+  };
+}
+
 export function computeAward(progress: ProgressState, result: ExerciseResult): Award {
   const lesson: LessonId = result.lesson ?? 'sight';
+  if (LESSONS[lesson].repertoire) return repertoireAward(progress, result);
   const tier = findTier(result.tierId) ?? LESSONS[lesson].tierForLevel(result.level) ?? tierForLevel(result.level);
   const tierState = progress.tiers[tier.id];
   const firstAttempt = (progress.attempts[result.exerciseId] ?? 0) === 0;
@@ -267,22 +309,18 @@ export function applyResult(progress: ProgressState, result: ExerciseResult, now
   day.practiceMs += Math.min(result.durationMs, 30 * 60 * 1000);
   next.days = trimRecord(next.days, MAX_DAYS);
 
-  const tier = (next.tiers[award.tierId] ??= { attempts: 0, passes: 0, passedExercises: [], bestAccuracy: 0, mastered: false });
-  tier.attempts++;
-  tier.bestAccuracy = Math.max(tier.bestAccuracy, result.pitchAccuracy);
-  if (award.passed && !tier.passedExercises.includes(result.exerciseId)) {
-    tier.passes++;
-    tier.passedExercises.push(result.exerciseId);
-    if (tier.passedExercises.length > 50) tier.passedExercises.shift();
-  }
-  if (award.newlyMastered) {
-    tier.mastered = true;
-    tier.masteredAt = now.getTime();
-  }
-
   const lesson = result.lesson ?? 'sight';
+  if (LESSONS[lesson].repertoire) recordRepertoireRun(next, award, result, now);
+  else recordTierRun(next, award, result, now);
+
   if (lesson === 'ear') {
     recordEarObservations(next.stats, result);
+  } else if (lesson === 'scales') {
+    // Per-item data lives in `repertoire`; key familiarity is a shared tag (DIDACTICS §3).
+    if (result.scale) {
+      const key = result.scale.itemId.split('/')[1];
+      addObservation(next.stats, 'scaleKey', key, result.pitchAccuracy >= MASTERY_ACCURACY, undefined, result.timingAccuracy ?? undefined);
+    }
   } else if (lesson === 'rhythm') {
     for (const n of result.notes) {
       recordTimeObservations(next.stats, n);
@@ -315,6 +353,31 @@ export function applyResult(progress: ProgressState, result: ExerciseResult, now
   });
   if (next.history.length > MAX_HISTORY) next.history.splice(0, next.history.length - MAX_HISTORY);
   return { progress: next, award };
+}
+
+function recordTierRun(next: ProgressState, award: Award, result: ExerciseResult, now: Date): void {
+  const tier = (next.tiers[award.tierId] ??= { attempts: 0, passes: 0, passedExercises: [], bestAccuracy: 0, mastered: false });
+  tier.attempts++;
+  tier.bestAccuracy = Math.max(tier.bestAccuracy, result.pitchAccuracy);
+  if (award.passed && !tier.passedExercises.includes(result.exerciseId)) {
+    tier.passes++;
+    tier.passedExercises.push(result.exerciseId);
+    if (tier.passedExercises.length > 50) tier.passedExercises.shift();
+  }
+  if (award.newlyMastered) {
+    tier.mastered = true;
+    tier.masteredAt = now.getTime();
+  }
+}
+
+/** Repertoire lessons: tempo ladder, mastery and review date of the item. */
+function recordRepertoireRun(next: ProgressState, award: Award, result: ExerciseResult, now: Date): void {
+  if (!result.scale) return;
+  const id = result.scale.itemId;
+  const { item, change } = applyRepertoireRun(next.repertoire[id], { mode: result.mode, accuracy: result.pitchAccuracy, scale: result.scale }, now.getTime());
+  next.repertoire[id] = item;
+  award.repertoire = change;
+  award.newlyMastered = change.newlyMastered;
 }
 
 function recordTimeObservations(stats: ProgressState['stats'], n: NoteResult): void {
@@ -517,5 +580,6 @@ export function normalizeProgress(raw: unknown): ProgressState {
     stats: obj(r.stats, base.stats),
     attempts: obj(r.attempts, base.attempts),
     history: Array.isArray(r.history) ? r.history.slice(-MAX_HISTORY) : [],
+    repertoire: obj(r.repertoire, base.repertoire),
   };
 }

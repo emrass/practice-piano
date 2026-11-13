@@ -1,4 +1,5 @@
 import { allEvents, type Clef, type Exercise } from '../../core/exercise';
+import { keyAlters } from '../../core/music/keys';
 
 /**
  * Pure score geometry. Every measure in the score has the same width and every tick the
@@ -58,6 +59,14 @@ export function shortestDuration(ex: Exercise): number {
   return durs.length ? Math.min(...durs) : 4;
 }
 
+/** Share of notes that need an accidental (roughly): chromatic passages need more room. */
+export function accidentalDensity(ex: Exercise): number {
+  const alters = keyAlters(ex.key.fifths);
+  const pitches = allEvents(ex).flatMap((e) => e.pitches);
+  if (!pitches.length) return 0;
+  return pitches.filter((p) => p.alter !== alters[p.letter]).length / pitches.length;
+}
+
 export function systemHeight(staves: readonly Clef[]): number {
   return staves.length > 1 ? GRAND_SYSTEM_HEIGHT : SINGLE_SYSTEM_HEIGHT;
 }
@@ -66,10 +75,12 @@ export function computeLayout(ex: Exercise, width: number, headerWidth: number, 
   const tpb = ex.timeSignature.ticksPerBar;
   const shortest = shortestDuration(ex);
   const available = Math.max(120, width - SCORE_MARGIN_X * 2 - headerWidth);
-  const minMeasure = Math.max(110, tpb * minPxPerTick(shortest));
+  const minMeasure = Math.max(110, tpb * minPxPerTick(shortest) * (1 + 0.8 * accidentalDensity(ex)));
   const maxFit = Math.max(1, Math.floor(available / minMeasure));
   const candidates = [4, 3, 2, 1].filter((m) => m <= maxPerSystem && ex.bars % m === 0);
-  const measuresPerSystem = candidates.find((m) => m <= maxFit) ?? 1;
+  let measuresPerSystem = candidates.find((m) => m <= maxFit) ?? 1;
+  // Odd lengths (scales: 3, 5 bars…): fill lines and leave the last one short.
+  if (measuresPerSystem === 1 && ex.bars > 1) measuresPerSystem = Math.max(1, Math.min(maxFit, maxPerSystem, ex.bars));
   const measureWidth = Math.floor(available / measuresPerSystem);
   const pxPerTick = measureWidth / tpb;
   const leadPx = Math.max(10, Math.min(26, pxPerTick * shortest * 0.45));

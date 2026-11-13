@@ -149,21 +149,52 @@ beat dots and key guide in silent bars, and with 4 bars shortens long silences s
 returns once at the end. Interlocking distributes one rhythm between the hands (never more than
 two notes in a row per hand, both hands in every bar). Polyrhythms are always written in 3/4.
 
-### 4.4 Scales & arpeggios (planned — fixed repertoire)
+### 4.4 Scales & arpeggios ✓ (v1 — fixed repertoire)
 
-- **Pick:** type (major; natural, harmonic, melodic minor; chromatic; pentatonic, blues; modes
-  later), keys (one, a set, circle of fifths, all 12), hands (RH, LH, together, contrary motion),
-  1–4 octaves, pattern (straight, in thirds, broken groupings), rhythm (quarters → sixteenths).
-  Arpeggios: major/minor triads, dominant 7th, diminished 7th.
-- **Auto:** optional stages (like exam grades) and a daily review queue of due items.
-- **Difficulty:** a tempo ladder per item (+4 bpm after a clean run, back off after errors) instead
-  of a level slider.
-- **Display:** notation with standard fingering the first time, then from memory (guide off).
-- **Measurements:** wrong notes, timing evenness, **velocity evenness** (thumb accents), hand
-  synchronisation, highest clean tempo.
-- **Weak spots:** key × type × hand, and position inside the scale (recurring timing bumps at the
-  same degree = thumb crossing).
-- **Links:** key familiarity ↔ sight reading in that key signature; arpeggios ↔ chord vocabulary.
+**Items.** An item is *type × key × hands*; range and rhythm are presentation.
+- Scales: major; natural, harmonic, melodic minor (raised 6/7 up, natural down); chromatic
+  (sharps up, flats down, no key signature); major and minor pentatonic; blues (♯4 up, ♭5 down).
+- Arpeggios: major and minor triads (groups of three: 3/4 in quarters, 6/8 in eighths and
+  sixteenths), dominant 7th *in a key* (G7 in C), diminished 7th *in a minor key* (on the leading
+  note, B° 7 in C minor).
+- Keys: all 12 per type (major F♯, D♭, A♭…; minor C♯, G♯, E♭, B♭…).
+- Hands: RH, LH, together (parallel, one or two octaves apart so each staff stays readable),
+  contrary motion (both start on the same key; that unison is one expected note).
+- Range 1–2 octaves, up and back down; quarters, eighths or sixteenths; the last note fills its
+  beat (or bar).
+
+**Pick, shuffle or review.** Pick an item; *Shuffle keys* plays the same type in a different key
+each run; *Review* plays the items that are due (below).
+
+**Two modes.** *Wait* (learn): self-paced, cursor and fingering, counts as practice only. *Flow*
+(play): count-in and metronome at the item's **tempo ladder**.
+
+**Tempo ladder.** Stored per item in notes per minute (so switching eighths ↔ sixteenths keeps the
+speed). A **clean run** (≥ 95 % notes and ≥ 80 % timing) adds 4 bpm in the note value played; a run
+under 90 % takes 4 bpm off; anything in between keeps the tempo. − / + (and the piano's F / G after
+a run) move it by hand. **Mastered** = a clean run at the goal speed (default 4 notes per second =
+♩ 120 in eighths; adjustable 2–8).
+
+**Spaced review.** Leitner boxes: each clean run doubles the interval (today → 1 → 2 → 4 → 8 → 16
+days), a run under 90 % resets it to today. Review order: most overdue first, then least accurate.
+
+**Fingering** is printed (RH above, LH below the staff, thumbs highlighted) where there is a settled
+standard: major and harmonic-minor fingerings in every key (also used for natural and melodic minor),
+chromatic (3 on black keys; RH 2 on F and C, LH 2 on E and B), triad arpeggios with white-key roots
+(RH 1-2-3-5; LH 5-4-2-1, or 5-3-2-1 when the third is a black key), right-hand 2-1-2-4 for D♭, E♭,
+A♭, B♭ major, and 1-2-3-4 / 5-4-3-2 sevenths on white-key roots. Pentatonic and blues: none.
+*Play from memory* hides the notation completely.
+
+**Measurements (Flow).** Notes and timing; **steadiness** (spread of timing); **touch evenness**
+(spread of velocity) and **thumb accents** (thumb louder than the other fingers); **hand sync**
+(average gap between the hands); **timing bumps** — a note late or early against its neighbours at
+the same place in each octave, labelled with finger and crossing (thumb under / finger over).
+
+**Weak spots.** Per item (accuracy, ladder, review schedule); the key is also recorded as a shared
+tag (`scaleKey`) for future cross-mode suggestions with sight reading in that key.
+
+**Not in v1:** 3–4 octaves (needs 8va / clef changes in the engraving), scales in thirds and broken
+patterns, modes, exam-style stages, LH fingering for black-key arpeggios.
 
 ### 4.5 Chords & progressions (planned — fixed repertoire)
 
@@ -178,6 +209,6 @@ two notes in a row per hand, both hands in every bar). Polyrhythms are always wr
 
 ## 5. Order of work
 
-1. Sight reading ✓ 2. Ear training ✓ 3. Rhythm ✓ 4. Scales & arpeggios (introduces the
+1. Sight reading ✓ 2. Ear training ✓ 3. Rhythm ✓ 4. Scales & arpeggios ✓ (introduced the
 fixed-repertoire infrastructure: item picker, tempo ladder, spaced review, evenness metrics)
 5. Chords & progressions (reuses it).

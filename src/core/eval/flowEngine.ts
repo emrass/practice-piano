@@ -32,6 +32,7 @@ interface FlowNote {
   deltaMs?: number;
   score?: number;
   onTime?: number;
+  velocity?: number;
 }
 
 export interface TimingWindows {
@@ -89,16 +90,20 @@ export class FlowEngine {
     private readonly opts: FlowOptions,
   ) {
     this.windows = timingWindows(opts.msPerTick);
+    // One key can only be pressed once at a time: two hands on the same key (contrary-motion
+    // scales start in unison) are one expected note.
     this.notes = steps.flatMap((s) =>
-      s.notes.map((n, i) => ({
-        uid: `${s.index}:${i}`,
-        midi: n.midi,
-        hand: n.hand,
-        stepIndex: s.index,
-        tick: s.tick,
-        durationTicks: n.durationTicks,
-        state: 'pending' as const,
-      })),
+      s.notes
+        .map((n, i) => ({
+          uid: `${s.index}:${i}`,
+          midi: n.midi,
+          hand: n.hand,
+          stepIndex: s.index,
+          tick: s.tick,
+          durationTicks: n.durationTicks,
+          state: 'pending' as const,
+        }))
+        .filter((n, i, all) => all.findIndex((o) => o.midi === n.midi) === i),
     );
   }
 
@@ -129,7 +134,7 @@ export class FlowEngine {
     return time - this.opts.latencyMs;
   }
 
-  noteOn(midi: number, time: number): FlowFeedback[] {
+  noteOn(midi: number, time: number, velocity?: number): FlowFeedback[] {
     const t = this.adjust(time);
     let best: FlowNote | null = null;
     let bestDelta = Infinity;
@@ -150,6 +155,7 @@ export class FlowEngine {
     best.deltaMs = bestDelta;
     best.score = timingScore(bestDelta, this.windows);
     best.onTime = time;
+    best.velocity = velocity;
     this.activeHits.set(midi, best);
     this.streak++;
     this.bestStreak = Math.max(this.bestStreak, this.streak);
@@ -246,6 +252,7 @@ export class FlowEngine {
       deltaMs: n.deltaMs,
       timingScore: n.score,
       step: n.stepIndex,
+      velocity: n.velocity,
     }));
     const total = this.notes.length;
     return {

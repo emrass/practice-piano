@@ -1,6 +1,6 @@
 # practice-piano.com
 
-An interactive **sight-reading, ear-training and rhythm studio** for your digital piano. It generates
+An interactive **sight-reading, ear-training, rhythm and scales studio** for your digital piano. It generates
 fresh, musical passages for any level from "first note ever" to advanced, engraves them with
 VexFlow, listens to your piano over MIDI and scores pitch, timing and reaction time.
 
@@ -12,6 +12,8 @@ Lessons:
 - **Rhythm** — rhythms without pitch on one designated key per hand: read them, echo them
   back, or keep the pulse while the metronome falls silent. With both hands it trains hand
   independence.
+- **Scales & arpeggios** — a fixed repertoire with standard fingering, a tempo ladder per item
+  and spaced review.
 
 The didactic concept behind the lessons (and the planned ones) is in
 [docs/DIDACTICS.md](docs/DIDACTICS.md).
@@ -99,6 +101,13 @@ contains the current web code.
   hands, one texture per exercise: unison, LH or RH pulse, interlocking, polyrhythm. Passing needs
   ≥ 90 % hits *and* ≥ 70 % timing; results show tendency (rushing / dragging), steadiness and, in
   Pulse, the drift in silent bars. Weak rhythm figures are shared with Flow-mode sight reading.
+- **Scales & arpeggios** — major, three minors, chromatic, pentatonics, blues; major/minor,
+  dominant-7th and diminished-7th arpeggios; all 12 keys; RH, LH, together or contrary motion;
+  1–2 octaves in quarters, eighths or sixteenths. Pick an item, shuffle keys, or review what's
+  due (spaced repetition). *Wait* to learn with fingering, *Flow* to play on the item's tempo
+  ladder (+4 bpm after a clean run, −4 after a messy one; mastered at your goal speed). Results
+  show timing steadiness, touch evenness, thumb accents, hand sync and timing bumps at thumb
+  crossings. *Play from memory* hides the notation.
 - **Progress** — XP that rewards accuracy (steep accuracy curve, reduced XP for repeats, level
   multiplier capped until tiers are mastered), a first-sight bonus, tier mastery at ≥ 90 % pitch
   accuracy on distinct passages, daily streaks, median reaction time, timing accuracy,
@@ -113,6 +122,7 @@ src/
     generator/   difficulty profiles, tiers, rhythm cells (figures), harmony, melody generator
     ear/         ear-training tiers and phrase generator
     rhythm/      rhythm tiers, generator (tasks, textures), analysis (tendency, drift)
+    scales/      scale catalogue, fingering, generator, analysis (evenness, bumps), ladder & review
     eval/        Wait / Flow scoring engines
     progress/    XP, mastery, streaks, weak spots, extensible stats
     midi/ input/ keyboard/ settings.ts
