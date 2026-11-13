@@ -63,6 +63,26 @@ The browser tests need Chromium once: `npx playwright install chromium`. Where t
 is not possible, point `PLAYWRIGHT_CHROMIUM_PATH` at an installed Chromium. CI (`checks.yml`)
 runs `npm run check` and the browser tests on every push and pull request.
 
+### Landing page screenshots
+
+The images on [practice-piano.com](https://practice-piano.com) are staged in the real app by
+`scripts/screenshots/landing.spec.ts` (Playwright, the same fake MIDI piano as the browser tests):
+each test sets up a lesson, plays it with a few deliberate mistakes and writes the final `.webp`
+at the size the page uses. Retake them all after a UI change:
+
+```bash
+npm run screenshots                                  # → ../practice-piano-site/img/
+SCREENSHOT_OUT=/tmp/shots npm run screenshots        # somewhere else
+npm run screenshots -- -g sight-flow                 # one shot (tests are named after their files)
+npm run screenshots -- -g "chords|progress"          # a few
+```
+
+It starts its own dev server on port 5194 (or set `SCREENSHOT_BASE_URL` to use a running one)
+and honours `PLAYWRIGHT_CHROMIUM_PATH`. The app's randomness and the played timing are seeded, so
+a rerun gives the same exercises and nearly the same numbers (real-time scheduling can move a
+timing figure by a few ms). The progress shots use `scripts/screenshots/progress-fixture.json`,
+moved in time so its last session was an hour ago. `og.png` is made by hand and not part of this.
+
 ## iPadOS & macOS app
 
 See **[docs/NATIVE.md](docs/NATIVE.md)**. In short:
