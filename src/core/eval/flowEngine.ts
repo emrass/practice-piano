@@ -11,6 +11,11 @@ export interface FlowOptions {
   sustainCountsAsHeld: boolean;
   /** Flag clipped notes (default true). Rhythm mode only judges onsets. */
   judgeReleases?: boolean;
+  /**
+   * Tick at which the exercise ends (usually the end of the last bar). The run lasts until
+   * then, so the last notes are held for their full value. Default: when the last note ends.
+   */
+  endTick?: number;
 }
 
 export type TimingGrade = 'perfect' | 'good' | 'early' | 'late';
@@ -124,10 +129,15 @@ export class FlowEngine {
     return this.t0 + tick * this.opts.msPerTick;
   }
 
-  /** Time after which nothing more can be judged. */
+  /**
+   * When the run is over: the end of the exercise (the last notes have sounded for their full
+   * value), but never before the last onset's hit window has closed.
+   */
   get endTime(): number {
-    const last = this.notes.reduce((a, n) => Math.max(a, n.tick), 0);
-    return this.expectedTime(last) + this.windows.hitMs;
+    const lastOnset = this.notes.reduce((a, n) => Math.max(a, n.tick), 0);
+    const lastEnd = this.notes.reduce((a, n) => Math.max(a, n.tick + n.durationTicks), 0);
+    const endTick = this.opts.endTick ?? lastEnd;
+    return Math.max(this.expectedTime(endTick), this.expectedTime(lastOnset) + this.windows.hitMs);
   }
 
   private adjust(time: number): number {

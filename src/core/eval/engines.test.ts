@@ -190,6 +190,30 @@ describe('FlowEngine', () => {
     expect(r.wrongNotes).toBe(1);
   });
 
+  it('keeps running until the last note has sounded for its full value', () => {
+    // The final chord starts at tick 8 (2000 ms) and lasts a half note (until 3000 ms).
+    const e = engine();
+    for (const [midi, t] of [[60, 1000], [48, 1000], [64, 1500], [60, 2000], [64, 2000], [67, 2000], [48, 2000]]) e.noteOn(midi, t);
+    e.update(2400);
+    expect(e.isFinished(2400)).toBe(false);
+    expect(e.isFinished(2999)).toBe(false);
+    expect(e.isFinished(3001)).toBe(true);
+  });
+
+  it('runs to the end of the exercise when it ends in rests', () => {
+    const e = new FlowEngine(buildSteps(fixture()), { msPerTick, latencyMs: 0, sustainCountsAsHeld: false, endTick: 32 });
+    e.setStartTime(1000);
+    e.update(3500);
+    expect(e.isFinished(3500)).toBe(false);
+    expect(e.isFinished(1000 + 32 * msPerTick + 1)).toBe(true);
+  });
+
+  it('never ends before the last onset can still be hit late', () => {
+    const e = new FlowEngine(buildSteps(fixture()), { msPerTick, latencyMs: 0, sustainCountsAsHeld: false, endTick: 8 });
+    e.setStartTime(1000);
+    expect(e.endTime).toBe(2000 + e.timing.hitMs);
+  });
+
   it('honours latency compensation', () => {
     const plain = engine(0);
     const compensated = engine(180);

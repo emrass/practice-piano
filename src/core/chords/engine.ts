@@ -198,8 +198,13 @@ export class ChordFlowEngine {
     return out;
   }
 
-  get finished(): boolean {
-    return this.judged >= this.targets.length;
+  /** When the run is over: the end of the last chord's bar, once every chord is judged. */
+  get endTime(): number {
+    return this.expectedTime(this.targets.length);
+  }
+
+  isFinished(now: number): boolean {
+    return this.judged >= this.targets.length && now - this.opts.latencyMs >= this.endTime;
   }
 
   private judge(i: number): ChordJudgement {

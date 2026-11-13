@@ -138,6 +138,7 @@ export class RhythmController extends SessionBase {
       latencyMs: this.opts.latencyMs,
       sustainCountsAsHeld: true,
       judgeReleases: false,
+      endTick: ex.totalTicks,
     });
     this.flow.setStartTime(t0);
     this.marks.reset();

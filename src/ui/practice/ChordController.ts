@@ -173,7 +173,7 @@ export class ChordController extends SessionBase {
         Object.assign(next, { marks, live: this.live(flow.results, this.wrongFlows) });
       }
       if (Object.keys(next).length) this.patch(next);
-      if (flow.finished) {
+      if (flow.isFinished(now)) {
         this.finish(flow.results, this.wrongFlows + flow.extraPresses(), n * this.barMs);
         return false;
       }

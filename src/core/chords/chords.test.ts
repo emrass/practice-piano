@@ -181,6 +181,17 @@ describe('chord engines', () => {
     expect(out[1]).toMatchObject({ correct: true, deltaMs: 50 });
     expect(out[2].correct).toBe(false);
   });
+
+  it('keeps running until the last chord has sounded for its whole bar', () => {
+    const ex = generateChordExercise(prog('I-IV-V-I', 'C'), opts, 1);
+    const ts = ex.chords.targets;
+    const f = new ChordFlowEngine(ts, { barMs: 4000, latencyMs: 0 });
+    f.setStartTime(1000);
+    const lastBar = 1000 + (ts.length - 1) * 4000;
+    f.update(lastBar + 1000);
+    expect(f.isFinished(lastBar + 1000)).toBe(false);
+    expect(f.isFinished(lastBar + 4000)).toBe(true);
+  });
 });
 
 describe('chord analysis and progress', () => {
