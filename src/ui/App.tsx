@@ -675,13 +675,9 @@ function Studio({ profile }: { profile: Profile }) {
             settings={s}
             storageKind={profile.storageKind}
             now={nowMs}
-            onReviewChords={() => {
-              update({ chords: { source: 'review' } });
-              setSeed(randomSeed());
-              setTab('exercise');
-            }}
-            onReviewScales={() => {
-              update({ scales: { source: 'review' } });
+            onReview={() => {
+              if (lesson === 'scales') update({ scales: { source: 'review' } });
+              if (lesson === 'chords') update({ chords: { source: 'review' } });
               setSeed(randomSeed());
               setTab('exercise');
             }}
