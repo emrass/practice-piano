@@ -4,7 +4,7 @@ import { median } from '../eval/types';
 import { tierForLevel } from '../generator/tiers';
 import { findTier, LESSONS, type LessonId } from '../lessons';
 import { RHYTHM_TIMING_PASS } from '../rhythm/analysis';
-import { applyRepertoireRun, type LadderRun, type RepertoireChange, type RepertoireItem } from '../scales/repertoire';
+import { applyRepertoireRun, type LadderRun, normalizeRepertoire, type RepertoireChange, type RepertoireItem } from '../repertoire/repertoire';
 
 export const PROGRESS_SCHEMA_VERSION = 1;
 export const MASTERY_ACCURACY = 0.9;
@@ -98,7 +98,7 @@ export interface ProgressState {
   /** exerciseId → completed attempts (for the first-sight bonus). */
   attempts: Record<string, number>;
   history: HistoryEntry[];
-  /** Fixed-repertoire items (scales & arpeggios): tempo ladder and review schedule. */
+  /** Fixed-repertoire items (scales, chords): tempo ladder and review schedule. */
   repertoire: Record<string, RepertoireItem>;
 }
 
@@ -384,9 +384,10 @@ function recordTierRun(next: ProgressState, award: Award, result: ExerciseResult
 
 /** What a repertoire run tells the item's tempo ladder. */
 export function ladderRun(result: ExerciseResult): LadderRun | null {
-  if (result.scale) return result.scale;
+  const s = result.scale;
+  if (s) return { itemId: s.itemId, tempo: s.npm, notesPerBeat: s.notesPerBeat, goalTempo: s.goalNpm, clean: s.clean };
   const c = result.chords;
-  if (c) return { itemId: c.itemId, npm: c.bpm, notesPerBeat: 1, goalNpm: c.goalBpm, clean: c.clean };
+  if (c) return { itemId: c.itemId, tempo: c.bpm, notesPerBeat: 1, goalTempo: c.goalBpm, clean: c.clean };
   return null;
 }
 
@@ -634,6 +635,6 @@ export function normalizeProgress(raw: unknown): ProgressState {
     stats: obj(r.stats, base.stats),
     attempts: obj(r.attempts, base.attempts),
     history: Array.isArray(r.history) ? r.history.slice(-MAX_HISTORY) : [],
-    repertoire: obj(r.repertoire, base.repertoire),
+    repertoire: normalizeRepertoire(r.repertoire),
   };
 }

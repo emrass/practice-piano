@@ -204,8 +204,8 @@ describe('chord analysis and progress', () => {
     const result = chordResult(ex, judgements, { mode: 'flow', goalBpm: 80, durationMs: 32000, wrongPresses: 0, completedAt: 0 });
     expect(isPass(result)).toBe(true);
     const { progress, award } = applyResult(emptyProgress(), result, new Date(2026, 10, 13));
-    expect(award.repertoire).toMatchObject({ itemId: 'chords/prog/I-V-vi-IV/C/rh', fromNpm: 60, toNpm: 64, clean: true });
-    expect(progress.repertoire['chords/prog/I-V-vi-IV/C/rh'].ladderNpm).toBe(64);
+    expect(award.repertoire).toMatchObject({ itemId: 'chords/prog/I-V-vi-IV/C/rh', fromTempo: 60, toTempo: 64, clean: true });
+    expect(progress.repertoire['chords/prog/I-V-vi-IV/C/rh'].ladderTempo).toBe(64);
     expect(progress.stats.chordQuality.maj.attempts).toBe(6);
     expect(progress.tiers).toEqual({});
   });

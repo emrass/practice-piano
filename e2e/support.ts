@@ -204,8 +204,8 @@ export function repertoireItem(tempo: number, dueInDays: number): Json {
   return {
     attempts: 2,
     cleanRuns: 1,
-    ladderNpm: tempo,
-    bestCleanNpm: tempo,
+    ladderTempo: tempo,
+    bestCleanTempo: tempo,
     box: 1,
     dueAt: now + dueInDays * DAY,
     lastAt: now - 2 * DAY,

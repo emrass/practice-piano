@@ -21,7 +21,7 @@ import { figureName } from '../../core/generator/rhythm';
 import { BEAT_POSITION_LABELS, TEXTURE_INFO, type BeatPosition, type RhythmTexture } from '../../core/rhythm/generator';
 import { HANDS_LABEL, itemTitle, parseItemId } from '../../core/scales/catalog';
 import { nps } from '../../core/scales/generator';
-import { dueItems } from '../../core/scales/repertoire';
+import { dueItems } from '../../core/repertoire/repertoire';
 import { chordItemTitle, parseChordItemId, QUALITIES, type ChordQuality } from '../../core/chords/catalog';
 import { median } from '../../core/eval/types';
 import { weakChordLabel } from '../../core/chords/analysis';
@@ -209,11 +209,11 @@ function RepertoireStats(props: { progress: ProgressState; goalNps: number; now:
                 <small>{HANDS_LABEL[item!.hands]}</small>
               </span>
               <span className="rep-tempo" title="Ladder tempo">
-                {nps(it.ladderNpm)}
+                {nps(it.ladderTempo)}
               </span>
               <span className="rep-state">{it.mastered ? '★' : days <= 0 ? 'due' : `${days}d`}</span>
               <div className="progress-track">
-                <div className={`progress-fill ${it.mastered ? 'is-mastered' : ''}`} style={{ width: `${Math.min(100, (it.ladderNpm / (props.goalNps * 60)) * 100)}%` }} />
+                <div className={`progress-fill ${it.mastered ? 'is-mastered' : ''}`} style={{ width: `${Math.min(100, (it.ladderTempo / (props.goalNps * 60)) * 100)}%` }} />
               </div>
             </li>
           );
@@ -289,11 +289,11 @@ function ChordStats(props: { progress: ProgressState; goalBpm: number; now: numb
                 <li key={id} className={it.mastered ? 'is-mastered' : ''}>
                   <span className="rep-name">{chordItemTitle(item!)}</span>
                   <span className="rep-tempo" title="Ladder tempo">
-                    ♩ {it.ladderNpm}
+                    ♩ {it.ladderTempo}
                   </span>
                   <span className="rep-state">{it.mastered ? '★' : days <= 0 ? 'due' : `${days}d`}</span>
                   <div className="progress-track">
-                    <div className={`progress-fill ${it.mastered ? 'is-mastered' : ''}`} style={{ width: `${Math.min(100, (it.ladderNpm / props.goalBpm) * 100)}%` }} />
+                    <div className={`progress-fill ${it.mastered ? 'is-mastered' : ''}`} style={{ width: `${Math.min(100, (it.ladderTempo / props.goalBpm) * 100)}%` }} />
                   </div>
                 </li>
               );

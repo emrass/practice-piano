@@ -10,7 +10,6 @@ import { summarizeScale } from './analysis';
 import { itemId, itemTitle, parseItemId, SCALE_TYPE_IDS, SCALE_TYPES, type ScaleItem, type NoteValue } from './catalog';
 import { crossingAt } from './fingering';
 import { generateScaleExercise, initialNpm, type ScaleExercise } from './generator';
-import { applyRepertoireRun, dueItems, REVIEW_DAYS } from './repertoire';
 
 function gen(item: Partial<ScaleItem>, octaves = 1, noteValue: NoteValue = 'eighth', npm = 240): ScaleExercise {
   return generateScaleExercise({ type: 'major', tonic: 'C', hands: 'rh', ...item }, { octaves, noteValue, npm });
@@ -206,49 +205,14 @@ describe('scale analysis', () => {
   });
 });
 
-describe('repertoire ladder and review', () => {
-  const summary = (clean: boolean, npm = 240) => ({
-    itemId: 'major/C/rh',
-    npm,
-    notesPerBeat: 2,
-    goalNpm: 240,
-    clean,
-    steadinessMs: 10,
-    velocitySpread: 0.1,
-    thumbAccent: false,
-    syncMs: null,
-    bumps: [],
-  });
-
-  it('moves up after clean runs, down after messy ones, and masters at the goal tempo', () => {
-    const now = Date.UTC(2026, 0, 1);
-    let r = applyRepertoireRun(undefined, { mode: 'flow', accuracy: 1, ladder: summary(true, 200) }, now);
-    expect(r.change.toNpm).toBe(208); // +4 bpm in eighths
-    expect(r.item.box).toBe(1);
-    expect(r.change.dueInDays).toBe(REVIEW_DAYS[1]);
-    r = applyRepertoireRun(r.item, { mode: 'flow', accuracy: 0.7, ladder: summary(false, 208) }, now);
-    expect(r.item.ladderNpm).toBe(200);
-    expect(r.item.box).toBe(0);
-    r = applyRepertoireRun(r.item, { mode: 'flow', accuracy: 1, ladder: summary(true, 240) }, now);
-    expect(r.change.newlyMastered).toBe(true);
-    // Learning runs don't move the ladder.
-    const w = applyRepertoireRun(r.item, { mode: 'wait', accuracy: 1, ladder: summary(false, 240) }, now);
-    expect(w.item.ladderNpm).toBe(r.item.ladderNpm);
-  });
-
-  it('lists due items, most overdue first', () => {
-    const base = { attempts: 1, cleanRuns: 0, ladderNpm: 120, bestCleanNpm: 0, box: 0, lastAt: 0, accuracy: 0.8, mastered: false };
-    const items = { a: { ...base, dueAt: 50 }, b: { ...base, dueAt: 10 }, c: { ...base, dueAt: 500 } };
-    expect(dueItems(items, 100)).toEqual(['b', 'a']);
-  });
-
+describe('scales on the repertoire ladder', () => {
   it('records runs in progress without touching level tiers', () => {
     const ex = gen({}, 1, 'eighth', 120);
     const raw = fakeRun(ex, () => 0);
     const result = { ...raw, scale: summarizeScale(ex, raw, 240) };
     const { progress, award } = applyResult(emptyProgress(), result, new Date(2026, 0, 1));
-    expect(progress.repertoire['major/C/rh'].ladderNpm).toBe(128);
-    expect(award.repertoire?.toNpm).toBe(128);
+    expect(progress.repertoire['major/C/rh'].ladderTempo).toBe(128);
+    expect(award.repertoire?.toTempo).toBe(128);
     expect(award.xp).toBeGreaterThan(0);
     expect(Object.keys(progress.tiers)).toEqual([]);
     expect(progress.stats.scaleKey?.C).toBeDefined();

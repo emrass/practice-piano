@@ -245,12 +245,12 @@ function ScaleResults(props: { result: ExerciseResult; award: Award | null }) {
         )}
       </div>
       {flow && change ? (
-        <div className={`scale-ladder ${change.toNpm > change.fromNpm ? 'is-up' : change.toNpm < change.fromNpm ? 'is-down' : ''}`}>
-          {change.toNpm > change.fromNpm
-            ? `Tempo up: ${bpm(change.fromNpm)} → ${bpm(change.toNpm)}`
-            : change.toNpm < change.fromNpm
-              ? `Tempo down to ${bpm(change.toNpm)} — get it clean first`
-              : `Tempo stays at ${bpm(change.toNpm)}`}
+        <div className={`scale-ladder ${change.toTempo > change.fromTempo ? 'is-up' : change.toTempo < change.fromTempo ? 'is-down' : ''}`}>
+          {change.toTempo > change.fromTempo
+            ? `Tempo up: ${bpm(change.fromTempo)} → ${bpm(change.toTempo)}`
+            : change.toTempo < change.fromTempo
+              ? `Tempo down to ${bpm(change.toTempo)} — get it clean first`
+              : `Tempo stays at ${bpm(change.toTempo)}`}
           {change.newlyMastered ? ` · ★ mastered at ${nps(scale.npm)}` : ''}
           {change.dueInDays > 0 ? ` · review in ${change.dueInDays} day${change.dueInDays === 1 ? '' : 's'}` : ''}
         </div>
@@ -332,12 +332,12 @@ function ChordResults(props: { result: ExerciseResult; award: Award | null }) {
         )}
       </div>
       {flow && change ? (
-        <div className={`scale-ladder ${change.toNpm > change.fromNpm ? 'is-up' : change.toNpm < change.fromNpm ? 'is-down' : ''}`}>
-          {change.toNpm > change.fromNpm
-            ? `Tempo up: ${change.fromNpm} → ${change.toNpm} bpm`
-            : change.toNpm < change.fromNpm
-              ? `Tempo down to ${change.toNpm} bpm — get it clean first`
-              : `Tempo stays at ${change.toNpm} bpm`}
+        <div className={`scale-ladder ${change.toTempo > change.fromTempo ? 'is-up' : change.toTempo < change.fromTempo ? 'is-down' : ''}`}>
+          {change.toTempo > change.fromTempo
+            ? `Tempo up: ${change.fromTempo} → ${change.toTempo} bpm`
+            : change.toTempo < change.fromTempo
+              ? `Tempo down to ${change.toTempo} bpm — get it clean first`
+              : `Tempo stays at ${change.toTempo} bpm`}
           {change.newlyMastered ? ` · ★ mastered at ${c.bpm} bpm` : ''}
           {change.dueInDays > 0 ? ` · review in ${change.dueInDays} day${change.dueInDays === 1 ? '' : 's'}` : ''}
         </div>

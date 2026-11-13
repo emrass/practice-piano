@@ -61,7 +61,7 @@ test.describe('Chords & progressions', () => {
     await expect(app.results()).toContainText('Tempo up: 120 → 124 bpm');
     await expect(app.results()).toContainText('Voice leading');
     const progress = await app.savedProgress();
-    expect((progress.repertoire as Record<string, { ladderNpm?: number; ladderTempo?: number }>)['chords/prog/I-IV-V-I/F/lh-bass']).toBeTruthy();
+    expect((progress.repertoire as Record<string, { ladderTempo: number }>)['chords/prog/I-IV-V-I/F/lh-bass'].ladderTempo).toBe(124);
   });
 
   test('Review plays due items first', async ({ app }) => {

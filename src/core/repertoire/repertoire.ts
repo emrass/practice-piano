@@ -3,13 +3,16 @@
  * Per-item progress for fixed-repertoire lessons (DIDACTICS §2): a tempo ladder instead of a
  * level, mastery at a goal tempo, and spaced review (Leitner boxes) so weak or old items
  * come back sooner. Pure functions; stored in ProgressState.repertoire.
+ *
+ * Tempo is in the lesson's own unit: notes per minute for scales (so switching eighths and
+ * sixteenths keeps the speed), beats per minute for chords (one chord per bar).
  */
 export interface RepertoireItem {
   attempts: number;
   cleanRuns: number;
-  /** Current ladder tempo: notes per minute (scales) or bpm (chords). */
-  ladderNpm: number;
-  bestCleanNpm: number;
+  /** Current ladder tempo, in the lesson's unit. */
+  ladderTempo: number;
+  bestCleanTempo: number;
   /** Leitner box 0–5: the review interval doubles with each clean run. */
   box: number;
   dueAt: number;
@@ -22,21 +25,22 @@ export interface RepertoireItem {
 
 export interface RepertoireChange {
   itemId: string;
-  fromNpm: number;
-  toNpm: number;
+  fromTempo: number;
+  toTempo: number;
   clean: boolean;
   newlyMastered: boolean;
   mastered: boolean;
   dueInDays: number;
 }
 
-/** What a run tells the ladder. Scales count notes per minute; chords count beats per minute (one chord per bar). */
+/** What a run tells the ladder. */
 export interface LadderRun {
   itemId: string;
-  npm: number;
-  /** Ladder step = 4 bpm × this (notes per beat; 1 for chords). */
+  /** Tempo of the run, in the lesson's unit. */
+  tempo: number;
+  /** Ladder step = 4 bpm × this: notes per beat for scales, 1 for chords. */
   notesPerBeat: number;
-  goalNpm: number;
+  goalTempo: number;
   clean: boolean;
 }
 
@@ -44,15 +48,15 @@ const DAY = 24 * 60 * 60 * 1000;
 /** Review interval (days) per box. Box 0 = due again today. */
 export const REVIEW_DAYS = [0, 1, 2, 4, 8, 16] as const;
 export const LADDER_STEP_BPM = 4;
-export const MIN_NPM = 30;
-export const MAX_NPM = 960;
+export const MIN_TEMPO = 30;
+export const MAX_TEMPO = 960;
 
-export function newRepertoireItem(npm: number, now: number): RepertoireItem {
-  return { attempts: 0, cleanRuns: 0, ladderNpm: npm, bestCleanNpm: 0, box: 0, dueAt: now, lastAt: now, accuracy: 0, mastered: false };
+export function newRepertoireItem(tempo: number, now: number): RepertoireItem {
+  return { attempts: 0, cleanRuns: 0, ladderTempo: tempo, bestCleanTempo: 0, box: 0, dueAt: now, lastAt: now, accuracy: 0, mastered: false };
 }
 
-function clampNpm(npm: number): number {
-  return Math.round(Math.min(MAX_NPM, Math.max(MIN_NPM, npm)));
+function clampTempo(tempo: number): number {
+  return Math.round(Math.min(MAX_TEMPO, Math.max(MIN_TEMPO, tempo)));
 }
 
 /**
@@ -66,8 +70,8 @@ export function applyRepertoireRun(
   now: number,
 ): { item: RepertoireItem; change: RepertoireChange } {
   const s = run.ladder;
-  const item: RepertoireItem = { ...(prev ?? newRepertoireItem(s.npm, now)) };
-  const fromNpm = item.ladderNpm;
+  const item: RepertoireItem = { ...(prev ?? newRepertoireItem(s.tempo, now)) };
+  const fromTempo = item.ladderTempo;
   item.attempts++;
   item.lastAt = now;
   item.accuracy = prev ? item.accuracy * 0.6 + run.accuracy * 0.4 : run.accuracy;
@@ -76,16 +80,16 @@ export function applyRepertoireRun(
     const step = LADDER_STEP_BPM * s.notesPerBeat;
     if (s.clean) {
       item.cleanRuns++;
-      item.bestCleanNpm = Math.max(item.bestCleanNpm, s.npm);
-      item.ladderNpm = clampNpm(Math.max(item.ladderNpm, s.npm + step));
+      item.bestCleanTempo = Math.max(item.bestCleanTempo, s.tempo);
+      item.ladderTempo = clampTempo(Math.max(item.ladderTempo, s.tempo + step));
       item.box = Math.min(REVIEW_DAYS.length - 1, item.box + 1);
-      if (!item.mastered && s.npm >= s.goalNpm) {
+      if (!item.mastered && s.tempo >= s.goalTempo) {
         item.mastered = true;
         item.masteredAt = now;
         newlyMastered = true;
       }
     } else if (run.accuracy < 0.9) {
-      item.ladderNpm = clampNpm(Math.min(item.ladderNpm, s.npm - step));
+      item.ladderTempo = clampTempo(Math.min(item.ladderTempo, s.tempo - step));
       item.box = 0;
     }
     item.dueAt = now + REVIEW_DAYS[item.box] * DAY;
@@ -94,8 +98,8 @@ export function applyRepertoireRun(
     item,
     change: {
       itemId: s.itemId,
-      fromNpm,
-      toNpm: item.ladderNpm,
+      fromTempo,
+      toTempo: item.ladderTempo,
       clean: s.clean,
       newlyMastered,
       mastered: item.mastered,
@@ -121,6 +125,18 @@ export function weakItems(items: Readonly<Record<string, RepertoireItem>>, limit
     .map(([id]) => id);
 }
 
-export function setLadder(item: RepertoireItem | undefined, npm: number, now: number): RepertoireItem {
-  return { ...(item ?? newRepertoireItem(npm, now)), ladderNpm: clampNpm(npm) };
+export function setLadder(item: RepertoireItem | undefined, tempo: number, now: number): RepertoireItem {
+  return { ...(item ?? newRepertoireItem(tempo, now)), ladderTempo: clampTempo(tempo) };
+}
+
+/** Stored items that still make sense; anything else is dropped (no saved data to migrate yet). */
+export function normalizeRepertoire(raw: unknown): Record<string, RepertoireItem> {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+  const out: Record<string, RepertoireItem> = {};
+  for (const [id, it] of Object.entries(raw as Record<string, Partial<RepertoireItem>>)) {
+    if (it && typeof it.ladderTempo === 'number' && Number.isFinite(it.ladderTempo) && typeof it.dueAt === 'number') {
+      out[id] = { ...newRepertoireItem(it.ladderTempo, it.dueAt), ...it } as RepertoireItem;
+    }
+  }
+  return out;
 }

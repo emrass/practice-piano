@@ -124,7 +124,7 @@ export function ScalesPanel(props: {
           </div>
           <p className="field-hint">
             {nps(ex.scale.npm)} · goal {nps(goalNpm)}
-            {item ? ` · best clean ${item.bestCleanNpm ? nps(item.bestCleanNpm) : '—'} · ${item.cleanRuns} clean run${item.cleanRuns === 1 ? '' : 's'} · ${dueText(item.dueAt, now)}` : ' · new item'}
+            {item ? ` · best clean ${item.bestCleanTempo ? nps(item.bestCleanTempo) : '—'} · ${item.cleanRuns} clean run${item.cleanRuns === 1 ? '' : 's'} · ${dueText(item.dueAt, now)}` : ' · new item'}
           </p>
         </div>
         <p className="field-hint">

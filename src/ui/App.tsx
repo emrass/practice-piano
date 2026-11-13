@@ -27,7 +27,7 @@ import { generateRhythmExercise, type RhythmExercise } from '../core/rhythm/gene
 import { scaleResult } from '../core/scales/analysis';
 import { itemId, parseItemId, SCALE_TYPES, type ScaleItem } from '../core/scales/catalog';
 import { generateScaleExercise, initialNpm, type ScaleExercise } from '../core/scales/generator';
-import { dueItems, setLadder } from '../core/scales/repertoire';
+import { dueItems, setLadder } from '../core/repertoire/repertoire';
 import { earSettingsFrom, rhythmSettingsFrom, type Settings } from '../core/settings';
 import { useStore } from '../lib/store';
 import { inputBus } from '../input/inputBus';
@@ -215,7 +215,7 @@ function Studio({ profile }: { profile: Profile }) {
       if (!scaleItem) return null;
       // The ladder tempo is read when the exercise is made (not on every progress change, so the
       // results of a run stay on screen); retries and tempo changes make a new one.
-      const npm = progress.repertoire[itemId(scaleItem)]?.ladderNpm ?? initialNpm(scaleItem, s.scaleNoteValue);
+      const npm = progress.repertoire[itemId(scaleItem)]?.ladderTempo ?? initialNpm(scaleItem, s.scaleNoteValue);
       return generateScaleExercise(scaleItem, { octaves: s.scaleOctaves, noteValue: s.scaleNoteValue, npm });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -235,7 +235,7 @@ function Studio({ profile }: { profile: Profile }) {
     () => {
       if (!chordItem) return null;
       // Ladder tempo read when the exercise is made, as for scales.
-      const bpm = progress.repertoire[chordItemId(chordItem)]?.ladderNpm ?? initialChordBpm(chordItem);
+      const bpm = progress.repertoire[chordItemId(chordItem)]?.ladderTempo ?? initialChordBpm(chordItem);
       const focus = s.weakSpotFocus && chordItem.task === 'drill' ? chordFocus : undefined;
       return generateChordExercise(chordItem, { bpm, count: s.chordsCount, focus }, seed);
     },
@@ -308,7 +308,7 @@ function Studio({ profile }: { profile: Profile }) {
       const cur = progressRef.current.repertoire[id];
       const next = {
         ...progressRef.current,
-        repertoire: { ...progressRef.current.repertoire, [id]: setLadder(cur, (cur?.ladderNpm ?? npm) + deltaBpm * notesPerBeat, Date.now()) },
+        repertoire: { ...progressRef.current.repertoire, [id]: setLadder(cur, (cur?.ladderTempo ?? npm) + deltaBpm * notesPerBeat, Date.now()) },
       };
       progressRef.current = next;
       setProgress(next);

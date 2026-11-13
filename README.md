@@ -145,8 +145,9 @@ src/
     generator/   difficulty profiles, tiers, rhythm cells (figures), harmony, melody generator
     ear/         ear-training tiers and phrase generator
     rhythm/      rhythm tiers, generator (tasks, textures), analysis (tendency, drift)
-    scales/      scale catalogue, fingering, generator, analysis (evenness, bumps), ladder & review
+    scales/      scale catalogue, fingering, generator, analysis (evenness, bumps)
     chords/      chord & progression catalogue, voicings, generator, chord engines, analysis
+    repertoire/  tempo ladder & spaced review for fixed-repertoire lessons (scales, chords)
     eval/        Wait / Flow scoring engines
     progress/    XP, mastery, streaks, weak spots, extensible stats
     midi/ input/ keyboard/ settings.ts

@@ -156,7 +156,7 @@ export function ChordsPanel(props: {
           </div>
           <p className="field-hint">
             {bpm} bpm · goal {goal}
-            {item ? ` · best clean ${item.bestCleanNpm || '—'} · ${item.cleanRuns} clean run${item.cleanRuns === 1 ? '' : 's'} · ${dueText(item.dueAt, now)}` : ' · new item'}
+            {item ? ` · best clean ${item.bestCleanTempo || '—'} · ${item.cleanRuns} clean run${item.cleanRuns === 1 ? '' : 's'} · ${dueText(item.dueAt, now)}` : ' · new item'}
           </p>
         </div>
         <p className="field-hint">

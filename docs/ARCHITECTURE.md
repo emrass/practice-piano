@@ -178,9 +178,13 @@ gets plain objects back.
 - `core/scales/analysis.ts` — clean-run rule, steadiness, velocity spread and thumb accents,
   hand sync, timing bumps grouped by place in the octave cycle. `FlowEngine` now records key
   velocity and merges duplicate keys in a step (contrary-motion unison).
-- `core/scales/repertoire.ts` — pure ladder + Leitner review (`applyRepertoireRun`, `dueItems`,
-  `setLadder`); `ProgressState.repertoire` stores it. Repertoire lessons (`LESSONS.x.repertoire`)
-  skip level tiers and first-sight logic in `computeAward`/`applyResult`.
+- `core/repertoire/repertoire.ts` — pure ladder + Leitner review shared by scales and chords
+  (`applyRepertoireRun`, `dueItems`, `setLadder`, `normalizeRepertoire`). Tempo is in the
+  lesson's unit (`ladderTempo`: notes per minute for scales, bpm for chords); a `LadderRun`
+  carries the run's tempo, goal and the step size (4 bpm × notes per beat).
+  `ProgressState.repertoire` stores it; `ladderRun(result)` in progress.ts maps a lesson's result
+  onto it. Repertoire lessons (`LESSONS.x.repertoire`) skip level tiers and first-sight logic in
+  `computeAward`/`applyResult`.
 - UI: the sight-reading `PracticeController` is reused (Wait / Flow) with a `decorate` hook that
   turns the raw result into a scale result; `ScalesPanel` (picker, ladder, review, display),
   fingering rows in `renderScore`, `MemoryCard` for playing from memory. The layout now fills
