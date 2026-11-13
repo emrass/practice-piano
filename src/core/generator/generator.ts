@@ -15,7 +15,7 @@ import { KEYBOARD_RANGES, type KeyboardSize } from '../keyboard/range';
 import { difficultyProfile, type DifficultyProfile } from './difficulty';
 import { chordTones, type Degree, progression } from './harmony';
 import { Rng } from './rng';
-import { barRhythm, type RhythmOptions } from './rhythm';
+import { barRhythmCells, figureKey, type RhythmCell, type RhythmOptions } from './rhythm';
 import { clampLevel } from './tiers';
 
 export interface FocusNote {
@@ -37,10 +37,13 @@ export interface GeneratorSettings {
   keyboardSize: KeyboardSize;
   /** Weak-spot practice: notes to feature more often. */
   focus?: FocusNote[];
+  /** Weak-spot practice: rhythm figures to feature more often (shared with Rhythm mode). */
+  focusFigures?: string[];
 }
 
 interface RhythmEvent {
   bar: number;
+  figure: string;
   /** Offset within the bar in ticks. */
   start: number;
   dur: number;
@@ -130,21 +133,24 @@ function handRhythm(
   opts: RhythmOptions,
 ): RhythmEvent[] {
   const events: RhythmEvent[] = [];
-  let previous: number[] | null = null;
+  let previous: RhythmCell[] | null = null;
   for (let b = 0; b < bars; b++) {
     const cadence = b === bars - 1 ? 'final' : bars >= 8 && b % 4 === 3 ? 'phrase' : 'none';
-    let ticks: number[];
+    let cells: RhythmCell[];
     if (previous && cadence === 'none' && b % 2 === 1 && rng.chance(profile.motifProbability)) {
-      ticks = previous; // rhythmic motif repetition
+      cells = previous; // rhythmic motif repetition
     } else {
-      ticks = barRhythm(rng, opts, cadence, b === 0);
+      cells = barRhythmCells(rng, opts, cadence, b === 0);
     }
-    previous = ticks;
+    previous = cells;
+    const ticks = cells.flat();
+    const figures = cells.flatMap((c) => c.map(() => figureKey(c)));
     let pos = 0;
     ticks.forEach((t, i) => {
       const dur = Math.abs(t);
       events.push({
         bar: b,
+        figure: figures[i],
         start: pos,
         dur,
         rest: t < 0,
@@ -377,6 +383,7 @@ function toNoteEvents(
       durationTicks: ev.dur,
       measureIndex: ev.bar,
       pitches: ev.rest ? [] : pitches,
+      figure: ev.figure,
     };
   });
 }
@@ -428,6 +435,7 @@ export function generateExercise(settings: GeneratorSettings, seed: number): Exe
     complexity,
     complexityOverridden,
     restProbability: profile.restProbability,
+    focusFigures: settings.focusFigures?.length ? new Set(settings.focusFigures) : undefined,
   };
 
   const makeLine = (hand: Hand, accompaniment: boolean): NoteEvent[] => {

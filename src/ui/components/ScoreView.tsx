@@ -11,6 +11,7 @@ const MARK_CLASSES: Record<StepMark, string> = {
   ok: 'is-ok',
   bad: 'is-bad',
   missed: 'is-missed',
+  call: 'is-call',
 };
 const ALL_MARK_CLASSES = Object.values(MARK_CLASSES);
 
@@ -56,7 +57,7 @@ export function ScoreView(props: { exercise: Exercise; showNoteNames: boolean; c
         width,
         height: viewHeight,
         showNoteNames,
-        placeholders: controller.state.get().visibleSteps !== undefined,
+        placeholders: 'ear' in exercise,
       });
       renderedRef.current = rendered;
       setHeight(Math.round(rendered.layout.height * rendered.scale));
@@ -84,6 +85,10 @@ export function ScoreView(props: { exercise: Exercise; showNoteNames: boolean; c
         g.classList.toggle('is-hidden', index >= hiddenFrom);
       }
     }
+    const barsFrom = state.visibleBars ?? Infinity;
+    r.svg?.querySelectorAll<SVGElement>('[data-measure]').forEach((el) => {
+      el.classList.toggle('is-hidden', Number(el.dataset.measure) >= barsFrom);
+    });
     r.svg?.querySelectorAll<SVGElement>('[data-step]').forEach((el) => {
       const hidden = Number(el.dataset.step) >= hiddenFrom;
       if (el.classList.contains('pp-placeholder')) el.classList.toggle('is-shown', hidden);
@@ -111,7 +116,7 @@ export function ScoreView(props: { exercise: Exercise; showNoteNames: boolean; c
         scroller.scrollTo({ top: Math.max(0, top - 6), behavior: 'smooth' });
       }
     }
-  }, [state.marks, state.stepIndex, state.status, state.mode, state.visibleSteps, exercise, width, viewHeight, showNoteNames, height]);
+  }, [state.marks, state.stepIndex, state.status, state.mode, state.visibleSteps, state.visibleBars, exercise, width, viewHeight, showNoteNames, height]);
 
   // Wrong-note flash on the cursor.
   useEffect(() => {
@@ -148,6 +153,8 @@ export function ScoreView(props: { exercise: Exercise; showNoteNames: boolean; c
           lastSystem = system.index;
           scrollRef.current?.scrollTo({ top: Math.max(0, system.top * k - 6), behavior: 'smooth' });
         }
+      } else {
+        head.style.opacity = '0'; // e.g. Rhythm Pulse: no visual metronome in silent bars
       }
       raf = requestAnimationFrame(frame);
     };

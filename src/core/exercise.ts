@@ -19,6 +19,8 @@ export interface NoteEvent {
   measureIndex: number;
   /** Empty for rests. Sorted low → high. */
   pitches: SpelledPitch[];
+  /** Rhythm figure this event belongs to (see generator/rhythm.ts figureKey). */
+  figure?: string;
 }
 
 export interface Measure {

@@ -24,6 +24,7 @@ export function PracticeBar(props: {
   const flow = s.mode === 'flow';
   const ear = s.mode === 'ear' ? s.ear : undefined;
   const active = s.status === 'countin' || s.status === 'running';
+  const phase = s.rhythm?.phase ?? null;
 
   let message: string;
   if (ear && s.status !== 'finished') {
@@ -33,7 +34,11 @@ export function PracticeBar(props: {
     else message = 'Keep going — notes appear as you find them';
   } else if (s.status === 'finished') message = props.pianoShortcuts ? 'Finished — on the piano: C retry · D next' : 'Finished — see your results';
   else if (flow && s.status === 'ready') message = props.pianoShortcuts ? 'Press Space or tap the sustain pedal to start' : 'Press Start or Space to start';
-  else if (flow && s.status === 'countin') message = 'Count-in… get ready';
+  else if (flow && s.status === 'countin') message = s.rhythm ? 'Count-in… listen to the tempo' : 'Count-in… get ready';
+  else if (phase === 'call') message = 'Listen…';
+  else if (phase === 'response') message = 'Your turn — play it back';
+  else if (phase === 'silent') message = 'Silent — keep the beat going';
+  else if (phase === 'click') message = 'Feel the pulse…';
   else if (flow) message = 'Play along with the playhead';
   else if (s.live.correct === 0 && s.live.wrong === 0) message = 'Play the highlighted note';
   else message = 'Take your time — the cursor waits for you';
@@ -89,7 +94,7 @@ export function PracticeBar(props: {
             <span key={i} className={`beat-dot ${cls} ${i === 0 ? 'is-downbeat' : ''}`} />
           ))}
         </div>
-        <span className="pb-message">{wrongFlash ? 'Not that one — try again' : message}</span>
+        <span className="pb-message">{wrongFlash ? (s.rhythm ? 'Use your rhythm keys' : 'Not that one — try again') : message}</span>
         <span className={`grade-chip ${gradeFlash && s.lastGrade ? `is-${s.lastGrade.grade}` : 'is-hidden'}`}>
           {s.lastGrade ? `${GRADE_TEXT[s.lastGrade.grade]} ${s.lastGrade.grade === 'perfect' ? '' : `${Math.abs(Math.round(s.lastGrade.deltaMs))} ms`}` : ''}
         </span>

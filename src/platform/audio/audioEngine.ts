@@ -137,6 +137,8 @@ export interface MetronomePlan {
   beatsPerBar: number;
   totalBeats: number;
   volume: number;
+  /** Beats (counted from the first click) that stay silent — Rhythm mode's Pulse task. */
+  muted?: (beat: number) => boolean;
 }
 
 /** Look-ahead scheduler: precise audio timing from an imprecise JS timer. */
@@ -159,7 +161,7 @@ export class Metronome {
       while (this.nextBeat < p.totalBeats) {
         const at = p.startTime + this.nextBeat * p.beatMs;
         if (at > horizon) break;
-        if (at >= performance.now() - 20) this.engine.click(at, this.nextBeat % p.beatsPerBar === 0, p.volume);
+        if (at >= performance.now() - 20 && !p.muted?.(this.nextBeat)) this.engine.click(at, this.nextBeat % p.beatsPerBar === 0, p.volume);
         this.nextBeat++;
       }
       if (this.nextBeat >= p.totalBeats) this.stop();

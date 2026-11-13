@@ -1,6 +1,6 @@
 # practice-piano.com
 
-An interactive **sight-reading and ear-training studio** for your digital piano. It generates
+An interactive **sight-reading, ear-training and rhythm studio** for your digital piano. It generates
 fresh, musical passages for any level from "first note ever" to advanced, engraves them with
 VexFlow, listens to your piano over MIDI and scores pitch, timing and reaction time.
 
@@ -9,6 +9,12 @@ Lessons:
 - **Sight reading** — read and play generated passages (Wait or Flow mode).
 - **Ear training** — listen to a phrase played by the built-in piano sound and play it back;
   the notes appear on the staff as you find them.
+- **Rhythm** — rhythms without pitch on one designated key per hand: read them, echo them
+  back, or keep the pulse while the metronome falls silent. With both hands it trains hand
+  independence.
+
+The didactic concept behind the lessons (and the planned ones) is in
+[docs/DIDACTICS.md](docs/DIDACTICS.md).
 
 It runs in two ways:
 
@@ -84,6 +90,15 @@ contains the current web code.
   chromatic notes. `Space` or a sustain-pedal tap replays (each replay costs a little XP), `?`
   reveals the next note (counts as a miss); the keyboard stays a fixed C3–C6 window so it never
   gives the phrase away. Interval accuracy is tracked and weak intervals can be practised.
+- **Rhythm (levels 1–100)** — quarters and halves → rests and 3/4, 2/4 → eighths → off-beats →
+  dotted rhythms → syncopation → sixteenths → 6/8 → dotted sixteenths → interlocking hands →
+  polyrhythms (3:2, 4:3). Tasks: *Read* (percussion staves, count-in, playhead), *Echo* (the app
+  plays a bar, you answer in the next; notation is revealed afterwards) and *Pulse* (silent
+  metronome bars, no playhead — measures your drift). Each hand taps its own key (default C5 / C3,
+  “Change” learns a new one; `J` / `F` on a computer keyboard); other keys are ignored. With both
+  hands, one texture per exercise: unison, LH or RH pulse, interlocking, polyrhythm. Passing needs
+  ≥ 90 % hits *and* ≥ 70 % timing; results show tendency (rushing / dragging), steadiness and, in
+  Pulse, the drift in silent bars. Weak rhythm figures are shared with Flow-mode sight reading.
 - **Progress** — XP that rewards accuracy (steep accuracy curve, reduced XP for repeats, level
   multiplier capped until tiers are mastered), a first-sight bonus, tier mastery at ≥ 90 % pitch
   accuracy on distinct passages, daily streaks, median reaction time, timing accuracy,
@@ -95,7 +110,9 @@ contains the current web code.
 src/
   core/          pure TypeScript domain logic (no DOM) — fully unit tested
     music/       pitch, keys, accidentals, rhythm
-    generator/   difficulty profiles, tiers, rhythm cells, harmony, melody generator
+    generator/   difficulty profiles, tiers, rhythm cells (figures), harmony, melody generator
+    ear/         ear-training tiers and phrase generator
+    rhythm/      rhythm tiers, generator (tasks, textures), analysis (tendency, drift)
     eval/        Wait / Flow scoring engines
     progress/    XP, mastery, streaks, weak spots, extensible stats
     midi/ input/ keyboard/ settings.ts

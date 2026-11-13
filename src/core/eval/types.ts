@@ -17,6 +17,26 @@ export interface NoteResult {
   timingScore?: number;
   /** Index of the step (onset) this note belongs to. */
   step?: number;
+  /** Rhythm figure of the note's event (sight Flow and Rhythm mode). */
+  figure?: string;
+  /** Metric position of the onset: 'downbeat' | 'beat' | 'offbeat' | 'sixteenth'. */
+  beat?: string;
+  /** Rhythm Pulse: the metronome was silent in this note's bar. */
+  muted?: boolean;
+}
+
+/** Rhythm-mode measurements (docs/DIDACTICS.md §4.3). */
+export interface RhythmSummary {
+  task: 'read' | 'echo' | 'pulse';
+  texture: string | null;
+  /** Average signed offset of hits in ms (negative = rushing, positive = dragging). */
+  tendencyMs: number | null;
+  /** Standard deviation of the offsets in ms (lower = steadier). */
+  steadinessMs: number | null;
+  /** Pulse: average offset in silent bars minus the average in clicked bars. */
+  driftMs: number | null;
+  /** Hit rate and timing per hand (hand independence). */
+  hands: Partial<Record<Hand, { notes: number; hitRate: number; timing: number | null }>>;
 }
 
 export interface ExerciseResult {
@@ -46,6 +66,7 @@ export interface ExerciseResult {
   /** Ear training: extra listens after the first, and notes revealed by hints. */
   replays?: number;
   hints?: number;
+  rhythm?: RhythmSummary;
 }
 
 export interface LiveStats {

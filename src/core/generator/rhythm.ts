@@ -62,6 +62,57 @@ export interface RhythmOptions {
   restProbability: number;
   /** Bias toward long values (accompaniment). */
   preferLong?: boolean;
+  /** Weak-spot practice: figure keys (see figureKey) to feature more often. */
+  focusFigures?: ReadonlySet<string>;
+  /**
+   * Explicit figure curriculum (Rhythm mode): weight multiplier per figure and start beat.
+   * 0 excludes the figure. When set, `complexity` and the level ramp are ignored.
+   */
+  figureWeight?: (figure: string, beat: number) => number;
+}
+
+/**
+ * A rhythm figure is one cell of the library, identified by its tick pattern ("6,2" = dotted
+ * quarter + eighth). Figures are the shared rhythm vocabulary of sight reading and Rhythm mode,
+ * and the unit of rhythm weak-spot statistics.
+ */
+export function figureKey(cell: RhythmCell): string {
+  return cell.join(',');
+}
+
+const FIGURE_NAMES: Record<string, string> = {
+  '4': 'Quarter note',
+  '8': 'Half note',
+  '12': 'Dotted half',
+  '16': 'Whole note',
+  '6': 'Dotted quarter (6/8 beat)',
+  '2,2': 'Eighth pair',
+  '2,2,2,2': 'Four eighths',
+  '6,2': 'Dotted quarter + eighth',
+  '-2,2': 'Off-beat eighth',
+  '2,-2': 'Eighth + rest',
+  '4,2,2': 'Quarter + two eighths',
+  '2,2,4': 'Two eighths + quarter',
+  '1,1,1,1': 'Four sixteenths',
+  '2,1,1': 'Eighth + two sixteenths',
+  '1,1,2': 'Two sixteenths + eighth',
+  '3,1': 'Dotted eighth + sixteenth',
+  '2,4,2': 'Syncopation (eighth–quarter–eighth)',
+  '1,2,1': 'Sixteenth syncopation',
+  '4,2': 'Quarter + eighth (6/8)',
+  '2,2,2': 'Three eighths (6/8)',
+  '2,4': 'Eighth + quarter (6/8)',
+  '-2,2,2': 'Rest + two eighths (6/8)',
+  '3,1,2': 'Dotted eighth group (6/8)',
+  '1,1,2,2': 'Sixteenths + eighths (6/8)',
+  '2,1,1,2': 'Eighth, sixteenths, eighth (6/8)',
+  'poly3:2': 'Polyrhythm 3 against 2',
+  'poly4:3': 'Polyrhythm 4 against 3',
+  interlock: 'Interlocking hands',
+};
+
+export function figureName(key: string): string {
+  return FIGURE_NAMES[key] ?? key;
 }
 
 function cellsFor(ts: TimeSignature): readonly CellDef[] {
@@ -72,8 +123,13 @@ function cellLength(cell: RhythmCell): number {
   return cell.reduce((a, b) => a + Math.abs(b), 0);
 }
 
-function cellWeight(def: CellDef, opts: RhythmOptions): number {
+function cellWeight(def: CellDef, opts: RhythmOptions, beat: number): number {
   let w = def.weight;
+  if (opts.figureWeight) {
+    w *= opts.figureWeight(figureKey(def.ticks), beat);
+    if (opts.focusFigures?.has(figureKey(def.ticks))) w *= 3;
+    return w;
+  }
   if (def.complexity > 0 && def.ticks.some((t) => t < 0)) {
     // Rest-containing cells scale with the profile's rest probability.
     w *= opts.restProbability / 0.08;
@@ -84,6 +140,7 @@ function cellWeight(def: CellDef, opts: RhythmOptions): number {
     const ramp = Math.min(1, Math.max(0.3, 0.3 + (opts.level - intro) / 12));
     w *= ramp;
   }
+  if (opts.focusFigures?.has(figureKey(def.ticks))) w *= 3;
   if (opts.preferLong) {
     const notes = def.ticks.filter((t) => t > 0);
     const avg = notes.length ? notes.reduce((a, b) => a + b, 0) / notes.length : 0;
@@ -96,18 +153,25 @@ function cellWeight(def: CellDef, opts: RhythmOptions): number {
  * Fill [fromTick, toTick) of a bar with rhythm cells.
  * Never produces a rest at tick 0 when `noLeadingRest` is set.
  */
-export function fillRhythm(
+export function fillRhythm(rng: Rng, opts: RhythmOptions, fromTick: number, toTick: number, noLeadingRest: boolean): number[] {
+  return fillRhythmCells(rng, opts, fromTick, toTick, noLeadingRest).flat();
+}
+
+/** Like fillRhythm, but keeps the cells (figures) separate. */
+export function fillRhythmCells(
   rng: Rng,
   opts: RhythmOptions,
   fromTick: number,
   toTick: number,
   noLeadingRest: boolean,
-): number[] {
+): RhythmCell[] {
   const { ts } = opts;
-  const defs = cellsFor(ts).filter(
-    (d) => d.complexity <= opts.complexity && (d.minLevel === undefined || opts.level >= d.minLevel || opts.complexity > 0),
-  );
-  const out: number[] = [];
+  const defs = opts.figureWeight
+    ? cellsFor(ts)
+    : cellsFor(ts).filter(
+        (d) => d.complexity <= opts.complexity && (d.minLevel === undefined || opts.level >= d.minLevel || opts.complexity > 0),
+      );
+  const out: RhythmCell[] = [];
   let pos = fromTick;
   while (pos < toTick) {
     const beat = Math.round(pos / ts.beatTicks);
@@ -120,7 +184,7 @@ export function fillRhythm(
       if (len === 16 && ts.ticksPerBar !== 16) return false;
       if (len === 12 && ts.beatTicks === 4 && ts.ticksPerBar < 12) return false;
       if (noLeadingRest && pos === 0 && out.length === 0 && d.ticks[0] < 0) return false;
-      return true;
+      return cellWeight(d, opts, beat) > 0;
     });
     let chosen: RhythmCell;
     if (candidates.length === 0) {
@@ -128,10 +192,10 @@ export function fillRhythm(
     } else {
       chosen = rng.weighted(
         candidates.map((c) => c.ticks),
-        candidates.map((c) => cellWeight(c, opts)),
+        candidates.map((c) => cellWeight(c, opts, beat)),
       );
     }
-    out.push(...chosen);
+    out.push(chosen);
     pos += cellLength(chosen);
   }
   return out;
@@ -156,15 +220,15 @@ export function cadenceLength(rng: Rng, ts: TimeSignature, final: boolean, level
  * Rhythm for one bar. `cadence` makes the bar end with a long note
  * ('final' for the end of the piece, 'phrase' for internal phrase endings).
  */
-export function barRhythm(
-  rng: Rng,
-  opts: RhythmOptions,
-  cadence: 'none' | 'phrase' | 'final',
-  isFirstBar: boolean,
-): number[] {
+export function barRhythm(rng: Rng, opts: RhythmOptions, cadence: 'none' | 'phrase' | 'final', isFirstBar: boolean): number[] {
+  return barRhythmCells(rng, opts, cadence, isFirstBar).flat();
+}
+
+/** Like barRhythm, but returns the figures (cells) the bar is made of. */
+export function barRhythmCells(rng: Rng, opts: RhythmOptions, cadence: 'none' | 'phrase' | 'final', isFirstBar: boolean): RhythmCell[] {
   const { ts } = opts;
-  if (cadence === 'none') return fillRhythm(rng, opts, 0, ts.ticksPerBar, isFirstBar);
+  if (cadence === 'none') return fillRhythmCells(rng, opts, 0, ts.ticksPerBar, isFirstBar);
   const last = cadenceLength(rng, ts, cadence === 'final', opts.level);
-  const head = fillRhythm(rng, { ...opts, restProbability: 0 }, 0, ts.ticksPerBar - last, isFirstBar);
-  return [...head, last];
+  const head = fillRhythmCells(rng, { ...opts, restProbability: 0 }, 0, ts.ticksPerBar - last, isFirstBar);
+  return [...head, [last]];
 }

@@ -163,10 +163,34 @@
   font-weight: 600;
 }
 
-/* Ear training: notes stay hidden until found. */
+/* Ear training: notes stay hidden until found. Rhythm Echo: bars stay hidden until answered. */
 .score-svg .vf-pp-note.is-hidden,
-.score-svg .pp-label.is-hidden {
+.score-svg .pp-label.is-hidden,
+.score-svg .vf-pp-measure.is-hidden {
   opacity: 0;
+}
+
+.score-svg .vf-pp-measure {
+  transition: opacity 0.25s;
+}
+
+/* Rhythm Echo: the bars the app played. */
+.score-svg .vf-pp-note.is-call,
+.score-svg .vf-pp-note.is-call [fill]:not([fill='none']) {
+  fill: var(--ink-3);
+}
+
+.score-svg .vf-pp-note.is-call [stroke]:not([stroke='none']) {
+  stroke: var(--ink-3);
+}
+
+.score-svg .pp-hand-label {
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  fill: var(--ink-3);
+  stroke: none;
 }
 
 .score-svg .pp-placeholder {

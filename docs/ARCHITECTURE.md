@@ -137,6 +137,34 @@ gets plain objects back.
   stats instead of reading stats, ear tiers have their own mastery and XP ceiling, and each
   replay scales XP by 1 / (1 + 0.2 × replays).
 
+## Rhythm
+
+- `core/generator/rhythm.ts` is the shared **figure library**: every cell (e.g. `6,2` = dotted
+  quarter + eighth) has a key (`figureKey`) and a name. `barRhythmCells` keeps the figures, so
+  generated `NoteEvent`s carry `figure` — in sight reading and in Rhythm mode alike. Options can
+  feature weak figures (`focusFigures`) or replace the complexity ramp with an explicit
+  curriculum (`figureWeight`).
+- `core/rhythm/tiers.ts`, `core/rhythm/generator.ts` — `rhythmProfile(level)` (figure intro
+  levels, meter pool, tempo, Echo length, Pulse pattern, texture pool) and
+  `generateRhythmExercise` → `RhythmExercise` (= `Exercise` + `rhythm: {task, texture, keys,
+  callBars, mutedBars}`). Pitches are the designated keys, so steps, scoring and rendering work
+  unchanged. Textures: unison, LH/RH pulse, interlocking (one rhythm distributed between the
+  hands, rests re-spelled by `restSlots`), polyrhythms (forced 3/4).
+- `core/rhythm/analysis.ts` annotates judged notes with figure, beat position and silent-bar
+  flag, and computes tendency (mean offset), steadiness (SD), Pulse drift and per-hand rates.
+- `ui/practice/RhythmController.ts` implements `Session` on top of `FlowEngine`
+  (`judgeReleases: false`): only designated keys reach the engine (others just flash); Echo
+  plays the call bars with `playSequence`, judges only response steps, ignores tapping along and
+  reveals bars via `visibleBars`; Pulse mutes metronome beats (`MetronomePlan.muted`) and hides
+  the playhead, beat dots and key guide in silent bars.
+- Rendering: `renderScore` draws rhythm exercises on one-line percussion staves (lines hidden
+  with `setConfigForLines`, all notes on `b/4`, stems up) and wraps each measure in a
+  `data-measure` group for Echo's reveal.
+- Progress: `isPass` adds the timing rule for rhythm (≥ 70 %); stats `rhythmFigure`,
+  `beatPosition`, `rhythmHand`, `rhythmTexture` keep signed offsets (`offsetSum`,
+  `offsetSqSum`) for tendency / steadiness; `findWeakFigures` drives weak-spot practice in both
+  lessons. Sight reading records figures in Flow mode only (Wait mode has no timing).
+
 ## Extending with new lesson types
 
 A lesson type needs (1) an entry in `core/lessons.ts` with its tier list, (2) a generator producing

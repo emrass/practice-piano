@@ -10,8 +10,18 @@ import { clampQwertyBase, OCTAVE_DOWN_CODE, OCTAVE_UP_CODE, qwertyBaseFor, qwert
 import { fitKeyboardRange, KEYBOARD_RANGES } from '../core/keyboard/range';
 import { prefersFlats } from '../core/music/keys';
 import { midiLabel } from '../core/music/pitch';
-import { applyResult, type Award, dayKey, displayStreak, findWeakIntervals, findWeakSpots, type ProgressState } from '../core/progress/progress';
-import { earSettingsFrom, type Settings } from '../core/settings';
+import {
+  applyResult,
+  type Award,
+  dayKey,
+  displayStreak,
+  findWeakFigures,
+  findWeakIntervals,
+  findWeakSpots,
+  type ProgressState,
+} from '../core/progress/progress';
+import { generateRhythmExercise, type RhythmExercise } from '../core/rhythm/generator';
+import { earSettingsFrom, rhythmSettingsFrom, type Settings } from '../core/settings';
 import { useStore } from '../lib/store';
 import { inputBus } from '../input/inputBus';
 import { audioEngine } from '../platform/audio/audioEngine';
@@ -30,6 +40,8 @@ import { ResultsCard } from './components/ResultsCard';
 import { ScoreView } from './components/ScoreView';
 import { EarController } from './practice/EarController';
 import { PracticeController } from './practice/PracticeController';
+import { RhythmController } from './practice/RhythmController';
+import { RhythmPanel } from './components/RhythmPanel';
 import type { Session } from './practice/session';
 import { type Profile, useProfile } from './state/useProfile';
 
@@ -43,6 +55,10 @@ function weakFocus(progress: ProgressState): FocusNote[] {
 
 function weakIntervalFocus(progress: ProgressState): number[] {
   return findWeakIntervals(progress).map((w) => w.semitones);
+}
+
+function weakFigureFocus(progress: ProgressState): string[] {
+  return findWeakFigures(progress).map((w) => w.key);
 }
 
 function isTypingTarget(t: EventTarget | null): boolean {
@@ -69,6 +85,7 @@ function Studio({ profile }: { profile: Profile }) {
   const [seed, setSeed] = useState(randomSeed);
   const [focus, setFocus] = useState<FocusNote[]>(() => (s.weakSpotFocus ? weakFocus(progress) : []));
   const [focusIntervals, setFocusIntervals] = useState<number[]>(() => (s.weakSpotFocus ? weakIntervalFocus(progress) : []));
+  const [focusFigures, setFocusFigures] = useState<string[]>(() => (s.weakSpotFocus ? weakFigureFocus(progress) : []));
   const lesson: LessonId = s.lesson;
   const [retryToken, setRetryToken] = useState(0);
   const [tab, setTab] = useState<Tab>('exercise');
@@ -98,10 +115,35 @@ function Studio({ profile }: { profile: Profile }) {
           bpm: s.bpm,
           keyboardSize: s.keyboardSize,
           focus: s.weakSpotFocus ? focus : undefined,
+          // Rhythm figures are only measured in Flow mode, so only featured there.
+          focusFigures: s.weakSpotFocus && s.mode === 'flow' ? focusFigures : undefined,
         },
         seed,
       ),
-    [lesson, s.level, s.hands, s.bars, s.keyId, s.timeSignature, s.rhythmComplexity, s.maxPolyphony, s.bpm, s.keyboardSize, s.weakSpotFocus, focus, seed],
+    // prettier-ignore
+    [lesson, s.level, s.hands, s.bars, s.keyId, s.timeSignature, s.rhythmComplexity, s.maxPolyphony, s.bpm, s.keyboardSize, s.weakSpotFocus, s.mode, focus, focusFigures, seed],
+  );
+  const rhythmExercise: RhythmExercise | null = useMemo(
+    () =>
+      lesson !== 'rhythm'
+        ? null
+        : generateRhythmExercise({ ...rhythmSettingsFrom(s), focusFigures: s.weakSpotFocus ? focusFigures : undefined }, seed),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      lesson,
+      s.rhythmLevel,
+      s.rhythmTask,
+      s.rhythmHands,
+      s.rhythmTexture,
+      s.rhythmBars,
+      s.rhythmTimeSignature,
+      s.rhythmBpm,
+      s.rhythmRhKey,
+      s.rhythmLhKey,
+      s.weakSpotFocus,
+      focusFigures,
+      seed,
+    ],
   );
   const earExercise: EarExercise | null = useMemo(
     () =>
@@ -111,7 +153,7 @@ function Studio({ profile }: { profile: Profile }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [lesson, s.earLevel, s.earLength, s.earReference, s.earKeyId, s.weakSpotFocus, focusIntervals, seed],
   );
-  const exercise: Exercise = (earExercise ?? sightExercise)!;
+  const exercise: Exercise = (earExercise ?? rhythmExercise ?? sightExercise)!;
   const firstSight = (progress.attempts[exercise.id] ?? 0) === 0;
 
   const update = useCallback(
@@ -119,6 +161,7 @@ function Studio({ profile }: { profile: Profile }) {
       if (patch.weakSpotFocus) {
         setFocus(weakFocus(progressRef.current));
         setFocusIntervals(weakIntervalFocus(progressRef.current));
+        setFocusFigures(weakFigureFocus(progressRef.current));
       }
       updateSettings(patch);
     },
@@ -129,6 +172,7 @@ function Studio({ profile }: { profile: Profile }) {
     if (s.weakSpotFocus) {
       setFocus(weakFocus(progressRef.current));
       setFocusIntervals(weakIntervalFocus(progressRef.current));
+      setFocusFigures(weakFigureFocus(progressRef.current));
     }
     setSeed(randomSeed());
   }, [s.weakSpotFocus]);
@@ -152,7 +196,20 @@ function Studio({ profile }: { profile: Profile }) {
             inputBus,
             audioEngine,
           )
-        : new PracticeController(
+        : rhythmExercise
+          ? new RhythmController(
+              {
+                exercise: rhythmExercise,
+                latencyMs: s.latencyMs,
+                playheadDelayMs: s.playheadDelayMs,
+                metronomeVolume: s.metronomeVolume,
+                countInBars: s.countInBars,
+                synthVolume: s.synthVolume,
+              },
+              inputBus,
+              audioEngine,
+            )
+          : new PracticeController(
         {
           exercise,
           mode: s.mode,
@@ -217,14 +274,15 @@ function Studio({ profile }: { profile: Profile }) {
           return hideResults();
         case 'easier':
         case 'harder': {
-          const current = lesson === 'ear' ? s.earLevel : s.level;
+          const key = lesson === 'ear' ? 'earLevel' : lesson === 'rhythm' ? 'rhythmLevel' : 'level';
+          const current = s[key];
           const level = Math.min(100, Math.max(1, current + (action === 'harder' ? 1 : -1)));
-          if (level !== current) update(lesson === 'ear' ? { earLevel: level } : { level });
+          if (level !== current) update({ [key]: level });
           return nextExercise();
         }
       }
     },
-    [retry, nextExercise, hideResults, s.level, s.earLevel, lesson, update],
+    [retry, nextExercise, hideResults, s, lesson, update],
   );
 
   useEffect(
@@ -266,6 +324,21 @@ function Studio({ profile }: { profile: Profile }) {
   // ---- Computer keyboard ---------------------------------------------------------
   const [qwertyShift, setQwertyShift] = useState<{ exerciseId: string; base: number } | null>(null);
   const qwertyBase = qwertyShift?.exerciseId === exercise.id ? qwertyShift.base : qwertyBaseFor(exercise.range.min, exercise.range.max);
+  // Rhythm mode: J taps the right-hand key, F the left (either one when only one hand plays).
+  const rhythmQwerty = useMemo(() => {
+    if (!rhythmExercise) return null;
+    const { rhKey, lhKey } = rhythmExercise.rhythm;
+    const usesLh = rhythmExercise.measures.some((m) => m.lh.length);
+    const usesRh = rhythmExercise.measures.some((m) => m.rh.length);
+    const map = new Map<string, number>();
+    map.set('KeyJ', usesRh ? rhKey : lhKey);
+    map.set('KeyF', usesLh ? lhKey : rhKey);
+    return map;
+  }, [rhythmExercise]);
+  const keyToMidi = useCallback(
+    (code: string) => (rhythmQwerty ? (rhythmQwerty.get(code) ?? null) : qwertyToMidi(code, qwertyBase)),
+    [rhythmQwerty, qwertyBase],
+  );
 
   useEffect(() => {
     const down = new Set<string>();
@@ -299,12 +372,12 @@ function Studio({ profile }: { profile: Profile }) {
         inputBus.publish({ kind: 'sustain', down: true, time: performance.now(), source: 'qwerty' });
         return;
       }
-      if (e.code === OCTAVE_DOWN_CODE || e.code === OCTAVE_UP_CODE) {
+      if ((e.code === OCTAVE_DOWN_CODE || e.code === OCTAVE_UP_CODE) && !rhythmQwerty) {
         const delta = e.code === OCTAVE_DOWN_CODE ? -12 : 12;
         setQwertyShift({ exerciseId: exercise.id, base: clampQwertyBase(qwertyBase + delta) });
         return;
       }
-      const midi = qwertyToMidi(e.code, qwertyBase);
+      const midi = keyToMidi(e.code);
       if (midi === null || down.has(e.code)) return;
       down.add(e.code);
       inputBus.publish({ kind: 'noteOn', midi, velocity: 80, time: performance.now(), source: 'qwerty' });
@@ -318,7 +391,7 @@ function Studio({ profile }: { profile: Profile }) {
       }
       if (!down.has(e.code)) return;
       down.delete(e.code);
-      const midi = qwertyToMidi(e.code, qwertyBase);
+      const midi = keyToMidi(e.code);
       if (midi !== null) inputBus.publish({ kind: 'noteOff', midi, time: performance.now(), source: 'qwerty' });
     };
     const onBlur = () => {
@@ -335,7 +408,7 @@ function Studio({ profile }: { profile: Profile }) {
       window.removeEventListener('blur', onBlur);
       onBlur();
     };
-  }, [controller, startStop, nextExercise, retry, hint, qwertyBase, exercise.id, calibrating, hideResults]);
+  }, [controller, startStop, nextExercise, retry, hint, qwertyBase, keyToMidi, rhythmQwerty, exercise.id, calibrating, hideResults]);
 
   // ---- Theme ------------------------------------------------------------------------
   useEffect(() => {
@@ -349,7 +422,9 @@ function Studio({ profile }: { profile: Profile }) {
       ? KEYBOARD_RANGES[s.keyboardSize]
       : lesson === 'ear'
         ? fitKeyboardRange(48, 84, s.keyboardSize)
-        : fitKeyboardRange(exercise.range.min, exercise.range.max, s.keyboardSize);
+        : lesson === 'rhythm'
+          ? fitKeyboardRange(Math.min(s.rhythmLhKey, s.rhythmRhKey), Math.max(s.rhythmLhKey, s.rhythmRhKey), s.keyboardSize)
+          : fitKeyboardRange(exercise.range.min, exercise.range.max, s.keyboardSize);
   const streak = displayStreak(progress.streak, dayKey(new Date()));
   const weakLabel = focus.length ? focus.slice(0, 4).map((f) => midiLabel(f.midi)).join(', ') : findWeakSpots(progress).notes.length ? 'your weakest notes' : null;
   const connectedInputs = midiState.inputs.filter((i) => i.connected);
@@ -390,6 +465,15 @@ function Studio({ profile }: { profile: Profile }) {
             weakIntervals={focusIntervals.length ? focusIntervals : weakIntervalFocus(progress)}
           />
         ) : null}
+        {tab === 'exercise' && lesson === 'rhythm' ? (
+          <RhythmPanel
+            settings={s}
+            progress={progress}
+            update={update}
+            onNew={nextExercise}
+            weakFigures={findWeakFigures(progress)}
+          />
+        ) : null}
         {tab === 'input' ? <InputAudioPanel settings={s} update={update} midi={midiService} qwertyBase={qwertyBase} onCalibrate={openCalibration} /> : null}
         {tab === 'progress' ? (
           <ProgressPanel
@@ -400,6 +484,7 @@ function Studio({ profile }: { profile: Profile }) {
             onPracticeWeakSpots={() => {
               setFocus(weakFocus(progressRef.current));
               setFocusIntervals(weakIntervalFocus(progressRef.current));
+              setFocusFigures(weakFigureFocus(progressRef.current));
               updateSettings({ weakSpotFocus: true });
               setSeed(randomSeed());
               setTab('exercise');
@@ -524,7 +609,15 @@ function Studio({ profile }: { profile: Profile }) {
             max={kbRange.max}
             settings={s}
             preferFlats={prefersFlats(exercise.key)}
-            qwertyBase={s.showQwertyHints ? qwertyBase : null}
+            qwertyBase={s.showQwertyHints && !rhythmExercise ? qwertyBase : null}
+            markers={
+              rhythmExercise
+                ? new Map<number, string>([
+                    ...(rhythmExercise.measures.some((m) => m.lh.length) ? [[rhythmExercise.rhythm.lhKey, 'LH · F'] as const] : []),
+                    ...(rhythmExercise.measures.some((m) => m.rh.length) ? [[rhythmExercise.rhythm.rhKey, 'RH · J'] as const] : []),
+                  ])
+                : undefined
+            }
           />
         </main>
       </div>
@@ -580,6 +673,8 @@ function KeyboardDock(props: {
   settings: Settings;
   preferFlats: boolean;
   qwertyBase: number | null;
+  /** Rhythm mode: the designated keys. */
+  markers?: Map<number, string>;
 }) {
   const held = useStore(inputBus.held);
   const state = useStore(props.controller.state);
@@ -604,6 +699,7 @@ function KeyboardDock(props: {
         preferFlats={props.preferFlats}
         qwertyBase={props.qwertyBase}
         actions={actions}
+        markers={state.status === 'finished' ? undefined : props.markers}
       />
     </div>
   );

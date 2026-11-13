@@ -41,18 +41,27 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 /** Middle staff line as a diatonic step: B4 (treble), D3 (bass). */
 const MIDDLE_LINE_STEP: Record<Clef, number> = { treble: 34, bass: 22 };
 const REST_KEY: Record<Clef, string> = { treble: 'b/4', bass: 'd/3' };
+/** Rhythm exercises are written on one-line percussion staves, every note on the line. */
+const PERCUSSION_KEY = 'b/4';
+const PERCUSSION_LINES = [false, false, true, false, false].map((visible) => ({ visible }));
+
+export function isPercussion(ex: Exercise): boolean {
+  return 'rhythm' in ex;
+}
 const WHOLE_REST_KEY: Record<Clef, string> = { treble: 'd/5', bass: 'f/3' };
 
 let headerCache: { key: string; width: number } | null = null;
 
 /** Width of clef + key signature + time signature, the widest a system header gets. */
 export function measureHeaderWidth(ex: Exercise): number {
-  const cacheKey = `${ex.staves.join()}|${ex.key.vexKey}|${ex.timeSignature.id}`;
+  const percussion = isPercussion(ex);
+  const cacheKey = `${ex.staves.join()}|${ex.key.vexKey}|${ex.timeSignature.id}|${percussion}`;
   if (headerCache?.key === cacheKey) return headerCache.width;
   let width = 0;
   for (const clef of ex.staves) {
     const stave = new Stave(0, 0, 500);
-    stave.addClef(clef).addKeySignature(ex.key.vexKey).addTimeSignature(ex.timeSignature.id);
+    if (percussion) stave.addClef('percussion').addTimeSignature(ex.timeSignature.id);
+    else stave.addClef(clef).addKeySignature(ex.key.vexKey).addTimeSignature(ex.timeSignature.id);
     width = Math.max(width, stave.getNoteStartX() - stave.getX());
   }
   headerCache = { key: cacheKey, width: Math.ceil(width + 6) };
@@ -90,17 +99,28 @@ function stemDirectionFor(events: NoteEvent[], clef: Clef): number {
   return avg >= MIDDLE_LINE_STEP[clef] ? Stem.DOWN : Stem.UP;
 }
 
-function createNote(e: NoteEvent, clef: Clef, ticksPerBar: number, stemDir: number | null, acc: MeasureAccidentals): StaveNote {
+function createNote(
+  e: NoteEvent,
+  clef: Clef,
+  ticksPerBar: number,
+  stemDir: number | null,
+  acc: MeasureAccidentals,
+  percussion = false,
+): StaveNote {
   const isRest = e.pitches.length === 0;
   const wholeBarRest = isRest && e.durationTicks === ticksPerBar;
   const duration = wholeBarRest ? 'w' : durationCode(e.durationTicks);
+  let keys: string[];
+  if (percussion) keys = [PERCUSSION_KEY];
+  else if (isRest) keys = [wholeBarRest ? WHOLE_REST_KEY[clef] : REST_KEY[clef]];
+  else keys = e.pitches.map((p) => vexKey(p));
   const note = new StaveNote({
-    keys: isRest ? [wholeBarRest ? WHOLE_REST_KEY[clef] : REST_KEY[clef]] : e.pitches.map((p) => vexKey(p)),
+    keys,
     duration: isRest ? `${duration}r` : duration,
-    clef,
-    ...(stemDir === null ? { auto_stem: true } : { stem_direction: stemDir }),
+    clef: percussion ? 'treble' : clef,
+    ...(percussion ? { stem_direction: Stem.UP } : stemDir === null ? { auto_stem: true } : { stem_direction: stemDir }),
   });
-  if (!isRest) {
+  if (!isRest && !percussion) {
     e.pitches.forEach((p, i) => {
       const code = acc.accidentalFor(p);
       if (code) note.addModifier(new Accidental(code), i);
@@ -128,6 +148,8 @@ function addText(svg: SVGSVGElement, parent: SVGElement, x: number, y: number, t
  */
 export function renderScore(container: HTMLDivElement, ex: Exercise, opts: RenderOptions): RenderedScore {
   container.replaceChildren();
+  const percussion = isPercussion(ex);
+  const showNames = opts.showNoteNames && !percussion;
   const headerWidth = measureHeaderWidth(ex);
   const scale = opts.height > 0 ? chooseScale(ex, opts.width, opts.height, headerWidth) : 1;
   const layout = computeLayout(ex, Math.floor(opts.width / scale), headerWidth);
@@ -145,7 +167,12 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
     svg.dataset.scale = String(scale);
     svg.dataset.measuresPerSystem = String(layout.measuresPerSystem);
     svg.setAttribute('role', 'img');
-    svg.setAttribute('aria-label', `Sight-reading exercise in ${ex.key.label}, ${ex.timeSignature.id}, ${ex.bars} bars`);
+    svg.setAttribute(
+      'aria-label',
+      percussion
+        ? `Rhythm exercise, ${ex.timeSignature.id}, ${ex.bars} bars`
+        : `Sight-reading exercise in ${ex.key.label}, ${ex.timeSignature.id}, ${ex.bars} bars`,
+    );
   }
   const stepByTick = new Map(ex.steps.map((s) => [s.tick, s.index]));
   const stepElements = new Map<number, SVGGElement[]>();
@@ -161,7 +188,8 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
     for (const clef of ex.staves) {
       const y = system.staveY[clef]!;
       const header = new Stave(system.headerX, y, headerWidth);
-      header.addClef(clef).addKeySignature(ex.key.vexKey);
+      if (percussion) header.addClef('percussion').setConfigForLines(PERCUSSION_LINES);
+      else header.addClef(clef).addKeySignature(ex.key.vexKey);
       if (system.index === 0) header.addTimeSignature(ex.timeSignature.id);
       header.setEndBarType(Barline.type.NONE);
       if (ex.staves.length === 1) header.setBegBarType(Barline.type.NONE);
@@ -172,6 +200,7 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
         const index = system.firstMeasure + m;
         const { x } = measureX(layout, index);
         const stave = new Stave(x, y, layout.measureWidth);
+        if (percussion) stave.setConfigForLines(PERCUSSION_LINES);
         if (m === 0) stave.setBegBarType(Barline.type.NONE);
         if (index === lastMeasure) stave.setEndBarType(Barline.type.END);
         stave.setContext(ctx).draw();
@@ -190,6 +219,12 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
         new StaveConnector(t, b).setType(last ? 'boldDoubleRight' : 'singleRight').setContext(ctx).draw();
       });
     }
+    if (percussion && labelLayer && svg && ex.staves.length > 1) {
+      for (const clef of ex.staves) {
+        const y = headers[clef]!.getYForLine(2);
+        addText(svg, labelLayer, system.headerX + 13, y - 19, clef === 'treble' ? 'RH' : 'LH', 'pp-hand-label');
+      }
+    }
     if (labelLayer && system.index > 0 && svg) {
       const firstY = system.staveY[ex.staves[0]]!;
       addText(svg, labelLayer, system.measuresX + 6, firstY + 30, String(system.firstMeasure + 1), 'pp-bar-number');
@@ -205,6 +240,8 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
         const measure = ex.measures[system.firstMeasure + m];
         const events = measure[hand];
         if (!events.length) return;
+        const measureGroup = ctx.openGroup('pp-measure', `pp-m-${hand}-${measure.index}`) as SVGGElement | undefined;
+        measureGroup?.setAttribute('data-measure', String(measure.index));
         const groups = beamGroups(events, ex.timeSignature.beatTicks);
         const stemFor = new Map<NoteEvent, number>();
         for (const g of groups) {
@@ -214,7 +251,7 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
         const acc = new MeasureAccidentals(ex.key.fifths);
         const notes = new Map<NoteEvent, StaveNote>();
         for (const e of events) {
-          const note = createNote(e, clef, tpb, stemFor.get(e) ?? null, acc);
+          const note = createNote(e, clef, tpb, stemFor.get(e) ?? null, acc, percussion);
           note.setStave(stave);
           const tc = new TickContext();
           tc.addTickable(note);
@@ -248,10 +285,11 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
           labelled.push({ note, event: e });
         }
         beams.forEach((b) => b.setContext(ctx).draw());
+        ctx.closeGroup();
       });
 
       // Note-name labels share one baseline per staff line, below stems, beams and ledger notes.
-      if (opts.showNoteNames && svg && labelLayer && labelled.length) {
+      if (showNames && svg && labelLayer && labelled.length) {
         let lowest = staveBottom + 8;
         for (const { note } of labelled) {
           lowest = Math.max(lowest, ...note.getYs().map((y) => y + 6));

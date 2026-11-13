@@ -8,8 +8,9 @@ import { createStore, Emitter, type Store } from '../../lib/store';
 import type { InputBus } from '../../input/inputBus';
 import { type AudioEngine, Metronome } from '../../platform/audio/audioEngine';
 import type { Session } from './session';
+import { annotateRhythm } from '../../core/rhythm/analysis';
 
-export type StepMark = 'good' | 'ok' | 'bad' | 'missed';
+export type StepMark = 'good' | 'ok' | 'bad' | 'missed' | 'call';
 export type PracticeStatus = 'ready' | 'countin' | 'running' | 'finished';
 
 export interface PracticeState {
@@ -27,6 +28,10 @@ export interface PracticeState {
   result: ExerciseResult | null;
   /** Ear training: steps with index < visibleSteps are shown; undefined = all shown. */
   visibleSteps?: number;
+  /** Rhythm Echo: bars with index < visibleBars are shown; undefined = all shown. */
+  visibleBars?: number;
+  /** Rhythm mode: what the current bar is (Echo call / response, Pulse click / silent). */
+  rhythm?: { phase: 'call' | 'response' | 'click' | 'silent' | null };
   ear?: { playing: boolean; listened: boolean; replays: number; hints: number };
 }
 
@@ -236,7 +241,7 @@ export class PracticeController implements Session {
   }
 
   private finish(raw: ExerciseResult) {
-    const result: ExerciseResult = { ...raw, lesson: 'sight' };
+    const result: ExerciseResult = { ...raw, lesson: 'sight', notes: annotateRhythm(this.opts.exercise, raw.notes) };
     this.stopLoop();
     this.metronome.stop();
     this.state.set({ ...this.state.get(), status: 'finished', result, expected: [], beat: null, countIn: null });

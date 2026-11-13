@@ -17,6 +17,8 @@ export interface PianoKeyboardProps {
   heat?: Map<number, { attempts: number; accuracy: number }>;
   /** Piano-shortcut labels by pitch class (shown after an exercise). */
   actions?: Map<number, string>;
+  /** Labels for specific keys (Rhythm mode's designated keys). */
+  markers?: Map<number, string>;
 }
 
 interface KeyGeom {
@@ -98,6 +100,7 @@ export const PianoKeyboard = memo(function PianoKeyboard(props: PianoKeyboardPro
         const qwerty = props.qwertyBase !== null ? midiToQwertyLabel(k.midi, props.qwertyBase) : null;
         const heat = props.heat?.get(k.midi);
         const action = props.actions?.get(k.midi % 12);
+        const marker = props.markers?.get(k.midi);
         const cls = [
           'key',
           k.black ? 'key-black' : 'key-white',
@@ -107,6 +110,7 @@ export const PianoKeyboard = memo(function PianoKeyboard(props: PianoKeyboardPro
           isWrong ? 'is-wrong' : '',
           isHeld && isExpected ? 'is-correct' : '',
           action ? 'is-action' : '',
+          marker ? 'is-marked' : '',
         ]
           .filter(Boolean)
           .join(' ');
@@ -129,6 +133,12 @@ export const PianoKeyboard = memo(function PianoKeyboard(props: PianoKeyboardPro
           >
             {heat && heat.attempts > 0 ? <span className="key-heat" style={{ background: heatColor(heat.accuracy) }} /> : null}
             {action && k.midi >= labelOctaveC && k.midi < labelOctaveC + 12 ? <span className="key-action">{action}</span> : null}
+            {marker ? (
+              <span className="key-marker">
+                {marker.split(' · ')[0]}
+                {marker.includes(' · ') ? <small> · {marker.split(' · ')[1]}</small> : null}
+              </span>
+            ) : null}
             {qwerty ? <span className="key-qwerty">{qwerty}</span> : null}
             {!k.black && (props.showLabels || isC) ? (
               <span className={`key-label ${isC ? 'is-c' : ''}`}>{props.showLabels ? pitchLabel(spelled, isC) : `C${spelled.octave}`}</span>

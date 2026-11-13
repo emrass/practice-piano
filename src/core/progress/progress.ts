@@ -1,8 +1,9 @@
 import type { Clef } from '../exercise';
-import type { ExerciseResult, PracticeMode } from '../eval/types';
+import type { ExerciseResult, NoteResult, PracticeMode } from '../eval/types';
 import { median } from '../eval/types';
 import { tierForLevel } from '../generator/tiers';
 import { findTier, LESSONS, type LessonId } from '../lessons';
+import { RHYTHM_TIMING_PASS } from '../rhythm/analysis';
 
 export const PROGRESS_SCHEMA_VERSION = 1;
 export const MASTERY_ACCURACY = 0.9;
@@ -23,14 +24,21 @@ export interface Aggregate {
   reactions: number[];
   timingSum: number;
   timingCount: number;
+  /** Signed timing offsets (ms) of hits — tendency (mean) and steadiness (spread). */
+  offsetSum?: number;
+  offsetSqSum?: number;
+  offsetCount?: number;
 }
 
 /**
  * Sight reading records 'note' (key = "treble:60") and 'clef' (key = "treble").
  * Ear training records 'interval' (melodic, key = semitones "0"–"12") and 'harmony'
  * (key = "h4" for a dyad of 4 semitones, "triad", "seventh").
+ * Rhythm (and sight reading in Flow mode) records 'rhythmFigure' (key = figure, e.g. "6,2"),
+ * 'beatPosition' (downbeat / beat / offbeat / sixteenth); Rhythm also 'rhythmHand' and
+ * 'rhythmTexture'.
  */
-export type StatDimension = 'note' | 'clef' | 'interval' | 'harmony';
+export type StatDimension = 'note' | 'clef' | 'interval' | 'harmony' | 'rhythmFigure' | 'beatPosition' | 'rhythmHand' | 'rhythmTexture';
 
 export interface TierProgress {
   attempts: number;
@@ -161,6 +169,13 @@ function accuracyFactor(acc: number): number {
   return x * x;
 }
 
+/** Pass = mastery accuracy; Rhythm additionally needs the timing. */
+export function isPass(result: ExerciseResult): boolean {
+  if (result.pitchAccuracy < MASTERY_ACCURACY) return false;
+  if (result.lesson === 'rhythm') return (result.timingAccuracy ?? 0) >= RHYTHM_TIMING_PASS;
+  return true;
+}
+
 export function computeAward(progress: ProgressState, result: ExerciseResult): Award {
   const lesson: LessonId = result.lesson ?? 'sight';
   const tier = findTier(result.tierId) ?? LESSONS[lesson].tierForLevel(result.level) ?? tierForLevel(result.level);
@@ -173,7 +188,7 @@ export function computeAward(progress: ProgressState, result: ExerciseResult): A
   const modeMult =
     result.mode === 'flow' ? 0.6 + 0.6 * (result.timingAccuracy ?? 0) : result.mode === 'ear' ? 1 / (1 + 0.2 * (result.replays ?? 0)) : 1;
   const baseXp = Math.round(result.totalNotes * levelMult * accuracyFactor(result.pitchAccuracy) * modeMult);
-  const passed = result.pitchAccuracy >= MASTERY_ACCURACY;
+  const passed = isPass(result);
   const firstSightBonus = firstAttempt && passed ? Math.round(baseXp * 0.5) + 5 : 0;
   const xp = Math.round(baseXp * (firstAttempt ? 1 : 0.4)) + firstSightBonus;
   const already = tierState?.passedExercises.includes(result.exerciseId) ?? false;
@@ -209,11 +224,17 @@ function addObservation(
   correct: boolean,
   reactionMs?: number,
   timingScore?: number,
+  offsetMs?: number,
 ): void {
   const dim = (stats[dimension] ??= {});
   const agg = (dim[key] ??= emptyAggregate());
   agg.attempts++;
   if (correct) agg.correct++;
+  if (offsetMs !== undefined && correct) {
+    agg.offsetSum = (agg.offsetSum ?? 0) + offsetMs;
+    agg.offsetSqSum = (agg.offsetSqSum ?? 0) + offsetMs * offsetMs;
+    agg.offsetCount = (agg.offsetCount ?? 0) + 1;
+  }
   if (reactionMs !== undefined) {
     agg.reactions.push(Math.round(reactionMs));
     if (agg.reactions.length > MAX_REACTION_SAMPLES) agg.reactions.splice(0, agg.reactions.length - MAX_REACTION_SAMPLES);
@@ -259,12 +280,21 @@ export function applyResult(progress: ProgressState, result: ExerciseResult, now
     tier.masteredAt = now.getTime();
   }
 
-  if ((result.lesson ?? 'sight') === 'ear') {
+  const lesson = result.lesson ?? 'sight';
+  if (lesson === 'ear') {
     recordEarObservations(next.stats, result);
+  } else if (lesson === 'rhythm') {
+    for (const n of result.notes) {
+      recordTimeObservations(next.stats, n);
+      addObservation(next.stats, 'rhythmHand', n.hand, n.correct, undefined, n.timingScore, n.deltaMs);
+      if (result.rhythm?.texture) addObservation(next.stats, 'rhythmTexture', result.rhythm.texture, n.correct, undefined, n.timingScore, n.deltaMs);
+    }
   } else {
     for (const n of result.notes) {
       addObservation(next.stats, 'note', noteStatKey(n.clef, n.midi), n.correct, n.reactionMs, n.timingScore);
       addObservation(next.stats, 'clef', n.clef, n.correct, n.reactionMs, n.timingScore);
+      // Rhythm figures are shared with Rhythm mode, but only Flow mode measures time.
+      if (result.mode === 'flow') recordTimeObservations(next.stats, n);
     }
   }
 
@@ -285,6 +315,11 @@ export function applyResult(progress: ProgressState, result: ExerciseResult, now
   });
   if (next.history.length > MAX_HISTORY) next.history.splice(0, next.history.length - MAX_HISTORY);
   return { progress: next, award };
+}
+
+function recordTimeObservations(stats: ProgressState['stats'], n: NoteResult): void {
+  if (n.figure) addObservation(stats, 'rhythmFigure', n.figure, n.correct, undefined, n.timingScore, n.deltaMs);
+  if (n.beat) addObservation(stats, 'beatPosition', n.beat, n.correct, undefined, n.timingScore, n.deltaMs);
 }
 
 /** Ear training: melodic intervals between single-note steps, and chord shapes. */
@@ -327,6 +362,53 @@ export function findWeakIntervals(progress: ProgressState, minAttempts = 4, limi
     .map(([k, a]) => ({ semitones: Number(k), attempts: a.attempts, accuracy: a.correct / Math.max(1, a.attempts) }))
     .filter((w) => w.attempts >= minAttempts && w.accuracy < 0.8)
     .sort((a, b) => a.accuracy - b.accuracy)
+    .slice(0, limit);
+}
+
+export interface TimeStat {
+  key: string;
+  attempts: number;
+  /** Share of notes hit inside the timing window. */
+  accuracy: number;
+  /** Average timing quality of the hits (0–1), null without hits. */
+  timing: number | null;
+  /** Average signed offset (ms): negative = rushing, positive = dragging. */
+  tendencyMs: number | null;
+  /** Spread of the offsets (ms). */
+  steadinessMs: number | null;
+}
+
+export function timeStat(key: string, a: Aggregate): TimeStat {
+  const n = a.offsetCount ?? 0;
+  const meanOffset = n ? (a.offsetSum ?? 0) / n : null;
+  const variance = n > 1 && meanOffset !== null ? Math.max(0, (a.offsetSqSum ?? 0) / n - meanOffset * meanOffset) : null;
+  return {
+    key,
+    attempts: a.attempts,
+    accuracy: a.correct / Math.max(1, a.attempts),
+    timing: a.timingCount ? a.timingSum / a.timingCount : null,
+    tendencyMs: meanOffset === null ? null : Math.round(meanOffset),
+    steadinessMs: variance === null ? null : Math.round(Math.sqrt(variance)),
+  };
+}
+
+export function timeStats(progress: ProgressState, dimension: StatDimension): TimeStat[] {
+  return Object.entries(progress.stats[dimension] ?? {}).map(([k, a]) => timeStat(k, a));
+}
+
+/** Weakness score for a rhythm statistic: misses weigh most, then loose timing. */
+function rhythmWeakness(t: TimeStat): number {
+  return (1 - t.accuracy) * 2 + (1 - (t.timing ?? 0));
+}
+
+/**
+ * Rhythm figures that are often missed or played loosely — shared by Rhythm mode and sight
+ * reading in Flow mode (both draw from the same figure library).
+ */
+export function findWeakFigures(progress: ProgressState, minAttempts = 6, limit = 4): TimeStat[] {
+  return timeStats(progress, 'rhythmFigure')
+    .filter((t) => t.attempts >= minAttempts && (t.accuracy < 0.85 || (t.timing ?? 0) < 0.65))
+    .sort((a, b) => rhythmWeakness(b) - rhythmWeakness(a))
     .slice(0, limit);
 }
 

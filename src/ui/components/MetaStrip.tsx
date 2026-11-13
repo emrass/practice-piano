@@ -2,6 +2,7 @@ import type { EarExercise } from '../../core/ear/generator';
 import type { Exercise } from '../../core/exercise';
 import { findTier } from '../../core/lessons';
 import { RHYTHM_COMPLEXITY_LABELS } from '../../core/generator/difficulty';
+import { isRhythmExercise, TASK_INFO, TEXTURE_INFO } from '../../core/rhythm/generator';
 
 const HANDS_LABEL = { rh: 'Right hand', lh: 'Left hand', alternating: 'Alternating', both: 'Both hands' } as const;
 
@@ -10,7 +11,17 @@ export function MetaStrip(props: { exercise: Exercise; firstSight: boolean; focu
   const ex = props.exercise;
   const tier = findTier(ex.meta.tierId);
   const ear = (ex as Partial<EarExercise>).ear;
-  const items: [string, string][] = ear
+  const rhythm = isRhythmExercise(ex) ? ex.rhythm : null;
+  const items: [string, string][] = rhythm
+    ? [
+        ['Task', TASK_INFO[rhythm.task].name],
+        ['Time', ex.timeSignature.id],
+        ['Tempo', `${ex.bpm} bpm${ex.timeSignature.id === '6/8' ? ' (♩.)' : ''}`],
+        ['Length', `${ex.bars} bars`],
+        ['Hands', HANDS_LABEL[ex.hands]],
+        ['Texture', rhythm.texture ? TEXTURE_INFO[rhythm.texture].name : '—'],
+      ]
+    : ear
     ? [
         ['Key', ex.key.label],
         ['Phrase', `${ex.steps.length} ${ear.content === 'melody' || ear.content === 'mixed' ? 'notes' : 'chords'}`],

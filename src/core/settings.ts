@@ -6,6 +6,7 @@ import { KEYBOARD_SIZES, type KeyboardSize } from './keyboard/range';
 import type { GeneratorSettings } from './generator/generator';
 import type { EarReference, EarSettings } from './ear/generator';
 import { LESSON_IDS, type LessonId } from './lessons';
+import { RHYTHM_TEXTURES, type RhythmHands, type RhythmSettings, type RhythmTask, type RhythmTexture } from './rhythm/generator';
 
 export const SETTINGS_SCHEMA_VERSION = 1;
 
@@ -23,6 +24,17 @@ export interface Settings {
   earKeyId: string;
   /** Volume of the built-in piano sound (ear training playback), 0–1. */
   synthVolume: number;
+  // Rhythm
+  rhythmLevel: number;
+  rhythmTask: RhythmTask;
+  rhythmHands: RhythmHands;
+  rhythmTexture: 'auto' | RhythmTexture;
+  rhythmBars: 4 | 8;
+  rhythmTimeSignature: 'auto' | TimeSignatureId;
+  rhythmBpm: number | null;
+  /** Designated keys (MIDI) for the right and left hand. */
+  rhythmRhKey: number;
+  rhythmLhKey: number;
   // Sight-reading exercise
   level: number;
   hands: HandsMode;
@@ -92,6 +104,15 @@ export const DEFAULT_SETTINGS: Settings = {
   earReference: 'auto',
   earKeyId: 'auto',
   synthVolume: 0.8,
+  rhythmLevel: 1,
+  rhythmTask: 'read',
+  rhythmHands: 'rh',
+  rhythmTexture: 'auto',
+  rhythmBars: 4,
+  rhythmTimeSignature: 'auto',
+  rhythmBpm: null,
+  rhythmRhKey: 72,
+  rhythmLhKey: 48,
   level: 1,
   hands: 'rh',
   bars: 4,
@@ -146,6 +167,14 @@ export function normalizeSettings(raw: unknown): Settings {
     earReference: oneOf(r.earReference, ['auto', 'first-note', 'key-only'] as const, d.earReference),
     earKeyId: oneOf(r.earKeyId, ['auto', ...KEYS.map((k) => k.id)], d.earKeyId),
     synthVolume: clampNum(r.synthVolume, 0, 1, d.synthVolume),
+    rhythmLevel: Math.round(clampNum(r.rhythmLevel, 1, 100, d.rhythmLevel)),
+    rhythmTask: oneOf(r.rhythmTask, ['read', 'echo', 'pulse'] as const, d.rhythmTask),
+    rhythmHands: oneOf(r.rhythmHands, ['rh', 'lh', 'both'] as const, d.rhythmHands),
+    rhythmTexture: oneOf(r.rhythmTexture, ['auto', ...RHYTHM_TEXTURES] as const, d.rhythmTexture),
+    rhythmBars: oneOf(r.rhythmBars, [4, 8] as const, d.rhythmBars),
+    rhythmTimeSignature: oneOf(r.rhythmTimeSignature, ['auto', ...TIME_SIGNATURE_IDS] as const, d.rhythmTimeSignature),
+    rhythmBpm: r.rhythmBpm === null || r.rhythmBpm === undefined ? null : Math.round(clampNum(r.rhythmBpm, 30, 240, 80)),
+    ...designatedKeys(r.rhythmRhKey, r.rhythmLhKey),
     level: Math.round(clampNum(r.level, 1, 100, d.level)),
     hands: oneOf(r.hands, ['rh', 'lh', 'alternating', 'both'] as const, d.hands),
     bars: oneOf(r.bars, [4, 8, 16] as const, d.bars),
@@ -181,6 +210,15 @@ export function normalizeSettings(raw: unknown): Settings {
   };
 }
 
+/** Designated rhythm keys: valid MIDI notes, and never the same key for both hands. */
+function designatedKeys(rh: unknown, lh: unknown): { rhythmRhKey: number; rhythmLhKey: number } {
+  const d = DEFAULT_SETTINGS;
+  const rhythmRhKey = Math.round(clampNum(rh, 21, 108, d.rhythmRhKey));
+  let rhythmLhKey = Math.round(clampNum(lh, 21, 108, d.rhythmLhKey));
+  if (rhythmLhKey === rhythmRhKey) rhythmLhKey = rhythmRhKey >= 45 ? rhythmRhKey - 24 : rhythmRhKey + 24;
+  return { rhythmRhKey, rhythmLhKey };
+}
+
 function normalizeCalibration(raw: unknown): LatencyCalibration | null {
   if (!raw || typeof raw !== 'object') return null;
   const c = raw as Record<string, unknown>;
@@ -211,4 +249,18 @@ export function generatorSettingsFrom(s: Settings): GeneratorSettings {
 
 export function earSettingsFrom(s: Settings): EarSettings {
   return { level: s.earLevel, length: s.earLength, reference: s.earReference, keyId: s.earKeyId };
+}
+
+export function rhythmSettingsFrom(s: Settings): RhythmSettings {
+  return {
+    level: s.rhythmLevel,
+    task: s.rhythmTask,
+    hands: s.rhythmHands,
+    texture: s.rhythmTexture,
+    bars: s.rhythmBars,
+    timeSignature: s.rhythmTimeSignature,
+    bpm: s.rhythmBpm,
+    rhKey: s.rhythmRhKey,
+    lhKey: s.rhythmLhKey,
+  };
 }

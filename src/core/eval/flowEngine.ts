@@ -9,6 +9,8 @@ export interface FlowOptions {
    */
   latencyMs: number;
   sustainCountsAsHeld: boolean;
+  /** Flag clipped notes (default true). Rhythm mode only judges onsets. */
+  judgeReleases?: boolean;
 }
 
 export type TimingGrade = 'perfect' | 'good' | 'early' | 'late';
@@ -185,7 +187,7 @@ export class FlowEngine {
   }
 
   private judgeRelease(note: FlowNote, releaseTime: number): FlowFeedback[] {
-    if (note.onTime === undefined) return [];
+    if (note.onTime === undefined || this.opts.judgeReleases === false) return [];
     const heldMs = releaseTime - note.onTime;
     const expectedMs = note.durationTicks * this.opts.msPerTick;
     // Only flag clearly clipped notes (less than half their value, and noticeably short).
