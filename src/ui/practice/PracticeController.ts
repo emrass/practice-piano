@@ -86,6 +86,7 @@ export class PracticeController extends SessionBase {
       msPerTick: this.tickMs,
       latencyMs: this.opts.latencyMs,
       sustainCountsAsHeld: this.opts.sustainCountsAsHeld,
+      endTick: ex.totalTicks,
     });
     this.flow.setStartTime(this.clock.startTime);
     this.marks.reset();
