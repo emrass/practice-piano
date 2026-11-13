@@ -90,16 +90,19 @@ export function PracticeBar(props: {
         )}
       </div>
 
-      <div className={`pb-status ${wrongFlash ? 'is-wrong' : ''}`}>
+      <div className={`pb-status ${wrongFlash ? 'is-wrong' : ''} ${flow ? 'is-timed' : ''}`}>
         <div className={`beat-dots ${s.countIn ? 'is-countin' : ''}`} aria-hidden="true">
           {dots.map((cls, i) => (
             <span key={i} className={`beat-dot ${cls} ${i === 0 ? 'is-downbeat' : ''}`} />
           ))}
         </div>
         <span className="pb-message">{wrongFlash ? (s.rhythm ? 'Use your rhythm keys' : 'Not that one — try again') : message}</span>
-        <span className={`grade-chip ${gradeFlash && s.lastGrade ? `is-${s.lastGrade.grade}` : 'is-hidden'}`}>
-          {s.lastGrade ? `${GRADE_TEXT[s.lastGrade.grade]} ${s.lastGrade.grade === 'perfect' ? '' : `${Math.abs(Math.round(s.lastGrade.deltaMs))} ms`}` : ''}
-        </span>
+        {/* Timing grades only come in Flow (and rhythm); elsewhere the chip would just hold space the message needs. */}
+        {flow ? (
+          <span className={`grade-chip ${gradeFlash && s.lastGrade ? `is-${s.lastGrade.grade}` : 'is-hidden'}`}>
+            {s.lastGrade ? `${GRADE_TEXT[s.lastGrade.grade]} ${s.lastGrade.grade === 'perfect' ? '' : `${Math.abs(Math.round(s.lastGrade.deltaMs))} ms`}` : ''}
+          </span>
+        ) : null}
       </div>
 
       <dl className="pb-stats">
