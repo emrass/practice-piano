@@ -33,7 +33,7 @@ declare global {
 }
 
 /** Installs a Web MIDI implementation with one connected input ("Test Piano"). */
-function fakeMidi() {
+export function fakeMidi() {
   const input = { id: 'fake1', name: 'Test Piano', manufacturer: 'Test', state: 'connected', onmidimessage: null as null | ((e: unknown) => void) };
   Object.defineProperty(navigator, 'requestMIDIAccess', {
     configurable: true,

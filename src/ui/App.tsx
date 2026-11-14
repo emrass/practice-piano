@@ -16,6 +16,7 @@ import { KeySound } from '../input/keySound';
 import { audioEngine } from '../platform/audio/audioEngine';
 import { MidiService } from '../platform/midi/midiService';
 import { isNativeApp } from '../platform/native';
+import { requestPersistentStorageOnce } from '../platform/storageProtection';
 import { Segmented } from './components/controls';
 import { InputAudioPanel, InputMonitor } from './components/InputAudioPanel';
 import { KeyboardControls } from './components/KeyboardControls';
@@ -106,6 +107,8 @@ function Studio({ profile }: { profile: Profile }) {
       progressRef.current = next;
       setProgress(next);
       setAward({ exerciseId: result.exerciseId, award: earned });
+      // A pause in practice: the one moment the app asks the browser to keep its data.
+      requestPersistentStorageOnce();
     },
     [setProgress],
   );

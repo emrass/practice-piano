@@ -122,6 +122,20 @@ starts Flow mode from the ready state.
 Lesson logic never touches storage or identity directly — the UI passes plain objects in and
 gets plain objects back.
 
+### Keeping local data (web)
+
+- `platform/storageProtection.ts` asks `navigator.storage.persist()` once per session, after a
+  finished exercise (Firefox shows a permission pop-up; other browsers decide silently, so it is
+  never asked while the page loads). Progress → *Your data* shows whether the browser agreed. In an
+  iPad/iPhone browser tab it explains WebKit's 7-day deletion and how to move to a Home Screen app,
+  which is exempt but has its own, empty storage (Export → Import).
+- `pwa/vitePwa.ts` (website build only — not `vite dev`, not `--mode native`) adds the web app
+  manifest, icons (`pwa/icons/`, rendered from the native app icon by `scripts/pwa-icons.ts`), the
+  iOS home-screen tags and `sw.js` from `pwa/sw.js`. The worker precaches every file of the build
+  under a content hash and serves it cache-first, so the app opens offline after one visit. A new
+  deploy installs in the background and is used from the next launch; the open page is never
+  reloaded. `e2e/pwa.spec.ts` checks it against a production build (`vite preview`).
+
 ## Ear training
 
 - `core/ear/tiers.ts`, `core/ear/generator.ts` — `earProfile(level)` maps 1–100 to phrase length,

@@ -1,8 +1,10 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { LessonId } from '../../core/lessons';
 import { dayKey, displayStreak, recentSummary, timeStats, type ProgressState } from '../../core/progress/progress';
 import type { Settings } from '../../core/settings';
 import { BackupError } from '../../persistence/profileRepository';
+import { isNativeApp } from '../../platform/native';
+import { isAppleMobileBrowserTab, isStoragePersisted } from '../../platform/storageProtection';
 import { PROGRESS_VIEWS, pct } from '../progress';
 import { profileRepository } from '../state/useProfile';
 
@@ -115,9 +117,7 @@ export function ProgressPanel(props: {
 
       <section className="panel-section">
         <div className="section-title">Your data</div>
-        <p className="field-hint">
-          Saved on this device only ({props.storageKind === 'memory' ? 'temporary — storage unavailable here' : 'browser storage'}). Export a backup to move it to another device.
-        </p>
+        <StorageStatus storageKind={props.storageKind} />
         <div className="button-row">
           <button type="button" className="btn" onClick={() => void exportJson('download')}>
             Export JSON
@@ -166,5 +166,47 @@ export function ProgressPanel(props: {
         {message ? <p className="status-line is-ok">{message}</p> : null}
       </section>
     </div>
+  );
+}
+
+/** Where the data lives and whether the browser may clear it (see platform/storageProtection). */
+function StorageStatus({ storageKind }: { storageKind: string }) {
+  const web = storageKind !== 'memory' && !isNativeApp();
+  const [persisted, setPersisted] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (!web) return;
+    let cancelled = false;
+    void isStoragePersisted().then((p) => {
+      if (!cancelled) setPersisted(p);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [web]);
+
+  if (!web) {
+    return (
+      <p className="field-hint">
+        Saved on this device only ({storageKind === 'memory' ? 'temporary — storage unavailable here' : 'browser storage'}). Export a backup to move it to another device.
+      </p>
+    );
+  }
+  if (isAppleMobileBrowserTab()) {
+    return (
+      <p className="field-hint storage-status">
+        Saved in this browser on this device. On iPad and iPhone, a browser can delete it after 7 days without a visit. To keep it, add the app to your
+        Home Screen (Share → Add to Home Screen). The Home Screen app starts empty: use Export JSON here, then Import… there.
+      </p>
+    );
+  }
+  return (
+    <p className="field-hint storage-status">
+      {persisted === null
+        ? 'Saved on this device.'
+        : persisted
+          ? 'Saved on this device · protected from automatic clean-up.'
+          : 'Saved on this device · the browser may clear it if the device runs low on space.'}{' '}
+      Export a backup to move it to another device.
+    </p>
   );
 }

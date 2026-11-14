@@ -6,7 +6,7 @@ import tseslint from 'typescript-eslint';
 import { defineConfig, globalIgnores } from 'eslint/config';
 
 export default defineConfig([
-  globalIgnores(['dist', 'native', 'coverage', 'test-results', 'playwright-report']),
+  globalIgnores(['dist', 'dist-e2e', 'native', 'coverage', 'test-results', 'playwright-report']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
@@ -30,5 +30,11 @@ export default defineConfig([
     files: ['e2e/**/*.ts', 'scripts/**/*.ts', 'playwright.config.ts'],
     languageOptions: { globals: { ...globals.browser, ...globals.node } },
     rules: { 'react-hooks/rules-of-hooks': 'off' },
+  },
+  {
+    // The service worker template; the build plugin fills in __PP_FILES__.
+    files: ['pwa/sw.js'],
+    extends: [js.configs.recommended],
+    languageOptions: { ecmaVersion: 2022, sourceType: 'script', globals: { ...globals.serviceworker, __PP_FILES__: 'readonly' } },
   },
 ]);
