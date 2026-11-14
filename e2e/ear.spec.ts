@@ -29,3 +29,17 @@ test('Ear training: a hint shows on the keys with the keyboard guide off', async
   await expect(page.locator('.key.is-expected')).toHaveCount(first.length);
   for (const k of first) await expect(page.locator(`.key[data-midi="${k}"]`)).toHaveClass(/is-expected/);
 });
+
+test('Ear training: opening the lesson waits for Listen; asking for a new phrase plays it', async ({ app, page }) => {
+  await app.open({ settings: { lesson: 'ear', ear: { level: 15 } } });
+  // Unlock audio with a first listen, then leave the lesson and come back.
+  await page.keyboard.press('Space');
+  await expect.poll(() => app.status()).toBe('running');
+  await app.switchLesson(/sight/i);
+  await app.switchLesson(/ear/i);
+  await page.waitForTimeout(800);
+  expect(await app.status()).toBe('ready');
+  // An explicit request for a new phrase plays it right away.
+  await page.keyboard.press('KeyN');
+  await expect.poll(() => app.status()).toBe('running');
+});
