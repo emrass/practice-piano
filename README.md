@@ -27,7 +27,7 @@ It runs in two ways:
 |---|---|---|
 | MIDI | Web MIDI (Chrome / Edge) — USB and macOS-paired Bluetooth MIDI | CoreMIDI — USB, Bluetooth LE MIDI, network |
 | Bluetooth pairing | via macOS *Audio MIDI Setup* | **in-app** “Pair Bluetooth MIDI…” button |
-| Install | none — open the site | build with Xcode, free Apple ID |
+| Install | none — open the site; optionally install it (Chrome / Edge) or add it to the Home Screen (iPad) to use it offline | build with Xcode, free Apple ID |
 
 No account, no backend: everything is stored locally, with JSON export / import / reset.
 
