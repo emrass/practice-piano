@@ -83,8 +83,14 @@ function Studio({ profile }: { profile: Profile }) {
     },
     [updateSettings],
   );
+  // Ear training plays a phrase by itself only after the player asked for a new one (or a retry):
+  // remembers the session that was on screen then, so the next session plays once it arrives.
+  const autoStartFrom = useRef<{ session: Session | null } | null>(null);
+  const armAutoStart = useCallback(() => {
+    autoStartFrom.current = { session: runtimeRef.current?.session ?? null };
+  }, []);
   const nowMs = new Date().getTime();
-  const runtime = useLesson(lesson, { settings: s, progress, progressRef, setProgress, update, seed, reseed, retryToken, now: nowMs });
+  const runtime = useLesson(lesson, { settings: s, progress, progressRef, setProgress, update, seed, reseed, retryToken, armAutoStart, now: nowMs });
   useLayoutEffect(() => {
     runtimeRef.current = runtime;
   });
@@ -112,13 +118,21 @@ function Studio({ profile }: { profile: Profile }) {
     keySound.setEnabled(s.keySound);
     keySound.volume = s.synthVolume;
   }, [s.keySound, s.synthVolume]);
-  // Ear training: once audio has been unlocked by a first gesture, new phrases play by themselves.
+  // Ear training: a phrase the player asked for (Next, New phrase, easier / harder, retry) plays by
+  // itself once audio has been unlocked. Opening the lesson or changing a setting waits for Listen.
   const autoStart = !!runtime.autoStart;
   useEffect(() => {
-    if (autoStart && audioEngine.isRunning) {
-      const t = setTimeout(() => controller.start(), 350);
-      return () => clearTimeout(t);
+    const armed = autoStartFrom.current;
+    if (!armed || armed.session === controller) return;
+    if (!autoStart || !audioEngine.isRunning) {
+      autoStartFrom.current = null;
+      return;
     }
+    const t = setTimeout(() => {
+      autoStartFrom.current = null;
+      controller.start();
+    }, 350);
+    return () => clearTimeout(t);
   }, [controller, autoStart]);
   useEffect(() => {
     // Development hook for end-to-end tests (stripped from production builds).
@@ -140,7 +154,10 @@ function Studio({ profile }: { profile: Profile }) {
     if (guideOn && controller.state.get().expected.length) return;
     controller.hint?.();
   }, [controller, guideOn]);
-  const retry = useCallback(() => setRetryToken((t) => t + 1), []);
+  const retry = useCallback(() => {
+    armAutoStart();
+    setRetryToken((t) => t + 1);
+  }, [armAutoStart]);
   const resultsHidden = hiddenResultsFor === controller;
   const hideResults = useCallback(() => setHiddenResultsFor(controller), [controller]);
 

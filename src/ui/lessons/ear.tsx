@@ -41,6 +41,7 @@ export function useEarLesson(ctx: LessonContext, active: boolean): LessonRuntime
 
   const next = () => {
     if (s.weakSpotFocus) refreshFocus();
+    ctx.armAutoStart();
     ctx.reseed();
   };
   return {

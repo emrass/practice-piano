@@ -19,6 +19,8 @@ export interface LessonContext {
   reseed: () => void;
   /** Changes on every retry: a fresh run of the same exercise. */
   retryToken: number;
+  /** The next session starts on its own if the lesson has `autoStart` (call when the player asks for a new exercise). */
+  armAutoStart: () => void;
   now: number;
 }
 
@@ -70,6 +72,9 @@ export interface LessonRuntime {
   review?: () => void;
   /** Progress tab: practise the weak spots it lists. */
   practiceWeakSpots: () => void;
-  /** New exercises start on their own once audio is unlocked (ear training plays the phrase). */
+  /**
+   * An exercise the player asked for (next, easier / harder, retry) starts on its own once audio
+   * is unlocked (ear training plays the phrase). Opening the lesson or changing a setting does not.
+   */
   autoStart?: boolean;
 }
