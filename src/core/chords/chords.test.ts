@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { isSupportedDuration } from '../music/rhythm';
 import { pitchLabel, spellMidiIn } from '../music/pitch';
-import { applyResult, emptyProgress, findWeakChords, isPass } from '../progress/progress';
+import { findWeakChords } from '../progress/chords';
+import { applyResult, emptyProgress, isPass } from '../progress/progress';
 import { normalizeSettings } from '../settings';
 import { chordResult, summarizeChords } from './analysis';
 import {

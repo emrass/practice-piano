@@ -1,14 +1,15 @@
 import { useMemo, useState } from 'react';
 import { chordItemId, type ChordItem, type ChordQuality, chordSpelling, findProgression, keysFor, parseChordItemId, PROGRESSIONS } from '../../core/chords/catalog';
 import { type ChordFocus, generateChordExercise, initialChordBpm } from '../../core/chords/generator';
-import { findWeakChords, type ProgressState } from '../../core/progress/progress';
+import { findWeakChords } from '../../core/progress/chords';
+import type { ProgressState } from '../../core/progress/progress';
 import { inputBus } from '../../input/inputBus';
 import { audioEngine } from '../../platform/audio/audioEngine';
 import { ChordChart } from '../components/ChordChart';
 import { ChordsPanel } from '../components/ChordsPanel';
 import { ChordController } from '../practice/ChordController';
 import { generatedContinuation, repertoireContinuation } from './continuation';
-import { randomFrom, reviewView, useFocus, useRepertoire } from './shared';
+import { flowTiming, randomFrom, reviewView, useBuiltFor, useFocus, useRepertoire } from './shared';
 import type { LessonContext, LessonRuntime } from './types';
 
 const isChordItem = (id: string) => parseChordItemId(id) !== null;
@@ -46,38 +47,21 @@ export function useChordsLesson(ctx: LessonContext, active: boolean): LessonRunt
   }, [active, c.source, c.task, c.set, c.prompt, c.inversions, c.progression, c.key, c.hands, rep.reviewPick, shuffleKey]);
 
   const drillFocus = s.weakSpotFocus && item?.task === 'drill' ? focus : undefined;
-  const exercise = useMemo(
+  const exercise = useBuiltFor(
+    // Ladder tempo read when the exercise is made, as for scales.
+    { item, count: c.count, drillFocus, seed, retryToken, ladderToken: rep.ladderToken },
     () => {
       if (!item) return null;
-      // Ladder tempo read when the exercise is made, as for scales.
       const bpm = ctx.progress.repertoire[chordItemId(item)]?.ladderTempo ?? initialChordBpm(item);
       return generateChordExercise(item, { bpm, count: c.count, focus: drillFocus }, seed);
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [item, c.count, drillFocus, seed, retryToken, rep.ladderToken],
   );
   // Keys and held notes are spelled as the chord asked for spells them (D♭7 shows C♭, not B).
   const spellings = useMemo(() => exercise?.chords.targets.map((t) => chordSpelling(t.spec)) ?? [], [exercise]);
   // A new session whenever the exercise, the mode or a timing setting changes, or on retry.
-  const session = useMemo(
-    () =>
-      exercise
-        ? new ChordController(
-            {
-              exercise,
-              mode: c.mode,
-              goalBpm: c.goalBpm,
-              latencyMs: s.latencyMs,
-              playheadDelayMs: s.playheadDelayMs,
-              metronomeVolume: s.metronomeVolume,
-              countInBars: s.countInBars,
-            },
-            inputBus,
-            audioEngine,
-          )
-        : null,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [exercise, c.mode, c.goalBpm, s.latencyMs, s.playheadDelayMs, s.countInBars, retryToken],
+  const session = useBuiltFor(
+    { exercise, mode: c.mode, goalBpm: c.goalBpm, latencyMs: s.latencyMs, playheadDelayMs: s.playheadDelayMs, countInBars: s.countInBars, retryToken },
+    () => (exercise ? new ChordController({ exercise, mode: c.mode, goalBpm: c.goalBpm, ...flowTiming(s) }, inputBus, audioEngine) : null),
   );
   if (!session || !item || !exercise) return null;
 

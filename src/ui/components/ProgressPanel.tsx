@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { LessonId } from '../../core/lessons';
-import { dayKey, displayStreak, recentSummary, timeStats, type ProgressState } from '../../core/progress/progress';
+import { dayKey, displayStreak, recentSummary, type ProgressState } from '../../core/progress/progress';
+import { timeStats } from '../../core/progress/rhythm';
 import type { Settings } from '../../core/settings';
 import { BackupError } from '../../persistence/profileRepository';
 import { isNativeApp } from '../../platform/native';

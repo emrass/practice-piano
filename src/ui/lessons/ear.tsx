@@ -1,13 +1,13 @@
-import { useMemo } from 'react';
 import { generateEarExercise } from '../../core/ear/generator';
 import { freshExercise } from '../../core/generator/fresh';
-import { findWeakIntervals, type ProgressState } from '../../core/progress/progress';
+import { findWeakIntervals } from '../../core/progress/ear';
+import type { ProgressState } from '../../core/progress/progress';
 import { inputBus } from '../../input/inputBus';
 import { audioEngine } from '../../platform/audio/audioEngine';
 import { EarPanel } from '../components/EarPanel';
 import { EarController } from '../practice/EarController';
 import { generatedContinuation } from './continuation';
-import { seenIn, stepLevel, useFocus } from './shared';
+import { seenIn, stepLevel, useBuiltFor, useFocus, waitOptions } from './shared';
 import type { LessonContext, LessonRuntime } from './types';
 
 const weakIntervals = (p: ProgressState): number[] => findWeakIntervals(p).map((w) => w.semitones);
@@ -16,27 +16,18 @@ const weakIntervals = (p: ProgressState): number[] => findWeakIntervals(p).map((
 export function useEarLesson(ctx: LessonContext, active: boolean): LessonRuntime | null {
   const { settings: s, seed, retryToken } = ctx;
   const [focus, refreshFocus] = useFocus(ctx, weakIntervals, []);
-  const exercise = useMemo(
+  const exercise = useBuiltFor(
+    // Progress is read when the phrase is made, not followed (the finished phrase stays on screen).
+    { active, ear: s.ear, weakSpotFocus: s.weakSpotFocus, focus, seed },
     () =>
       active
         ? freshExercise((sd) => generateEarExercise({ ...s.ear, focusIntervals: s.weakSpotFocus ? focus : undefined }, sd), seed, seenIn(ctx.progress))
         : null,
-    // Progress is read when the phrase is made, not followed (the finished phrase stays on screen).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [active, s.ear, s.weakSpotFocus, focus, seed],
   );
   // A new session whenever the exercise, the mode or a timing setting changes, or on retry.
-  const session = useMemo(
-    () =>
-      exercise
-        ? new EarController(
-            { exercise, graceMs: s.chordGraceMs, sustainCountsAsHeld: s.sustainScoring === 'hold', volume: s.synthVolume },
-            inputBus,
-            audioEngine,
-          )
-        : null,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [exercise, s.chordGraceMs, s.sustainScoring, s.synthVolume, retryToken],
+  const session = useBuiltFor(
+    { exercise, chordGraceMs: s.chordGraceMs, sustainScoring: s.sustainScoring, synthVolume: s.synthVolume, retryToken },
+    () => (exercise ? new EarController({ exercise, ...waitOptions(s), volume: s.synthVolume }, inputBus, audioEngine) : null),
   );
   if (!session || !exercise) return null;
 

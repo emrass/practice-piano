@@ -1,23 +1,23 @@
 import { describe, expect, it } from 'vitest';
-import type { ExerciseResult, NoteResult } from '../eval/types';
+import type { NoteResult, RawResult, SightResult } from '../eval/types';
+import { findWeakIntervals, INTERVAL_NAMES } from './ear';
 import {
   applyResult,
   computeAward,
   dayKey,
   displayStreak,
   emptyProgress,
-  findWeakIntervals,
-  findWeakSpots,
-  INTERVAL_NAMES,
-  noteHeatmap,
   normalizeProgress,
+  recentSummary,
   updateStreak,
   type ProgressState,
 } from './progress';
+import { findWeakSpots, noteHeatmap } from './sight';
 
-function result(over: Partial<ExerciseResult> = {}, notes?: NoteResult[]): ExerciseResult {
+function result(over: Partial<RawResult> = {}, notes?: NoteResult[]): SightResult {
   const n = notes ?? Array.from({ length: 20 }, (_, i) => ({ midi: 60 + (i % 5), hand: 'rh' as const, clef: 'treble' as const, correct: true, reactionMs: 500 }));
   return {
+    lesson: 'sight',
     mode: 'wait',
     exerciseId: 'ex-1',
     level: 2,
@@ -161,6 +161,15 @@ describe('normalizeProgress', () => {
     expect(p.history).toEqual([]);
     expect(p.tiers).toEqual({});
   });
+
+  it('migrates history entries recorded before lessons existed to sight reading', () => {
+    const old = { at: 1, exerciseId: 'x', mode: 'wait', level: 3, tierId: 't01', pitchAccuracy: 1, timingAccuracy: null, medianReactionMs: 800, xp: 10, firstSight: true, passed: true };
+    const p = normalizeProgress({ history: [old, { ...old, lesson: 'ear', mode: 'ear', tierId: 'e01', replays: 1 }] });
+    expect(p.history.map((h) => h.lesson)).toEqual(['sight', 'ear']);
+    expect(p.history[0]).toEqual({ ...old, lesson: 'sight' });
+    expect(recentSummary(p, 20, 'sight').exercises).toBe(1);
+    expect(recentSummary(p, 20, 'ear').exercises).toBe(1);
+  });
 });
 
 describe('ear training progress', () => {
@@ -174,7 +183,7 @@ describe('ear training progress', () => {
       [67, false],
       [60, true],
     ]);
-    const r = result({ lesson: 'ear', mode: 'ear', tierId: 'e03', level: 15, exerciseId: 'ear-x', replays: 0 }, notes);
+    const r = { ...result({ mode: 'ear', tierId: 'e03', level: 15, exerciseId: 'ear-x' }, notes), lesson: 'ear' as const, replays: 0, hints: 0 };
     const once = computeAward(emptyProgress(), r);
     const thrice = computeAward(emptyProgress(), { ...r, replays: 2 });
     expect(once.tierId).toBe('e03');
@@ -194,7 +203,7 @@ describe('ear training progress', () => {
         [67, i === 0],
         [69, true],
       ]);
-      p = applyResult(p, result({ lesson: 'ear', mode: 'ear', tierId: 'e05', exerciseId: `e${i}` }, notes), day1).progress;
+      p = applyResult(p, { ...result({ mode: 'ear', tierId: 'e05', exerciseId: `e${i}` }, notes), lesson: 'ear', replays: 0, hints: 0 }, day1).progress;
     }
     expect(findWeakIntervals(p).map((w) => w.semitones)).toEqual([7]);
     expect(INTERVAL_NAMES[7]).toBe('P5');

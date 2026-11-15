@@ -19,7 +19,8 @@ export const scalesResults: ResultsView = {
   repertoire: true,
   trains: null,
   Body: function ScaleResults({ result, award }) {
-    const scale = result.scale!;
+    if (result.lesson !== 'scales') return null;
+    const scale = result.scale;
     const flow = result.mode === 'flow';
     const change = award?.repertoire;
     const bpm = (npm: number) => `${Math.round(npm / scale.notesPerBeat)} bpm`;

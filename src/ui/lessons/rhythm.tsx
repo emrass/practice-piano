@@ -1,13 +1,14 @@
 import { useMemo } from 'react';
 import { freshExercise } from '../../core/generator/fresh';
-import { findWeakFigures, type ProgressState } from '../../core/progress/progress';
+import type { ProgressState } from '../../core/progress/progress';
+import { findWeakFigures } from '../../core/progress/rhythm';
 import { generateRhythmExercise } from '../../core/rhythm/generator';
 import { inputBus } from '../../input/inputBus';
 import { audioEngine } from '../../platform/audio/audioEngine';
 import { RhythmPanel } from '../components/RhythmPanel';
 import { RhythmController } from '../practice/RhythmController';
 import { generatedContinuation } from './continuation';
-import { seenIn, stepLevel, useFocus } from './shared';
+import { flowTiming, seenIn, stepLevel, useBuiltFor, useFocus } from './shared';
 import type { LessonContext, LessonRuntime } from './types';
 
 const weakFigures = (p: ProgressState): string[] => findWeakFigures(p).map((w) => w.key);
@@ -16,14 +17,13 @@ const weakFigures = (p: ProgressState): string[] => findWeakFigures(p).map((w) =
 export function useRhythmLesson(ctx: LessonContext, active: boolean): LessonRuntime | null {
   const { settings: s, seed, retryToken } = ctx;
   const [focus, refreshFocus] = useFocus(ctx, weakFigures, []);
-  const exercise = useMemo(
+  const exercise = useBuiltFor(
+    // Progress is read when the rhythm is made, not followed (the finished one stays on screen).
+    { active, rhythm: s.rhythm, weakSpotFocus: s.weakSpotFocus, focus, seed },
     () =>
       active
         ? freshExercise((sd) => generateRhythmExercise({ ...s.rhythm, focusFigures: s.weakSpotFocus ? focus : undefined }, sd), seed, seenIn(ctx.progress))
         : null,
-    // Progress is read when the rhythm is made, not followed (the finished one stays on screen).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [active, s.rhythm, s.weakSpotFocus, focus, seed],
   );
   // J taps the right-hand key, F the left (either one when only one hand plays).
   const keys = useMemo(() => {
@@ -39,24 +39,9 @@ export function useRhythmLesson(ctx: LessonContext, active: boolean): LessonRunt
     return { qwerty, markers };
   }, [exercise]);
   // A new session whenever the exercise, the mode or a timing setting changes, or on retry.
-  const session = useMemo(
-    () =>
-      exercise
-        ? new RhythmController(
-            {
-              exercise,
-              latencyMs: s.latencyMs,
-              playheadDelayMs: s.playheadDelayMs,
-              metronomeVolume: s.metronomeVolume,
-              countInBars: s.countInBars,
-              synthVolume: s.synthVolume,
-            },
-            inputBus,
-            audioEngine,
-          )
-        : null,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [exercise, s.latencyMs, s.playheadDelayMs, s.countInBars, s.synthVolume, retryToken],
+  const session = useBuiltFor(
+    { exercise, latencyMs: s.latencyMs, playheadDelayMs: s.playheadDelayMs, countInBars: s.countInBars, synthVolume: s.synthVolume, retryToken },
+    () => (exercise ? new RhythmController({ exercise, ...flowTiming(s), synthVolume: s.synthVolume }, inputBus, audioEngine) : null),
   );
   if (!session || !exercise || !keys) return null;
 

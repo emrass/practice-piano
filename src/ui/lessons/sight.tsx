@@ -1,15 +1,16 @@
-import { useMemo } from 'react';
 import { freshExercise } from '../../core/generator/fresh';
 import { generateExercise, type FocusNote } from '../../core/generator/generator';
 import { midiLabel } from '../../core/music/pitch';
-import { findWeakFigures, findWeakSpots, type ProgressState } from '../../core/progress/progress';
+import type { ProgressState } from '../../core/progress/progress';
+import { findWeakFigures } from '../../core/progress/rhythm';
+import { findWeakSpots } from '../../core/progress/sight';
 import { generatorSettingsFrom } from '../../core/settings';
 import { inputBus } from '../../input/inputBus';
 import { audioEngine } from '../../platform/audio/audioEngine';
 import { ExercisePanel } from '../components/ExercisePanel';
 import { PracticeController } from '../practice/PracticeController';
 import { generatedContinuation } from './continuation';
-import { seenIn, stepLevel, useFocus } from './shared';
+import { flowTiming, seenIn, stepLevel, useBuiltFor, useFocus, waitOptions } from './shared';
 import type { LessonContext, LessonRuntime } from './types';
 
 const weakNotes = (p: ProgressState): FocusNote[] => findWeakSpots(p).notes.map((n) => ({ midi: n.midi, clef: n.clef }));
@@ -21,7 +22,10 @@ export function useSightLesson(ctx: LessonContext, active: boolean): LessonRunti
   const [focus, refreshFocus] = useFocus(ctx, weakNotes, []);
   const [figures, refreshFigures] = useFocus(ctx, weakFigures, []);
   const sight = s.sight;
-  const exercise = useMemo(
+  const exercise = useBuiltFor(
+    // Only the fields that shape a passage (not e.g. the theme) make a new one; progress is read
+    // when it is made (an unseen passage first), not followed.
+    { active, sight, keyboardSize: s.keyboardSize, weakSpotFocus: s.weakSpotFocus, focus, figures, seed },
     () =>
       active
         ? freshExercise(
@@ -39,32 +43,20 @@ export function useSightLesson(ctx: LessonContext, active: boolean): LessonRunti
             seenIn(ctx.progress),
           )
         : null,
-    // Only the fields that shape a passage (not e.g. the theme) make a new one; progress is read
-    // when it is made (an unseen passage first), not followed.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [active, sight, s.keyboardSize, s.weakSpotFocus, focus, figures, seed],
   );
   // A new session whenever the exercise, the mode or a timing setting changes, or on retry.
-  const session = useMemo(
-    () =>
-      exercise
-        ? new PracticeController(
-            {
-              exercise,
-              mode: sight.mode,
-              graceMs: s.chordGraceMs,
-              sustainCountsAsHeld: s.sustainScoring === 'hold',
-              latencyMs: s.latencyMs,
-              playheadDelayMs: s.playheadDelayMs,
-              metronomeVolume: s.metronomeVolume,
-              countInBars: s.countInBars,
-            },
-            inputBus,
-            audioEngine,
-          )
-        : null,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [exercise, sight.mode, s.chordGraceMs, s.sustainScoring, s.latencyMs, s.playheadDelayMs, s.countInBars, retryToken],
+  const session = useBuiltFor(
+    {
+      exercise,
+      mode: sight.mode,
+      chordGraceMs: s.chordGraceMs,
+      sustainScoring: s.sustainScoring,
+      latencyMs: s.latencyMs,
+      playheadDelayMs: s.playheadDelayMs,
+      countInBars: s.countInBars,
+      retryToken,
+    },
+    () => (exercise ? new PracticeController({ exercise, mode: sight.mode, ...waitOptions(s), ...flowTiming(s) }, inputBus, audioEngine) : null),
   );
   if (!session || !exercise) return null;
 

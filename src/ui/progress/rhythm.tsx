@@ -1,5 +1,5 @@
 import { figureName } from '../../core/generator/rhythm';
-import { findWeakFigures, timeStats, type TimeStat } from '../../core/progress/progress';
+import { findWeakFigures, timeStats, type TimeStat } from '../../core/progress/rhythm';
 import { BEAT_POSITION_LABELS, TEXTURE_INFO, type BeatPosition, type RhythmTexture } from '../../core/rhythm/generator';
 import { pct, tendencyText } from './format';
 import { TierMastery } from './TierMastery';

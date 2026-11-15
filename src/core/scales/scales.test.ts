@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { allEvents, type Hand } from '../exercise';
 import { FlowEngine } from '../eval/flowEngine';
-import type { ExerciseResult, NoteResult } from '../eval/types';
+import type { NoteResult, RawResult } from '../eval/types';
 import { isSupportedDuration } from '../music/rhythm';
 import { pitchLabel } from '../music/pitch';
 import { applyResult, emptyProgress } from '../progress/progress';
 import { normalizeSettings } from '../settings';
-import { summarizeScale } from './analysis';
+import { scaleResult, summarizeScale } from './analysis';
 import { itemId, itemTitle, parseItemId, SCALE_TYPE_IDS, SCALE_TYPES, type ScaleItem, type NoteValue } from './catalog';
 import { crossingAt } from './fingering';
 import { generateScaleExercise, initialNpm, type ScaleExercise } from './generator';
@@ -135,7 +135,7 @@ describe('crossings', () => {
   });
 });
 
-function fakeRun(ex: ScaleExercise, delta: (hand: Hand, i: number, finger?: number) => number | null, velocity: (finger?: number) => number = () => 64): ExerciseResult {
+function fakeRun(ex: ScaleExercise, delta: (hand: Hand, i: number, finger?: number) => number | null, velocity: (finger?: number) => number = () => 64): RawResult {
   const notes: NoteResult[] = [];
   for (const hand of ['rh', 'lh'] as const) {
     line(ex, hand).forEach((e, i) => {
@@ -156,7 +156,6 @@ function fakeRun(ex: ScaleExercise, delta: (hand: Hand, i: number, finger?: numb
   }
   const hits = notes.filter((n) => n.correct).length;
   return {
-    lesson: 'scales',
     mode: 'flow',
     exerciseId: ex.id,
     level: 1,
@@ -209,7 +208,7 @@ describe('scales on the repertoire ladder', () => {
   it('records runs in progress without touching level tiers', () => {
     const ex = gen({}, 1, 'eighth', 120);
     const raw = fakeRun(ex, () => 0);
-    const result = { ...raw, scale: summarizeScale(ex, raw, 240) };
+    const result = scaleResult(ex, raw, 240);
     const { progress, award } = applyResult(emptyProgress(), result, new Date(2026, 0, 1));
     expect(progress.repertoire['major/C/rh'].ladderTempo).toBe(128);
     expect(award.repertoire?.toTempo).toBe(128);

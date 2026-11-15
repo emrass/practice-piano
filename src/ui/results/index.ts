@@ -18,7 +18,7 @@ export const RESULTS_VIEWS: Record<LessonId, ResultsView> = {
   chords: chordsResults,
 };
 
-/** The view for a result; results without a lesson are sight reading. */
+/** The view for a result's lesson. */
 export function resultsView(result: ExerciseResult): ResultsView {
-  return RESULTS_VIEWS[result.lesson ?? 'sight'];
+  return RESULTS_VIEWS[result.lesson];
 }

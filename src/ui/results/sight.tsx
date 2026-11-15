@@ -1,7 +1,7 @@
 import { gradeHeadline, hintNote, pct } from './format';
 import type { ResultsView } from './types';
 
-/** Sight reading (also results without a lesson). Body is defined inline so this file only exports the view (react-refresh). */
+/** Sight reading. Body is defined inline so this file only exports the view (react-refresh). */
 export const sightResults: ResultsView = {
   ribbon: (result, passed) =>
     passed ? '≥ 90% — counts toward mastery' : `Needs ≥ 90% pitch accuracy${result.hints ? ' (hints count as misses)' : ''} to pass`,

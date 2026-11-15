@@ -1,6 +1,6 @@
 import type { Exercise } from '../../core/exercise';
 import { FlowEngine } from '../../core/eval/flowEngine';
-import type { ExerciseResult, PracticeMode } from '../../core/eval/types';
+import type { ExerciseResult, PracticeMode, RawResult } from '../../core/eval/types';
 import { WaitEngine } from '../../core/eval/waitEngine';
 import type { NoteInput } from '../../core/input/events';
 import { msPerTick } from '../../core/music/rhythm';
@@ -20,7 +20,7 @@ export interface PracticeOptions {
   metronomeVolume: number;
   countInBars: number;
   /** Turns the engine's raw result into the lesson's result (default: sight reading). */
-  decorate?: (raw: ExerciseResult) => ExerciseResult;
+  decorate?: (raw: RawResult) => ExerciseResult;
 }
 
 /**
@@ -163,7 +163,7 @@ export class PracticeController extends SessionBase {
     return { exerciseId: ex.id, level: ex.meta.level, tierId: ex.meta.tierId, completedAt: Date.now() };
   }
 
-  private finish(raw: ExerciseResult) {
+  private finish(raw: RawResult) {
     const result: ExerciseResult = this.opts.decorate
       ? this.opts.decorate(raw)
       : { ...raw, lesson: 'sight', notes: annotateRhythm(this.opts.exercise, raw.notes) };
