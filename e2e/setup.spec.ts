@@ -109,7 +109,7 @@ test('A browser without MIDI says so, and continuing without a piano turns the k
   await expect(page.locator('.kb-sound')).toHaveAttribute('aria-pressed', 'true');
 });
 
-test('A piano plugged in while the guide is open is found; the top-bar chip opens the guide again', async ({ page }) => {
+test('A piano plugged in while the guide is open is found; later, the top-bar chip shows how to connect one', async ({ page }) => {
   await openNew(page, unpluggedMidi);
   await expect(guide(page)).toContainText('No piano found yet');
   await expect(guide(page)).toContainText('USB');
@@ -120,9 +120,21 @@ test('A piano plugged in while the guide is open is found; the top-bar chip open
   await expect(guide(page)).toHaveCount(0);
   const chip = page.locator('.chip-midi');
   await expect(chip).toHaveText('Connect a piano');
+  // The chip opens Piano & audio with the same connection help, not the guide.
   await chip.click();
-  await expect(guide(page)).toContainText('Connect your piano');
+  const settings = page.getByRole('dialog', { name: 'Piano & audio' });
+  await expect(settings).toContainText('No piano found yet');
+  await expect(settings).toContainText('USB');
+  await expect(settings).not.toContainText('How well do you play?');
 
+  await page.evaluate(() => (window as unknown as { __plug(): void }).__plug());
+  await expect(settings).toContainText('Found Test Piano');
+  await expect(chip).toHaveClass(/is-on/);
+});
+
+test('A piano plugged in during the first step enables Next', async ({ page }) => {
+  await openNew(page, unpluggedMidi);
+  await expect(button(page, 'Next')).toBeDisabled();
   await page.evaluate(() => (window as unknown as { __plug(): void }).__plug());
   await expect(guide(page)).toContainText('Found Test Piano');
   await expect(button(page, 'Next')).toBeEnabled();
@@ -173,11 +185,13 @@ test('Calibrate now opens the calibration and comes back to the metronome step',
   await expect(guide(page)).toContainText('step 3 of 3');
 });
 
-test('Reopened from Input & audio, the guide changes nothing unless something is picked', async ({ app, page }) => {
+test('Reopened from Piano & audio, the guide changes nothing unless something is picked', async ({ app, page }) => {
   await app.open({ settings: { lesson: 'sight', sight: { level: 30, hands: 'lh' }, audioSetup: 'headphones', latencyMs: 180 } });
   await expect(guide(page)).toHaveCount(0);
-  await app.openTab('Input & audio');
-  await page.getByRole('button', { name: 'Setup guide…' }).click();
+  const settings = await app.openPianoAudio();
+  await settings.getByRole('button', { name: 'Run setup guide again…' }).click();
+  // The settings close: only the guide is left.
+  await expect(guide(page)).toHaveCount(1);
   await expect(guide(page)).toContainText('Connect your piano');
   await button(page, 'Next').click();
   await expect(guide(page).getByRole('radio', { checked: true })).toHaveCount(0);

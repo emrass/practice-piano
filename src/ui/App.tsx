@@ -13,10 +13,10 @@ import { audioEngine } from '../platform/audio/audioEngine';
 import { MidiService } from '../platform/midi/midiService';
 import { isNativeApp } from '../platform/native';
 import { requestPersistentStorageOnce } from '../platform/storageProtection';
-import { InputAudioPanel } from './components/InputAudioPanel';
 import { KeyboardDock } from './components/KeyboardDock';
 import { LatencyCalibration } from './components/LatencyCalibration';
 import { MetaStrip } from './components/MetaStrip';
+import { PianoAudioDialog } from './components/PianoAudioDialog';
 import { PracticeBar } from './components/PracticeBar';
 import { ProgressPanel } from './components/ProgressPanel';
 import { ResultsCard } from './components/ResultsCard';
@@ -33,7 +33,7 @@ import { type Profile, useProfile } from './state/useProfile';
 
 const midiService = new MidiService(inputBus);
 
-type Tab = 'exercise' | 'input' | 'progress';
+type Tab = 'exercise' | 'progress';
 
 /** Optional sound for the on-screen and computer keys (MIDI pianos make their own). */
 const keySound = new KeySound(audioEngine);
@@ -63,6 +63,8 @@ function Studio({ profile }: { profile: Profile }) {
   /** The setup guide, opened again by the player (it opens by itself until it was seen once). */
   const [reopenedSetup, setReopenedSetup] = useState<SetupStep | null>(null);
   const setupOpen = !s.setupGuideSeen || reopenedSetup !== null;
+  /** Piano & audio: the settings every lesson shares, opened from the piano chip. */
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [hiddenResultsFor, setHiddenResultsFor] = useState<object | null>(null);
   const progressRef = useRef(progress);
   useEffect(() => {
@@ -172,6 +174,16 @@ function Studio({ profile }: { profile: Profile }) {
     },
     [controller],
   );
+  const openSettings = useCallback(() => {
+    if (controller.isActive) controller.stop();
+    setDrawerOpen(false);
+    setSettingsOpen(true);
+  }, [controller]);
+  const closeSettings = useCallback(() => setSettingsOpen(false), []);
+  const runSetupAgain = useCallback(() => {
+    setSettingsOpen(false);
+    openSetup('connect');
+  }, [openSetup]);
   const closeSetup = useCallback(() => {
     updateSettings({ setupGuideSeen: true });
     setReopenedSetup(null);
@@ -190,7 +202,7 @@ function Studio({ profile }: { profile: Profile }) {
     controller,
     exercise,
     rhythmQwerty: runtime.keyboard.qwerty,
-    dialogOpen: calibrating || setupOpen,
+    dialogOpen: calibrating || setupOpen || settingsOpen,
     startStop,
     nextExercise,
     retry,
@@ -214,7 +226,6 @@ function Studio({ profile }: { profile: Profile }) {
         {(
           [
             ['exercise', 'Exercise'],
-            ['input', 'Input & audio'],
             ['progress', 'Progress'],
           ] as [Tab, string][]
         ).map(([id, label]) => (
@@ -225,7 +236,6 @@ function Studio({ profile }: { profile: Profile }) {
       </div>
       <div className="sidebar-scroll">
         {tab === 'exercise' ? runtime.panel : null}
-        {tab === 'input' ? <InputAudioPanel settings={s} update={update} midi={midiService} qwertyBase={qwertyBase} onCalibrate={openCalibration} onSetup={() => openSetup('connect')} /> : null}
         {tab === 'progress' ? (
           <ProgressPanel
             lesson={lesson}
@@ -268,12 +278,7 @@ function Studio({ profile }: { profile: Profile }) {
         mode={runtime.mode}
         progress={progress}
         midi={midiState}
-        onOpenMidi={() => {
-          // No piano yet: the guide explains how to connect one. Otherwise, the device settings.
-          if (!midiState.inputs.some((i) => i.connected)) return openSetup('connect');
-          setTab('input');
-          setDrawerOpen(true);
-        }}
+        onOpenMidi={openSettings}
         onToggleDrawer={() => setDrawerOpen((o) => !o)}
       />
 
@@ -339,6 +344,18 @@ function Studio({ profile }: { profile: Profile }) {
           onCalibrate={openCalibration}
           onLevelsChanged={reseed}
           onClose={closeSetup}
+        />
+      ) : null}
+      {settingsOpen ? (
+        <PianoAudioDialog
+          settings={s}
+          update={update}
+          midi={midiService}
+          qwertyBase={qwertyBase}
+          hidden={calibrating}
+          onCalibrate={openCalibration}
+          onSetup={runSetupAgain}
+          onClose={closeSettings}
         />
       ) : null}
       {calibrating ? (

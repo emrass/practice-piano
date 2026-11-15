@@ -136,8 +136,8 @@ review. Restart in Wait is off while the run is untouched (`isUntouched`, `ui/pr
 
 - `Settings.setupGuideSeen` (default `false`) decides whether `SetupGuide` opens with the app;
   closing it by any route sets the flag. Because it is a setting, a reset or an imported backup
-  without the flag shows the guide again. `App.tsx` also opens it on request (the *Setup guide…*
-  button, or the top-bar chip while no piano is connected).
+  without the flag shows the guide again. `App.tsx` also opens it on request (*Run setup guide
+  again…* in Piano & audio).
 - While open, the guide takes all input with `inputBus.capture()`, like latency calibration, so
   the key played to check the connection is not scored by the exercise underneath. It steps
   aside (state kept) while the calibration dialog is open.
@@ -146,8 +146,19 @@ review. Restart in Wait is off while the run is untouched (`isUntouched`, `ui/pr
   statement per skill. `experiencePatch()` merges the three patches; the chosen statements are
   saved as `Settings.experience` so the reopened guide can show them. Tests check that every
   level is the first level of a tier and that every combination is a valid `Settings`.
-- Connection texts and buttons are shared with the Input & audio panel
-  (`ui/components/MidiConnect.tsx`, `midiStatus.ts`).
+- Connection texts and buttons are shared with Piano & audio (`ConnectionStatus` in
+  `ui/components/MidiConnect.tsx`, `midiStatus.ts`); both dialogs take input with
+  `useHeardNote()` (`ui/hooks/useHeardNote.ts`).
+
+## Piano & audio
+
+- `PianoAudioDialog` holds the settings every lesson shares: the piano (connection, device,
+  keyboard size, live input), audio & timing (calibration, latency, metronome, count-in) and
+  playing (sustain scoring, chord grace, piano shortcuts, key sound). It is not a sidebar tab:
+  the sidebar is only about the current lesson (Exercise, Progress).
+- The top-bar piano chip always opens it, connected or not; without a piano it shows the same
+  connection help as the guide's first step. Like the guide, it captures input while open and
+  steps aside (state kept) while the calibration dialog is on top.
 
 Lesson logic never touches storage or identity directly — the UI passes plain objects in and
 gets plain objects back.

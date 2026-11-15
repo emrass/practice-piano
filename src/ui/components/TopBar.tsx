@@ -18,7 +18,7 @@ function midiLabelText(midi: MidiState): string {
     : 'Connect a piano';
 }
 
-/** Brand, lesson and Wait / Flow switches, streak, XP and MIDI chips, theme and drawer toggles. */
+/** Brand, lesson and Wait / Flow switches, streak and XP chips, the piano chip (Piano & audio), theme and drawer toggles. */
 export function TopBar(props: {
   settings: Settings;
   update: (patch: SettingsPatch) => void;
@@ -27,6 +27,7 @@ export function TopBar(props: {
   mode: LessonRuntime['mode'];
   progress: ProgressState;
   midi: MidiState;
+  /** The piano chip: opens Piano & audio, whether or not a piano is connected. */
   onOpenMidi: () => void;
   onToggleDrawer: () => void;
 }) {
@@ -76,7 +77,13 @@ export function TopBar(props: {
         <span className="chip chip-xp" title="Experience points">
           {props.progress.xp.toLocaleString()} XP
         </span>
-        <button type="button" className={`chip chip-midi ${midiConnected ? 'is-on' : ''}`} onClick={props.onOpenMidi} title="MIDI input">
+        <button
+          type="button"
+          className={`chip chip-midi ${midiConnected ? 'is-on' : ''}`}
+          onClick={props.onOpenMidi}
+          aria-haspopup="dialog"
+          title="Piano & audio settings"
+        >
           <span className="dot" aria-hidden="true" />
           <span className="chip-midi-name">{midiLabelText(props.midi)}</span>
         </button>

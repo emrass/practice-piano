@@ -133,12 +133,13 @@ test('Rhythm grays out computer-key hints (it uses J and F)', async ({ app, page
   await expect(page.locator('.key-qwerty')).toHaveCount(0);
 });
 
-test('Your keyboard size is set under Input & audio', async ({ app, page }) => {
+test('Your keyboard size is set under Piano & audio', async ({ app, page }) => {
   await app.open({ settings: { lesson: 'sight', keyboardSize: 88 } });
-  await app.openTab('Input & audio');
-  await page.getByLabel('Your keyboard').selectOption({ index: 0 });
+  const dialog = await app.openPianoAudio();
+  await dialog.getByLabel('Your keyboard').selectOption({ index: 0 });
   await expect.poll(async () => (await app.savedSettings()).keyboardSize).not.toBe(88);
-  await app.openTab('Exercise');
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
   await expect(page.locator('.sidebar')).not.toContainText('Keyboard guide');
 });
 

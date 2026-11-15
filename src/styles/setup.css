@@ -45,7 +45,7 @@
   background: var(--paper-2);
 }
 
-.setup-body .status-line.is-warn,
+.status-line.is-warn,
 .setup-note.is-warn {
   border-color: color-mix(in srgb, var(--warn) 55%, transparent);
 }

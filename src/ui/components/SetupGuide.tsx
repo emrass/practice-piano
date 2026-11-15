@@ -1,19 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 import { EXPERIENCE_SKILLS, experiencePatch, type ExperienceSelection, sameSelection, SKILLS, stageOf, STAGES } from '../../core/experience';
-import { midiLabel } from '../../core/music/pitch';
 import { LATENCY_PRESETS, type Settings, type SettingsPatch } from '../../core/settings';
-import { inputBus } from '../../input/inputBus';
 import { useStore } from '../../lib/store';
 import type { MidiService, MidiState } from '../../platform/midi/midiService';
-import { BrowserBluetoothHelp, MidiButtons } from './MidiConnect';
-import { connectedInputs, midiStatusText } from './midiStatus';
+import { useHeardNote } from '../hooks/useHeardNote';
+import { ConnectionStatus } from './MidiConnect';
+import { connectedInputs } from './midiStatus';
 import { Select } from './controls';
 
 export type SetupStep = 'connect' | 'level' | 'metronome';
 
 /**
  * First-run setup: connect a real piano (the way the app is meant to be played), say how well
- * you play, line up the metronome. Shown once; reopened from Input & audio or the MIDI chip.
+ * you play, line up the metronome. Shown once; reopened from the Piano & audio settings.
  * Every step can be skipped, and nothing is changed by a step that is left untouched.
  */
 export function SetupGuide(props: {
@@ -38,17 +37,11 @@ export function SetupGuide(props: {
   const [explainingFallback, setExplainingFallback] = useState(false);
   /** Continued without a piano: the metronome step is left out. */
   const [noPiano, setNoPiano] = useState(false);
-  const [heard, setHeard] = useState<number | null>(null);
   const [selection, setSelection] = useState<ExperienceSelection | null>(s.experience);
   const card = useRef<HTMLDivElement>(null);
 
   // Notes played here are for the guide alone: they must not reach the exercise underneath.
-  useEffect(() => {
-    if (hidden) return;
-    return inputBus.capture((ev) => {
-      if (ev.kind === 'noteOn' && ev.source === 'midi') setHeard(ev.midi);
-    });
-  }, [hidden]);
+  const heard = useHeardNote(!hidden);
 
   useEffect(() => {
     if (hidden) return;
@@ -139,7 +132,7 @@ export function SetupGuide(props: {
               </p>
               <p>
                 It is a way to look around, not to practice: fingering, both hands and playing in time need a real keyboard. When your piano is nearby, press{' '}
-                <b>Connect a piano</b> in the top bar, or open <b>Input &amp; audio → Setup guide</b>.
+                <b>Connect a piano</b> in the top bar.
               </p>
             </div>
             <div className="modal-actions setup-actions">
@@ -198,78 +191,13 @@ export function SetupGuide(props: {
 }
 
 function ConnectStep(props: { midi: MidiState; service: MidiService; heard: number | null }) {
-  const { midi, heard } = props;
-  const connected = connectedInputs(midi);
-  const names = connected.map((i) => i.name).join(', ');
-  const noMidiHere = midi.status === 'unsupported';
-
   return (
     <div className="setup-body">
       <p>
         Practice Piano is made to be played on a <b>real piano or keyboard</b>. It listens to what you play over <b>USB or Bluetooth MIDI</b> and scores your notes and your
         timing.
       </p>
-
-      {connected.length ? (
-        <div className={`setup-listen ${heard !== null ? 'is-heard' : ''}`} aria-live="polite">
-          <span className="setup-listen-mark" aria-hidden="true">
-            {heard !== null ? '✓' : '♪'}
-          </span>
-          {heard !== null ? (
-            <div>
-              <b>We hear you: {midiLabel(heard)}</b>
-              <span>on {midi.lastInputName ?? names}. Your piano is ready.</span>
-            </div>
-          ) : (
-            <div>
-              <b>Found {names}</b>
-              <span>Play any key on it to check the connection.</span>
-            </div>
-          )}
-        </div>
-      ) : noMidiHere ? (
-        <div className="setup-note is-warn">
-          <b>This browser can’t connect to a piano.</b>
-          <ul>
-            <li>
-              On a computer, open this page in <b>Chrome</b> or <b>Edge</b>.
-            </li>
-            <li>
-              On an iPad or iPhone, use the <b>Practice Piano app</b>: browsers there cannot use MIDI.
-            </li>
-          </ul>
-        </div>
-      ) : midi.status === 'ready' ? (
-        <>
-          <p className="status-line">No piano found yet.</p>
-          <ul className="setup-ways">
-            <li>
-              <b>USB</b>
-              <span>Connect the piano’s USB port (“USB to Host”) to this device and switch the piano on. It shows up here by itself.</span>
-            </li>
-            <li>
-              <b>Bluetooth</b>
-              <span>
-                {midi.canPairBluetooth ? 'Press Pair Bluetooth MIDI and choose your piano from the list.' : <BrowserBluetoothHelp />}
-              </span>
-            </li>
-          </ul>
-          <div className="button-row">
-            <MidiButtons midi={props.service} canPairBluetooth={midi.canPairBluetooth} />
-          </div>
-        </>
-      ) : (
-        <>
-          <p className={`status-line ${midi.status === 'initializing' ? '' : 'is-warn'}`}>{midiStatusText(midi)}</p>
-          {midi.status === 'initializing' ? (
-            <p className="field-hint">If your browser asks whether this site may use MIDI devices, choose Allow.</p>
-          ) : (
-            <div className="button-row">
-              <MidiButtons midi={props.service} canPairBluetooth={midi.canPairBluetooth} />
-            </div>
-          )}
-        </>
-      )}
+      <ConnectionStatus {...props} />
     </div>
   );
 }
@@ -356,7 +284,7 @@ function MetronomeStep(props: { settings: Settings; update: (patch: SettingsPatc
         </div>
       </div>
       <p className="field-hint">
-        This only matters in Flow mode. You can do it later under <b>Input &amp; audio</b>.
+        This only matters in Flow mode. You can do it later in <b>Piano &amp; audio</b>, from the piano button in the top bar.
       </p>
     </div>
   );

@@ -18,14 +18,14 @@ Build **`practice-piano.com`**, an interactive piano practice application focuse
 
 - **Real Piano Input:**
   - Support MIDI note-on, note-off (including velocity `0` note-on as note-off), and sustain pedal (`CC 64`).
-  - Device connection UI: auto-connect or select specific MIDI inputs, rescan devices, live input monitor (currently held notes + sustain state), and an in-app Bluetooth MIDI pairing trigger when running inside the Apple native wrapper.
+  - Device connection UI, in the app-wide *Piano & audio* settings (opened from the piano button in the top bar, whether or not a piano is connected; not a lesson sidebar tab): auto-connect or select specific MIDI inputs, connection help while no piano is connected, rescan devices, live input monitor (currently held notes + sustain state), and an in-app Bluetooth MIDI pairing trigger when running inside the Apple native wrapper.
   - Sustain pedal (`CC 64`) should show a visual indicator on screen and include a user option to ignore or factor sustain during exercise scoring.
 - **First-Run Setup:**
   - A real MIDI piano is the intended input. On first launch a setup guide says so, gives connection instructions for the platform (Web MIDI browser, native app with Bluetooth pairing, browser without MIDI) and confirms the piano when a key is played. A piano that is already connected is offered immediately.
   - The player can continue without a piano (on-screen or computer keys), which is presented as the fallback and turns the key sound on.
   - One choice of playing stage sets a starting point for all lessons; the result is shown per skill (reading, ear, scales & chords) and can be adjusted before continuing.
   - Latency calibration is offered, with the presets as a fallback; skipped when no piano is connected.
-  - Every step can be skipped; the guide is shown once and can be reopened from *Input & audio*.
+  - Every step can be skipped; the guide is shown once and can be run again from *Piano & audio*. The top-bar piano button opens *Piano & audio*, not the guide.
 - **Fallback Inputs:**
   - Interactive on-screen piano keyboard (mouse/touch) and computer QWERTY keyboard mapping so every lesson can be practiced or tested without a physical MIDI instrument.
 - **Audio & Wireless Latency Workflows:**

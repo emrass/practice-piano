@@ -50,7 +50,9 @@ The app is made to be played on a **real piano or keyboard over MIDI** (USB or B
 first time it opens, a short **setup guide** walks through connecting the piano (and confirms it
 when you play a key), asks how well you play to set a starting point for every lesson, and offers
 to line up the metronome with your audio setup. Every step can be skipped, and the guide can be
-opened again from *Input & audio → Setup guide…*.
+run again from *Piano & audio → Run setup guide again…*. *Piano & audio* (the piano button in the
+top bar: *Connect a piano*, or your piano's name) holds the settings every lesson shares: the
+piano connection, latency and metronome, and how playing is scored.
 
 No piano nearby? Every exercise can be played with the **on-screen keyboard** (mouse/touch)
 or the **computer keyboard** (`A`–`'` white keys, `W E T Y U O P` black keys, `Z`/`X` octave,

@@ -6,7 +6,7 @@ import { useStore } from '../../lib/store';
 import { inputBus } from '../../input/inputBus';
 import type { KeyboardAvailability } from '../lessons/types';
 import type { PracticeState, Session } from '../practice/session';
-import { InputMonitor } from './InputAudioPanel';
+import { InputMonitor } from './InputMonitor';
 import { KeyboardControls } from './KeyboardControls';
 import { PianoKeyboard } from './PianoKeyboard';
 
