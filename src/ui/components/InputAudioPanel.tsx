@@ -216,7 +216,7 @@ export function InputAudioPanel(props: {
         <div className="section-title">Piano shortcuts</div>
         <Toggle
           label="Navigate from the piano"
-          hint="After an exercise: C repeat · D next · E close · F easier · G harder. In Flow mode, tap the sustain pedal to start."
+          hint="After an exercise: C restart · D next · E close · F easier · G harder. In Flow mode, tap the sustain pedal to start."
           checked={s.pianoShortcuts}
           onChange={(pianoShortcuts) => update({ pianoShortcuts })}
         />
