@@ -18,7 +18,7 @@ Build **`practice-piano.com`**, an interactive piano practice application focuse
 
 - **Real Piano Input:**
   - Support MIDI note-on, note-off (including velocity `0` note-on as note-off), and sustain pedal (`CC 64`).
-  - Device connection UI, in the app-wide *Piano & audio* settings (opened from the piano button in the top bar, whether or not a piano is connected; not a lesson sidebar tab): auto-connect or select specific MIDI inputs, connection help while no piano is connected, rescan devices, live input monitor (currently held notes + sustain state), and an in-app Bluetooth MIDI pairing trigger when running inside the Apple native wrapper.
+  - Device connection UI, in the app-wide *Piano & audio* settings (opened from the piano button in the top bar, whether or not a piano is connected; not a lesson sidebar tab): auto-connect or select specific MIDI inputs, connection help while no piano is connected, rescan devices, a check that confirms the piano when a key is played, and an in-app Bluetooth MIDI pairing trigger when running inside the Apple native wrapper. A live input monitor (currently held notes + sustain state) sits in the bar above the on-screen keyboard.
   - Sustain pedal (`CC 64`) should show a visual indicator on screen and include a user option to ignore or factor sustain during exercise scoring.
 - **First-Run Setup:**
   - A real MIDI piano is the intended input. On first launch a setup guide says so, gives connection instructions for the platform (Web MIDI browser, native app with Bluetooth pairing, browser without MIDI) and confirms the piano when a key is played. A piano that is already connected is offered immediately.

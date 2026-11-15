@@ -15,6 +15,8 @@ test('With a piano connected, the chip opens Piano & audio; a key played there i
   const before = await page.evaluate(() => JSON.stringify(window.__ppDebug!.controller.state.get()));
   const dialog = await app.openPianoAudio();
   await expect(dialog).toContainText('Found Test Piano');
+  // The connection check is the input check: held keys and the pedal show in the keyboard bar.
+  await expect(dialog.locator('.monitor')).toHaveCount(0);
   for (const section of ['Piano', 'Audio & timing', 'Playing', 'Setup guide']) {
     await expect(dialog.getByRole('region', { name: section, exact: false }).first()).toBeVisible();
   }

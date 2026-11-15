@@ -153,9 +153,10 @@ review. Restart in Wait is off while the run is untouched (`isUntouched`, `ui/pr
 ## Piano & audio
 
 - `PianoAudioDialog` holds the settings every lesson shares: the piano (connection, device,
-  keyboard size, live input), audio & timing (calibration, latency, metronome, count-in) and
-  playing (sustain scoring, chord grace, piano shortcuts, key sound). It is not a sidebar tab:
-  the sidebar is only about the current lesson (Exercise, Progress).
+  keyboard size), audio & timing (calibration, latency, metronome, count-in) and playing
+  (sustain scoring, chord grace, piano shortcuts, key sound). The connection check ("We hear
+  you") is its input check; held keys and the pedal show in the keyboard bar. It is not a
+  sidebar tab: the sidebar is only about the current lesson (Exercise, Progress).
 - The top-bar piano chip always opens it, connected or not; without a piano it shows the same
   connection help as the guide's first step. Like the guide, it captures input while open and
   steps aside (state kept) while the calibration dialog is on top.
