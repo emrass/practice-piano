@@ -1,0 +1,225 @@
+/* First-run setup guide (SetupGuide.tsx). Sits on the shared modal card. */
+
+.modal-card.setup {
+  width: min(560px, 100%);
+  display: grid;
+  gap: 14px;
+}
+
+.modal-card.setup:focus {
+  outline: none;
+}
+
+.modal-card.setup .modal-head {
+  align-items: flex-start;
+  margin-bottom: 0;
+}
+
+.setup-progress {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 2px;
+}
+
+.setup-body {
+  display: grid;
+  gap: 12px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.setup-body p,
+.setup-body ul {
+  margin: 0;
+}
+
+.setup-body kbd {
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 1px 5px;
+  border-radius: 5px;
+  border: 1px solid var(--rule);
+  background: var(--paper-2);
+}
+
+.setup-body .status-line.is-warn,
+.setup-note.is-warn {
+  border-color: color-mix(in srgb, var(--warn) 55%, transparent);
+}
+
+/* Buttons wrap on narrow screens; the way forward stays at the end. */
+.setup-actions {
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.setup-actions .btn {
+  white-space: normal;
+  min-height: 36px;
+  height: auto;
+  padding-block: 6px;
+}
+
+/* "Found your piano — play a key", then "We hear you". */
+.setup-listen {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--paper-2);
+  border: 1px solid var(--rule);
+}
+
+.setup-listen > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.setup-listen b {
+  font-family: var(--serif);
+  font-size: 17px;
+  overflow-wrap: anywhere;
+}
+
+.setup-listen span {
+  color: var(--ink-2);
+}
+
+.setup-listen-mark {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  color: var(--ink-3);
+  border: 2px dashed var(--rule);
+}
+
+.setup-listen.is-heard {
+  border-color: color-mix(in srgb, var(--ok) 45%, transparent);
+  background: var(--ok-soft);
+}
+
+.setup-listen.is-heard .setup-listen-mark {
+  border: 2px solid var(--ok);
+  background: var(--ok);
+  color: var(--card);
+}
+
+.setup-note {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--paper-2);
+  border: 1px solid var(--rule);
+}
+
+.setup-note ul {
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+}
+
+/* The two ways to connect: a label column and what to do. */
+.setup-ways {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.setup-ways li {
+  display: grid;
+  grid-template-columns: 76px 1fr;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.setup-ways li > b {
+  color: var(--ink);
+}
+
+.setup-ways li > span {
+  color: var(--ink-2);
+}
+
+/* Stage choices and latency presets: a name and one line about it. */
+.setup-stages,
+.setup-presets {
+  display: grid;
+  gap: 6px;
+}
+
+.setup-stage {
+  display: grid;
+  gap: 1px;
+  text-align: left;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--rule);
+  background: var(--card);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.setup-stage span {
+  color: var(--ink-2);
+}
+
+.setup-stage:hover {
+  border-color: var(--ink-3);
+}
+
+.setup-stage.is-active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.setup-stage.is-active b {
+  color: var(--accent);
+}
+
+.setup-skills {
+  display: grid;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--paper-2);
+}
+
+.setup-skills-head {
+  font-size: 13.5px;
+}
+
+.setup-skills select {
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 480px) {
+  .modal-card.setup {
+    padding: 14px 14px 16px;
+  }
+
+  .setup-ways li {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  /* One button per row, the way forward first. */
+  .setup-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .setup-actions .btn-ghost {
+    margin-right: 0;
+  }
+}

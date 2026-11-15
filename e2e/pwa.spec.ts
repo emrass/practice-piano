@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { fakeMidi } from './support';
+import { fakeMidi, skipSetup } from './support';
 
 /**
  * The installable, offline web app. Runs against a production build served by `vite preview`
@@ -22,6 +22,7 @@ test('The manifest and its icons are served', async ({ page, request }) => {
 test('After one visit, the app loads and plays offline', async ({ page, context }) => {
   await page.addInitScript(fakeMidi);
   await page.goto('./');
+  await skipSetup(page);
   await page.evaluate(async () => {
     await navigator.serviceWorker.ready;
   });
@@ -49,6 +50,7 @@ test('After one visit, the app loads and plays offline', async ({ page, context 
 
 test('Your data shows whether the browser keeps the data', async ({ page }) => {
   await page.goto('./');
+  await skipSetup(page);
   await page.getByRole('tab', { name: 'Progress' }).click();
   await expect(page.locator('.storage-status')).toContainText(/protected from automatic clean-up|may clear it/);
 });

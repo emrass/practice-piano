@@ -27,6 +27,7 @@ import { PracticeBar } from './components/PracticeBar';
 import { ProgressPanel } from './components/ProgressPanel';
 import { ResultsCard } from './components/ResultsCard';
 import { ScoreView } from './components/ScoreView';
+import { SetupGuide, type SetupStep } from './components/SetupGuide';
 import { type LessonRuntime, useLesson } from './lessons';
 import type { Continuation, KeyboardAvailability } from './lessons/types';
 import { isUntouched, type PracticeState, type Session } from './practice/session';
@@ -67,6 +68,9 @@ function Studio({ profile }: { profile: Profile }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [award, setAward] = useState<{ exerciseId: string; award: Award } | null>(null);
   const [calibrating, setCalibrating] = useState(false);
+  /** The setup guide, opened again by the player (it opens by itself until it was seen once). */
+  const [reopenedSetup, setReopenedSetup] = useState<SetupStep | null>(null);
+  const setupOpen = !s.setupGuideSeen || reopenedSetup !== null;
   const [hiddenResultsFor, setHiddenResultsFor] = useState<object | null>(null);
   const progressRef = useRef(progress);
   useEffect(() => {
@@ -225,6 +229,18 @@ function Studio({ profile }: { profile: Profile }) {
     setDrawerOpen(false);
     setCalibrating(true);
   }, [controller]);
+  const openSetup = useCallback(
+    (step: SetupStep) => {
+      if (controller.isActive) controller.stop();
+      setDrawerOpen(false);
+      setReopenedSetup(step);
+    },
+    [controller],
+  );
+  const closeSetup = useCallback(() => {
+    updateSettings({ setupGuideSeen: true });
+    setReopenedSetup(null);
+  }, [updateSettings]);
 
   // ---- MIDI -------------------------------------------------------------------------
   const [initialMidiId] = useState(s.midiInputId);
@@ -247,7 +263,7 @@ function Studio({ profile }: { profile: Profile }) {
   useEffect(() => {
     const down = new Set<string>();
     const onKeyDown = (e: KeyboardEvent) => {
-      if (calibrating) return; // the dialog captures input and handles Escape itself
+      if (calibrating || setupOpen) return; // the dialog captures input and handles Escape itself
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       if (isTypingTarget(e.target)) return;
       const finished = controller.state.get().status === 'finished';
@@ -293,7 +309,7 @@ function Studio({ profile }: { profile: Profile }) {
       inputBus.publish({ kind: 'noteOn', midi, velocity: 80, time: performance.now(), source: 'qwerty' });
     };
     const onKeyUp = (e: KeyboardEvent) => {
-      if (calibrating && !down.has(e.code) && e.key !== 'Shift') return;
+      if ((calibrating || setupOpen) && !down.has(e.code) && e.key !== 'Shift') return;
       if (e.code === 'Space') e.preventDefault();
       if (e.key === 'Shift') {
         inputBus.publish({ kind: 'sustain', down: false, time: performance.now(), source: 'qwerty' });
@@ -318,7 +334,7 @@ function Studio({ profile }: { profile: Profile }) {
       window.removeEventListener('blur', onBlur);
       onBlur();
     };
-  }, [controller, startStop, nextExercise, retry, continueRun, hint, qwertyBase, keyToMidi, rhythmQwerty, exercise.id, calibrating, hideResults]);
+  }, [controller, startStop, nextExercise, retry, continueRun, hint, qwertyBase, keyToMidi, rhythmQwerty, exercise.id, calibrating, setupOpen, hideResults]);
 
   // ---- Theme ------------------------------------------------------------------------
   useEffect(() => {
@@ -337,7 +353,7 @@ function Studio({ profile }: { profile: Profile }) {
           ? connectedInputs[0].name
           : `${connectedInputs.length} MIDI inputs`
         : (midiState.inputs.find((i) => i.id === midiState.selectedId)?.name ?? 'Device offline')
-      : 'No MIDI device';
+      : 'Connect a piano';
 
   const panels = (
     <>
@@ -356,7 +372,7 @@ function Studio({ profile }: { profile: Profile }) {
       </div>
       <div className="sidebar-scroll">
         {tab === 'exercise' ? runtime.panel : null}
-        {tab === 'input' ? <InputAudioPanel settings={s} update={update} midi={midiService} qwertyBase={qwertyBase} onCalibrate={openCalibration} /> : null}
+        {tab === 'input' ? <InputAudioPanel settings={s} update={update} midi={midiService} qwertyBase={qwertyBase} onCalibrate={openCalibration} onSetup={() => openSetup('connect')} /> : null}
         {tab === 'progress' ? (
           <ProgressPanel
             lesson={lesson}
@@ -438,6 +454,8 @@ function Studio({ profile }: { profile: Profile }) {
             type="button"
             className={`chip chip-midi ${connectedInputs.length ? 'is-on' : ''}`}
             onClick={() => {
+              // No piano yet: the guide explains how to connect one. Otherwise, the device settings.
+              if (!connectedInputs.length) return openSetup('connect');
               setTab('input');
               setDrawerOpen(true);
             }}
@@ -512,6 +530,19 @@ function Studio({ profile }: { profile: Profile }) {
           />
         </main>
       </div>
+      {setupOpen ? (
+        <SetupGuide
+          settings={s}
+          update={update}
+          midi={midiService}
+          initialStep={reopenedSetup ?? 'connect'}
+          reopened={s.setupGuideSeen}
+          hidden={calibrating}
+          onCalibrate={openCalibration}
+          onLevelsChanged={reseed}
+          onClose={closeSetup}
+        />
+      ) : null}
       {calibrating ? (
         <LatencyCalibration
           volume={s.metronomeVolume}
