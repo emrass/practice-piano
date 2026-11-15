@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { generatedContinuation, pianoLegend, repertoireContinuation } from './continuation';
 
 describe('generatedContinuation', () => {
-  it('offers a retry and suggests new material', () => {
-    expect(generatedContinuation('New phrase')).toEqual({ repeat: { label: 'Retry' }, next: { label: 'New phrase' }, primary: 'next' });
+  it('offers a restart and suggests new material', () => {
+    expect(generatedContinuation('New phrase')).toEqual({ repeat: { label: 'Restart' }, next: { label: 'New phrase' }, primary: 'next' });
   });
 });
 
@@ -31,7 +31,7 @@ describe('repertoireContinuation', () => {
 describe('pianoLegend', () => {
   it('names C and D as the lesson does', () => {
     expect(pianoLegend(generatedContinuation('New rhythm'))).toEqual([
-      { key: 'C', label: 'Retry' },
+      { key: 'C', label: 'Restart' },
       { key: 'D', label: 'New rhythm' },
       { key: 'E', label: 'Close' },
       { key: 'F', label: 'Easier' },

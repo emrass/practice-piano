@@ -3,7 +3,7 @@ import type { Continuation } from './types';
 
 /** Generated material (sight reading, ear, rhythm, chord drills): try this one again, or move on to a new one. */
 export function generatedContinuation(nextLabel: string): Continuation {
-  return { repeat: { label: 'Retry' }, next: { label: nextLabel }, primary: 'next' };
+  return { repeat: { label: 'Restart' }, next: { label: nextLabel }, primary: 'next' };
 }
 
 /**

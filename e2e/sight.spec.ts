@@ -29,9 +29,9 @@ test.describe('Sight reading', () => {
     await expect(restart).toBeDisabled();
     await app.playSteps();
     const actions = app.results().locator('.results-actions .btn');
-    await expect(actions).toHaveText([/Close/, /Retry/, /New exercise/]);
+    await expect(actions).toHaveText([/Close/, /Restart/, /New exercise/]);
     await expect(actions.last()).toBeFocused();
-    await expect(page.locator('.pb-message')).toHaveText('Finished — on the piano: C retry · D new exercise');
+    await expect(page.locator('.pb-message')).toHaveText('Finished — on the piano: C restart · D new exercise');
   });
 
   test('Wait: with the results closed, the bar offers them and the next exercise; a restarted run shows its own', async ({ app, page }) => {
