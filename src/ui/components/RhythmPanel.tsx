@@ -12,7 +12,8 @@ import {
   type RhythmTexture,
 } from '../../core/rhythm/generator';
 import { rhythmTierForLevel } from '../../core/rhythm/tiers';
-import type { ProgressState, TimeStat } from '../../core/progress/progress';
+import type { ProgressState } from '../../core/progress/progress';
+import type { TimeStat } from '../../core/progress/rhythm';
 import type { Settings, SettingsPatch } from '../../core/settings';
 import { inputBus } from '../../input/inputBus';
 import { CommitSlider, Field, Segmented, Select, Toggle } from './controls';

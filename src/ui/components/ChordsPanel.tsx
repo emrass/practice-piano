@@ -12,7 +12,8 @@ import {
 } from '../../core/chords/catalog';
 import { weakChordLabel } from '../../core/chords/analysis';
 import type { ChordExercise } from '../../core/chords/generator';
-import type { ProgressState, WeakChordStat } from '../../core/progress/progress';
+import type { WeakChordStat } from '../../core/progress/chords';
+import type { ProgressState } from '../../core/progress/progress';
 import { progressionChoice, type Settings, type SettingsPatch } from '../../core/settings';
 import { tonicLabel } from '../../core/scales/catalog';
 import { CommitSlider, Field, ReviewNote, Segmented, Select, Toggle } from './controls';

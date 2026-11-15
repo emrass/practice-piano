@@ -116,6 +116,11 @@ review. Restart in Wait is off while the run is untouched (`isUntouched`, `ui/pr
   times, timing sum). v1 records `note` (`treble:60`) and `clef`; adding `interval`,
   `accidental`, `keySignature` or `rhythm` later needs no schema change. `findWeakSpots`
   ranks notes by miss rate and slowness; weak-spot practice feeds them back into the generator.
+- XP, streaks, history and tier / repertoire bookkeeping are shared (`progress.ts`); what differs
+  per lesson lives in `core/progress/<lesson>.ts` behind `LessonProgressRules`
+  (`core/progress/types.ts`): the pass rule, the stats a run records, and where needed replays
+  (ear) or the repertoire ladder run and XP tempo. `progress.ts` looks them up in
+  `PROGRESS_RULES` by the result's lesson. Each lesson's weak-spot finder sits in the same module.
 
 ## Persistence & identity (v1 → v2)
 
@@ -199,7 +204,7 @@ gets plain objects back.
 - Rendering: `renderScore` draws rhythm exercises on one-line percussion staves (lines hidden
   with `setConfigForLines`, all notes on `b/4`, stems up) and wraps each measure in a
   `data-measure` group for Echo's reveal.
-- Progress: `isPass` adds the timing rule for rhythm (≥ 70 %); stats `rhythmFigure`,
+- Progress (`core/progress/rhythm.ts`): the pass rule adds timing (≥ 70 %); stats `rhythmFigure`,
   `beatPosition`, `rhythmHand`, `rhythmTexture` keep signed offsets (`offsetSum`,
   `offsetSqSum`) for tendency / steadiness; `findWeakFigures` drives weak-spot practice in both
   lessons. Sight reading records figures in Flow mode only (Wait mode has no timing).
@@ -221,7 +226,7 @@ gets plain objects back.
   (`applyRepertoireRun`, `dueItems`, `setLadder`, `normalizeRepertoire`). Tempo is in the
   lesson's unit (`ladderTempo`: notes per minute for scales, bpm for chords); a `LadderRun`
   carries the run's tempo, goal and the step size (4 bpm × notes per beat).
-  `ProgressState.repertoire` stores it; `ladderRun(result)` in progress.ts maps a lesson's result
+  `ProgressState.repertoire` stores it; the lesson's progress rules (`ladderRun`) map its result
   onto it. Repertoire lessons (`LESSONS.x.repertoire`) skip level tiers and first-sight logic in
   `computeAward`/`applyResult`.
 - UI: the sight-reading `PracticeController` is reused (Wait / Flow) with a `decorate` hook that
@@ -237,6 +242,11 @@ A lesson is a set of modules, one of each kind, and App.tsx only picks the activ
   `Exercise` (scales, chords and rhythm drills fit the same measures/steps model), and analysis
   that turns the engine's `RawResult` into the lesson's variant of the `ExerciseResult` union
   (`lesson: 'chords'` plus its required `chords` summary; add a variant for a new lesson).
+- **Progress rules** — `core/progress/<lesson>.ts` exports the lesson's `LessonProgressRules`
+  (typed on its result variant): `isPass`, `recordObservations` (the stats dimensions it fills;
+  add new ones to `StatDimension`), and for a repertoire lesson `ladderRun` and `tempoRatio`;
+  add it to `PROGRESS_RULES` in `progress.ts`. Weak-spot finders for the lesson hook and the
+  Progress tab live in the same module.
 - **Settings** — a group in `core/settings.ts` (`settings.<lesson>`, validated by a
   `normalize<Lesson>` function); shared settings (display, audio, input) stay at the top level;
   the keyboard's display settings are switched in the bar above the keys
@@ -264,4 +274,5 @@ A lesson is a set of modules, one of each kind, and App.tsx only picks the activ
 - **Results and Progress** — a `ResultsView` in `ui/results/` (ribbon, headline, measurements) and
   a `ProgressView` in `ui/progress/` (summary tile labels, the lesson's section).
 
-The renderer, keyboard, input, piano shortcuts, persistence and progress logic are shared.
+The renderer, keyboard, input, piano shortcuts, persistence and progress bookkeeping (XP, streaks,
+history, tier mastery) are shared.

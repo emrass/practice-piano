@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { freshExercise } from '../../core/generator/fresh';
-import { findWeakFigures, type ProgressState } from '../../core/progress/progress';
+import type { ProgressState } from '../../core/progress/progress';
+import { findWeakFigures } from '../../core/progress/rhythm';
 import { generateRhythmExercise } from '../../core/rhythm/generator';
 import { inputBus } from '../../input/inputBus';
 import { audioEngine } from '../../platform/audio/audioEngine';
