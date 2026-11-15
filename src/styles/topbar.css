@@ -132,16 +132,11 @@
   }
 }
 
-@media (max-width: 900px) {
-  .chip-streak {
-    display: none;
-  }
-}
-
 /* Five lessons: the top bar drops the wordmark and chip labels before it runs out of room. */
 @media (max-width: 900px) {
   .brand-name,
-  .chip-xp {
+  .chip-xp,
+  .chip-streak {
     display: none;
   }
   .chip-midi {
@@ -157,11 +152,6 @@
   .topbar {
     gap: 10px;
     padding: 0 10px;
-  }
-  .brand-name,
-  .chip-xp,
-  .chip-streak {
-    display: none;
   }
   .topbar-lesson .segmented {
     width: 252px;
@@ -182,13 +172,6 @@
   }
   .label-short {
     display: inline;
-  }
-  .chip-midi {
-    max-width: 34px;
-    padding: 0 12px;
-  }
-  .chip-midi-name {
-    display: none;
   }
 }
 
