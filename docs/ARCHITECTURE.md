@@ -121,6 +121,14 @@ review. Restart in Wait is off while the run is untouched (`isUntouched`, `ui/pr
   (`core/progress/types.ts`): the pass rule, the stats a run records, and where needed replays
   (ear) or the repertoire ladder run and XP tempo. `progress.ts` looks them up in
   `PROGRESS_RULES` by the result's lesson. Each lesson's weak-spot finder sits in the same module.
+- Trends: every day log (`days`, 120 days) also sums each lesson's runs (`DayLog.lessons`: runs,
+  accuracy, timing, level), and every repertoire item keeps a `ladderLog` (the starting tempo,
+  then the last tempo of each day it moved, at most 60 entries). `core/progress/trends.ts` turns
+  them into the Progress tab's trend (one point per practice day of the lesson) and the practice
+  calendar (17 Monday-first weeks, for all lessons like the streak, with the tab's lesson marked).
+  Both fields are optional: `normalizeProgress` fills in old days from the history and starts
+  old items' logs at their current tempo, so the schema and backup versions stay at 1. The
+  charts are inline SVG (`ui/progress/charts/`).
 
 ## Persistence & identity (v1 → v2)
 

@@ -6,7 +6,10 @@ import type { Settings } from '../../core/settings';
 import { BackupError } from '../../persistence/profileRepository';
 import { isNativeApp } from '../../platform/native';
 import { isAppleMobileBrowserTab, isStoragePersisted } from '../../platform/storageProtection';
+import { lessonTrend } from '../../core/progress/trends';
 import { PROGRESS_VIEWS, pct } from '../progress';
+import { PracticeCalendar } from '../progress/charts/PracticeCalendar';
+import { TrendChart } from '../progress/charts/TrendChart';
 import { profileRepository } from '../state/useProfile';
 
 /**
@@ -33,6 +36,7 @@ export function ProgressPanel(props: {
     return n ? Math.round(all.reduce((a, t) => a + (t.tendencyMs ?? 0) * t.attempts, 0) / n) : null;
   }, [progress]);
   const streak = displayStreak(progress.streak, dayKey(new Date()));
+  const trend = useMemo(() => lessonTrend(progress, props.lesson), [progress, props.lesson]);
   const [message, setMessage] = useState<string | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -106,6 +110,18 @@ export function ProgressPanel(props: {
             </div>
           )}
         </div>
+        <PracticeCalendar progress={progress} lesson={props.lesson} now={props.now} />
+      </section>
+
+      <section className="panel-section">
+        <div className="section-title">
+          Trend{trend.length > 1 ? <span className="muted"> · last {trend.length} practice days</span> : null}
+        </div>
+        {trend.length > 1 ? (
+          <TrendChart points={trend} series={view.trend} />
+        ) : (
+          <p className="field-hint">Your trend appears once you have practiced this lesson on two days{trend.length ? ' (one so far)' : ''}.</p>
+        )}
       </section>
 
       <Section

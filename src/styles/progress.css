@@ -146,3 +146,239 @@
   font-variant-numeric: tabular-nums;
   color: var(--ink-3);
 }
+
+/* Practice calendar: 17 Monday-first weeks under the summary tiles. */
+
+.practice-calendar {
+  display: grid;
+  gap: 6px;
+}
+
+.cal-head,
+.cal-legend {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: auto repeat(17, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.cal-col {
+  display: grid;
+  grid-template-rows: 12px repeat(7, auto);
+  gap: 2px;
+  min-width: 0;
+}
+
+.cal-month {
+  font-size: 9px;
+  line-height: 12px;
+  color: var(--ink-3);
+  white-space: nowrap;
+  overflow: visible;
+}
+
+.cal-weekdays span:not(.cal-month) {
+  font-size: 8.5px;
+  line-height: 1;
+  color: var(--ink-3);
+  display: flex;
+  align-items: center;
+  padding-right: 3px;
+}
+
+.cal-day {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  max-width: 16px;
+  min-width: 8px;
+  border-radius: 3px;
+  background: var(--rule-2);
+}
+
+.cal-day.lvl-1 {
+  background: color-mix(in srgb, var(--accent) 28%, var(--card));
+}
+
+.cal-day.lvl-2 {
+  background: color-mix(in srgb, var(--accent) 50%, var(--card));
+}
+
+.cal-day.lvl-3 {
+  background: color-mix(in srgb, var(--accent) 74%, var(--card));
+}
+
+.cal-day.lvl-4 {
+  background: var(--accent);
+}
+
+.cal-day.is-future {
+  background: transparent;
+}
+
+.cal-day.is-today {
+  outline: 1.5px solid var(--ink-2);
+  outline-offset: 1px;
+}
+
+.cal-dot {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--ink);
+}
+
+.cal-day.lvl-3 .cal-dot,
+.cal-day.lvl-4 .cal-dot {
+  background: var(--card);
+}
+
+.cal-legend {
+  font-weight: 500;
+  color: var(--ink-3);
+}
+
+.cal-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cal-legend .cal-dot {
+  background: var(--ink-2);
+}
+
+.cal-scale .cal-day {
+  width: 10px;
+  min-width: 10px;
+}
+
+/* Charts (inline SVG): trend per lesson, ladder per repertoire item. */
+
+.trend-chart {
+  margin: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.trend-chart svg,
+.ladder-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.chart-grid line {
+  stroke: var(--rule-2);
+  stroke-width: 1;
+}
+
+.chart-grid text,
+.chart-axis {
+  font-size: 9px;
+  fill: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-value {
+  font-size: 10px;
+  font-weight: 700;
+  fill: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-hit {
+  fill: transparent;
+}
+
+.chart-hit:hover {
+  fill: var(--cursor);
+}
+
+.trend-line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.trend-line.is-pitch,
+.swatch.is-pitch {
+  stroke: var(--accent);
+  background: var(--accent);
+}
+
+.trend-line.is-timing,
+.swatch.is-timing {
+  stroke: var(--gold);
+  background: var(--gold);
+}
+
+.trend-line.is-level {
+  stroke: var(--ink-3);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+
+.trend-dot.is-pitch {
+  fill: var(--accent);
+}
+
+.trend-dot.is-timing {
+  fill: var(--gold);
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.chart-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.swatch {
+  display: inline-block;
+  width: 14px;
+  height: 3px;
+  border-radius: 2px;
+}
+
+.swatch.is-level {
+  background: repeating-linear-gradient(90deg, var(--ink-3) 0 4px, transparent 4px 7px);
+}
+
+.ladder-goal {
+  stroke: var(--ok);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+}
+
+.ladder-line {
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.ladder-dot {
+  fill: var(--gold);
+}

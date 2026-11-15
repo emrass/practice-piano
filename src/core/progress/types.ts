@@ -53,10 +53,26 @@ export interface TierProgress {
   masteredAt?: number;
 }
 
+/** One lesson's runs on one day, summed so a day's average is `sum / runs`. */
+export interface LessonDay {
+  runs: number;
+  pitchSum: number;
+  /** Runs with a timing score (Flow, rhythm) and the sum of those scores. */
+  timingRuns: number;
+  timingSum: number;
+  /** Sum of the runs' levels; 0 for repertoire lessons, which have no level. */
+  levelSum: number;
+}
+
 export interface DayLog {
   exercises: number;
   xp: number;
   practiceMs: number;
+  /**
+   * Per-lesson breakdown, for the trend chart and the calendar's lesson marks. Missing on days
+   * recorded before it existed that the history could not fill in (see `normalizeProgress`).
+   */
+  lessons?: Partial<Record<LessonId, LessonDay>>;
 }
 
 export interface HistoryEntry {

@@ -16,22 +16,27 @@ export { pct } from './format';
 export const PROGRESS_VIEWS: Record<LessonId, ProgressView> = {
   sight: {
     summary: { pitch: 'Pitch (last 20)', second: 'timing', secondLabel: 'Timing (Flow)', third: 'reaction' },
+    trend: { pitch: 'Pitch', timing: 'Timing (Flow)', level: true },
     Section: SightSection,
   },
   ear: {
     summary: { pitch: 'Found (last 20)', second: 'replays', secondLabel: 'Avg replays (last 20)', third: 'reaction' },
+    trend: { pitch: 'Found', timing: null, level: true },
     Section: EarSection,
   },
   rhythm: {
     summary: { pitch: 'Hits (last 20)', second: 'timing', secondLabel: 'Timing (last 20)', third: 'tendency' },
+    trend: { pitch: 'Hits', timing: 'Timing', level: true },
     Section: RhythmSection,
   },
   scales: {
     summary: { pitch: 'Notes (last 20)', second: 'timing', secondLabel: 'Timing (last 20)', third: 'reaction' },
+    trend: { pitch: 'Notes', timing: 'Timing', level: false },
     Section: RepertoireStats,
   },
   chords: {
     summary: { pitch: 'Chords (last 20)', second: 'timing', secondLabel: 'Timing (last 20)', third: 'reaction' },
+    trend: { pitch: 'Chords', timing: 'Timing', level: false },
     Section: ChordStats,
   },
 };
