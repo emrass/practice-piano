@@ -13,3 +13,4 @@ native/build/
 native/**/xcuserdata/
 native/**/*.xcuserstate
 native/DerivedData/
+.wrangler/
