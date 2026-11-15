@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import { useStore } from '../../lib/store';
 import type { Continuation } from '../lessons/types';
 import { isUntouched, type Session } from '../practice/session';
@@ -63,22 +62,6 @@ export function PracticeBar(props: {
       ? Array.from({ length: s.beat.beatsPerBar }, (_, i) => (i === s.beat!.index ? 'is-on' : ''))
       : Array.from({ length: 4 }, () => 'is-idle');
 
-  // Beside the red button: the lesson's "next", or the way back to closed results. Ear training has its hint there until the phrase is done.
-  let secondary: ReactNode = null;
-  if (s.status === 'finished' && props.resultsHidden) {
-    secondary = (
-      <button type="button" className="btn" onClick={props.onShowResults}>
-        Results
-      </button>
-    );
-  } else if (next && (!ear || s.status === 'finished')) {
-    secondary = (
-      <button type="button" className="btn" onClick={props.onNext}>
-        {next.label} <kbd>N</kbd>
-      </button>
-    );
-  }
-
   return (
     <div className="practice-bar">
       <div className="pb-actions">
@@ -118,7 +101,18 @@ export function PracticeBar(props: {
             Hint <kbd>?</kbd>
           </button>
         ) : null}
-        {secondary}
+        {/* Closed results stay one press away, next to the way on. */}
+        {s.status === 'finished' && props.resultsHidden ? (
+          <button type="button" className="btn" onClick={props.onShowResults}>
+            Results
+          </button>
+        ) : null}
+        {/* Ear training has its hint here until the phrase is done. */}
+        {next && (!ear || s.status === 'finished') ? (
+          <button type="button" className="btn" onClick={props.onNext}>
+            {next.label} <kbd>N</kbd>
+          </button>
+        ) : null}
       </div>
 
       <div className={`pb-status ${wrongFlash ? 'is-wrong' : ''} ${flow ? 'is-timed' : ''} ${hint ? 'has-hint' : ''}`}>

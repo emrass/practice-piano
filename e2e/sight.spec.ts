@@ -34,6 +34,22 @@ test.describe('Sight reading', () => {
     await expect(page.locator('.pb-message')).toHaveText('Finished — on the piano: C retry · D new exercise');
   });
 
+  test('Wait: with the results closed, the bar offers them and the next exercise; a restarted run shows its own', async ({ app, page }) => {
+    await app.open({ settings: { lesson: 'sight', sight: { mode: 'wait', level: 8, bars: 4, hands: 'rh' } } });
+    const bar = page.locator('.practice-bar');
+    await app.playSteps();
+    await page.keyboard.press('Escape');
+    await expect(app.results()).toBeHidden();
+    await expect(bar.locator('.btn')).toHaveText([/Restart/, /Hint/, /Results/, /New exercise/]);
+    await bar.getByRole('button', { name: 'Restart' }).click();
+    await app.playSteps();
+    await expect(app.results()).toBeVisible();
+    await page.keyboard.press('Escape');
+    const before = await app.steps();
+    await bar.getByRole('button', { name: 'New exercise' }).click();
+    await expect.poll(() => app.steps()).not.toEqual(before);
+  });
+
   test('Wait: with the guide off, a hint shows the note and costs the step', async ({ app, page }) => {
     await app.open({ settings: { lesson: 'sight', showKeyboardGuide: false, sight: { mode: 'wait', level: 8, bars: 4, hands: 'rh' } } });
     const steps = await app.steps();
