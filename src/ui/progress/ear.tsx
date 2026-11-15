@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { findWeakIntervals, INTERVAL_NAMES, type ProgressState } from '../../core/progress/progress';
+import { findWeakIntervals, INTERVAL_NAMES } from '../../core/progress/ear';
+import type { ProgressState } from '../../core/progress/progress';
 import { pct } from './format';
 import { TierMastery } from './TierMastery';
 import type { ProgressSectionProps } from './types';

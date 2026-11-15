@@ -3,7 +3,8 @@ import { allEvents } from '../exercise';
 import type { NoteResult, RawResult } from '../eval/types';
 import { generateExercise } from '../generator/generator';
 import { isSupportedDuration, TIME_SIGNATURES } from '../music/rhythm';
-import { applyResult, emptyProgress, findWeakFigures, isPass } from '../progress/progress';
+import { applyResult, emptyProgress, isPass } from '../progress/progress';
+import { findWeakFigures } from '../progress/rhythm';
 import { annotateRhythm, rhythmResult, summarizeRhythm } from './analysis';
 import {
   beatPosition,

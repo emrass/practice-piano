@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { earProfile, type EarReference } from '../../core/ear/generator';
 import { earTierForLevel } from '../../core/ear/tiers';
 import { KEYS } from '../../core/music/keys';
-import { INTERVAL_NAMES, type ProgressState } from '../../core/progress/progress';
+import { INTERVAL_NAMES } from '../../core/progress/ear';
+import type { ProgressState } from '../../core/progress/progress';
 import type { Settings, SettingsPatch } from '../../core/settings';
 import { CommitSlider, Field, Segmented, Select, Toggle } from './controls';
 

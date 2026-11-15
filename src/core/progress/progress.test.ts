@@ -1,20 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import type { NoteResult, RawResult, SightResult } from '../eval/types';
+import { findWeakIntervals, INTERVAL_NAMES } from './ear';
 import {
   applyResult,
   computeAward,
   dayKey,
   displayStreak,
   emptyProgress,
-  findWeakIntervals,
-  findWeakSpots,
-  INTERVAL_NAMES,
-  noteHeatmap,
   normalizeProgress,
   recentSummary,
   updateStreak,
   type ProgressState,
 } from './progress';
+import { findWeakSpots, noteHeatmap } from './sight';
 
 function result(over: Partial<RawResult> = {}, notes?: NoteResult[]): SightResult {
   const n = notes ?? Array.from({ length: 20 }, (_, i) => ({ midi: 60 + (i % 5), hand: 'rh' as const, clef: 'treble' as const, correct: true, reactionMs: 500 }));

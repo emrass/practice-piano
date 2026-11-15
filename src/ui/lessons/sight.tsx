@@ -1,7 +1,9 @@
 import { freshExercise } from '../../core/generator/fresh';
 import { generateExercise, type FocusNote } from '../../core/generator/generator';
 import { midiLabel } from '../../core/music/pitch';
-import { findWeakFigures, findWeakSpots, type ProgressState } from '../../core/progress/progress';
+import type { ProgressState } from '../../core/progress/progress';
+import { findWeakFigures } from '../../core/progress/rhythm';
+import { findWeakSpots } from '../../core/progress/sight';
 import { generatorSettingsFrom } from '../../core/settings';
 import { inputBus } from '../../input/inputBus';
 import { audioEngine } from '../../platform/audio/audioEngine';

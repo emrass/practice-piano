@@ -1,6 +1,7 @@
 import { generateEarExercise } from '../../core/ear/generator';
 import { freshExercise } from '../../core/generator/fresh';
-import { findWeakIntervals, type ProgressState } from '../../core/progress/progress';
+import { findWeakIntervals } from '../../core/progress/ear';
+import type { ProgressState } from '../../core/progress/progress';
 import { inputBus } from '../../input/inputBus';
 import { audioEngine } from '../../platform/audio/audioEngine';
 import { EarPanel } from '../components/EarPanel';

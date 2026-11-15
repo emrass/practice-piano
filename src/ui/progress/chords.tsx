@@ -1,7 +1,7 @@
 import { weakChordLabel } from '../../core/chords/analysis';
 import { chordItemTitle, parseChordItemId, QUALITIES, type ChordQuality } from '../../core/chords/catalog';
 import { median } from '../../core/eval/types';
-import { findWeakChords } from '../../core/progress/progress';
+import { findWeakChords } from '../../core/progress/chords';
 import { dueItems } from '../../core/repertoire/repertoire';
 import { DAY, pct } from './format';
 import type { ProgressSectionProps } from './types';

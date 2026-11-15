@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { chordItemId, type ChordItem, type ChordQuality, chordSpelling, findProgression, keysFor, parseChordItemId, PROGRESSIONS } from '../../core/chords/catalog';
 import { type ChordFocus, generateChordExercise, initialChordBpm } from '../../core/chords/generator';
-import { findWeakChords, type ProgressState } from '../../core/progress/progress';
+import { findWeakChords } from '../../core/progress/chords';
+import type { ProgressState } from '../../core/progress/progress';
 import { inputBus } from '../../input/inputBus';
 import { audioEngine } from '../../platform/audio/audioEngine';
 import { ChordChart } from '../components/ChordChart';
