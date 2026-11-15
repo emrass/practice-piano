@@ -1,5 +1,5 @@
 import { allEvents, type Exercise, type Hand } from '../exercise';
-import type { ExerciseResult, NoteResult, RhythmSummary } from '../eval/types';
+import type { NoteResult, RawResult, RhythmResult, RhythmSummary } from '../eval/types';
 import { beatPosition, isRhythmExercise } from './generator';
 
 /** Attach rhythm figure, metric position and (Pulse) silent-bar flag to each judged note. */
@@ -66,7 +66,7 @@ export function summarizeRhythm(ex: Exercise, notes: readonly NoteResult[]): Rhy
 /** Rhythm passes need the notes *and* the time: ≥ 90 % hits and ≥ 70 % timing. */
 export const RHYTHM_TIMING_PASS = 0.7;
 
-export function rhythmResult(ex: Exercise, raw: ExerciseResult): ExerciseResult {
+export function rhythmResult(ex: Exercise, raw: RawResult): RhythmResult {
   const notes = annotateRhythm(ex, raw.notes);
   return { ...raw, lesson: 'rhythm', notes, rhythm: summarizeRhythm(ex, notes) };
 }

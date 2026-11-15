@@ -1,5 +1,5 @@
 import { allEvents, type Hand } from '../exercise';
-import type { ExerciseResult, NoteResult, ScaleSummary } from '../eval/types';
+import type { NoteResult, RawResult, ScalesResult, ScaleSummary } from '../eval/types';
 import { pitchLabel } from '../music/pitch';
 import { crossingAt } from './fingering';
 import type { ScaleExercise } from './generator';
@@ -63,7 +63,7 @@ function handLines(ex: ScaleExercise, notes: readonly NoteResult[]): Record<Hand
   return lines;
 }
 
-export function summarizeScale(ex: ScaleExercise, raw: ExerciseResult, goalNpm: number): ScaleSummary {
+export function summarizeScale(ex: ScaleExercise, raw: RawResult, goalNpm: number): ScaleSummary {
   const lines = handLines(ex, raw.notes);
   const hits = raw.notes.filter((n) => n.correct && n.deltaMs !== undefined);
   const offsets = hits.map((n) => n.deltaMs!);
@@ -136,6 +136,6 @@ export function summarizeScale(ex: ScaleExercise, raw: ExerciseResult, goalNpm: 
   };
 }
 
-export function scaleResult(ex: ScaleExercise, raw: ExerciseResult, goalNpm: number): ExerciseResult {
+export function scaleResult(ex: ScaleExercise, raw: RawResult, goalNpm: number): ScalesResult {
   return { ...raw, lesson: 'scales', scale: summarizeScale(ex, raw, goalNpm) };
 }

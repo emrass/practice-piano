@@ -1,5 +1,5 @@
 import { HAND_CLEF, type Hand, type Step } from '../exercise';
-import { type ExerciseResult, type LiveStats, type NoteResult, type ResultContext } from './types';
+import { type LiveStats, type NoteResult, type RawResult, type ResultContext } from './types';
 
 export interface FlowOptions {
   msPerTick: number;
@@ -249,7 +249,7 @@ export class FlowEngine {
     };
   }
 
-  result(ctx: ResultContext): ExerciseResult {
+  result(ctx: ResultContext): RawResult {
     const hits = this.notes.filter((n) => n.state === 'hit');
     const missed = this.notes.filter((n) => n.state !== 'hit').length;
     const steps = new Map<number, boolean>();

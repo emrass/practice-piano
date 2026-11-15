@@ -1,6 +1,6 @@
 import { allEvents, type Exercise } from '../../core/exercise';
 import { FlowEngine } from '../../core/eval/flowEngine';
-import type { ExerciseResult } from '../../core/eval/types';
+import type { RawResult } from '../../core/eval/types';
 import type { NoteInput } from '../../core/input/events';
 import { msPerTick } from '../../core/music/rhythm';
 import { rhythmResult } from '../../core/rhythm/analysis';
@@ -241,7 +241,7 @@ export class RhythmController extends SessionBase {
     return true;
   };
 
-  private finish(raw: ExerciseResult) {
+  private finish(raw: RawResult) {
     const result = rhythmResult(this.opts.exercise, raw);
     this.halt();
     this.state.set({

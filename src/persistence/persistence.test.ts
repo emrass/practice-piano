@@ -10,6 +10,7 @@ function repo(storage = new MemoryStorageAdapter()) {
 }
 
 const sampleResult = {
+  lesson: 'sight' as const,
   mode: 'wait' as const,
   exerciseId: 'abc',
   level: 3,
@@ -66,6 +67,21 @@ describe('ProfileRepository', () => {
     expect(loaded.settings.theme).toBe('dark');
     expect(loaded.progress.xp).toBe(progress.xp);
     expect(loaded.progress.history).toHaveLength(1);
+  });
+
+  it('loads stored progress and backups recorded before lessons existed', async () => {
+    // A history entry as the first version saved it: no `lesson`, no `repertoire` in progress.
+    const entry = { at: 1, exerciseId: 'abc', mode: 'wait', level: 3, tierId: 't01', pitchAccuracy: 1, timingAccuracy: null, medianReactionMs: 800, xp: 12, firstSight: true, passed: true };
+    const progress = { schemaVersion: 1, xp: 12, exercisesCompleted: 1, streak: { current: 1, best: 1, lastDay: '2026-01-01' }, days: {}, tiers: {}, stats: {}, attempts: { abc: 1 }, history: [entry] };
+
+    const { storage, repo: r } = repo();
+    await storage.setItem(`users/${(await r.currentUser()).id}/progress`, JSON.stringify(progress));
+    expect((await r.load()).progress.history).toEqual([{ ...entry, lesson: 'sight' }]);
+
+    const backup = { format: 'practice-piano.backup', version: 1, exportedAt: '2026-01-02T00:00:00.000Z', app: 'practice-piano.com', user: { id: 'local-x', provider: 'local' }, settings: {}, progress };
+    const b = repo().repo;
+    await b.importBackup(JSON.stringify(backup));
+    expect((await b.load()).progress.history).toEqual([{ ...entry, lesson: 'sight' }]);
   });
 
   it('rejects invalid backups with a helpful message', () => {

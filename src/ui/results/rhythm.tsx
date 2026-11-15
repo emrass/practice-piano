@@ -5,7 +5,7 @@ import type { ResultsView } from './types';
 export const rhythmResults: ResultsView = {
   ribbon: (_result, passed) => (passed ? 'In time — counts toward mastery' : 'Needs ≥ 90% hits and ≥ 70% timing to pass'),
   headline: (result, passed) => {
-    const rhythm = result.rhythm;
+    const rhythm = result.lesson === 'rhythm' ? result.rhythm : null;
     // 'Right in the pocket!' also needs good timing and no clear rushing/dragging or drift.
     const inThePocket =
       !rhythm ||
@@ -15,7 +15,8 @@ export const rhythmResults: ResultsView = {
   repertoire: false,
   trains: 'your rhythm',
   Body: function RhythmResults({ result }) {
-    const rhythm = result.rhythm!;
+    if (result.lesson !== 'rhythm') return null;
+    const rhythm = result.rhythm;
     return (
       <div className="results-grid">
         <div className="rg-item rg-main">

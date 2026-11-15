@@ -1,5 +1,5 @@
 import { HAND_CLEF, type Step } from '../exercise';
-import { type ExerciseResult, type LiveStats, median, type NoteResult, type ResultContext } from './types';
+import { type LiveStats, median, type NoteResult, type RawResult, type ResultContext } from './types';
 
 export interface WaitOptions {
   /** Chord notes pressed within this window of each other count as simultaneous. */
@@ -181,7 +181,7 @@ export class WaitEngine {
     };
   }
 
-  result(ctx: ResultContext): ExerciseResult {
+  result(ctx: ResultContext): RawResult {
     const totalNotes = this.steps.reduce((a, s) => a + s.notes.length, 0);
     const expected = this.steps.reduce((a, s) => a + s.midis.length, 0);
     const pitchAccuracy = expected + this.wrong === 0 ? 1 : Math.max(0, this.correct - this.assistedNotes) / (expected + this.wrong);
