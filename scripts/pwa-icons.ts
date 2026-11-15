@@ -40,7 +40,7 @@ for (const v of variants) {
       ctx.roundRect(0, 0, size, size, size * radius);
       ctx.clip();
     }
-    // Background: the icon's own corner colour, so scaled-down artwork sits on the same field.
+    // Background: the icon's own corner color, so scaled-down artwork sits on the same field.
     const probe = document.createElement('canvas');
     probe.width = probe.height = 1;
     probe.getContext('2d')!.drawImage(img, 0, 0, 1, 1, 0, 0, 1, 1);

@@ -124,7 +124,7 @@ export interface Clip {
 }
 
 /**
- * The element's box (or a given box) from its top, cut or extended downwards to the final
+ * The element's box (or a given box) from its top, cut or extended downward to the final
  * image's aspect ratio. `top` moves the top edge down (positive) or up (negative); `pad` widens
  * the box on every side.
  */

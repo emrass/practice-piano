@@ -1,7 +1,7 @@
 import { chordResult } from '../../core/chords/analysis';
 import { pitchLabel } from '../../core/music/pitch';
 import { bassOf } from '../../core/chords/catalog';
-import { ChordFlowEngine, type ChordJudgement, ChordWaitEngine } from '../../core/chords/engine';
+import { ChordFlowEngine, type ChordJudgment, ChordWaitEngine } from '../../core/chords/engine';
 import type { ChordExercise } from '../../core/chords/generator';
 import type { TimingGrade } from '../../core/eval/flowEngine';
 import type { LiveStats } from '../../core/eval/types';
@@ -134,7 +134,7 @@ export class ChordController extends SessionBase {
     return (now - this.opts.playheadDelayMs - this.flow.startTime) / this.tickMs;
   }
 
-  private live(results: readonly ChordJudgement[], wrong: number): LiveStats {
+  private live(results: readonly ChordJudgment[], wrong: number): LiveStats {
     let streak = 0;
     let best = 0;
     for (const r of results) {
@@ -154,7 +154,7 @@ export class ChordController extends SessionBase {
     };
   }
 
-  private grade(j: ChordJudgement, perfectMs: number): TimingGrade {
+  private grade(j: ChordJudgment, perfectMs: number): TimingGrade {
     const d = j.deltaMs ?? 0;
     if (Math.abs(d) <= perfectMs) return 'perfect';
     if (Math.abs(d) <= 2.5 * perfectMs) return 'good';
@@ -219,8 +219,8 @@ export class ChordController extends SessionBase {
       const t = this.opts.exercise.chords.targets[w.index];
       s = this.nudged({ ...s, chords: { index: w.index, bassHint: `Right notes — put ${pitchLabel(bassOf(t.spec))} in the bass` } });
     }
-    if (r.type === 'match' && r.judgement) {
-      const j = r.judgement;
+    if (r.type === 'match' && r.judgment) {
+      const j = r.judgment;
       const mark: StepMark = j.correct ? 'good' : 'ok';
       s = {
         ...s,
@@ -253,7 +253,7 @@ export class ChordController extends SessionBase {
     }
   }
 
-  private finish(results: readonly ChordJudgement[], wrongPresses: number, durationMs: number) {
+  private finish(results: readonly ChordJudgment[], wrongPresses: number, durationMs: number) {
     const ex = this.opts.exercise;
     const result = chordResult(ex, results, {
       mode: this.opts.mode,

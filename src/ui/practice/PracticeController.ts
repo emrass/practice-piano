@@ -115,7 +115,7 @@ export class PracticeController extends SessionBase {
     if (this.opts.mode === 'flow') this.state.set(initialState(this.opts));
   }
 
-  /** Visual playhead position in ticks (Flow mode), honouring the optional audio delay. */
+  /** Visual playhead position in ticks (Flow mode), honoring the optional audio delay. */
   playheadTick(now = performance.now()): number | null {
     if (!this.flow) return null;
     const visualNow = now - this.opts.playheadDelayMs;

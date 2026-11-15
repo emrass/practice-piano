@@ -50,7 +50,7 @@ describe('WaitEngine', () => {
     expect(e.stepIndex).toBe(1);
   });
 
-  it('penalises wrong notes without advancing', () => {
+  it('penalizes wrong notes without advancing', () => {
     const e = new WaitEngine(buildSteps(fixture()), opts);
     e.start(0);
     const fb = e.noteOn(62, 50);
@@ -214,7 +214,7 @@ describe('FlowEngine', () => {
     expect(e.endTime).toBe(2000 + e.timing.hitMs);
   });
 
-  it('honours latency compensation', () => {
+  it('honors latency compensation', () => {
     const plain = engine(0);
     const compensated = engine(180);
     const a = plain.noteOn(60, 1180)[0];

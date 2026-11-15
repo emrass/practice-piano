@@ -1,5 +1,5 @@
 /**
- * Web Audio output: metronome clicks and a small synthesised piano voice used by ear
+ * Web Audio output: metronome clicks and a small synthesized piano voice used by ear
  * training, Rhythm Echo calls and (optionally) the on-screen and computer keys. MIDI input
  * never sounds: the player hears their own piano. A sampled piano can replace the voice
  * later by implementing NoteSynth.

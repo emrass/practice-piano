@@ -126,7 +126,7 @@ describe('scale spelling', () => {
 });
 
 describe('crossings', () => {
-  it('recognises thumb-under and finger-over in both hands', () => {
+  it('recognizes thumb-under and finger-over in both hands', () => {
     expect(crossingAt('rh', 3, 1, true)).toBe('thumb-under');
     expect(crossingAt('rh', 1, 3, false)).toBe('finger-over');
     expect(crossingAt('rh', 1, 2, true)).toBeNull();

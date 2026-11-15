@@ -1,7 +1,7 @@
 import { LESSONS, type LessonId } from '../../core/lessons';
 import type { ProgressState } from '../../core/progress/progress';
 
-/** Tier ladder of a levelled lesson (not used by repertoire lessons), marking the tier of the current level. */
+/** Tier ladder of a leveled lesson (not used by repertoire lessons), marking the tier of the current level. */
 export function TierMastery(props: { lesson: LessonId; level: number; progress: ProgressState }) {
   const info = LESSONS[props.lesson];
   return (

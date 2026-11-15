@@ -300,7 +300,7 @@ describe('rhythm analysis and progress', () => {
 });
 
 describe('shared figure library with sight reading', () => {
-  it('tags sight-reading events with figures and honours focus figures', () => {
+  it('tags sight-reading events with figures and honors focus figures', () => {
     const settings = {
       level: 40,
       hands: 'rh' as const,

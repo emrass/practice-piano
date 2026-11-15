@@ -39,7 +39,7 @@
 3. Rhythm per bar from weighted cells (beat-aligned, new figures fade in over ~12 levels), with
    motif repetition and long notes at phrase ends.
 4. Melody by weighted choice: steps ≫ skips ≫ leaps (decaying), chord tones on strong beats, leap
-   recovery, run limits, tritone avoidance, centre pull, cadential approach and tonic ending,
+   recovery, run limits, tritone avoidance, center pull, cadential approach and tonic ending,
    occasional melodic sequence of an earlier bar.
 5. Decoration: harmonic-minor leading tones, chromatic approach notes, consonant chord tones
    (span ≤ an octave), weak-spot focus weighting.
@@ -170,7 +170,7 @@ gets plain objects back.
 - `ui/practice/EarController.ts` implements the shared `Session` interface on top of
   `WaitEngine`: input is ignored while the phrase plays; found steps become visible
   (`visibleSteps`), `hint()` marks the step as assisted (it no longer counts as correct).
-- `platform/audio/audioEngine.ts` gained a small synthesised piano voice (`simplePiano`) and
+- `platform/audio/audioEngine.ts` gained a small synthesized piano voice (`simplePiano`) and
   `playSequence()` with a stop handle (replay cancels the previous playback).
 - Results carry `lesson: 'ear'`, `replays`, `hints`; progress records `interval` / `harmony`
   stats instead of reading stats, ear tiers have their own mastery and XP ceiling, and each
@@ -254,7 +254,7 @@ A lesson is a set of modules, one of each kind, and App.tsx only picks the activ
   go on after a run, see Piano shortcuts), how it reacts to settings
   changes (`onPatch`), its settings panel, an optional stage that replaces the score (chord chart,
   play from memory), the Wait / Flow switch, keyboard span and mappings (and which keyboard
-  display settings don't apply, greyed out in the bar above the keys), review and weak-spot
+  display settings don't apply, grayed out in the bar above the keys), review and weak-spot
   actions for the Progress tab. Shared pieces live in `ui/lessons/shared.ts` (weak-spot focus,
   review queue and manual tempo ladder for repertoire lessons). `useLesson` in
   `ui/lessons/index.ts` runs every lesson's hook (hooks can't be conditional); only the active one

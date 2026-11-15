@@ -99,7 +99,7 @@
   position: relative;
 }
 
-/* Opens upwards from the bar, over the practice bar, in the page's own colours. */
+/* Opens upward from the bar, over the practice bar, in the page's own colors. */
 .kb-popover {
   position: absolute;
   right: -34px;
@@ -156,7 +156,7 @@
   border-bottom: 1px solid var(--key-white-edge);
   border-radius: 0 0 5px 5px;
   /* No stacking context of its own, so a shortcut label wider than its key can paint over the
-     neighbouring white keys (black keys still cover everything). */
+     neighboring white keys (black keys still cover everything). */
 }
 
 .key-black {
@@ -296,7 +296,7 @@
 
 /* Narrow keys (phones, long ranges): the labels are wider than their keys, so they drop to the
    bottom of the key (over the note name) and every other one sits a row up, clear of its
-   neighbours and still under the black keys. */
+   neighbors and still under the black keys. */
 .key-white.is-action {
   container-type: inline-size;
 }

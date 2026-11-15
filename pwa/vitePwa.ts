@@ -61,7 +61,7 @@ export function pwa(enabled: boolean): Plugin {
 
 const ICONS = ['icon-192.png', 'icon-512.png', 'maskable-512.png', 'apple-touch-icon.png'];
 
-// Colours from src/styles/base.css (light theme): --bg for the splash, --paper-2 like the theme-color meta.
+// Colors from src/styles/base.css (light theme): --bg for the splash, --paper-2 like the theme-color meta.
 const MANIFEST = {
   id: './',
   name: 'Practice Piano',

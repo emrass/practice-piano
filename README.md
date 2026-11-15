@@ -60,7 +60,7 @@ keyboard guide and a menu for note names on the keys, computer-key hints and the
 | `npm run dev` | Vite dev server |
 | `npm test` | Vitest unit + integration tests |
 | `npm run typecheck` | `tsc -b` (strict) |
-| `npm run lint` | ESLint (typescript-eslint, react-hooks) |
+| `npm run lint` | ESLint (typescript-eslint, react-hooks) and the American English spelling check |
 | `npm run build` | type-check + production build → `dist/` |
 | `npm run build:native` | production build into `native/PracticePiano/Web` |
 | `npm run check` | all of the above, in order |
@@ -69,6 +69,10 @@ keyboard guide and a menu for note names on the keys, computer-key hints and the
 The browser tests need Chromium once: `npx playwright install chromium`. Where that download
 is not possible, point `PLAYWRIGHT_CHROMIUM_PATH` at an installed Chromium. CI (`checks.yml`)
 runs `npm run check` and the browser tests on every push and pull request.
+
+**Language:** UI text, code, comments and docs use American English ("practice", "color",
+"center", "canceled", "normalize"). `scripts/check-spelling.mjs` fails the lint on British
+spellings; add new ones to its list when you spot them.
 
 ### Landing page screenshots
 
@@ -85,7 +89,7 @@ npm run screenshots -- -g "chords|progress"          # a few
 ```
 
 It starts its own dev server on port 5194 (or set `SCREENSHOT_BASE_URL` to use a running one)
-and honours `PLAYWRIGHT_CHROMIUM_PATH`. The app's randomness and the played timing are seeded, so
+and honors `PLAYWRIGHT_CHROMIUM_PATH`. The app's randomness and the played timing are seeded, so
 a rerun gives the same exercises and nearly the same numbers (real-time scheduling can move a
 timing figure by a few ms). The progress shots use `scripts/screenshots/progress-fixture.json`,
 moved in time so its last session was an hour ago. `og.png` is made by hand and not part of this.
@@ -116,7 +120,7 @@ contains the current web code.
   axis (both hands align exactly), optional note-name labels, light / dark themes, automatic zoom
   for short pieces.
 - **Wait mode** — the cursor waits for the right notes; chords may be rolled within a
-  configurable grace window (75 ms default); wrong notes are penalised but don't advance.
+  configurable grace window (75 ms default); wrong notes are penalized but don't advance.
 - **Flow mode** — count-in with beat lights and clicks, a smooth constant-speed playhead,
   pitch + timing scoring with latency compensation, `Space` (or a sustain-pedal tap) to start / stop.
 - **Latency calibration** — tap along with a click on your piano to measure your exact setup
@@ -133,17 +137,17 @@ contains the current web code.
   so final notes never trigger them). R and N do the same from the computer keyboard, and Enter
   takes the suggested one: something new after generated exercises and in review, the same again
   for scales and progressions.
-- **Sustain pedal** — CC 64 indicator, and an option to count pedalled notes as held.
+- **Sustain pedal** — CC 64 indicator, and an option to count pedaled notes as held.
 - **Ear training (levels 1–100)** — two-note echoes from middle C, stepwise tunes, five-finger
   melodies, octave-wide leaps, new keys introduced by an I–IV–V–I cadence, minor keys, harmonic
   intervals, triads, "key only" phrases with no starting note, then inversions, sevenths and
   chromatic notes. `Space` or a sustain-pedal tap replays (each replay costs a little XP), `?`
   reveals the next note (counts as a miss); the keyboard stays a fixed C3–C6 window so it never
-  gives the phrase away. Interval accuracy is tracked and weak intervals can be practised.
+  gives the phrase away. Interval accuracy is tracked and weak intervals can be practiced.
 - **Rhythm (levels 1–100)** — quarters and halves → rests and 3/4, 2/4 → eighths → off-beats →
   dotted rhythms → syncopation → sixteenths → 6/8 → dotted sixteenths → interlocking hands →
   polyrhythms (3:2, 4:3). Tasks: *Read* (percussion staves, count-in, playhead), *Echo* (the app
-  plays a bar, you answer in the next; notation is revealed afterwards) and *Pulse* (silent
+  plays a bar, you answer in the next; notation is revealed afterward) and *Pulse* (silent
   metronome bars, no playhead — measures your drift). Each hand taps its own key (default C5 / C3,
   “Change” learns a new one; `J` / `F` on a computer keyboard); other keys are ignored. With both
   hands, one texture per exercise: unison, LH or RH pulse, interlocking, polyrhythm. Passing needs
@@ -179,8 +183,8 @@ src/
     generator/   difficulty profiles, tiers, rhythm cells (figures), harmony, melody generator
     ear/         ear-training tiers and phrase generator
     rhythm/      rhythm tiers, generator (tasks, textures), analysis (tendency, drift)
-    scales/      scale catalogue, fingering, generator, analysis (evenness, bumps)
-    chords/      chord & progression catalogue, voicings, generator, chord engines, analysis
+    scales/      scale catalog, fingering, generator, analysis (evenness, bumps)
+    chords/      chord & progression catalog, voicings, generator, chord engines, analysis
     repertoire/  tempo ladder & spaced review for fixed-repertoire lessons (scales, chords)
     eval/        Wait / Flow scoring engines
     progress/    XP, mastery, streaks, weak spots, extensible stats

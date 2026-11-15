@@ -3,13 +3,13 @@ import { EXPERIENCE_SKILLS, experiencePatch, normalizeExperience, SKILLS, STAGES
 import { LESSONS, type LessonId } from './lessons';
 import { applySettingsPatch, DEFAULT_SETTINGS, normalizeSettings } from './settings';
 
-const LEVELLED: LessonId[] = ['sight', 'ear', 'rhythm'];
+const LEVELED: LessonId[] = ['sight', 'ear', 'rhythm'];
 
 describe('experience statements', () => {
-  it('start every levelled lesson on the first level of a tier', () => {
+  it('start every leveled lesson on the first level of a tier', () => {
     for (const skill of EXPERIENCE_SKILLS) {
       for (const st of SKILLS[skill].statements) {
-        for (const lesson of LEVELLED) {
+        for (const lesson of LEVELED) {
           const level = (st.patch[lesson] as { level?: number } | undefined)?.level;
           if (level === undefined) continue;
           expect(LESSONS[lesson].tiers.map((t) => t.minLevel), `${st.text} → ${lesson} ${level}`).toContain(level);
@@ -24,7 +24,7 @@ describe('experience statements', () => {
       const fields = (i: number) => Object.entries(list[i].patch).flatMap(([g, v]) => Object.keys(v as object).map((k) => `${g}.${k}`));
       for (let i = 1; i < list.length; i++) {
         expect(fields(i)).toEqual(fields(0));
-        for (const lesson of LEVELLED) {
+        for (const lesson of LEVELED) {
           const level = (j: number) => (list[j].patch[lesson] as { level?: number } | undefined)?.level;
           if (level(i) !== undefined) expect(level(i)).toBeGreaterThanOrEqual(level(i - 1)!);
         }
@@ -65,7 +65,7 @@ describe('experience stages', () => {
     expect(s.experience).toEqual(STAGES[3].selection);
   });
 
-  it('are recognised from a selection until a statement is changed', () => {
+  it('are recognized from a selection until a statement is changed', () => {
     expect(stageOf(STAGES[2].selection)?.id).toBe('elementary');
     expect(stageOf({ ...STAGES[2].selection, ear: 5 })).toBeNull();
     expect(stageOf(null)).toBeNull();

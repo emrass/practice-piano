@@ -51,7 +51,7 @@ export interface ScaleSettings {
   noteValue: NoteValue;
   /** Wait = learn (self-paced), Flow = play with the metronome on the tempo ladder. */
   mode: 'wait' | 'flow';
-  /** 'review' practises the items that are due (spaced repetition). */
+  /** 'review' practices the items that are due (spaced repetition). */
   source: 'pick' | 'review';
   /** Mastery goal in notes per second. */
   goalNps: number;

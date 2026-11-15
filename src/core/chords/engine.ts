@@ -7,7 +7,7 @@ import type { ChordTarget } from './generator';
  */
 const pc = (m: number) => ((m % 12) + 12) % 12;
 
-export interface ChordJudgement {
+export interface ChordJudgment {
   index: number;
   correct: boolean;
   /** Wait: time from the chord being asked to it being played. */
@@ -53,7 +53,7 @@ export class ChordWaitEngine {
   private hints = 0;
   /** A key went down since the last match (so a repeated chord must be struck again). */
   private fresh = false;
-  readonly results: ChordJudgement[] = [];
+  readonly results: ChordJudgment[] = [];
 
   constructor(private readonly targets: readonly ChordTarget[]) {}
 
@@ -84,7 +84,7 @@ export class ChordWaitEngine {
     this.hints++;
   }
 
-  noteOn(midi: number, time: number): { type: 'wrong' | 'bass' | 'match' | 'none'; judgement?: ChordJudgement } {
+  noteOn(midi: number, time: number): { type: 'wrong' | 'bass' | 'match' | 'none'; judgment?: ChordJudgment } {
     this.held.add(midi);
     this.fresh = true;
     const target = this.targets[this.current];
@@ -102,17 +102,17 @@ export class ChordWaitEngine {
     return r;
   }
 
-  noteOff(midi: number, time: number): { type: 'match' | 'none'; judgement?: ChordJudgement } {
+  noteOff(midi: number, time: number): { type: 'match' | 'none'; judgment?: ChordJudgment } {
     this.held.delete(midi);
     const r = this.check(time);
     return r.type === 'match' ? r : { type: 'none' };
   }
 
-  private check(time: number): { type: 'match' | 'none'; judgement?: ChordJudgement } {
+  private check(time: number): { type: 'match' | 'none'; judgment?: ChordJudgment } {
     const target = this.targets[this.current];
     const keys = [...this.held].sort((a, b) => a - b);
     if (!target || !this.fresh || !matches(target, keys)) return { type: 'none' };
-    const judgement: ChordJudgement = {
+    const judgment: ChordJudgment = {
       index: target.index,
       correct: this.wrong === 0 && !this.bassWrong && !this.hinted,
       reactionMs: Math.max(0, time - this.activeSince),
@@ -121,14 +121,14 @@ export class ChordWaitEngine {
       wrongBass: this.bassWrong,
       hinted: this.hinted,
     };
-    this.results.push(judgement);
+    this.results.push(judgment);
     this.current++;
     this.activeSince = time;
     this.wrong = 0;
     this.bassWrong = false;
     this.hinted = false;
     this.fresh = false;
-    return { type: 'match', judgement };
+    return { type: 'match', judgment };
   }
 }
 
@@ -153,7 +153,7 @@ export class ChordFlowEngine {
   private readonly notes: Played[] = [];
   private t0 = 0;
   private judged = 0;
-  readonly results: ChordJudgement[] = [];
+  readonly results: ChordJudgment[] = [];
   readonly preMs: number;
   readonly postMs: number;
   readonly perfectMs: number;
@@ -204,9 +204,9 @@ export class ChordFlowEngine {
   }
 
   /** Judge every chord whose window has closed. */
-  update(now: number): ChordJudgement[] {
+  update(now: number): ChordJudgment[] {
     const t = now - this.opts.latencyMs;
-    const out: ChordJudgement[] = [];
+    const out: ChordJudgment[] = [];
     while (this.judged < this.targets.length && t >= this.expectedTime(this.judged) + this.postMs) {
       out.push(this.judge(this.judged));
       this.judged++;
@@ -224,7 +224,7 @@ export class ChordFlowEngine {
     return this.judged >= this.targets.length && now - this.opts.latencyMs >= this.endTime;
   }
 
-  private judge(i: number): ChordJudgement {
+  private judge(i: number): ChordJudgment {
     const target = this.targets[i];
     const e = this.expectedTime(i);
     const fresh = this.notes.filter((n) => n.on >= e - this.preMs && n.on <= e + this.postMs);
@@ -234,18 +234,18 @@ export class ChordFlowEngine {
     // A chord must be struck: holding the previous one through the bar line does not count.
     const correct = fresh.length > 0 && matches(target, keys);
     const onsets = fresh.map((n) => n.on).sort((a, b) => a - b);
-    const judgement: ChordJudgement = { index: i, correct, played: keys, wrongPresses: 0, wrongBass: bassOnlyWrong(target, keys) };
+    const judgment: ChordJudgment = { index: i, correct, played: keys, wrongPresses: 0, wrongBass: bassOnlyWrong(target, keys) };
     if (onsets.length) {
       const mid = onsets[Math.floor(onsets.length / 2)];
-      judgement.deltaMs = Math.round(mid - e);
-      judgement.spreadMs = Math.round(onsets[onsets.length - 1] - onsets[0]);
+      judgment.deltaMs = Math.round(mid - e);
+      judgment.spreadMs = Math.round(onsets[onsets.length - 1] - onsets[0]);
     }
     if (correct) {
-      const off = Math.abs(judgement.deltaMs ?? 0);
-      judgement.timingScore =
+      const off = Math.abs(judgment.deltaMs ?? 0);
+      judgment.timingScore =
         off <= this.perfectMs ? 1 : Math.max(0.4, 1 - (0.6 * (off - this.perfectMs)) / Math.max(1, this.postMs - this.perfectMs));
     }
-    return judgement;
+    return judgment;
   }
 
   /** Keys pressed outside every chord's window. */

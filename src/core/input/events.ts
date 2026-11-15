@@ -1,6 +1,6 @@
 export type InputSource = 'midi' | 'screen' | 'qwerty';
 
-/** Normalised performance input from any source (MIDI, on-screen keys, computer keyboard). */
+/** Normalized performance input from any source (MIDI, on-screen keys, computer keyboard). */
 export type NoteInput =
   | { kind: 'noteOn'; midi: number; velocity: number; time: number; source: InputSource }
   | { kind: 'noteOff'; midi: number; time: number; source: InputSource }

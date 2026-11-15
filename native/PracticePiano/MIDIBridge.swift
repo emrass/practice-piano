@@ -5,7 +5,7 @@ import Foundation
 ///
 /// Connects to every MIDI source (USB, Bluetooth LE, network) and forwards MIDI 1.0
 /// channel-voice messages as `{ type: "midi", source, data: [status, d1, d2] }`.
-/// Device selection happens in JS so behaviour matches the Web MIDI backend.
+/// Device selection happens in JS so behavior matches the Web MIDI backend.
 final class MIDIBridge {
     /// Called on the main thread with a JSON object literal.
     var onMessage: ((String) -> Void)?

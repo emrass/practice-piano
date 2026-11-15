@@ -78,7 +78,7 @@ test('Keyboard guide button above the keys flips the setting, persists and light
   await expect(page.locator('.kb-guide')).toHaveAttribute('aria-pressed', 'false');
 });
 
-test('The keyboard guide is greyed out, with the reason, where it would give the answer away', async ({ app, page }) => {
+test('The keyboard guide is grayed out, with the reason, where it would give the answer away', async ({ app, page }) => {
   await app.open({ settings: { lesson: 'ear', showKeyboardGuide: true } });
   const guide = page.locator('.kb-guide');
   await expect(guide).toHaveAttribute('aria-disabled', 'true');
@@ -124,7 +124,7 @@ for (const width of [390, 1440]) {
   });
 }
 
-test('Rhythm greys out computer-key hints (it uses J and F)', async ({ app, page }) => {
+test('Rhythm grays out computer-key hints (it uses J and F)', async ({ app, page }) => {
   await app.open({ settings: { lesson: 'rhythm', showQwertyHints: true } });
   await page.getByRole('button', { name: 'Keyboard display' }).click();
   const menu = page.getByRole('dialog', { name: 'Keyboard display' });

@@ -1,6 +1,6 @@
 # Didactic concept
 
-practice-piano.com trains **isolated skills**. Someone who knows what they want to practise
+practice-piano.com trains **isolated skills**. Someone who knows what they want to practice
 should be able to open the app, pick exactly that, and get fresh material at the right level
 in seconds. This document is the musical and didactic design that the code follows. Code
 changes to a practice mode should start here.
@@ -17,9 +17,9 @@ changes to a practice mode should start here.
 4. **Accuracy before speed.** Mastery is gated on accuracy (≥ 90 %); tempo and level rise only
    on top of clean playing. XP scales with level and accuracy: harder material pays more per
    note, but only clean playing earns much of it. Learners choose their level freely; XP never
-   penalises that choice.
+   penalizes that choice.
 5. **Measure what a teacher listens for**, and only what MIDI can really tell: pitch, timing,
-   evenness (time and velocity), hand synchronisation, reaction time. Fingering is shown, never
+   evenness (time and velocity), hand synchronization, reaction time. Fingering is shown, never
    graded.
 6. **Feedback that teaches.** Weak spots name the musical thing ("you rush the sixteenth after a
    dotted eighth", "timing bump at the thumb crossing"), not just a score.
@@ -46,14 +46,14 @@ two-note echo has only a handful of phrases). A new exercise therefore tries sev
 takes the first passage, phrase or rhythm you have not played yet (the least-played one once
 everything has been met).
 
-Why not randomise everything? A C major scale is always a C major scale; random notes would
-destroy what is being practised. Random *chord sequences* would be unmusical. For fixed
-repertoire, research on practice favours **shuffled** (mixed-up) items over drilling one
+Why not randomize everything? A C major scale is always a C major scale; random notes would
+destroy what is being practiced. Random *chord sequences* would be unmusical. For fixed
+repertoire, research on practice favors **shuffled** (mixed-up) items over drilling one
 item in a block, and **spaced repetition** (items you are weak at return sooner).
 
 ## 3. Weak spots and shared skill tags
 
-Weak spots are analysed **per mode** (practice stays isolated). In addition, every observation
+Weak spots are analyzed **per mode** (practice stays isolated). In addition, every observation
 carries **shared tags** so patterns can be seen across modes:
 
 | Tag | Example | Recorded by |
@@ -67,7 +67,7 @@ carries **shared tags** so patterns can be seen across modes:
 Stats are stored as `dimension → key → aggregate`, so new tags need no data migration.
 
 Cross-mode use is **suggestion, never automatic mixing**: "E♭ major is weak in sight reading
-and your E♭ scale is uneven → practise the E♭ major scale" (one click). Correlations are
+and your E♭ scale is uneven → practice the E♭ major scale" (one click). Correlations are
 hypotheses, so a suggestion needs evidence in both modes.
 
 Implemented links:
@@ -202,8 +202,8 @@ A♭, B♭ major, and 1-2-3-4 / 5-4-3-2 sevenths on white-key roots. Pentatonic 
 
 **Measurements (Flow).** Notes and timing; **steadiness** (spread of timing); **touch evenness**
 (spread of velocity) and **thumb accents** (thumb louder than the other fingers); **hand sync**
-(average gap between the hands); **timing bumps** — a note late or early against its neighbours at
-the same place in each octave, labelled with finger and crossing (thumb under / finger over).
+(average gap between the hands); **timing bumps** — a note late or early against its neighbors at
+the same place in each octave, labeled with finger and crossing (thumb under / finger over).
 
 **Weak spots.** Per item (accuracy, ladder, review schedule); the key is also recorded as a shared
 tag (`scaleKey`) for future cross-mode suggestions with sight reading in that key.
@@ -224,7 +224,7 @@ patterns, modes, exam-style stages, LH fingering for black-key arpeggios.
 - **Progression** — *progression × key × hands*. Library: I–IV–V–I, I–V–vi–IV, I–vi–IV–V,
   ii7–V7–Imaj7, i–iv–V–i, iiø7–V7–i, Andalusian i–VII–VI–V, Pachelbel's canon, circle of fifths,
   12-bar blues (dominant sevenths). All 12 major or minor keys (minor dominants from harmonic
-  minor); four-chord progressions go round twice so the turnaround is practised. Hands: right
+  minor); four-chord progressions go around twice so the turnaround is practiced. Hands: right
   hand alone, or **+ LH root** (left hand plays the root in the bass staff, which becomes the
   required bass note). Symbols *and* Roman numerals are printed above the staff; *Play from the
   chord chart* hides the notation (voice it yourself).
@@ -289,7 +289,7 @@ skill. The statements are shown in the skill's own words and can be changed befo
 | # | Playing by ear | Ear training |
 |---|---|---|
 | 1 | I have never tried | level 1 |
-| 2 | I can copy two or three neighbouring notes | level 7 |
+| 2 | I can copy two or three neighboring notes | level 7 |
 | 3 | I can play back short tunes within five notes | level 13 |
 | 4 | I can play back melodies that span an octave | level 21 |
 | 5 | I can play back melodies in different keys | level 41 |

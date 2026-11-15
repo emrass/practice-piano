@@ -88,7 +88,7 @@ describe('chord exercises', () => {
   it('spells progressions in the key with numerals and smooth voicings', () => {
     const ex = generateChordExercise(prog('ii-V-I', 'Bb'), opts, 1);
     expect(ex.chords.targets.slice(0, 4).map((t) => t.symbol)).toEqual(['Cm7', 'F7', 'B♭maj7', 'B♭maj7']);
-    expect(ex.chords.targets).toHaveLength(8); // short progressions go round twice
+    expect(ex.chords.targets).toHaveLength(8); // short progressions go around twice
     expect(ex.key.id).toBe('Bb');
     expect(ex.measures[0].rh[0].symbol).toBe('Cm7  ii7');
     // Every change moves the hand as little as possible.
@@ -113,7 +113,7 @@ describe('chord exercises', () => {
     }
   });
 
-  it('weak-spot focus favours the qualities asked for', () => {
+  it('weak-spot focus favors the qualities asked for', () => {
     const ex = generateChordExercise(drill({ set: 'all-triads' }), { bpm: 60, count: 16, focus: { qualities: { dim: 20 } } }, 3);
     expect(ex.chords.targets.filter((t) => t.spec.quality === 'dim').length).toBeGreaterThan(8);
   });
@@ -216,10 +216,10 @@ describe('chord engines', () => {
 });
 
 describe('chord analysis and progress', () => {
-  it('summarises a Flow run, measures voice leading and moves the ladder', () => {
+  it('summarizes a Flow run, measures voice leading and moves the ladder', () => {
     const ex = generateChordExercise(prog('I-V-vi-IV', 'C'), opts, 1);
     const ts = ex.chords.targets;
-    const judgements = ts.map((t, i) => ({
+    const judgments = ts.map((t, i) => ({
       index: i,
       correct: true,
       deltaMs: 10,
@@ -229,12 +229,12 @@ describe('chord analysis and progress', () => {
       wrongPresses: 0,
       wrongBass: false,
     }));
-    const s = summarizeChords(ex, judgements, 'flow', 80);
+    const s = summarizeChords(ex, judgments, 'flow', 80);
     expect(s.clean).toBe(true);
     expect(s.voiceLeading).toBeLessThan(1);
     expect(s.movement!.played).toBeGreaterThan(s.movement!.minimal);
     expect(s.spreadMs).toBe(20);
-    const result = chordResult(ex, judgements, { mode: 'flow', goalBpm: 80, durationMs: 32000, wrongPresses: 0, completedAt: 0 });
+    const result = chordResult(ex, judgments, { mode: 'flow', goalBpm: 80, durationMs: 32000, wrongPresses: 0, completedAt: 0 });
     expect(isPass(result)).toBe(true);
     const { progress, award } = applyResult(emptyProgress(), result, new Date(2026, 10, 13));
     expect(award.repertoire).toMatchObject({ itemId: 'chords/prog/I-V-vi-IV/C/rh', fromTempo: 60, toTempo: 64, clean: true });
@@ -246,7 +246,7 @@ describe('chord analysis and progress', () => {
   it('flags missed chords, wrong bass and slow chords, and finds weak qualities', () => {
     const ex = generateChordExercise(drill({ set: 'all-triads', inversions: 'inversions' }), { bpm: 60, count: 8 }, 5);
     const ts = ex.chords.targets;
-    const judgements = ts.map((t, i) => ({
+    const judgments = ts.map((t, i) => ({
       index: i,
       correct: i !== 2,
       reactionMs: i === 5 ? 9000 : 1000,
@@ -254,11 +254,11 @@ describe('chord analysis and progress', () => {
       wrongPresses: i === 2 ? 1 : 0,
       wrongBass: i === 2,
     }));
-    const s = summarizeChords(ex, judgements, 'wait', 80);
+    const s = summarizeChords(ex, judgments, 'wait', 80);
     expect(s.trouble[0]).toMatchObject({ symbol: ts[2].symbol, reason: 'bass' });
     expect(s.medianReactionMs).toBe(1000);
     expect(s.trouble).toContainEqual({ symbol: ts[5].symbol, reason: 'slow', ms: 9000 });
-    const weakRun = judgements.map((j, i) => ({ ...j, correct: ts[i].spec.quality !== ts[0].spec.quality }));
+    const weakRun = judgments.map((j, i) => ({ ...j, correct: ts[i].spec.quality !== ts[0].spec.quality }));
     let p = emptyProgress();
     for (let k = 0; k < 4; k++) {
       p = applyResult(p, chordResult(ex, weakRun, { mode: 'wait', goalBpm: 80, durationMs: 1000, wrongPresses: 1, completedAt: 0 }), new Date(2026, 10, 13)).progress;

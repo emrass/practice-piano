@@ -24,9 +24,9 @@ export interface LessonContext {
   now: number;
 }
 
-/** Which keyboard display settings apply to a lesson (the rest are greyed out in the keyboard bar). */
+/** Which keyboard display settings apply to a lesson (the rest are grayed out in the keyboard bar). */
 export interface KeyboardAvailability {
-  /** Why a setting does not apply here, shown with it greyed out. */
+  /** Why a setting does not apply here, shown with it grayed out. */
   unavailable?: { guide?: string; qwertyHints?: string };
   /** What "fit" means here (ear training: a fixed C3–C6 window). Default: fit to the exercise. */
   fitLabel?: string;
@@ -46,7 +46,7 @@ export interface Continuation {
 }
 
 /**
- * One lesson as the studio sees it: the current exercise and how to practise it, the lesson's
+ * One lesson as the studio sees it: the current exercise and how to practice it, the lesson's
  * settings panel and stage, and how it reacts to "next", "easier / harder" and settings
  * changes. Each lesson builds this in its own hook (ui/lessons/<lesson>.tsx); App.tsx only
  * picks the active one.
@@ -85,7 +85,7 @@ export interface LessonRuntime {
   } & KeyboardAvailability;
   /** Progress tab: review the due items (repertoire lessons). */
   review?: () => void;
-  /** Progress tab: practise the weak spots it lists. */
+  /** Progress tab: practice the weak spots it lists. */
   practiceWeakSpots: () => void;
   /**
    * An exercise the player asked for (next, easier / harder, retry) starts on its own once audio

@@ -589,7 +589,7 @@ export function recentSummary(progress: ProgressState, count = 20, lesson?: Less
   };
 }
 
-/** Defensive normalisation for data loaded from storage or an import file. */
+/** Defensive normalization for data loaded from storage or an import file. */
 export function normalizeProgress(raw: unknown): ProgressState {
   const base = emptyProgress();
   if (!raw || typeof raw !== 'object') return base;
