@@ -39,7 +39,7 @@ environment variable `SKIP_WEB_BUILD=1` to embed the existing build without rebu
 
 ## Using it
 
-- **Input & audio → MIDI input** shows *CoreMIDI (native app)*. USB pianos appear immediately.
+- **Piano & audio → Piano** (the piano button in the top bar) shows *CoreMIDI (native app)*. USB pianos appear immediately.
 - **Pair Bluetooth MIDI…** opens Apple's Bluetooth MIDI browser; tap your piano to connect. The
   piano then shows up as a normal input (re-scanned automatically when the sheet closes).
 - The audio session uses the *playback* category, so the metronome sounds with the silent switch

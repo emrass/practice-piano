@@ -186,8 +186,16 @@ export class App {
     return this.page.locator('.results-card');
   }
 
-  async openTab(name: 'Exercise' | 'Input & audio' | 'Progress'): Promise<void> {
+  async openTab(name: 'Exercise' | 'Progress'): Promise<void> {
     await this.page.getByRole('tab', { name }).click();
+  }
+
+  /** Piano & audio, opened from the piano chip in the top bar. */
+  async openPianoAudio() {
+    await this.page.locator('.chip-midi').click();
+    const dialog = this.page.getByRole('dialog', { name: 'Piano & audio' });
+    await expect(dialog).toBeVisible();
+    return dialog;
   }
 
   /** The lesson switcher in the top bar (short or long label). */

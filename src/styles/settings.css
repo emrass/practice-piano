@@ -1,0 +1,71 @@
+/* Piano & audio settings (PianoAudioDialog.tsx): a dialog on the shared modal card, a full-screen sheet on phones. */
+
+.modal-card.settings {
+  width: min(560px, 100%);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+.modal-card.settings:focus {
+  outline: none;
+}
+
+/* The title and close button stay put while the sections scroll. */
+.settings-head {
+  flex: none;
+  margin: 0;
+  padding: 16px 18px 12px 22px;
+  border-bottom: 1px solid var(--rule-2);
+}
+
+.settings-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px 22px 18px;
+}
+
+.settings-intro {
+  padding-top: 10px;
+}
+
+.connect-status {
+  display: grid;
+  gap: 12px;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.connect-status p,
+.connect-status ul {
+  margin: 0;
+}
+
+@media (max-width: 600px) {
+  .modal-backdrop.is-sheet {
+    padding: 0;
+  }
+
+  .modal-card.settings {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .settings-head {
+    padding-left: 16px;
+    padding-right: 12px;
+  }
+
+  .settings-scroll {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
