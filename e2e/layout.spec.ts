@@ -156,7 +156,8 @@ test('Every lesson renders its exercise and Progress panels', async ({ app, page
 for (const width of [390, 1440]) {
   test(`The exercise panel holds settings only at ${width}px: the practice bar runs, N moves on`, async ({ app, page }) => {
     await page.setViewportSize({ width, height: 800 });
-    await app.open({ settings: { lesson: 'sight' } });
+    // A level with varied notes, so a new exercise is never note for note the old one.
+    await app.open({ settings: { lesson: 'sight', sight: { mode: 'wait', level: 8, bars: 4, hands: 'rh' } } });
     const sidebar = page.locator('.sidebar');
     for (const lesson of [...LESSONS.slice(1), 'sight']) {
       await page.locator('.topbar-lesson [role=radio]').nth(LESSONS.indexOf(lesson)).click();
@@ -164,6 +165,8 @@ for (const width of [390, 1440]) {
       await expect(sidebar.locator('.panel-body')).toHaveCount(1);
       await expect(sidebar.locator('.btn-primary'), `${lesson}: a primary button in the sidebar`).toHaveCount(0);
       await expect(page.locator('.practice-bar .btn-primary')).toBeInViewport();
+      // Mid-phrase too: the bar is the only place left to skip a phrase without a keyboard.
+      if (lesson === 'ear') await expect(page.locator('.practice-bar').getByRole('button', { name: 'New phrase' })).toBeInViewport();
     }
     if (width === 390) await expect(sidebar).not.toBeInViewport(); // the drawer is closed
     const before = await app.steps();

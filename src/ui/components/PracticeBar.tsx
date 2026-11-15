@@ -107,8 +107,7 @@ export function PracticeBar(props: {
             Results
           </button>
         ) : null}
-        {/* Ear training has its hint here until the phrase is done. */}
-        {next && (!ear || s.status === 'finished') ? (
+        {next ? (
           <button type="button" className="btn" onClick={props.onNext}>
             {next.label} <kbd>N</kbd>
           </button>
