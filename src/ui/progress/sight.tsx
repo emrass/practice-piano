@@ -78,7 +78,7 @@ export function SightSection(props: ProgressSectionProps) {
         ) : null}
         {weak.weakestClef ? <p className="field-hint">Your {weak.weakestClef} clef needs the most attention.</p> : null}
         <button type="button" className="btn btn-block" disabled={weak.notes.length === 0} onClick={props.onPracticeWeakSpots}>
-          Practise weak spots
+          Practice weak spots
         </button>
       </section>
 

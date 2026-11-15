@@ -45,7 +45,7 @@ export function EarSection(props: ProgressSectionProps) {
           <p className="field-hint">Weakest: {weakIntervals.map((w) => `${INTERVAL_NAMES[w.semitones]} (${pct(w.accuracy)})`).join(', ')}</p>
         ) : null}
         <button type="button" className="btn btn-block" disabled={weakIntervals.length === 0} onClick={props.onPracticeWeakSpots}>
-          Practise weak intervals
+          Practice weak intervals
         </button>
       </section>
 

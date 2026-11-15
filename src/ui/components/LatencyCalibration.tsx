@@ -179,7 +179,7 @@ export function LatencyCalibration(props: {
         {phase === 'intro' ? (
           <div className="calib-body">
             <p>
-              Set up exactly as you practise — same piano connection, same speakers or headphones. You’ll hear {CALIBRATION_WARMUP} lead-in clicks, then{' '}
+              Set up exactly as you practice — same piano connection, same speakers or headphones. You’ll hear {CALIBRATION_WARMUP} lead-in clicks, then{' '}
               {CALIBRATION_COUNTED} more at {CALIBRATION_BPM} bpm.
             </p>
             <p>
