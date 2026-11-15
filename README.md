@@ -60,7 +60,7 @@ keyboard guide and a menu for note names on the keys, computer-key hints and the
 | `npm run dev` | Vite dev server |
 | `npm test` | Vitest unit + integration tests |
 | `npm run typecheck` | `tsc -b` (strict) |
-| `npm run lint` | ESLint (typescript-eslint, react-hooks) and the American English spelling check |
+| `npm run lint` | ESLint (typescript-eslint, react-hooks) |
 | `npm run build` | type-check + production build → `dist/` |
 | `npm run build:native` | production build into `native/PracticePiano/Web` |
 | `npm run check` | all of the above, in order |
@@ -69,10 +69,6 @@ keyboard guide and a menu for note names on the keys, computer-key hints and the
 The browser tests need Chromium once: `npx playwright install chromium`. Where that download
 is not possible, point `PLAYWRIGHT_CHROMIUM_PATH` at an installed Chromium. CI (`checks.yml`)
 runs `npm run check` and the browser tests on every push and pull request.
-
-**Language:** UI text, code, comments and docs use American English ("practice", "color",
-"center", "canceled", "normalize"). `scripts/check-spelling.mjs` fails the lint on British
-spellings; add new ones to its list when you spot them.
 
 ### Landing page screenshots
 
