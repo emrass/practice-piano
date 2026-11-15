@@ -12,7 +12,6 @@ export function EarPanel(props: {
   settings: Settings;
   progress: ProgressState;
   update: (patch: SettingsPatch) => void;
-  onNew: () => void;
   weakIntervals: number[];
 }) {
   const { settings: s, update } = props;
@@ -63,9 +62,6 @@ export function EarPanel(props: {
           Listen, then play the phrase back on your piano. Notes appear on the staff as you find them. <kbd>Space</kbd> or a quick sustain-pedal tap replays it;{' '}
           <kbd>?</kbd> reveals the next note.
         </p>
-        <button type="button" className="btn btn-primary btn-block" onClick={props.onNew}>
-          New phrase <kbd>N</kbd>
-        </button>
         <Toggle
           label="Weak-spot practice"
           hint={

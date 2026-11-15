@@ -16,7 +16,6 @@ export function ScalesPanel(props: {
   settings: Settings;
   progress: ProgressState;
   update: (patch: SettingsPatch) => void;
-  onNew: () => void;
   exercise: ScaleExercise;
   onTempo: (deltaBpm: number) => void;
   dueCount: number;
@@ -100,9 +99,6 @@ export function ScalesPanel(props: {
           />
         </div>
         {props.reviewing ? <ReviewNote mode={s.scales.mode} /> : null}
-        <button type="button" className="btn btn-primary btn-block" onClick={props.onNew}>
-          {review ? 'Next due item' : s.scales.tonic === 'shuffle' ? 'Next key' : 'Again'} <kbd>N</kbd>
-        </button>
       </section>
 
       <section className="panel-section">

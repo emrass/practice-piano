@@ -29,7 +29,6 @@ export function ChordsPanel(props: {
   settings: Settings;
   progress: ProgressState;
   update: (patch: SettingsPatch) => void;
-  onNew: () => void;
   exercise: ChordExercise;
   onTempo: (deltaBpm: number) => void;
   dueCount: number;
@@ -45,7 +44,6 @@ export function ChordsPanel(props: {
   const def = findProgression(s.chords.progression) ?? PROGRESSIONS[0];
   const goal = s.chords.goalBpm;
   const bpm = ex.chords.bpm;
-  const nextLabel = review ? 'Next due item' : drill ? 'New chords' : s.chords.key === 'shuffle' ? 'Next key' : 'Again';
 
   return (
     <div className="panel-body">
@@ -132,9 +130,6 @@ export function ChordsPanel(props: {
           </>
         )}
         {props.reviewing ? <ReviewNote mode={s.chords.mode} /> : null}
-        <button type="button" className="btn btn-primary btn-block" onClick={props.onNew}>
-          {nextLabel} <kbd>N</kbd>
-        </button>
       </section>
 
       <section className="panel-section">

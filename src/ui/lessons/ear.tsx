@@ -59,7 +59,6 @@ export function useEarLesson(ctx: LessonContext, active: boolean): LessonRuntime
         settings={s}
         progress={ctx.progress}
         update={ctx.update}
-        onNew={next}
         weakIntervals={focus.length ? focus : weakIntervals(ctx.progress)}
       />
     ),

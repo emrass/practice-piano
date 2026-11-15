@@ -152,3 +152,22 @@ test('Every lesson renders its exercise and Progress panels', async ({ app, page
     await app.openTab('Exercise');
   }
 });
+
+for (const width of [390, 1440]) {
+  test(`The exercise panel holds settings only at ${width}px: the practice bar runs, N moves on`, async ({ app, page }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await app.open({ settings: { lesson: 'sight' } });
+    const sidebar = page.locator('.sidebar');
+    for (const lesson of [...LESSONS.slice(1), 'sight']) {
+      await page.locator('.topbar-lesson [role=radio]').nth(LESSONS.indexOf(lesson)).click();
+      await expect(page.locator('.meta-strip')).toBeVisible();
+      await expect(sidebar.locator('.panel-body')).toHaveCount(1);
+      await expect(sidebar.locator('.btn-primary'), `${lesson}: a primary button in the sidebar`).toHaveCount(0);
+      await expect(page.locator('.practice-bar .btn-primary')).toBeInViewport();
+    }
+    if (width === 390) await expect(sidebar).not.toBeInViewport(); // the drawer is closed
+    const before = await app.steps();
+    await page.keyboard.press('KeyN');
+    await expect.poll(() => app.steps()).not.toEqual(before);
+  });
+}
