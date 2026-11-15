@@ -7,8 +7,9 @@ export const earResults: ResultsView = {
   headline: (result, passed) => gradeHeadline(result, passed, 'Perfect ear!'),
   repertoire: false,
   trains: 'your ear',
-  xpNotes: (result) => ((result.replays ?? 0) > 0 ? ['Each replay reduces XP a little — try to catch it in one listen.'] : []),
+  xpNotes: (result) => (result.lesson === 'ear' && result.replays > 0 ? ['Each replay reduces XP a little — try to catch it in one listen.'] : []),
   Body: function EarResults({ result }) {
+    if (result.lesson !== 'ear') return null;
     return (
       <div className="results-grid">
         <div className="rg-item rg-main">
@@ -16,7 +17,7 @@ export const earResults: ResultsView = {
           <span className="rg-k">Pitch accuracy</span>
         </div>
         <div className="rg-item">
-          <span className="rg-v">{result.replays ?? 0}</span>
+          <span className="rg-v">{result.replays}</span>
           <span className="rg-k">Replays</span>
         </div>
         <div className="rg-item">
@@ -26,7 +27,7 @@ export const earResults: ResultsView = {
           <span className="rg-k">Found unaided</span>
         </div>
         <div className="rg-item">
-          <span className="rg-v">{`${result.wrongNotes}/${result.hints ?? 0}`}</span>
+          <span className="rg-v">{`${result.wrongNotes}/${result.hints}`}</span>
           <span className="rg-k">Wrong / hints</span>
         </div>
       </div>

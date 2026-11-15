@@ -27,7 +27,8 @@ export const chordsResults: ResultsView = {
   repertoire: true,
   trains: null,
   Body: function ChordResults({ result, award }) {
-    const c = result.chords!;
+    if (result.lesson !== 'chords') return null;
+    const c = result.chords;
     const flow = result.mode === 'flow';
     const change = award?.repertoire;
     return (

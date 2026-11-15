@@ -235,7 +235,8 @@ A lesson is a set of modules, one of each kind, and App.tsx only picks the activ
 
 - **Core** — an entry in `core/lessons.ts` (tiers, or `repertoire: true`), a generator producing an
   `Exercise` (scales, chords and rhythm drills fit the same measures/steps model), and analysis
-  that puts the lesson's summary on `ExerciseResult` (`result.lesson`, plus e.g. `result.chords`).
+  that turns the engine's `RawResult` into the lesson's variant of the `ExerciseResult` union
+  (`lesson: 'chords'` plus its required `chords` summary; add a variant for a new lesson).
 - **Settings** — a group in `core/settings.ts` (`settings.<lesson>`, validated by a
   `normalize<Lesson>` function); shared settings (display, audio, input) stay at the top level;
   the keyboard's display settings are switched in the bar above the keys

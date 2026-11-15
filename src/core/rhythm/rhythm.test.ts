@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { allEvents } from '../exercise';
-import type { ExerciseResult, NoteResult } from '../eval/types';
+import type { NoteResult, RawResult } from '../eval/types';
 import { generateExercise } from '../generator/generator';
 import { isSupportedDuration, TIME_SIGNATURES } from '../music/rhythm';
 import { applyResult, emptyProgress, findWeakFigures, isPass } from '../progress/progress';
-import { annotateRhythm, summarizeRhythm } from './analysis';
+import { annotateRhythm, rhythmResult, summarizeRhythm } from './analysis';
 import {
   beatPosition,
   generateRhythmExercise,
@@ -219,7 +219,7 @@ describe('rhythm helpers', () => {
   });
 });
 
-function fakeResult(ex: RhythmExercise, offsets: (step: number) => number | null): ExerciseResult {
+function fakeResult(ex: RhythmExercise, offsets: (step: number) => number | null): RawResult {
   const notes: NoteResult[] = ex.steps.flatMap((s) =>
     s.notes.map((n) => {
       const d = offsets(s.index);
@@ -236,7 +236,6 @@ function fakeResult(ex: RhythmExercise, offsets: (step: number) => number | null
   );
   const hits = notes.filter((n) => n.correct);
   return {
-    lesson: 'rhythm',
     mode: 'flow',
     exerciseId: ex.id,
     level: ex.meta.level,
@@ -274,10 +273,10 @@ describe('rhythm analysis and progress', () => {
 
   it('needs timing to pass and records figure weak spots', () => {
     const ex = gen({ level: 20, task: 'read' }, 3);
-    const sloppy = fakeResult(ex, () => 90);
+    const sloppy = rhythmResult(ex, fakeResult(ex, () => 90));
     expect(sloppy.pitchAccuracy).toBe(1);
     expect(isPass(sloppy)).toBe(false); // all hits, but loose timing
-    const tight = fakeResult(ex, () => 5);
+    const tight = rhythmResult(ex, fakeResult(ex, () => 5));
     expect(isPass(tight)).toBe(true);
 
     let progress = emptyProgress();
@@ -288,8 +287,7 @@ describe('rhythm analysis and progress', () => {
         e.steps.filter((s) => s.notes.some((n) => allEvents(e).find((x) => x.id === n.eventId)?.figure === '2,2')).map((s) => s.index),
       );
       const raw = fakeResult(e, (step) => (eighthSteps.has(step) ? null : 0));
-      const result = { ...raw, notes: annotateRhythm(e, raw.notes), rhythm: summarizeRhythm(e, annotateRhythm(e, raw.notes)) };
-      progress = applyResult(progress, result, new Date(2026, 0, 1)).progress;
+      progress = applyResult(progress, rhythmResult(e, raw), new Date(2026, 0, 1)).progress;
     }
     expect(progress.stats.rhythmFigure?.['2,2']).toBeDefined();
     expect(progress.stats.beatPosition?.downbeat).toBeDefined();

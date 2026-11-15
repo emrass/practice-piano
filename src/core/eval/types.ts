@@ -1,5 +1,4 @@
 import type { Clef, Hand } from '../exercise';
-import type { LessonId } from '../lessons';
 
 export type PracticeMode = 'wait' | 'flow' | 'ear';
 
@@ -41,9 +40,11 @@ export interface RhythmSummary {
   hands: Partial<Record<Hand, { notes: number; hitRate: number; timing: number | null }>>;
 }
 
-export interface ExerciseResult {
-  /** Lesson type; absent on results created before lessons existed (= sight reading). */
-  lesson?: LessonId;
+/**
+ * What every lesson's result has in common. The Wait / Flow engines return just this; the lesson
+ * turns it into an `ExerciseResult` by adding `lesson` and its own measurements.
+ */
+export interface RawResult {
   mode: PracticeMode;
   exerciseId: string;
   level: number;
@@ -65,13 +66,38 @@ export interface ExerciseResult {
   durationMs: number;
   notes: NoteResult[];
   completedAt: number;
-  /** Ear training: extra listens after the first. Wait runs and ear training: hints asked for. */
-  replays?: number;
+  /** Wait runs and ear training: hints asked for. */
   hints?: number;
-  rhythm?: RhythmSummary;
-  scale?: ScaleSummary;
-  chords?: ChordSummary;
 }
+
+export interface SightResult extends RawResult {
+  lesson: 'sight';
+}
+
+export interface EarResult extends RawResult {
+  lesson: 'ear';
+  /** Extra listens after the first. */
+  replays: number;
+  hints: number;
+}
+
+export interface RhythmResult extends RawResult {
+  lesson: 'rhythm';
+  rhythm: RhythmSummary;
+}
+
+export interface ScalesResult extends RawResult {
+  lesson: 'scales';
+  scale: ScaleSummary;
+}
+
+export interface ChordsResult extends RawResult {
+  lesson: 'chords';
+  chords: ChordSummary;
+}
+
+/** A finished run, keyed on its lesson: each lesson's result carries that lesson's measurements. */
+export type ExerciseResult = SightResult | EarResult | RhythmResult | ScalesResult | ChordsResult;
 
 /** Scales & arpeggios measurements (docs/DIDACTICS.md §4.4). */
 export interface ScaleSummary {

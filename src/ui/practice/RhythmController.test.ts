@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, assert, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ExerciseResult } from '../../core/eval/types';
 import { generateRhythmExercise, type RhythmSettings } from '../../core/rhythm/generator';
 import { InputBus } from '../../input/inputBus';
@@ -75,7 +75,7 @@ describe('RhythmController', () => {
     frame();
     expect(results).toHaveLength(1);
     const r = results[0];
-    expect(r.lesson).toBe('rhythm');
+    assert(r.lesson === 'rhythm');
     expect(r.wrongNotes).toBe(0);
     expect(r.pitchAccuracy).toBe(1);
     expect(r.rhythm?.tendencyMs).toBe(12);

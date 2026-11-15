@@ -72,8 +72,7 @@ export interface DayLog {
 
 export interface HistoryEntry {
   at: number;
-  /** Absent on entries recorded before lessons existed (= sight reading). */
-  lesson?: LessonId;
+  lesson: LessonId;
   replays?: number;
   exerciseId: string;
   mode: PracticeMode;
@@ -169,8 +168,8 @@ function accuracyFactor(acc: number): number {
 
 /** Pass = mastery accuracy; Rhythm additionally needs the timing. */
 export function isPass(result: ExerciseResult): boolean {
-  if (result.lesson === 'scales') return result.mode === 'flow' ? !!result.scale?.clean : result.pitchAccuracy >= MASTERY_ACCURACY;
-  if (result.lesson === 'chords') return result.mode === 'flow' ? !!result.chords?.clean : result.pitchAccuracy >= MASTERY_ACCURACY;
+  if (result.lesson === 'scales') return result.mode === 'flow' ? result.scale.clean : result.pitchAccuracy >= MASTERY_ACCURACY;
+  if (result.lesson === 'chords') return result.mode === 'flow' ? result.chords.clean : result.pitchAccuracy >= MASTERY_ACCURACY;
   if (result.pitchAccuracy < MASTERY_ACCURACY) return false;
   if (result.lesson === 'rhythm') return (result.timingAccuracy ?? 0) >= RHYTHM_TIMING_PASS;
   return true;
@@ -183,7 +182,7 @@ export function isPass(result: ExerciseResult): boolean {
 function repertoireAward(progress: ProgressState, result: ExerciseResult): Award {
   const flow = result.mode === 'flow';
   // Tempo relative to 4 notes per second (scales) or 60 bpm with a chord per bar (chords).
-  const ratio = result.chords ? result.chords.bpm / 60 : (result.scale?.npm ?? 120) / 240;
+  const ratio = result.lesson === 'chords' ? result.chords.bpm / 60 : (result.lesson === 'scales' ? result.scale.npm : 120) / 240;
   const tempo = Math.min(2, Math.max(0.5, ratio));
   const xp = Math.round(result.totalNotes * accuracyFactor(result.pitchAccuracy) * (flow ? (0.6 + 0.6 * (result.timingAccuracy ?? 0)) * tempo : 0.5));
   return {
@@ -201,7 +200,7 @@ function repertoireAward(progress: ProgressState, result: ExerciseResult): Award
 }
 
 export function computeAward(progress: ProgressState, result: ExerciseResult): Award {
-  const lesson: LessonId = result.lesson ?? 'sight';
+  const { lesson } = result;
   if (LESSONS[lesson].repertoire) return repertoireAward(progress, result);
   const tier = findTier(result.tierId) ?? LESSONS[lesson].tierForLevel(result.level) ?? tierForLevel(result.level);
   const tierState = progress.tiers[tier.id];
@@ -211,7 +210,7 @@ export function computeAward(progress: ProgressState, result: ExerciseResult): A
   const levelMult = 1 + result.level / 50;
   // Flow: timing matters. Ear: every extra listen costs a little (the first one is free).
   const modeMult =
-    result.mode === 'flow' ? 0.6 + 0.6 * (result.timingAccuracy ?? 0) : result.mode === 'ear' ? 1 / (1 + 0.2 * (result.replays ?? 0)) : 1;
+    result.mode === 'flow' ? 0.6 + 0.6 * (result.timingAccuracy ?? 0) : result.lesson === 'ear' ? 1 / (1 + 0.2 * result.replays) : 1;
   const baseXp = Math.round(result.totalNotes * levelMult * accuracyFactor(result.pitchAccuracy) * modeMult);
   const passed = isPass(result);
   const firstSightBonus = firstAttempt && passed ? Math.round(baseXp * 0.5) + 5 : 0;
@@ -290,29 +289,26 @@ export function applyResult(progress: ProgressState, result: ExerciseResult, now
   day.practiceMs += Math.min(result.durationMs, 30 * 60 * 1000);
   next.days = trimRecord(next.days, MAX_DAYS);
 
-  const lesson = result.lesson ?? 'sight';
-  if (LESSONS[lesson].repertoire) recordRepertoireRun(next, award, result, now);
+  if (LESSONS[result.lesson].repertoire) recordRepertoireRun(next, award, result, now);
   else recordTierRun(next, award, result, now);
 
-  if (lesson === 'ear') {
+  if (result.lesson === 'ear') {
     recordEarObservations(next.stats, result);
-  } else if (lesson === 'scales') {
+  } else if (result.lesson === 'scales') {
     // Per-item data lives in `repertoire`; key familiarity is a shared tag (DIDACTICS §3).
-    if (result.scale) {
-      const key = result.scale.itemId.split('/')[1];
-      addObservation(next.stats, 'scaleKey', key, result.pitchAccuracy >= MASTERY_ACCURACY, undefined, result.timingAccuracy ?? undefined);
-    }
-  } else if (lesson === 'chords') {
-    for (const o of result.chords?.outcomes ?? []) {
+    const key = result.scale.itemId.split('/')[1];
+    addObservation(next.stats, 'scaleKey', key, result.pitchAccuracy >= MASTERY_ACCURACY, undefined, result.timingAccuracy ?? undefined);
+  } else if (result.lesson === 'chords') {
+    for (const o of result.chords.outcomes) {
       addObservation(next.stats, 'chordQuality', o.quality, o.correct, o.reactionMs, o.timingScore, o.deltaMs);
       addObservation(next.stats, 'chordRoot', String(o.rootPc), o.correct, o.reactionMs, o.timingScore, o.deltaMs);
       addObservation(next.stats, 'chordInversion', String(o.inversion), o.correct, o.reactionMs, o.timingScore, o.deltaMs);
     }
-  } else if (lesson === 'rhythm') {
+  } else if (result.lesson === 'rhythm') {
     for (const n of result.notes) {
       recordTimeObservations(next.stats, n);
       addObservation(next.stats, 'rhythmHand', n.hand, n.correct, undefined, n.timingScore, n.deltaMs);
-      if (result.rhythm?.texture) addObservation(next.stats, 'rhythmTexture', result.rhythm.texture, n.correct, undefined, n.timingScore, n.deltaMs);
+      if (result.rhythm.texture) addObservation(next.stats, 'rhythmTexture', result.rhythm.texture, n.correct, undefined, n.timingScore, n.deltaMs);
     }
   } else {
     for (const n of result.notes) {
@@ -325,8 +321,8 @@ export function applyResult(progress: ProgressState, result: ExerciseResult, now
 
   next.history.push({
     at: now.getTime(),
-    lesson: result.lesson ?? 'sight',
-    replays: result.replays,
+    lesson: result.lesson,
+    replays: result.lesson === 'ear' ? result.replays : undefined,
     exerciseId: result.exerciseId,
     mode: result.mode,
     level: result.level,
@@ -359,10 +355,14 @@ function recordTierRun(next: ProgressState, award: Award, result: ExerciseResult
 
 /** What a repertoire run tells the item's tempo ladder. */
 export function ladderRun(result: ExerciseResult): LadderRun | null {
-  const s = result.scale;
-  if (s) return { itemId: s.itemId, tempo: s.npm, notesPerBeat: s.notesPerBeat, goalTempo: s.goalNpm, clean: s.clean };
-  const c = result.chords;
-  if (c) return { itemId: c.itemId, tempo: c.bpm, notesPerBeat: 1, goalTempo: c.goalBpm, clean: c.clean };
+  if (result.lesson === 'scales') {
+    const s = result.scale;
+    return { itemId: s.itemId, tempo: s.npm, notesPerBeat: s.notesPerBeat, goalTempo: s.goalNpm, clean: s.clean };
+  }
+  if (result.lesson === 'chords') {
+    const c = result.chords;
+    return { itemId: c.itemId, tempo: c.bpm, notesPerBeat: 1, goalTempo: c.goalBpm, clean: c.clean };
+  }
   return null;
 }
 
@@ -578,7 +578,7 @@ export function noteHeatmap(progress: ProgressState, clef?: Clef): Map<number, {
 
 /** Recent aggregate metrics for the dashboard. */
 export function recentSummary(progress: ProgressState, count = 20, lesson?: LessonId) {
-  const recent = progress.history.filter((h) => !lesson || (h.lesson ?? 'sight') === lesson).slice(-count);
+  const recent = progress.history.filter((h) => !lesson || h.lesson === lesson).slice(-count);
   const avg = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
   return {
     exercises: recent.length,
@@ -587,6 +587,11 @@ export function recentSummary(progress: ProgressState, count = 20, lesson?: Less
     medianReactionMs: median(recent.map((h) => h.medianReactionMs).filter((v): v is number => v !== null)),
     replays: recent.length ? Math.round((recent.reduce((a, h) => a + (h.replays ?? 0), 0) / recent.length) * 10) / 10 : 0,
   };
+}
+
+/** Entries recorded before lessons existed have no `lesson`: they are sight reading. */
+function migrateHistoryEntry(entry: Omit<HistoryEntry, 'lesson'> & { lesson?: LessonId }): HistoryEntry {
+  return { ...entry, lesson: entry.lesson ?? 'sight' };
 }
 
 /** Defensive normalisation for data loaded from storage or an import file. */
@@ -609,7 +614,7 @@ export function normalizeProgress(raw: unknown): ProgressState {
     tiers: obj(r.tiers, base.tiers),
     stats: obj(r.stats, base.stats),
     attempts: obj(r.attempts, base.attempts),
-    history: Array.isArray(r.history) ? r.history.slice(-MAX_HISTORY) : [],
+    history: Array.isArray(r.history) ? r.history.slice(-MAX_HISTORY).map(migrateHistoryEntry) : [],
     repertoire: normalizeRepertoire(r.repertoire),
   };
 }

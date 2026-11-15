@@ -1,4 +1,4 @@
-import type { ChordOutcome, ChordSummary, ExerciseResult } from '../eval/types';
+import type { ChordOutcome, ChordsResult, ChordSummary } from '../eval/types';
 import { median } from '../eval/types';
 import type { ChordJudgement } from './engine';
 import { QUALITIES, type ChordQuality } from './catalog';
@@ -135,7 +135,7 @@ export function chordResult(
   ex: ChordExercise,
   judgements: readonly ChordJudgement[],
   ctx: { mode: 'wait' | 'flow'; goalBpm: number; durationMs: number; wrongPresses: number; completedAt: number },
-): ExerciseResult {
+): ChordsResult {
   const chords = summarizeChords(ex, judgements, ctx.mode, ctx.goalBpm);
   const size = (i: number) => ex.chords.targets[i].pcs.length + (ex.chords.targets[i].bassMidi !== null ? 1 : 0);
   const totalNotes = ex.chords.targets.reduce((a, _t, i) => a + size(i), 0);
