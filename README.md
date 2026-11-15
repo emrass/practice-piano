@@ -36,7 +36,7 @@ No account, no backend: everything is stored locally, with JSON export / import 
 [practice-piano.com](https://practice-piano.com) is a separate repository,
 [emrass/practice-piano-site](https://github.com/emrass/practice-piano-site).
 Branches and pull requests get a preview deployment from Cloudflare Workers Builds
-(`wrangler.jsonc`: build `npm run build`, preview command `npx wrangler versions upload`);
+(`wrangler.jsonc`: build `npm run build`, preview command `npx wrangler preview`);
 production stays on GitHub Pages.
 
 ## Quick start (web)
