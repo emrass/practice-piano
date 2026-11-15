@@ -110,6 +110,8 @@ function Studio({ profile }: { profile: Profile }) {
       progressRef.current = next;
       setProgress(next);
       setAward({ exerciseId: result.exerciseId, award: earned });
+      // Restart replays on the same session: results closed after an earlier run must not hide this one's.
+      setHiddenResultsFor(null);
       // A pause in practice: the one moment the app asks the browser to keep its data.
       requestPersistentStorageOnce();
     },
