@@ -8,7 +8,7 @@ import { MemoryCard } from '../components/MemoryCard';
 import { ScalesPanel } from '../components/ScalesPanel';
 import { PracticeController } from '../practice/PracticeController';
 import { repertoireContinuation } from './continuation';
-import { randomFrom, reviewView, useRepertoire } from './shared';
+import { flowTiming, randomFrom, reviewView, useBuiltFor, useRepertoire, waitOptions } from './shared';
 import type { LessonContext, LessonRuntime } from './types';
 
 const isScaleItem = (id: string) => parseItemId(id) !== null;
@@ -29,19 +29,29 @@ export function useScalesLesson(ctx: LessonContext, active: boolean): LessonRunt
     return { type: sc.type, tonic, hands: sc.hands };
   }, [active, sc.source, sc.type, sc.tonic, sc.hands, rep.reviewPick, shuffleTonic]);
 
-  const exercise: ScaleExercise | null = useMemo(
+  const exercise: ScaleExercise | null = useBuiltFor(
+    // The ladder tempo is read when the exercise is made (not on every progress change, so the
+    // results of a run stay on screen); retries and tempo changes make a new one.
+    { item, octaves: sc.octaves, noteValue: sc.noteValue, seed, retryToken, ladderToken: rep.ladderToken },
     () => {
       if (!item) return null;
-      // The ladder tempo is read when the exercise is made (not on every progress change, so the
-      // results of a run stay on screen); retries and tempo changes make a new one.
       const npm = ctx.progress.repertoire[itemId(item)]?.ladderTempo ?? initialNpm(item, sc.noteValue);
       return generateScaleExercise(item, { octaves: sc.octaves, noteValue: sc.noteValue, npm });
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [item, sc.octaves, sc.noteValue, seed, retryToken, rep.ladderToken],
   );
   // A new session whenever the exercise, the mode or a timing setting changes, or on retry.
-  const session = useMemo(
+  const session = useBuiltFor(
+    {
+      exercise,
+      mode: sc.mode,
+      goalNps: sc.goalNps,
+      chordGraceMs: s.chordGraceMs,
+      sustainScoring: s.sustainScoring,
+      latencyMs: s.latencyMs,
+      playheadDelayMs: s.playheadDelayMs,
+      countInBars: s.countInBars,
+      retryToken,
+    },
     () =>
       exercise
         ? new PracticeController(
@@ -49,19 +59,13 @@ export function useScalesLesson(ctx: LessonContext, active: boolean): LessonRunt
               exercise,
               mode: sc.mode,
               decorate: (raw) => scaleResult(exercise, raw, sc.goalNps * 60),
-              graceMs: s.chordGraceMs,
-              sustainCountsAsHeld: s.sustainScoring === 'hold',
-              latencyMs: s.latencyMs,
-              playheadDelayMs: s.playheadDelayMs,
-              metronomeVolume: s.metronomeVolume,
-              countInBars: s.countInBars,
+              ...waitOptions(s),
+              ...flowTiming(s),
             },
             inputBus,
             audioEngine,
           )
         : null,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [exercise, sc.mode, sc.goalNps, s.chordGraceMs, s.sustainScoring, s.latencyMs, s.playheadDelayMs, s.countInBars, retryToken],
   );
   if (!session || !item || !exercise) return null;
 

@@ -11,10 +11,41 @@ import type { LessonContext } from './types';
 export function useFocus<T>(ctx: LessonContext, compute: (progress: ProgressState) => T, empty: T): [T, () => void] {
   const [focus, setFocus] = useState<T>(() => (ctx.settings.weakSpotFocus ? compute(ctx.progress) : empty));
   const { progressRef } = ctx;
-  // `compute` is a module-level function in every lesson, so it never changes.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const refresh = useCallback(() => setFocus(compute(progressRef.current)), [progressRef]);
+  const refresh = useCallback(() => setFocus(compute(progressRef.current)), [compute, progressRef]);
   return [focus, refresh];
+}
+
+/**
+ * `build()`, made again only when a field of `key` changes: the key is the one place that says
+ * what makes a new exercise or session. `build` reads everything else (progress, other settings)
+ * as it is when it runs, so a change to those alone makes nothing new. Fields are compared one by
+ * one with `Object.is`, like a dependency list: a fresh key object each render is fine, but each
+ * field must keep its identity between renders (a setting, state, an earlier built value), not be
+ * an object made during render. Unlike `useMemo`, the value is kept until the key changes.
+ */
+export function useBuiltFor<T>(key: Record<string, unknown>, build: () => T): T {
+  const [built, setBuilt] = useState(() => ({ key, value: build() }));
+  if (sameFields(built.key, key)) return built.value;
+  // The key changed: keep the new value in state, set while rendering (React's pattern for
+  // storing information from previous renders).
+  const next = { key, value: build() };
+  setBuilt(next);
+  return next.value;
+}
+
+function sameFields(a: Record<string, unknown>, b: Record<string, unknown>): boolean {
+  const fields = Object.keys(a);
+  return fields.length === Object.keys(b).length && fields.every((f) => Object.hasOwn(b, f) && Object.is(a[f], b[f]));
+}
+
+/** Session timing from the settings. The metronome volume is also applied live, so no session key lists it. */
+export function flowTiming(s: Settings) {
+  return { latencyMs: s.latencyMs, playheadDelayMs: s.playheadDelayMs, metronomeVolume: s.metronomeVolume, countInBars: s.countInBars };
+}
+
+/** How a Wait-mode session judges chords and held keys. */
+export function waitOptions(s: Settings) {
+  return { graceMs: s.chordGraceMs, sustainCountsAsHeld: s.sustainScoring === 'hold' };
 }
 
 /** How often each exercise id has been played (fresh material: unseen first). */
