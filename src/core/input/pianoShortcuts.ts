@@ -4,7 +4,7 @@ import type { NoteInput } from './events';
 export type PianoAction = 'retry' | 'next' | 'close' | 'easier' | 'harder';
 
 export const PIANO_ACTIONS: readonly { pc: number; key: string; action: PianoAction; label: string }[] = [
-  { pc: 0, key: 'C', action: 'retry', label: 'Repeat' },
+  { pc: 0, key: 'C', action: 'retry', label: 'Restart' },
   { pc: 2, key: 'D', action: 'next', label: 'Next' },
   { pc: 4, key: 'E', action: 'close', label: 'Close' },
   { pc: 5, key: 'F', action: 'easier', label: 'Easier' },
