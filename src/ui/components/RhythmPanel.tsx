@@ -38,7 +38,6 @@ export function RhythmPanel(props: {
   settings: Settings;
   progress: ProgressState;
   update: (patch: SettingsPatch) => void;
-  onNew: () => void;
   weakFigures: TimeStat[];
 }) {
   const { settings: s, update } = props;
@@ -155,9 +154,6 @@ export function RhythmPanel(props: {
             options={[4, 8].map((b) => ({ value: b, label: `${b} bars` }))}
           />
         </Field>
-        <button type="button" className="btn btn-primary btn-block" onClick={props.onNew}>
-          New rhythm <kbd>N</kbd>
-        </button>
       </section>
 
       <section className="panel-section">

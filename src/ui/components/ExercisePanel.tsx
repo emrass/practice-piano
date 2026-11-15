@@ -12,7 +12,6 @@ export function ExercisePanel(props: {
   settings: Settings;
   progress: ProgressState;
   update: (patch: SettingsPatch) => void;
-  onNew: () => void;
   weakNotesLabel: string | null;
 }) {
   const { settings: s, update } = props;
@@ -77,9 +76,6 @@ export function ExercisePanel(props: {
             options={[4, 8, 16].map((b) => ({ value: b, label: `${b} bars` }))}
           />
         </Field>
-        <button type="button" className="btn btn-primary btn-block" onClick={props.onNew}>
-          New exercise <kbd>N</kbd>
-        </button>
       </section>
 
       <section className="panel-section">

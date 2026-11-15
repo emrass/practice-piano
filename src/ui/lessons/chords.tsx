@@ -118,7 +118,6 @@ export function useChordsLesson(ctx: LessonContext, active: boolean): LessonRunt
         settings={view.settings}
         progress={ctx.progress}
         update={view.update}
-        onNew={next}
         exercise={exercise}
         onTempo={tempo}
         dueCount={rep.dueCount}

@@ -74,7 +74,7 @@ export function useRhythmLesson(ctx: LessonContext, active: boolean): LessonRunt
     onPatch: (patch) => {
       if (patch.weakSpotFocus) refreshFocus();
     },
-    panel: <RhythmPanel settings={s} progress={ctx.progress} update={ctx.update} onNew={next} weakFigures={findWeakFigures(ctx.progress)} />,
+    panel: <RhythmPanel settings={s} progress={ctx.progress} update={ctx.update} weakFigures={findWeakFigures(ctx.progress)} />,
     focusActive: s.weakSpotFocus && focus.length > 0,
     keyboard: {
       span: { min: Math.min(lhKey, rhKey), max: Math.max(lhKey, rhKey) },
