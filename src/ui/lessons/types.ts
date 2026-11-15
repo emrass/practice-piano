@@ -33,6 +33,19 @@ export interface KeyboardAvailability {
 }
 
 /**
+ * How to continue from the current exercise. The practice bar, the results card, Enter, R / N
+ * and the piano shortcuts all read this, so a lesson names and ranks the two actions in one place.
+ */
+export interface Continuation {
+  /** The same exercise again (R, piano C). */
+  repeat: { label: string };
+  /** Move on (N, piano D); null when there is nothing to move on to (one scale in one key). */
+  next: { label: string } | null;
+  /** The suggested one: Enter, and the main button of the results card. */
+  primary: 'repeat' | 'next';
+}
+
+/**
  * One lesson as the studio sees it: the current exercise and how to practise it, the lesson's
  * settings panel and stage, and how it reacts to "next", "easier / harder" and settings
  * changes. Each lesson builds this in its own hook (ui/lessons/<lesson>.tsx); App.tsx only
@@ -44,6 +57,8 @@ export interface LessonRuntime {
   session: Session;
   /** Prepare and show a new exercise (next review item, shuffled key, fresh weak spots…). */
   next: () => void;
+  /** How to continue from this exercise (per exercise: Chords has both drills and progressions). */
+  continuation: Continuation;
   /** Piano F / G after a run: one level (or one tempo step) easier or harder. */
   step: (direction: 1 | -1) => void;
   /** React to a settings change before it is applied (e.g. switching on review). */

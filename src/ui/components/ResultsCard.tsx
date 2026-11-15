@@ -1,23 +1,33 @@
 import { useEffect, useRef } from 'react';
 import type { ExerciseResult } from '../../core/eval/types';
 import { findTier } from '../../core/lessons';
-import { PIANO_ACTIONS } from '../../core/input/pianoShortcuts';
 import { isPass, type Award } from '../../core/progress/progress';
+import { pianoLegend } from '../lessons/continuation';
+import type { Continuation } from '../lessons/types';
 import { resultsView } from '../results';
 
-/** End-of-run card: shared chrome here, the lesson's ribbon, headline, measurements and labels from its ResultsView. */
+/**
+ * End-of-run card: shared chrome here, the lesson's ribbon, headline and measurements from its
+ * ResultsView, and its repeat / next actions from the exercise's continuation.
+ */
 export function ResultsCard(props: {
   result: ExerciseResult;
   award: Award | null;
+  continuation: Continuation;
   pianoShortcuts: boolean;
   onNext: () => void;
   onRetry: () => void;
   onClose: () => void;
 }) {
   const { result, award } = props;
-  const nextRef = useRef<HTMLButtonElement>(null);
-  // Focus "Next" for Enter, without scrolling a tall card away from its top.
-  useEffect(() => nextRef.current?.focus({ preventScroll: true }), []);
+  const { repeat, next, primary } = props.continuation;
+  const actions = [
+    { id: 'repeat', label: repeat.label, shortcut: 'R', run: props.onRetry },
+    ...(next ? [{ id: 'next', label: next.label, shortcut: 'N', run: props.onNext }] : []),
+  ];
+  const primaryRef = useRef<HTMLButtonElement>(null);
+  // Focus the suggested action for Enter, without scrolling a tall card away from its top.
+  useEffect(() => primaryRef.current?.focus({ preventScroll: true }), []);
   const tier = award ? findTier(award.tierId) : null;
   const view = resultsView(result);
   const Body = view.Body;
@@ -59,7 +69,7 @@ export function ResultsCard(props: {
         {props.pianoShortcuts ? (
           <div className="piano-legend" aria-label="Piano shortcuts">
             <span className="muted">Piano:</span>
-            {PIANO_ACTIONS.map((a) => (
+            {pianoLegend(props.continuation).map((a) => (
               <span key={a.key} className="legend-item">
                 <span className="legend-key">{a.key}</span>
                 {a.label}
@@ -71,12 +81,14 @@ export function ResultsCard(props: {
           <button type="button" className="btn btn-ghost" onClick={props.onClose}>
             Close <kbd>Esc</kbd>
           </button>
-          <button type="button" className="btn" onClick={props.onRetry}>
-            Retry <kbd>R</kbd>
-          </button>
-          <button type="button" className="btn btn-primary" onClick={props.onNext} ref={nextRef}>
-            {view.nextLabel} <kbd>Enter</kbd>
-          </button>
+          {actions.map((a) => {
+            const suggested = a.id === primary;
+            return (
+              <button key={a.id} type="button" className={suggested ? 'btn btn-primary' : 'btn'} onClick={a.run} ref={suggested ? primaryRef : undefined}>
+                {a.label} <kbd>{suggested ? 'Enter' : a.shortcut}</kbd>
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>

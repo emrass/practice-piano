@@ -35,6 +35,14 @@ export interface PracticeState {
 }
 
 /**
+ * A run that is under way but has nothing in it yet: no note played, right or wrong, and no
+ * hint asked for. Restarting it would change nothing (Wait runs start on their own).
+ */
+export function isUntouched(state: PracticeState): boolean {
+  return state.status === 'running' && state.live.correct === 0 && state.live.wrong === 0 && !state.hint?.count;
+}
+
+/**
  * What the UI needs from any lesson's practice session (sight-reading Wait/Flow, ear
  * training, rhythm, scales, chords). Score view, practice bar, keyboard, results and piano
  * shortcuts all work against this interface; `SessionBase` (sessionBase.ts) holds the

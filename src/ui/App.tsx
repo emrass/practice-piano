@@ -28,8 +28,8 @@ import { ProgressPanel } from './components/ProgressPanel';
 import { ResultsCard } from './components/ResultsCard';
 import { ScoreView } from './components/ScoreView';
 import { type LessonRuntime, useLesson } from './lessons';
-import type { KeyboardAvailability } from './lessons/types';
-import type { PracticeState, Session } from './practice/session';
+import type { Continuation, KeyboardAvailability } from './lessons/types';
+import { isUntouched, type PracticeState, type Session } from './practice/session';
 import { type Profile, useProfile } from './state/useProfile';
 
 const midiService = new MidiService(inputBus);
@@ -98,7 +98,10 @@ function Studio({ profile }: { profile: Profile }) {
   const { exercise } = runtime;
   const firstSight = (progress.attempts[exercise.id] ?? 0) === 0;
   // Stable callbacks (the runtime is rebuilt every render; effects keyed on these must not re-run).
-  const nextExercise = useCallback(() => runtimeRef.current?.next(), []);
+  // N, piano D and the next buttons all come through here: without a `next` there is nothing to move on to.
+  const nextExercise = useCallback(() => {
+    if (runtimeRef.current?.continuation.next) runtimeRef.current.next();
+  }, []);
 
   // ---- Practice session -------------------------------------------------------------
   const onFinished = useCallback(
@@ -161,6 +164,11 @@ function Studio({ profile }: { profile: Profile }) {
     armAutoStart();
     setRetryToken((t) => t + 1);
   }, [armAutoStart]);
+  /** Enter after a run: what the lesson suggests. */
+  const continueRun = useCallback(() => {
+    if (runtimeRef.current?.continuation.primary === 'repeat') retry();
+    else nextExercise();
+  }, [retry, nextExercise]);
   const resultsHidden = hiddenResultsFor === controller;
   const hideResults = useCallback(() => setHiddenResultsFor(controller), [controller]);
 
@@ -253,11 +261,17 @@ function Studio({ profile }: { profile: Profile }) {
       if (e.repeat) return;
       if (e.code === 'Enter' && finished && !(e.target instanceof HTMLButtonElement)) {
         e.preventDefault();
-        nextExercise();
+        continueRun();
         return;
       }
       if (e.code === 'KeyN') return nextExercise();
-      if (e.code === 'KeyR') return finished || controller.state.get().mode !== 'wait' ? retry() : controller.start();
+      if (e.code === 'KeyR') {
+        const st = controller.state.get();
+        if (finished || st.mode !== 'wait') return retry();
+        // A Wait run restarts in place; an untouched one has nothing to restart.
+        if (!isUntouched(st)) controller.start();
+        return;
+      }
       if (e.code === 'Slash') {
         e.preventDefault();
         return hint();
@@ -302,7 +316,7 @@ function Studio({ profile }: { profile: Profile }) {
       window.removeEventListener('blur', onBlur);
       onBlur();
     };
-  }, [controller, startStop, nextExercise, retry, hint, qwertyBase, keyToMidi, rhythmQwerty, exercise.id, calibrating, hideResults]);
+  }, [controller, startStop, nextExercise, retry, continueRun, hint, qwertyBase, keyToMidi, rhythmQwerty, exercise.id, calibrating, hideResults]);
 
   // ---- Theme ------------------------------------------------------------------------
   useEffect(() => {
@@ -461,6 +475,7 @@ function Studio({ profile }: { profile: Profile }) {
               controller={controller}
               award={award?.exerciseId === exercise.id ? award.award : null}
               hidden={resultsHidden}
+              continuation={runtime.continuation}
               pianoShortcuts={s.pianoShortcuts}
               onNext={nextExercise}
               onRetry={retry}
@@ -469,6 +484,7 @@ function Studio({ profile }: { profile: Profile }) {
           </div>
           <PracticeBar
             controller={controller}
+            continuation={runtime.continuation}
             onHint={hint}
             onRetry={retry}
             onStartStop={startStop}
@@ -486,6 +502,7 @@ function Studio({ profile }: { profile: Profile }) {
             settings={s}
             update={update}
             availability={runtime.keyboard}
+            hasNext={runtime.continuation.next !== null}
             preferFlats={prefersFlats(exercise.key)}
             qwertyBase={s.showQwertyHints && !runtime.keyboard.unavailable?.qwertyHints ? qwertyBase : null}
             markers={runtime.keyboard.markers}
@@ -517,6 +534,7 @@ function ResultsLayer(props: {
   controller: Session;
   award: Award | null;
   hidden: boolean;
+  continuation: Continuation;
   pianoShortcuts: boolean;
   onNext: () => void;
   onRetry: () => void;
@@ -528,6 +546,7 @@ function ResultsLayer(props: {
     <ResultsCard
       result={state.result}
       award={props.award}
+      continuation={props.continuation}
       pianoShortcuts={props.pianoShortcuts}
       onNext={props.onNext}
       onRetry={props.onRetry}
@@ -535,8 +554,6 @@ function ResultsLayer(props: {
     />
   );
 }
-
-const ACTION_LABELS = new Map(PIANO_ACTIONS.map((a) => [a.pc, a.label]));
 
 function KeyboardDock(props: {
   controller: Session;
@@ -551,6 +568,8 @@ function KeyboardDock(props: {
   spelling?: (state: PracticeState) => PcSpelling | undefined;
   update: (patch: SettingsPatch) => void;
   availability: KeyboardAvailability;
+  /** The lesson has something to move on to (piano D is on offer after a run). */
+  hasNext: boolean;
 }) {
   const held = useStore(inputBus.held);
   const soundOn = props.settings.keySound;
@@ -560,7 +579,9 @@ function KeyboardDock(props: {
     () => (state.status === 'finished' ? [] : [...new Set([...(guideOn ? state.expected : []), ...state.revealed])]),
     [state.status, state.expected, state.revealed, guideOn],
   );
-  const actions = props.settings.pianoShortcuts && state.status === 'finished' ? ACTION_LABELS : undefined;
+  // The keys carry one short word each (the results card spells out the lesson's own labels).
+  const actionLabels = useMemo(() => new Map(PIANO_ACTIONS.filter((a) => props.hasNext || a.action !== 'next').map((a) => [a.pc, a.label])), [props.hasNext]);
+  const actions = props.settings.pianoShortcuts && state.status === 'finished' ? actionLabels : undefined;
   const spelling = props.spelling?.(state);
   return (
     <div className="keyboard-dock">

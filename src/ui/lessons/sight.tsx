@@ -8,6 +8,7 @@ import { inputBus } from '../../input/inputBus';
 import { audioEngine } from '../../platform/audio/audioEngine';
 import { ExercisePanel } from '../components/ExercisePanel';
 import { PracticeController } from '../practice/PracticeController';
+import { generatedContinuation } from './continuation';
 import { seenIn, stepLevel, useFocus } from './shared';
 import type { LessonContext, LessonRuntime } from './types';
 
@@ -80,6 +81,7 @@ export function useSightLesson(ctx: LessonContext, active: boolean): LessonRunti
     exercise,
     session,
     next,
+    continuation: generatedContinuation('New exercise'),
     step: (direction) => stepLevel(ctx, 'sight', direction, next),
     onPatch: (patch) => {
       if (patch.weakSpotFocus) refresh();

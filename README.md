@@ -117,9 +117,12 @@ contains the current web code.
   (Bluetooth MIDI, Bluetooth audio, speakers); an optional silent pass with a flashing circle
   separates out how late you *hear* the click, which sets the playhead delay. Quick presets
   (*device speakers* ~15 ms, *headphones on the piano* ~180 ms) and manual sliders remain.
-- **Piano shortcuts** — after an exercise, play C to retry, D for the next exercise, E to close
-  the results, F for one level easier, G for one level harder (any octave; ignored until all keys
-  are released, so final notes never trigger them).
+- **Piano shortcuts** — after an exercise, play C to repeat it, D to move on (a new exercise,
+  the next key, the next due item — nothing for one scale in one key), E to close the results, F
+  for one level easier, G for one level harder (any octave; ignored until all keys are released,
+  so final notes never trigger them). R and N do the same from the computer keyboard, and Enter
+  takes the suggested one: something new after generated exercises and in review, the same again
+  for scales and progressions.
 - **Sustain pedal** — CC 64 indicator, and an option to count pedalled notes as held.
 - **Ear training (levels 1–100)** — two-note echoes from middle C, stepwise tunes, five-finger
   melodies, octave-wide leaps, new keys introduced by an I–IV–V–I cadence, minor keys, harmonic

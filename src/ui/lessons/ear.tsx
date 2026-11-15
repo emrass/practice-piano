@@ -6,6 +6,7 @@ import { inputBus } from '../../input/inputBus';
 import { audioEngine } from '../../platform/audio/audioEngine';
 import { EarPanel } from '../components/EarPanel';
 import { EarController } from '../practice/EarController';
+import { generatedContinuation } from './continuation';
 import { seenIn, stepLevel, useFocus } from './shared';
 import type { LessonContext, LessonRuntime } from './types';
 
@@ -48,6 +49,7 @@ export function useEarLesson(ctx: LessonContext, active: boolean): LessonRuntime
     exercise,
     session,
     next,
+    continuation: generatedContinuation('New phrase'),
     step: (direction) => stepLevel(ctx, 'ear', direction, next),
     onPatch: (patch) => {
       if (patch.weakSpotFocus) refreshFocus();

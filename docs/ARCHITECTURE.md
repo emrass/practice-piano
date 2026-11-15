@@ -92,8 +92,16 @@ grades the run (good ≤ 20 ms, fair ≤ 40 ms, otherwise "retry"). During a run
 
 `core/input/pianoShortcuts.ts`: `PianoShortcutGate` sees every input event. Once the exercise
 has finished, a note-on that starts from silence (no key held) at least 600 ms after the end maps
-by pitch class: C retry, D next, E close results, F easier, G harder. A short sustain-pedal tap
+by pitch class: C repeat, D next, E close results, F easier, G harder. A short sustain-pedal tap
 starts Flow mode from the ready state.
+
+What "repeat" and "next" mean comes from the exercise's `continuation` (`ui/lessons/types.ts`):
+a label for each, `next: null` when there is nothing to move on to, and which of the two is
+suggested (`primary`). The practice bar, the results card (main button and focus, so Enter), R /
+N and piano C / D all read it. `ui/lessons/continuation.ts` builds it: generated material (sight
+reading, ear, rhythm, chord drills) suggests something new; fixed repertoire (scales,
+progressions) suggests "Again", has no next for a specific key, and suggests the next due item in
+review. Restart in Wait is off while the run is untouched (`isUntouched`, `ui/practice/session.ts`).
 
 ## Progress & gamification
 
@@ -225,7 +233,8 @@ A lesson is a set of modules, one of each kind, and App.tsx only picks the activ
   note the exercise gives). Wait sessions that offer a hint implement `hint()` and keep
   `state.hint` (count, and `nudge` when the player looks stuck).
 - **Lesson hook** — `ui/lessons/<lesson>.tsx` returns a `LessonRuntime` (`ui/lessons/types.ts`): the
-  current exercise and its session, `next` / `step` (easier / harder), how it reacts to settings
+  current exercise and its session, `next` / `step` (easier / harder), its `continuation` (how to
+  go on after a run, see Piano shortcuts), how it reacts to settings
   changes (`onPatch`), its settings panel, an optional stage that replaces the score (chord chart,
   play from memory), the Wait / Flow switch, keyboard span and mappings (and which keyboard
   display settings don't apply, greyed out in the bar above the keys), review and weak-spot
@@ -233,7 +242,7 @@ A lesson is a set of modules, one of each kind, and App.tsx only picks the activ
   review queue and manual tempo ladder for repertoire lessons). `useLesson` in
   `ui/lessons/index.ts` runs every lesson's hook (hooks can't be conditional); only the active one
   builds an exercise.
-- **Results and Progress** — a `ResultsView` in `ui/results/` (ribbon, headline, measurements, Next
-  label) and a `ProgressView` in `ui/progress/` (summary tile labels, the lesson's section).
+- **Results and Progress** — a `ResultsView` in `ui/results/` (ribbon, headline, measurements) and
+  a `ProgressView` in `ui/progress/` (summary tile labels, the lesson's section).
 
 The renderer, keyboard, input, piano shortcuts, persistence and progress logic are shared.

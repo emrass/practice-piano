@@ -25,6 +25,45 @@ test.describe('Scales & arpeggios', () => {
     await expect(app.results()).toContainText('Notes in place');
   });
 
+  test('A specific key has nothing to move on to: only "Again", and N does nothing', async ({ app, page }) => {
+    await app.open({ settings: scale({ mode: 'wait' }) });
+    const bar = page.locator('.practice-bar');
+    const restart = bar.getByRole('button', { name: 'Restart' });
+    await expect(bar.locator('.btn')).toHaveText([/Restart/, /Hint/]);
+    // Nothing played yet: nothing to restart.
+    await expect(restart).toBeDisabled();
+    const steps = await app.steps();
+    await app.tap(steps[0]);
+    await expect(restart).toBeEnabled();
+    for (const step of steps.slice(1)) await app.tap(step);
+
+    const actions = app.results().locator('.results-actions .btn');
+    await expect(actions).toHaveText([/Close/, /Again/]);
+    await expect(actions.last()).toBeFocused();
+    await expect(app.results().locator('.piano-legend .legend-key')).toHaveText(['C', 'E', 'F', 'G']);
+    await expect(page.locator('.pb-message')).toHaveText('Finished — on the piano: C again');
+    await page.keyboard.press('KeyN');
+    await expect(app.results()).toBeVisible();
+    // Enter takes the suggested action: the same scale again.
+    await page.keyboard.press('Enter');
+    await expect(app.results()).toBeHidden();
+    expect(await app.status()).toBe('running');
+    expect(await app.exercise((ex) => (ex.scale as { itemId: string }).itemId)).toBe('major/G/rh');
+  });
+
+  test('Shuffle keys: "Again" is suggested, N moves to another key', async ({ app, page }) => {
+    await app.open({ settings: scale({ mode: 'wait', tonic: 'shuffle' }) });
+    await expect(page.locator('.practice-bar').getByRole('button', { name: 'Next key' })).toBeVisible();
+    const first = await app.exercise((ex) => (ex.scale as { itemId: string }).itemId);
+    await app.playSteps();
+    const actions = app.results().locator('.results-actions .btn');
+    await expect(actions).toHaveText([/Close/, /Again/, /Next key/]);
+    await expect(actions.nth(1)).toBeFocused();
+    await page.keyboard.press('KeyN');
+    await expect(app.results()).toBeHidden();
+    expect(await app.exercise((ex) => (ex.scale as { itemId: string }).itemId)).not.toBe(first);
+  });
+
   test('Play from memory hides the notation', async ({ app, page }) => {
     await app.open({ settings: scale({ mode: 'wait', notation: false }) });
     await expect(page.locator('.memory-card')).toBeVisible();
@@ -43,6 +82,8 @@ test.describe('Scales & arpeggios', () => {
 
     await app.playSteps();
     await expect(app.results()).toContainText('move only in Flow');
+    // Review is one pass per item: the next due item is the suggested action.
+    await expect(app.results().getByRole('button', { name: 'Next due item' })).toBeFocused();
     const item = ((await app.savedProgress()).repertoire as Record<string, { dueAt: number }>)['major/D/together'];
     expect(item.dueAt).toBeLessThan(Date.now());
     await page.keyboard.press('Escape');

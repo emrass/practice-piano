@@ -13,8 +13,6 @@ export interface ResultsView {
   headline(result: ExerciseResult, passed: boolean, award: Award | null): string;
   /** The lesson's measurements (results grid, notes…), rendered as a component. */
   Body: (props: { result: ExerciseResult; award: Award | null }) => ReactNode;
-  /** Label of the primary button, e.g. 'Next phrase'. */
-  nextLabel: string;
   /** Repertoire lessons (scales, chords) have no tier block and no repeat-passage XP note. */
   repertoire: boolean;
   /** What new passages train, for the "Repeat passage — reduced XP. New passages train … best." note; null for repertoire. */

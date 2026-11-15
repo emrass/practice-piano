@@ -6,7 +6,6 @@ export const sightResults: ResultsView = {
   ribbon: (result, passed) =>
     passed ? '≥ 90% — counts toward mastery' : `Needs ≥ 90% pitch accuracy${result.hints ? ' (hints count as misses)' : ''} to pass`,
   headline: (result, passed) => gradeHeadline(result, passed, 'Beautifully read!'),
-  nextLabel: 'Next exercise',
   repertoire: false,
   trains: 'sight reading',
   Body: function SightResults({ result }) {

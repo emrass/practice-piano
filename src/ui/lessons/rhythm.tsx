@@ -6,6 +6,7 @@ import { inputBus } from '../../input/inputBus';
 import { audioEngine } from '../../platform/audio/audioEngine';
 import { RhythmPanel } from '../components/RhythmPanel';
 import { RhythmController } from '../practice/RhythmController';
+import { generatedContinuation } from './continuation';
 import { seenIn, stepLevel, useFocus } from './shared';
 import type { LessonContext, LessonRuntime } from './types';
 
@@ -68,6 +69,7 @@ export function useRhythmLesson(ctx: LessonContext, active: boolean): LessonRunt
     exercise,
     session,
     next,
+    continuation: generatedContinuation('New rhythm'),
     step: (direction) => stepLevel(ctx, 'rhythm', direction, next),
     onPatch: (patch) => {
       if (patch.weakSpotFocus) refreshFocus();
