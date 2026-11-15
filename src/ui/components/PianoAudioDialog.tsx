@@ -7,7 +7,6 @@ import { audioEngine } from '../../platform/audio/audioEngine';
 import type { MidiService } from '../../platform/midi/midiService';
 import { useHeardNote } from '../hooks/useHeardNote';
 import { BrowserBluetoothHelp, ConnectionStatus, MidiButtons } from './MidiConnect';
-import { InputMonitor } from './InputMonitor';
 import { connectedInputs } from './midiStatus';
 import { CommitSlider, Field, Segmented, Select, Toggle } from './controls';
 
@@ -69,8 +68,6 @@ export function PianoAudioDialog(props: {
         </div>
 
         <div className="settings-scroll">
-          <p className="field-hint settings-intro">These apply to every lesson.</p>
-
           <section className="panel-section" aria-labelledby="settings-piano">
             <div className="section-title" id="settings-piano">
               Piano <span className="muted">· {BACKEND_TEXT[midi.backend]}</span>
@@ -115,8 +112,6 @@ export function PianoAudioDialog(props: {
               options={KEYBOARD_SIZES.map((k) => ({ value: k, label: KEYBOARD_RANGES[k].label }))}
             />
             <p className="field-hint">Sight reading keeps its passages within your keyboard’s range.</p>
-            <div className="field-label">Live input</div>
-            <InputMonitor />
           </section>
 
           <section className="panel-section" aria-labelledby="settings-timing">
