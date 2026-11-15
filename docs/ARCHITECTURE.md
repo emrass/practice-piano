@@ -124,8 +124,8 @@ review. Restart in Wait is off while the run is untouched (`isUntouched`, `ui/pr
 - Trends: every day log (`days`, 120 days) also sums each lesson's runs (`DayLog.lessons`: runs,
   accuracy, timing, level), and every repertoire item keeps a `ladderLog` (the starting tempo,
   then the last tempo of each day it moved, at most 60 entries). `core/progress/trends.ts` turns
-  them into the Progress tab's trend (one point per practice day of the lesson) and the practice
-  calendar (17 Monday-first weeks, for all lessons like the streak, with the tab's lesson marked).
+  them into the Progress tab's trend (one point per practice day of the lesson) and each item's
+  ladder history.
   Both fields are optional: `normalizeProgress` fills in old days from the history and starts
   old items' logs at their current tempo, so the schema and backup versions stay at 1. The
   charts are inline SVG (`ui/progress/charts/`).

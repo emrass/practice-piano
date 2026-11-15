@@ -8,7 +8,6 @@ import { isNativeApp } from '../../platform/native';
 import { isAppleMobileBrowserTab, isStoragePersisted } from '../../platform/storageProtection';
 import { lessonTrend } from '../../core/progress/trends';
 import { PROGRESS_VIEWS, pct } from '../progress';
-import { PracticeCalendar } from '../progress/charts/PracticeCalendar';
 import { TrendChart } from '../progress/charts/TrendChart';
 import { profileRepository } from '../state/useProfile';
 
@@ -110,7 +109,6 @@ export function ProgressPanel(props: {
             </div>
           )}
         </div>
-        <PracticeCalendar progress={progress} lesson={props.lesson} now={props.now} />
       </section>
 
       <section className="panel-section">

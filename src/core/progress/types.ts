@@ -69,7 +69,7 @@ export interface DayLog {
   xp: number;
   practiceMs: number;
   /**
-   * Per-lesson breakdown, for the trend chart and the calendar's lesson marks. Missing on days
+   * Per-lesson breakdown, for the trend chart. Missing on days
    * recorded before it existed that the history could not fill in (see `normalizeProgress`).
    */
   lessons?: Partial<Record<LessonId, LessonDay>>;

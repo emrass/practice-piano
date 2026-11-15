@@ -34,25 +34,17 @@ function practicedProgress() {
   return { ...progressWith({ 'major/D/together': item, 'natural-minor/A/rh': repertoireItem(150, -1) }), days };
 }
 
-test('Progress tab: practice calendar, trend and an item’s ladder history', async ({ app, page }) => {
+test('Progress tab: trend and an item’s ladder history', async ({ app, page }) => {
   await app.open({ settings: { lesson: 'sight' }, progress: practicedProgress() });
   await app.openTab('Progress');
   const sidebar = page.locator('.sidebar');
-
-  // The calendar is for all lessons; the dot marks this lesson's days.
-  const calendar = sidebar.getByRole('group', { name: /Practice calendar: 8 practice days/ });
-  await expect(calendar).toBeVisible();
-  await expect(calendar.locator('.cal-day:not(.lvl-0):not(.is-future)')).toHaveCount(8);
-  await expect(calendar.locator('.cal-dot')).toHaveCount(6);
-  await expect(calendar.getByRole('img', { name: /Ear training/ })).toHaveCount(1);
 
   await expect(sidebar.getByText('last 6 practice days')).toBeVisible();
   await expect(sidebar.getByRole('img', { name: /^Pitch 60% on .*, 95% on .*, over 6 practice days$/ })).toBeVisible();
   await expect(sidebar.locator('.chart-legend')).toHaveText(/Pitch.*Timing \(Flow\).*Level/);
 
-  // Ear training: the same calendar, its own day marked, and too few days for a trend.
+  // Ear training: too few days for a trend.
   await app.switchLesson(/Ear/);
-  await expect(calendar.locator('.cal-dot')).toHaveCount(1);
   await expect(sidebar.getByText(/Your trend appears once you have practiced this lesson on two days \(one so far\)/)).toBeVisible();
 
   // Scales: tapping an item opens its ladder history.
@@ -88,8 +80,8 @@ test('Progress saved before trends existed still loads: days filled from the his
   ];
   await app.open({ settings: { lesson: 'sight' }, progress: old });
   await app.openTab('Progress');
-  const calendar = page.locator('.sidebar').getByRole('group', { name: /Practice calendar: 1 practice day / });
-  await expect(calendar.locator('.cal-dot')).toHaveCount(1); // backfilled from the history
+  // The day was filled in from the history: one practice day of sight reading so far.
+  await expect(page.locator('.sidebar').getByText(/on two days \(one so far\)/)).toBeVisible();
   await app.switchLesson(/Scales/);
   await page.locator('.sidebar').getByRole('button', { name: /G major/ }).click();
   await expect(page.locator('.sidebar .ladder-chart')).toBeVisible();

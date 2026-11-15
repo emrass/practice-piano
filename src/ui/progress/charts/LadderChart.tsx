@@ -37,9 +37,12 @@ export function LadderChart(props: { log: readonly LadderLogEntry[]; goal: numbe
           <title>{`${shortDate(day)}: ${format(t)}`}</title>
         </circle>
       ))}
-      <text className="chart-value" x={Math.min(lastX, W - PAD.right)} y={y(last) + (y(last) - y(goal) < 14 ? 13 : -5)} textAnchor="end">
-        {format(last)}
-      </text>
+      {/* The latest tempo, unless it sits on the goal line (whose label already says it). */}
+      {Math.abs(y(last) - y(goal)) >= 12 ? (
+        <text className="chart-value" x={lastX} y={y(last) + (y(last) < y(goal) ? 13 : -6)} textAnchor="end">
+          {format(last)}
+        </text>
+      ) : null}
       <text className="chart-axis" x={PAD.left} y={H - 5} textAnchor="start">
         {shortDate(log[0][0])}
       </text>
