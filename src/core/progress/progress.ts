@@ -252,7 +252,7 @@ function migrateHistoryEntry(entry: Omit<HistoryEntry, 'lesson'> & { lesson?: Le
   return { ...entry, lesson: entry.lesson ?? 'sight' };
 }
 
-/** Defensive normalisation for data loaded from storage or an import file. */
+/** Defensive normalization for data loaded from storage or an import file. */
 export function normalizeProgress(raw: unknown): ProgressState {
   const base = emptyProgress();
   if (!raw || typeof raw !== 'object') return base;

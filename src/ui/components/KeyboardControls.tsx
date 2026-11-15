@@ -6,7 +6,7 @@ import { Field, Segmented, Toggle } from './controls';
 /**
  * The keyboard's display preferences, in the bar above the keys: the keyboard guide as a
  * button of its own (the one switched mid-practice), the rest in a small menu. They apply to
- * every lesson; where one does not, it is greyed out with the reason.
+ * every lesson; where one does not, it is grayed out with the reason.
  */
 export function KeyboardControls(props: { settings: Settings; update: (patch: SettingsPatch) => void; availability: KeyboardAvailability }) {
   const { settings: s, update, availability: a } = props;

@@ -1,7 +1,7 @@
 import { LETTER_PC, LETTERS, accidentalText, mod, type Letter } from '../music/pitch';
 
 /**
- * Scales & arpeggios (docs/DIDACTICS.md §4.4) are a fixed repertoire: the catalogue below
+ * Scales & arpeggios (docs/DIDACTICS.md §4.4) are a fixed repertoire: the catalog below
  * defines every scale and arpeggio type by its degrees. Freshness comes from shuffling keys,
  * spaced review and the tempo ladder, never from random notes.
  */

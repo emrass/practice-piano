@@ -138,7 +138,7 @@ export function SetupGuide(props: {
                 keys, <kbd>W</kbd> <kbd>E</kbd> <kbd>T</kbd> <kbd>Y</kbd> <kbd>U</kbd> the black ones. We’ll turn on <b>Key sound</b> so those keys make a sound.
               </p>
               <p>
-                It is a way to look around, not to practise: fingering, both hands and playing in time need a real keyboard. When your piano is nearby, press{' '}
+                It is a way to look around, not to practice: fingering, both hands and playing in time need a real keyboard. When your piano is nearby, press{' '}
                 <b>Connect a piano</b> in the top bar, or open <b>Input &amp; audio → Setup guide</b>.
               </p>
             </div>
@@ -173,7 +173,7 @@ export function SetupGuide(props: {
                 Back
               </button>
               <button type="button" className="btn btn-primary" onClick={next}>
-                {last ? 'Start practising' : 'Next'}
+                {last ? 'Start practicing' : 'Next'}
               </button>
             </div>
           </>
@@ -187,7 +187,7 @@ export function SetupGuide(props: {
                 Back
               </button>
               <button type="button" className="btn btn-primary" onClick={next}>
-                Start practising
+                Start practicing
               </button>
             </div>
           </>

@@ -55,7 +55,7 @@ export function RhythmSection(props: ProgressSectionProps) {
           </p>
         ) : null}
         <button type="button" className="btn btn-block" disabled={weak.length === 0} onClick={props.onPracticeWeakSpots}>
-          Practise weak figures
+          Practice weak figures
         </button>
       </section>
       <section className="panel-section">

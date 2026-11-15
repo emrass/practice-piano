@@ -13,9 +13,9 @@ export function heatColor(acc: number): string {
   return `hsl(${hue} 65% 48%)`;
 }
 
-/** "centred", "12 ms early" or "20 ms late"; empty without data. */
+/** "centered", "12 ms early" or "20 ms late"; empty without data. */
 export function tendencyText(ms: number | null): string {
   if (ms === null) return '';
-  if (Math.abs(ms) < 8) return 'centred';
+  if (Math.abs(ms) < 8) return 'centered';
   return `${Math.abs(ms)} ms ${ms < 0 ? 'early' : 'late'}`;
 }

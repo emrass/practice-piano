@@ -78,7 +78,7 @@ export function summarizeScale(ex: ScaleExercise, raw: RawResult, goalNpm: numbe
   const thumbAccent =
     thumbs.length >= 3 && others.length >= 3 && vSd !== null && mean(thumbs)! - mean(others)! > Math.max(6, 0.5 * vSd);
 
-  // Hand synchronisation: steps where both hands hit.
+  // Hand synchronization: steps where both hands hit.
   const sync: number[] = [];
   for (const s of ex.steps) {
     const rh = lines.rh.find((p) => p.step === s.index)?.result;
@@ -88,7 +88,7 @@ export function summarizeScale(ex: ScaleExercise, raw: RawResult, goalNpm: numbe
     }
   }
 
-  // Timing bumps: a note that arrives late (or early) relative to its neighbours, at the
+  // Timing bumps: a note that arrives late (or early) relative to its neighbors, at the
   // same place in every octave — typically a thumb crossing.
   const groups = new Map<string, { p: Played; locals: number[] }>();
   const allLocals: number[] = [];

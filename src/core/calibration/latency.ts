@@ -47,7 +47,7 @@ export function pulseTimes(start: number, beatMs = CALIBRATION_BEAT_MS, count = 
 
 /**
  * Match taps to pulses (nearest pulse within ±45 % of a beat, one tap per pulse — the
- * closest wins), skip the warm-up pulses, and summarise robustly.
+ * closest wins), skip the warm-up pulses, and summarize robustly.
  */
 export function analyzeTaps(pulses: readonly number[], taps: readonly number[], beatMs: number, opts: AnalyzeOptions = {}): TapAnalysis {
   const warmup = opts.warmup ?? CALIBRATION_WARMUP;

@@ -176,12 +176,12 @@ function StorageStatus({ storageKind }: { storageKind: string }) {
   const [persisted, setPersisted] = useState<boolean | null>(null);
   useEffect(() => {
     if (!web) return;
-    let cancelled = false;
+    let canceled = false;
     void isStoragePersisted().then((p) => {
-      if (!cancelled) setPersisted(p);
+      if (!canceled) setPersisted(p);
     });
     return () => {
-      cancelled = true;
+      canceled = true;
     };
   }, [web]);
 

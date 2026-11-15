@@ -27,16 +27,16 @@ export function useProfile(): Profile {
   const latest = useRef(settings);
 
   useEffect(() => {
-    let cancelled = false;
+    let canceled = false;
     profileRepository.load().then((data) => {
-      if (cancelled) return;
+      if (canceled) return;
       latest.current = data.settings;
       setSettings(data.settings);
       setProgressState(data.progress);
       setReady(true);
     });
     return () => {
-      cancelled = true;
+      canceled = true;
     };
   }, []);
 

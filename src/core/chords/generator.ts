@@ -123,7 +123,7 @@ function progressionTargets(item: Extract<ChordItem, { task: 'progression' }>): 
   const def = findProgression(item.progression)!;
   const { letter, alter } = parseTonic(item.key);
   const tonic = makePitch(letter, alter, 4);
-  // Short progressions go round twice, so the turnaround back to the start is practised too.
+  // Short progressions go around twice, so the turnaround back to the start is practiced too.
   const chords = def.chords.length <= 4 ? [...def.chords, ...def.chords] : def.chords;
   const out: ChordTarget[] = [];
   let prev: number[] | null = null;

@@ -12,7 +12,7 @@ export const EAR_TIERS: readonly Tier[] = [
   { id: 'e08', name: 'Harmonic Intervals', minLevel: 61, maxLevel: 70, passesRequired: 5, summary: 'Two notes at once' },
   { id: 'e09', name: 'Triads', minLevel: 71, maxLevel: 80, passesRequired: 5, summary: 'Major and minor chords' },
   { id: 'e10', name: 'Key Only', minLevel: 81, maxLevel: 90, passesRequired: 6, summary: 'No starting note — find it from the key' },
-  { id: 'e11', name: 'Inversions & Sevenths', minLevel: 91, maxLevel: 100, passesRequired: 6, summary: 'Chord colours and chromatic notes' },
+  { id: 'e11', name: 'Inversions & Sevenths', minLevel: 91, maxLevel: 100, passesRequired: 6, summary: 'Chord colors and chromatic notes' },
 ];
 
 export function earTierForLevel(level: number): Tier {

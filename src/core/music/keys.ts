@@ -101,7 +101,7 @@ export function stepToMidi(key: KeySignature, step: number, extraAlter = 0): num
 
 /**
  * Tracks accidentals within one measure on one staff so we know when an accidental
- * (or a cancelling natural) has to be printed.
+ * (or a canceling natural) has to be printed.
  */
 export class MeasureAccidentals {
   private readonly alters: Record<Letter, number>;

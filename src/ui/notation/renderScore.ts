@@ -22,7 +22,7 @@ export interface RenderedScore {
   /** CSS pixels per layout pixel. */
   scale: number;
   svg: SVGSVGElement | null;
-  /** SVG groups of each step's noteheads (both hands), for colouring. */
+  /** SVG groups of each step's noteheads (both hands), for coloring. */
   stepElements: Map<number, SVGGElement[]>;
   /** Engraved notehead x (layout px) per event id — used by tests to verify alignment. */
   noteX: Map<string, number>;
@@ -241,7 +241,7 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
     // Notes, per staff and measure.
     for (const clef of ex.staves) {
       const hand: Hand = clef === 'treble' ? 'rh' : 'lh';
-      const labelled: { note: StaveNote; event: NoteEvent }[] = [];
+      const labeled: { note: StaveNote; event: NoteEvent }[] = [];
       let staveBottom = 0;
       measureStaves[clef]!.forEach((stave, m) => {
         staveBottom = stave.getYForLine(4);
@@ -290,18 +290,18 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
             list.push(group);
             stepElements.set(stepIndex, list);
           }
-          labelled.push({ note, event: e });
+          labeled.push({ note, event: e });
         }
         beams.forEach((b) => b.setContext(ctx).draw());
         ctx.closeGroup();
       });
 
       // Fingering: one row per staff, above the treble staff and below the bass staff.
-      if (opts.showFingering && svg && labelLayer && labelled.some((l) => l.event.fingers)) {
+      if (opts.showFingering && svg && labelLayer && labeled.some((l) => l.event.fingers)) {
         const above = clef === 'treble';
         const staveTop = staveBottom - 40;
         let rowY = above ? staveTop - 10 : staveBottom + 20;
-        for (const { note } of labelled) {
+        for (const { note } of labeled) {
           const ys = note.getYs();
           if (above) {
             rowY = Math.min(rowY, ...ys.map((y) => y - 12));
@@ -317,7 +317,7 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
             }
           }
         }
-        for (const { note, event } of labelled) {
+        for (const { note, event } of labeled) {
           const f = event.fingers?.[0];
           if (f === undefined) continue;
           const cx = (note.getNoteHeadBeginX() + note.getNoteHeadEndX()) / 2;
@@ -326,13 +326,13 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
       }
 
       // Chord symbols (and Roman numerals) on one row above the treble staff.
-      if (clef === ex.staves[0] && svg && labelLayer && labelled.some((l) => l.event.symbol)) {
+      if (clef === ex.staves[0] && svg && labelLayer && labeled.some((l) => l.event.symbol)) {
         let rowY = staveBottom - 40 - 14;
-        for (const { note } of labelled) {
+        for (const { note } of labeled) {
           rowY = Math.min(rowY, ...note.getYs().map((y) => y - 16));
           if (note.hasStem() && note.getStemDirection() === Stem.UP) rowY = Math.min(rowY, note.getStemExtents().topY - 10);
         }
-        for (const { note, event } of labelled) {
+        for (const { note, event } of labeled) {
           if (!event.symbol) continue;
           const [symbol, numeral] = event.symbol.split(/\s{2,}/);
           const el = document.createElementNS(SVG_NS, 'text');
@@ -356,9 +356,9 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
       }
 
       // Note-name labels share one baseline per staff line, below stems, beams and ledger notes.
-      if (showNames && svg && labelLayer && labelled.length) {
+      if (showNames && svg && labelLayer && labeled.length) {
         let lowest = staveBottom + 8;
-        for (const { note } of labelled) {
+        for (const { note } of labeled) {
           lowest = Math.max(lowest, ...note.getYs().map((y) => y + 6));
           if (note.hasStem() && note.getStemDirection() === Stem.DOWN) {
             const ext = note.getStemExtents();
@@ -367,7 +367,7 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
         }
         let rowY = Math.max(staveBottom + 22, lowest + 14);
         if (clef === 'treble' && ex.staves.length > 1) rowY = Math.min(rowY, staveBottom + 40);
-        for (const { note, event } of labelled) {
+        for (const { note, event } of labeled) {
           const cx = (note.getNoteHeadBeginX() + note.getNoteHeadEndX()) / 2;
           let y = rowY;
           for (const p of [...event.pitches].reverse()) {

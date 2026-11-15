@@ -49,7 +49,7 @@ export function ChordsPanel(props: {
   return (
     <div className="panel-body">
       <section className="panel-section">
-        <Field label="Practise">
+        <Field label="Practice">
           <Segmented<'drill' | 'progression'>
             label="Task"
             value={s.chords.task}

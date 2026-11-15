@@ -47,7 +47,7 @@ export const SKILLS: Readonly<Record<ExperienceSkill, ExperienceSkillInfo>> = {
     lessons: 'Ear training',
     statements: [
       { text: 'I have never tried', patch: { ear: { level: 1 } } },
-      { text: 'I can copy two or three neighbouring notes', patch: { ear: { level: 7 } } },
+      { text: 'I can copy two or three neighboring notes', patch: { ear: { level: 7 } } },
       { text: 'I can play back short tunes within five notes', patch: { ear: { level: 13 } } },
       { text: 'I can play back melodies that span an octave', patch: { ear: { level: 21 } } },
       { text: 'I can play back melodies in different keys', patch: { ear: { level: 41 } } },

@@ -101,7 +101,7 @@ export function InputAudioPanel(props: {
 
       <section className="panel-section">
         <div className="section-title">Scoring</div>
-        <Field label="Sustain pedal" hint="“Count as held” lets pedalled notes satisfy chords and note lengths.">
+        <Field label="Sustain pedal" hint="“Count as held” lets pedaled notes satisfy chords and note lengths.">
           <Segmented<Settings['sustainScoring']>
             label="Sustain pedal scoring"
             value={s.sustainScoring}

@@ -285,7 +285,7 @@ export function generateEarExercise(settings: EarSettings, seed: number): EarExe
     const line = melodyLine(rng, profile, key, tonic, length, focus);
     steps = line.map((n, i) => {
       if (profile.content !== 'mixed' || n.alter !== 0 || !(i === 0 || i === line.length - 1 || rng.chance(profile.chordProbability))) return [n];
-      // Harmonise the melody note (as top voice) with a triad below it.
+      // Harmonize the melody note (as top voice) with a triad below it.
       const deg = scaleDegree(key, n.step);
       let root = [0, 3, 4].map((r) => n.step - ((deg - r + 7) % 7)).find((s) => chordTones(scaleDegree(key, s)).includes(deg)) ?? n.step - 7;
       if (root < tonic - 4) root += 7; // keep the harmony on the staff

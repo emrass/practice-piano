@@ -94,7 +94,7 @@ describe('generateEarExercise', () => {
     expect(triads.steps.every((s) => s.midis.length === 3)).toBe(true);
   });
 
-  it('honours length override and interval focus', () => {
+  it('honors length override and interval focus', () => {
     expect(generateEarExercise({ ...base, level: 30, length: 7 }, 1).steps).toHaveLength(7);
     const count = (focus?: number[]) => {
       let n = 0;

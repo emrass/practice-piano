@@ -1,6 +1,6 @@
 import type { ChordOutcome, ChordsResult, ChordSummary } from '../eval/types';
 import { median } from '../eval/types';
-import type { ChordJudgement } from './engine';
+import type { ChordJudgment } from './engine';
 import { QUALITIES, type ChordQuality } from './catalog';
 import { type ChordExercise, PC_NAMES } from './generator';
 import { minimalMovement, movement } from './voicing';
@@ -30,10 +30,10 @@ function rightHand(played: readonly number[], lhBass: boolean): number[] {
   return lhBass && sorted.length > 1 ? sorted.slice(1) : sorted;
 }
 
-export function summarizeChords(ex: ChordExercise, judgements: readonly ChordJudgement[], mode: string, goalBpm: number): ChordSummary {
+export function summarizeChords(ex: ChordExercise, judgments: readonly ChordJudgment[], mode: string, goalBpm: number): ChordSummary {
   const { targets, item } = ex.chords;
   const flow = mode === 'flow';
-  const byIndex = new Map(judgements.map((j) => [j.index, j]));
+  const byIndex = new Map(judgments.map((j) => [j.index, j]));
   const outcomes: ChordOutcome[] = targets.map((t) => {
     const j = byIndex.get(t.index);
     return {
@@ -49,13 +49,13 @@ export function summarizeChords(ex: ChordExercise, judgements: readonly ChordJud
     };
   });
   const correct = outcomes.filter((o) => o.correct).length;
-  const reactions = judgements.map((j) => j.reactionMs).filter((v): v is number => v !== undefined);
-  const hits = judgements.filter((j) => j.correct && j.deltaMs !== undefined);
+  const reactions = judgments.map((j) => j.reactionMs).filter((v): v is number => v !== undefined);
+  const hits = judgments.filter((j) => j.correct && j.deltaMs !== undefined);
   const offsets = hits.map((j) => j.deltaMs!);
   const spreads = hits.map((j) => j.spreadMs ?? 0);
-  const timing = mean(judgements.filter((j) => j.correct).map((j) => j.timingScore ?? 0));
+  const timing = mean(judgments.filter((j) => j.correct).map((j) => j.timingScore ?? 0));
 
-  // Voice leading: only for progressions, between neighbouring chords both played right.
+  // Voice leading: only for progressions, between neighboring chords both played right.
   let voiceLeading: number | null = null;
   let moves: ChordSummary['movement'] = null;
   if (item.task === 'progression') {
@@ -95,7 +95,7 @@ export function summarizeChords(ex: ChordExercise, judgements: readonly ChordJud
     add({ symbol: o.symbol, reason: byIndex.get(targets[i].index)?.hinted ? 'hint' : flow ? 'missed' : 'retry' });
   });
   if (!flow && typical !== null) {
-    judgements
+    judgments
       .filter((j) => j.reactionMs !== undefined && j.reactionMs > Math.max(2 * typical, typical + 1500))
       .sort((a, b) => b.reactionMs! - a.reactionMs!)
       .forEach((j) => add({ symbol: targets[j.index].symbol, reason: 'slow', ms: Math.round(j.reactionMs!) }));
@@ -133,14 +133,14 @@ export function summarizeChords(ex: ChordExercise, judgements: readonly ChordJud
 /** The shared result shape for a chords run (one "step" per chord). */
 export function chordResult(
   ex: ChordExercise,
-  judgements: readonly ChordJudgement[],
+  judgments: readonly ChordJudgment[],
   ctx: { mode: 'wait' | 'flow'; goalBpm: number; durationMs: number; wrongPresses: number; completedAt: number },
 ): ChordsResult {
-  const chords = summarizeChords(ex, judgements, ctx.mode, ctx.goalBpm);
+  const chords = summarizeChords(ex, judgments, ctx.mode, ctx.goalBpm);
   const size = (i: number) => ex.chords.targets[i].pcs.length + (ex.chords.targets[i].bassMidi !== null ? 1 : 0);
   const totalNotes = ex.chords.targets.reduce((a, _t, i) => a + size(i), 0);
   const correctNotes = chords.outcomes.reduce((a, o, i) => a + (o.correct ? size(i) : 0), 0);
-  const hits = judgements.filter((j) => j.correct);
+  const hits = judgments.filter((j) => j.correct);
   const flow = ctx.mode === 'flow';
   return {
     lesson: 'chords',
@@ -161,7 +161,7 @@ export function chordResult(
     durationMs: ctx.durationMs,
     notes: [],
     completedAt: ctx.completedAt,
-    hints: flow ? undefined : judgements.filter((j) => j.hinted).length,
+    hints: flow ? undefined : judgments.filter((j) => j.hinted).length,
     chords,
   };
 }

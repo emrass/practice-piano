@@ -18,7 +18,7 @@ export type WaitFeedback =
  * Wait Mode: the cursor sits on the current step until every expected key has been
  * played. A chord is accepted when all its notes are pressed within the grace window
  * of each other, or are all held down together (slow chord assembly is fine as long as
- * the keys stay down). Wrong keys are penalised but never advance the cursor.
+ * the keys stay down). Wrong keys are penalized but never advance the cursor.
  */
 export class WaitEngine {
   private index = 0;

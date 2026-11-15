@@ -4,7 +4,7 @@ import type { Session } from '../practice/session';
 
 /**
  * Chords without notation: a lead-sheet style chart, one card per bar. The card being asked
- * for is marked; played ones take their result colour.
+ * for is marked; played ones take their result color.
  */
 export function ChordChart(props: { exercise: ChordExercise; controller: Session }) {
   const state = useStore(props.controller.state);

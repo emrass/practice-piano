@@ -35,7 +35,7 @@ export function ScalesPanel(props: {
   return (
     <div className="panel-body">
       <section className="panel-section">
-        <Field label="Practise">
+        <Field label="Practice">
           <Segmented<'scale' | 'arpeggio'>
             label="Kind"
             value={kind}

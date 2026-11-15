@@ -66,7 +66,7 @@ test('First run: a connected piano is offered at once, confirmed by a key, and t
   await button(page, 'Next').click();
   await expect(guide(page)).toContainText('Line up the metronome');
   await button(page, /Headphones on piano/).click();
-  await button(page, 'Start practising').click();
+  await button(page, 'Start practicing').click();
   await expect(guide(page)).toHaveCount(0);
 
   await expect.poll(() => saved(page)).toMatchObject({
@@ -103,7 +103,7 @@ test('A browser without MIDI says so, and continuing without a piano turns the k
   // No metronome step: a calibration without the piano would measure the wrong thing.
   await expect(guide(page)).toContainText('step 2 of 2');
   await guide(page).getByRole('radio', { name: /New to the piano/ }).click();
-  await button(page, 'Start practising').click();
+  await button(page, 'Start practicing').click();
   await expect(guide(page)).toHaveCount(0);
   await expect.poll(() => saved(page)).toMatchObject({ setupGuideSeen: true, keySound: true, audioSetup: 'speakers', sight: { level: 1, hands: 'rh' } });
   await expect(page.locator('.kb-sound')).toHaveAttribute('aria-pressed', 'true');
@@ -138,7 +138,7 @@ test('Changing one skill changes only the lessons it covers', async ({ page }) =
   // No longer the preset of any stage.
   await expect(guide(page).getByRole('radio', { checked: true })).toHaveCount(0);
   await button(page, 'Next').click();
-  await button(page, 'Start practising').click();
+  await button(page, 'Start practicing').click();
   await expect.poll(() => saved(page)).toMatchObject({
     experience: { reading: 1, ear: 5, technique: 0 },
     sight: { level: 10, hands: 'rh' },
@@ -183,7 +183,7 @@ test('Reopened from Input & audio, the guide changes nothing unless something is
   await expect(guide(page).getByRole('radio', { checked: true })).toHaveCount(0);
   await button(page, 'Next').click();
   await expect(button(page, /Headphones on piano/)).toHaveAttribute('aria-pressed', 'true');
-  await button(page, 'Start practising').click();
+  await button(page, 'Start practicing').click();
   await expect(guide(page)).toHaveCount(0);
   await page.waitForTimeout(500); // past the debounced save
   expect(await app.savedSettings()).toMatchObject({ sight: { level: 30, hands: 'lh' }, experience: null, audioSetup: 'headphones', latencyMs: 180 });
