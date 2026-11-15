@@ -43,6 +43,12 @@ export function fakeMidi() {
   window.__schedule = (data, at) => setTimeout(() => window.__midi(data, at), Math.max(0, at - performance.now()));
 }
 
+/** A new profile opens on the first-run setup guide; tests of other things skip it. */
+export async function skipSetup(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Skip setup' }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+}
+
 /** Seeds one local profile's settings and progress before the app loads. */
 function seedStorage(seed: { settings: string; progress: string | null }) {
   // Only on the first load of a page, so a reload in a test sees what the app saved.
@@ -54,8 +60,11 @@ function seedStorage(seed: { settings: string; progress: string | null }) {
   if (seed.progress) localStorage.setItem('practice-piano:users/local-test/progress', seed.progress);
 }
 
-/** Settings every test starts from: no latency compensation, so scheduled notes land where meant. */
-const BASE_SETTINGS: Json = { latencyMs: 0, playheadDelayMs: 0, pianoShortcuts: true };
+/**
+ * Settings every test starts from: no latency compensation, so scheduled notes land where meant,
+ * and the first-run setup guide already seen (e2e/setup.spec.ts tests the guide itself).
+ */
+const BASE_SETTINGS: Json = { latencyMs: 0, playheadDelayMs: 0, pianoShortcuts: true, setupGuideSeen: true };
 
 export class App {
   readonly errors: string[] = [];

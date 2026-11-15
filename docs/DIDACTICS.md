@@ -263,7 +263,60 @@ early / late, rolled).
 altered dominants, rule-based progressions generated from functions, Roman-numeral prompts in a
 key for drills, rhythm patterns (comping) inside the bar.
 
-## 5. Order of work
+## 5. Where a new player starts
+
+The first-run setup asks one question, *How well do you play?*, with five stages. A stage is a
+preset: it picks one statement per skill, and each statement sets the lessons that train that
+skill. The statements are shown in the skill's own words and can be changed before continuing.
+
+| Stage | Reading music | Playing by ear | Scales & chords |
+|---|---|---|---|
+| New to the piano | 1 | 1 | 1 |
+| Beginner | 2 | 2 | 1 |
+| Elementary | 4 | 3 | 2 |
+| Intermediate | 5 | 4 | 3 |
+| Advanced | 6 | 5 | 4 |
+
+| # | Reading music | Sight reading | Rhythm |
+|---|---|---|---|
+| 1 | I can't read notes yet | level 1, right hand | level 1 |
+| 2 | I read a few notes around middle C | level 10, right hand | level 1 |
+| 3 | I read simple melodies, one hand at a time | level 13, hands alternating | level 9 |
+| 4 | I read both hands in easy keys | level 16, both hands | level 17 |
+| 5 | I read both hands with sharps, flats and dotted rhythms | level 36, both hands | level 37 |
+| 6 | I read fluently in any key | level 66, both hands | level 57 |
+
+| # | Playing by ear | Ear training |
+|---|---|---|
+| 1 | I have never tried | level 1 |
+| 2 | I can copy two or three neighbouring notes | level 7 |
+| 3 | I can play back short tunes within five notes | level 13 |
+| 4 | I can play back melodies that span an octave | level 21 |
+| 5 | I can play back melodies in different keys | level 41 |
+| 6 | I can pick out intervals and chords | level 61 |
+
+| # | Scales & chords | Scales & arpeggios | Chords |
+|---|---|---|---|
+| 1 | I don't know any yet | right hand, 1 octave, eighths | major & minor triads, root position |
+| 2 | I know a few major scales and basic chords | right hand, 2 octaves, eighths | same |
+| 3 | I play major and minor scales hands together, and chords in inversions | hands together, 2 octaves, eighths | all triads, inversions |
+| 4 | I play scales in all keys at speed, and seventh chords | hands together, 2 octaves, sixteenths | seventh chords, inversions |
+
+Why it is built this way:
+
+- **One choice, because a new player should be playing within a minute.** Asking per lesson
+  blocks them, and beginners cannot rate skills they have never tried.
+- **Statements per skill, because skills differ.** Reading well does not mean playing by ear, so
+  ear training starts lower. The player sees a sentence about ear playing, not a lower rating.
+- **Three skills, not five lessons.** The rhythm lesson is about reading rhythm; scales and
+  chords both come from knowing the keyboard.
+- **Cautious starts.** Every level is the first level of a tier, and nothing starts near the top
+  (sight reading 66 of 100 at most). A self-description is a rough signal: too easy costs one
+  "harder" press, too hard makes a bad first exercise.
+- **No placement test.** An adaptive test needs its own rules and tuning; principle 4 (learners
+  choose their level freely) already makes a wrong start cheap to correct.
+
+## 6. Order of work
 
 1. Sight reading ✓ 2. Ear training ✓ 3. Rhythm ✓ 4. Scales & arpeggios ✓ (introduced the
 fixed-repertoire infrastructure: item picker, tempo ladder, spaced review, evenness metrics)

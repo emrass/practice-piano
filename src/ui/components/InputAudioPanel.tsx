@@ -5,6 +5,8 @@ import { useStore } from '../../lib/store';
 import { inputBus } from '../../input/inputBus';
 import { audioEngine } from '../../platform/audio/audioEngine';
 import type { MidiService } from '../../platform/midi/midiService';
+import { BrowserBluetoothHelp, MidiButtons } from './MidiConnect';
+import { connectedInputs, midiStatusText } from './midiStatus';
 import { CommitSlider, Field, Segmented, Select, Toggle } from './controls';
 
 const BACKEND_TEXT = {
@@ -45,25 +47,13 @@ export function InputAudioPanel(props: {
   midi: MidiService;
   qwertyBase: number;
   onCalibrate: () => void;
+  /** Reopens the first-run setup guide. */
+  onSetup: () => void;
 }) {
   const { settings: s, update } = props;
   const midi = useStore(props.midi.state);
-  const connected = midi.inputs.filter((i) => i.connected);
-
-  const statusText =
-    midi.status === 'initializing'
-      ? 'Looking for MIDI…'
-      : midi.status === 'denied'
-        ? 'MIDI access was blocked. Allow MIDI for this site in Chrome’s site settings, then Rescan.'
-        : midi.status === 'unsupported'
-          ? midi.backend === 'none'
-            ? 'This browser has no Web MIDI. Use Chrome on macOS, or the iPad/Mac app.'
-            : 'MIDI is not available in this context.'
-          : midi.status === 'error'
-            ? 'MIDI could not be started.'
-            : connected.length
-              ? `${connected.length} input${connected.length > 1 ? 's' : ''} connected`
-              : 'No MIDI inputs found — connect your piano (USB or Bluetooth) and Rescan.';
+  const connected = connectedInputs(midi);
+  const statusText = midiStatusText(midi);
 
   return (
     <div className="panel-body">
@@ -85,24 +75,19 @@ export function InputAudioPanel(props: {
           ]}
         />
         <div className="button-row">
-          <button type="button" className="btn" onClick={() => void props.midi.rescan()}>
-            Rescan
-          </button>
-          {midi.canPairBluetooth ? (
-            <button type="button" className="btn btn-primary" onClick={() => props.midi.pairBluetooth()}>
-              Pair Bluetooth MIDI…
-            </button>
-          ) : null}
+          <MidiButtons midi={props.midi} canPairBluetooth={midi.canPairBluetooth} />
         </div>
         {!midi.canPairBluetooth ? (
           <details className="help">
             <summary>Bluetooth MIDI in the browser</summary>
             <p>
-              On macOS, pair the piano once in <b>Audio MIDI Setup → Window → Show MIDI Studio → Bluetooth</b> (the “Bluetooth” toolbar button), then press Rescan here.
-              On iPad, browsers can’t use MIDI — install the practice-piano app, which has a built-in pairing button.
+              <BrowserBluetoothHelp />
             </p>
           </details>
         ) : null}
+        <button type="button" className="btn btn-block" onClick={props.onSetup}>
+          Setup guide…
+        </button>
         <Select<KeyboardSize>
           label="Your keyboard"
           value={s.keyboardSize}

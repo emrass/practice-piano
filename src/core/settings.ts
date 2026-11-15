@@ -15,6 +15,7 @@ import {
   PROGRESSIONS,
 } from './chords/catalog';
 import { SCALE_TYPE_IDS, SCALE_TYPES, type NoteValue, type ScaleHands, type ScaleTypeId } from './scales/catalog';
+import { type ExperienceSelection, normalizeExperience } from './experience';
 import { RHYTHM_TEXTURES, type RhythmHands, type RhythmSettings, type RhythmTask, type RhythmTexture } from './rhythm/generator';
 
 export const SETTINGS_SCHEMA_VERSION = 2;
@@ -125,6 +126,11 @@ export interface Settings extends LessonSettings {
   midiInputId: string; // 'auto' | device id
   /** Play C/D/E/F/G after an exercise to retry / next / close / easier / harder. */
   pianoShortcuts: boolean;
+  // First-run setup
+  /** The setup guide was finished or skipped; false shows it when the app opens. */
+  setupGuideSeen: boolean;
+  /** What the player said about their playing in the setup guide (null = never answered). */
+  experience: ExperienceSelection | null;
 }
 
 /** A change to settings: shared fields as they are, lesson groups field by field. */
@@ -239,6 +245,8 @@ export const DEFAULT_SETTINGS: Settings = {
   metronomeVolume: 0.7,
   midiInputId: 'auto',
   pianoShortcuts: true,
+  setupGuideSeen: false,
+  experience: null,
 };
 
 function clampNum(v: unknown, lo: number, hi: number, d: number): number {
@@ -301,6 +309,8 @@ export function normalizeSettings(raw: unknown): Settings {
     metronomeVolume: clampNum(r.metronomeVolume, 0, 1, d.metronomeVolume),
     midiInputId: typeof r.midiInputId === 'string' && r.midiInputId ? r.midiInputId : d.midiInputId,
     pianoShortcuts: bool(r.pianoShortcuts, d.pianoShortcuts),
+    setupGuideSeen: bool(r.setupGuideSeen, d.setupGuideSeen),
+    experience: normalizeExperience(r.experience),
   };
 }
 

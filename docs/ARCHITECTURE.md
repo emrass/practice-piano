@@ -127,6 +127,23 @@ review. Restart in Wait is off while the run is untouched (`isUntouched`, `ui/pr
   (`normalizeSettings`, `normalizeProgress`, versioned backup format) and handles
   export / import / reset. On first sign-in in v2, local data can be copied to the account id.
 
+## First-run setup
+
+- `Settings.setupGuideSeen` (default `false`) decides whether `SetupGuide` opens with the app;
+  closing it by any route sets the flag. Because it is a setting, a reset or an imported backup
+  without the flag shows the guide again. `App.tsx` also opens it on request (the *Setup guide…*
+  button, or the top-bar chip while no piano is connected).
+- While open, the guide takes all input with `inputBus.capture()`, like latency calibration, so
+  the key played to check the connection is not scored by the exercise underneath. It steps
+  aside (state kept) while the calibration dialog is open.
+- `core/experience.ts` holds the five stages and, per skill (reading, ear, scales & chords), a
+  list of statements with a `SettingsPatch` each. A stage is only a preset: it names one
+  statement per skill. `experiencePatch()` merges the three patches; the chosen statements are
+  saved as `Settings.experience` so the reopened guide can show them. Tests check that every
+  level is the first level of a tier and that every combination is a valid `Settings`.
+- Connection texts and buttons are shared with the Input & audio panel
+  (`ui/components/MidiConnect.tsx`, `midiStatus.ts`).
+
 Lesson logic never touches storage or identity directly — the UI passes plain objects in and
 gets plain objects back.
 
