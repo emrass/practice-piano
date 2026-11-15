@@ -1,0 +1,29 @@
+/* App shell: fixed rows so nothing outside the score ever moves. */
+
+.app {
+  --topbar-h: 58px;
+  height: 100dvh;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: var(--topbar-h) minmax(0, 1fr);
+  padding-top: env(safe-area-inset-top);
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr);
+  min-height: 0;
+}
+
+@media (max-width: 1080px) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Phones: the top bar takes two rows (lessons get a row of their own, see topbar.css). */
+@media (max-width: 600px) {
+  .app {
+    --topbar-h: 96px;
+  }
+}

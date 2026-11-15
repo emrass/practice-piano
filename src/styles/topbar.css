@@ -1,0 +1,210 @@
+/* Top bar: brand, status chips, lesson and mode switchers. */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+  gap: 18px;
+  padding: 0 18px;
+  border-bottom: 1px solid var(--rule);
+  background: color-mix(in srgb, var(--paper) 85%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.brand-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, transparent 0 22%, var(--ink) 22% 34%, transparent 34% 56%, var(--ink) 56% 68%, transparent 68%) top / 100% 58% no-repeat,
+    linear-gradient(90deg, var(--paper) 0 30%, var(--rule) 30% 33%, var(--paper) 33% 63%, var(--rule) 63% 66%, var(--paper) 66%);
+  border: 2px solid var(--accent);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  flex: none;
+}
+
+.brand-name {
+  font-family: var(--serif);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.brand-tld {
+  color: var(--accent);
+}
+
+.topbar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 11px;
+  border-radius: 999px;
+  border: 1px solid var(--rule);
+  background: var(--card);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.chip-icon {
+  color: var(--gold);
+}
+
+.chip-xp {
+  color: var(--gold);
+}
+
+.chip-midi {
+  max-width: 230px;
+}
+
+.chip-midi-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chip-midi .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ink-3);
+  flex: none;
+}
+
+.chip-midi.is-on .dot {
+  background: var(--ok);
+  box-shadow: 0 0 0 3px var(--ok-soft);
+}
+
+.topbar-lesson .segmented {
+  width: 760px;
+}
+
+/* Size each lesson from its own label, then share out the spare room. Equal fifths (the
+   default `flex: 1 1 0`) left "Chords & progressions" about 129px, which fits SF Pro but cuts
+   the label off in wider fallback fonts such as DejaVu Sans (Linux) or Roboto. */
+.topbar-lesson .segmented button {
+  flex: 1 1 auto;
+}
+
+.topbar-mode .segmented {
+  width: 140px;
+}
+
+/* Keeps its width when hidden so the top bar never shifts between lessons. */
+.topbar-mode.is-hidden {
+  visibility: hidden;
+}
+
+.label-short {
+  display: none;
+}
+
+@media (max-width: 1760px) {
+  .topbar-lesson .segmented {
+    width: 350px;
+  }
+  .topbar-lesson .label-long {
+    display: none;
+  }
+  .topbar-lesson .label-short {
+    display: inline;
+  }
+}
+
+@media (max-width: 900px) {
+  .chip-streak {
+    display: none;
+  }
+}
+
+/* Five lessons: the top bar drops the wordmark and chip labels before it runs out of room. */
+@media (max-width: 900px) {
+  .brand-name,
+  .chip-xp {
+    display: none;
+  }
+  .chip-midi {
+    max-width: 34px;
+    padding: 0 12px;
+  }
+  .chip-midi-name {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .topbar {
+    gap: 10px;
+    padding: 0 10px;
+  }
+  .brand-name,
+  .chip-xp,
+  .chip-streak {
+    display: none;
+  }
+  .topbar-lesson .segmented {
+    width: 252px;
+  }
+  .topbar-lesson .segmented button {
+    padding: 0 3px;
+    font-size: 11.5px;
+  }
+  .topbar-mode .segmented {
+    width: 96px;
+  }
+  .topbar-mode .segmented button {
+    padding: 0 4px;
+  }
+  .label-long,
+  .topbar-mode.is-hidden {
+    display: none;
+  }
+  .label-short {
+    display: inline;
+  }
+  .chip-midi {
+    max-width: 34px;
+    padding: 0 12px;
+  }
+  .chip-midi-name {
+    display: none;
+  }
+}
+
+/* Phones: lessons get a row of their own under the brand, mode and menu. */
+@media (max-width: 600px) {
+  .topbar {
+    flex-wrap: wrap;
+    align-content: center;
+    row-gap: 6px;
+    padding: 6px 10px;
+  }
+  .topbar-lesson {
+    order: 3;
+    flex: 1 0 100%;
+  }
+  .topbar .topbar-lesson .segmented {
+    width: 100%;
+  }
+}

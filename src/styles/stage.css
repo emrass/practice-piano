@@ -1,0 +1,159 @@
+/* Stage: meta strip, badges and the score card. */
+
+.stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  /* The practice bar is 62px on one row and grows when it stacks (see .practice-bar). */
+  grid-template-rows: 54px minmax(0, 1fr) auto auto;
+  gap: 10px;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  min-height: 0;
+  min-width: 0;
+}
+
+.meta-strip {
+  display: grid;
+  grid-template-columns: minmax(170px, 1.3fr) repeat(6, minmax(0, 1fr)) auto;
+  align-items: center;
+  gap: 4px;
+  padding: 0 6px 0 14px;
+  border-radius: var(--radius);
+  background: var(--card);
+  border: 1px solid var(--rule);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.meta-tier {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+.meta-level {
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  min-width: 2.6em;
+}
+
+.meta-tier-name {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 14.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.meta-item {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+  padding-left: 12px;
+  border-left: 1px solid var(--rule-2);
+}
+
+.meta-k {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.meta-v {
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
+}
+
+.meta-badges {
+  display: flex;
+  gap: 6px;
+  width: 190px;
+  justify-content: flex-end;
+}
+
+.badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.badge-sight {
+  background: color-mix(in srgb, var(--gold) 18%, transparent);
+  color: var(--gold);
+}
+
+.badge-sight.is-off {
+  background: var(--rule-2);
+  color: var(--ink-3);
+}
+
+.badge-focus {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.badge.is-hidden {
+  visibility: hidden;
+}
+
+.score-card {
+  position: relative;
+  min-height: 0;
+  display: flex;
+  border-radius: var(--radius);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.5), transparent 120px),
+    var(--paper);
+  border: 1px solid var(--rule);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+[data-theme='dark'] .score-card {
+  background: var(--paper);
+}
+
+@media (max-width: 1240px) {
+  .meta-strip {
+    grid-template-columns: minmax(150px, 1.3fr) repeat(4, minmax(0, 1fr)) auto;
+  }
+  .meta-item:nth-of-type(n + 6) {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .stage {
+    padding: 8px;
+    gap: 8px;
+    grid-template-rows: 50px minmax(0, 1fr) auto auto;
+  }
+  .meta-strip {
+    grid-template-columns: minmax(120px, 1fr) repeat(2, minmax(0, 1fr));
+  }
+  .meta-item:nth-of-type(n + 4),
+  .meta-badges {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .meta-strip {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .meta-item:nth-of-type(n + 3) {
+    display: none;
+  }
+}

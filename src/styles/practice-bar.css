@@ -1,0 +1,234 @@
+/* Practice bar: actions, status message, beat dots, timing grade and stats. */
+
+/* One row (actions · status · stats) when the bar is wide, the message wrapping to two lines
+   if it must. When the bar gets narrower than that allows (~860px of its own width, ~1040px
+   in Flow, which also shows the timing grade, and in Wait with its Hint button) the status gets a full row on top and the
+   actions and stats share the row under it, the stats wrapping below if they must. */
+.practice-bar {
+  container: practice-bar / inline-size;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  min-height: 62px;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  background: var(--card);
+  border: 1px solid var(--rule);
+  box-shadow: var(--shadow);
+}
+
+.pb-actions {
+  display: flex;
+  flex: none;
+  gap: 8px;
+}
+
+.btn-start {
+  min-width: 132px;
+}
+
+.btn-start.is-stop {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+
+.pb-status {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 10px;
+  transition: background 0.2s;
+}
+
+.pb-status.is-wrong {
+  background: var(--bad-soft);
+}
+
+/* Wraps to a second line rather than truncating; two lines fit the 40px status. */
+.pb-message {
+  flex: 1;
+  min-width: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  line-height: 1.3;
+  color: var(--ink-2);
+  font-weight: 500;
+}
+
+.pb-status.is-wrong .pb-message {
+  color: var(--bad);
+  font-weight: 600;
+}
+
+.beat-dots {
+  display: flex;
+  gap: 6px;
+  width: 112px;
+  flex: none;
+}
+
+.beat-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--rule);
+  background: transparent;
+  transition: background 0.06s, transform 0.06s;
+}
+
+.beat-dot.is-downbeat {
+  border-color: var(--ink-3);
+}
+
+.beat-dot.is-on {
+  background: var(--accent);
+  border-color: var(--accent);
+  transform: scale(1.15);
+}
+
+.beat-dots.is-countin .beat-dot.is-on {
+  background: var(--gold);
+  border-color: var(--gold);
+}
+
+.beat-dot.is-idle {
+  opacity: 0.5;
+}
+
+.grade-chip {
+  width: 110px;
+  /* Same height empty as with a grade, so the bar doesn't jump when the first one shows. */
+  min-height: calc(1.4em + 8px);
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 999px;
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.grade-chip.is-hidden {
+  visibility: hidden;
+}
+
+.grade-chip.is-perfect,
+.grade-chip.is-good {
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+
+.grade-chip.is-early,
+.grade-chip.is-late {
+  background: color-mix(in srgb, var(--warn) 20%, transparent);
+  color: var(--warn);
+}
+
+.pb-stats {
+  display: flex;
+  flex: none;
+  gap: 4px;
+  margin: 0;
+}
+
+@container practice-bar (max-width: 860px) {
+  .pb-status {
+    flex-basis: 100%;
+    order: -1;
+  }
+  .pb-stats {
+    margin-left: auto;
+  }
+}
+
+/* Flow also carries the timing grade, and Wait a third button (Hint), so their status needs
+   the full row sooner. */
+@container practice-bar (max-width: 1040px) {
+  .pb-status.is-timed,
+  .pb-status.has-hint {
+    flex-basis: 100%;
+    order: -1;
+  }
+  .pb-status.is-timed ~ .pb-stats,
+  .pb-status.has-hint ~ .pb-stats {
+    margin-left: auto;
+  }
+}
+
+/* Narrow bars in Flow: the beat dots and timing grade keep a line of their own and the
+   message takes the full width under them. */
+@container practice-bar (max-width: 560px) {
+  .pb-status.is-timed {
+    flex-wrap: wrap;
+    row-gap: 2px;
+    padding: 6px 12px;
+  }
+  .pb-status.is-timed .pb-message {
+    order: 1;
+    flex-basis: 100%;
+  }
+  .pb-status.is-timed .grade-chip {
+    margin-left: auto;
+  }
+}
+
+.pb-stats div {
+  width: 76px;
+  display: grid;
+  justify-items: center;
+}
+
+.pb-stats dt {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.pb-stats dd {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 760px) {
+  .practice-bar {
+    padding: 8px;
+  }
+  .pb-actions .btn {
+    padding: 0 10px;
+  }
+  .btn-start {
+    min-width: 0;
+  }
+  .pb-stats {
+    gap: 12px;
+  }
+  /* Narrower than on desktop, but never narrower than the label ("ACCURACY"). */
+  .pb-stats div {
+    width: auto;
+    min-width: 44px;
+  }
+  .pb-stats dd {
+    font-size: 17px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pb-actions .btn kbd,
+  .pb-stats div:nth-child(2) {
+    display: none;
+  }
+}
