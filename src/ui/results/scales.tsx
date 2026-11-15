@@ -16,7 +16,6 @@ export const scalesResults: ResultsView = {
     if (result.mode !== 'flow') return 'Notes in place!';
     return award?.repertoire?.newlyMastered ? 'Mastered!' : 'Clean!';
   },
-  nextLabel: 'Next',
   repertoire: true,
   trains: null,
   Body: function ScaleResults({ result, award }) {

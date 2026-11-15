@@ -7,6 +7,7 @@ import { audioEngine } from '../../platform/audio/audioEngine';
 import { ChordChart } from '../components/ChordChart';
 import { ChordsPanel } from '../components/ChordsPanel';
 import { ChordController } from '../practice/ChordController';
+import { generatedContinuation, repertoireContinuation } from './continuation';
 import { randomFrom, reviewView, useFocus, useRepertoire } from './shared';
 import type { LessonContext, LessonRuntime } from './types';
 
@@ -89,6 +90,13 @@ export function useChordsLesson(ctx: LessonContext, active: boolean): LessonRunt
     else if (item.task === 'progression' && c.key === 'shuffle') setShuffleKey(randomFrom(keysOf(item.progression), item.key));
     ctx.reseed();
   };
+  // A drill is generated material; a progression is repertoire ("Again" is at the new tempo once a run moved the ladder).
+  const review = c.source === 'review';
+  const ladderBpm = ctx.progress.repertoire[exercise.chords.itemId]?.ladderTempo ?? exercise.chords.bpm;
+  const continuation =
+    item.task === 'drill' && !review
+      ? generatedContinuation('New chords')
+      : repertoireContinuation({ review, shuffle: c.key === 'shuffle', movedToBpm: ladderBpm === exercise.chords.bpm ? undefined : ladderBpm });
   const tempo = (deltaBpm: number) => rep.changeTempo({ itemId: exercise.chords.itemId, tempo: exercise.chords.bpm, notesPerBeat: 1 }, deltaBpm);
   // Drills by symbol (the staff would give the answer away) and progressions from the chart.
   const chart = item.task === 'drill' ? item.prompt === 'symbol' : !c.notation;
@@ -96,6 +104,7 @@ export function useChordsLesson(ctx: LessonContext, active: boolean): LessonRunt
     exercise,
     session,
     next,
+    continuation,
     step: (direction) => tempo(4 * direction),
     onPatch: (patch) => {
       if (patch.weakSpotFocus) refreshFocus();

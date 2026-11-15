@@ -1,5 +1,7 @@
+import type { ReactNode } from 'react';
 import { useStore } from '../../lib/store';
-import type { Session } from '../practice/session';
+import type { Continuation } from '../lessons/types';
+import { isUntouched, type Session } from '../practice/session';
 
 function pct(v: number | null | undefined): string {
   return v === null || v === undefined ? '—' : `${Math.round(v * 100)}%`;
@@ -9,6 +11,8 @@ const GRADE_TEXT = { perfect: 'Perfect', good: 'Good', early: 'Early', late: 'La
 
 export function PracticeBar(props: {
   controller: Session;
+  /** How the lesson continues from this exercise: labels of the repeat and next actions. */
+  continuation: Continuation;
   onHint?: () => void;
   onRetry?: () => void;
   onStartStop: () => void;
@@ -31,6 +35,8 @@ export function PracticeBar(props: {
   // Stays in place (disabled) once finished, so the bar does not reflow under the results.
   const hint = s.hint ?? null;
   const nudge = !!hint?.nudge && !guideShowing && s.status === 'running';
+  const { repeat, next } = props.continuation;
+  const onPiano = `C ${repeat.label.toLowerCase()}${next ? ` · D ${next.label.toLowerCase()}` : ''}`;
 
   let message: string;
   if (ear && s.status !== 'finished') {
@@ -38,7 +44,7 @@ export function PracticeBar(props: {
     else if (ear.playing) message = 'Listening…';
     else if (s.live.correct === 0 && s.live.wrong === 0) message = s.revealed.length ? 'Play it back — start on the shown note' : 'Play it back — find the first note from the key';
     else message = 'Keep going — notes appear as you find them';
-  } else if (s.status === 'finished') message = props.pianoShortcuts ? 'Finished — on the piano: C retry · D next' : 'Finished — see your results';
+  } else if (s.status === 'finished') message = props.pianoShortcuts ? `Finished — on the piano: ${onPiano}` : 'Finished — see your results';
   else if (flow && s.status === 'ready') message = props.pianoShortcuts ? 'Press Space or tap the sustain pedal to start' : 'Press Start or Space to start';
   else if (flow && s.status === 'countin') message = s.rhythm ? 'Count-in… listen to the tempo' : 'Count-in… get ready';
   else if (phase === 'call') message = 'Listen…';
@@ -57,12 +63,28 @@ export function PracticeBar(props: {
       ? Array.from({ length: s.beat.beatsPerBar }, (_, i) => (i === s.beat!.index ? 'is-on' : ''))
       : Array.from({ length: 4 }, () => 'is-idle');
 
+  // Beside the red button: the lesson's "next", or the way back to closed results. Ear training has its hint there until the phrase is done.
+  let secondary: ReactNode = null;
+  if (s.status === 'finished' && props.resultsHidden) {
+    secondary = (
+      <button type="button" className="btn" onClick={props.onShowResults}>
+        Results
+      </button>
+    );
+  } else if (next && (!ear || s.status === 'finished')) {
+    secondary = (
+      <button type="button" className="btn" onClick={props.onNext}>
+        {next.label} <kbd>N</kbd>
+      </button>
+    );
+  }
+
   return (
     <div className="practice-bar">
       <div className="pb-actions">
         {ear && s.status === 'finished' ? (
           <button type="button" className="btn btn-primary btn-start" onClick={props.onRetry}>
-            Retry <kbd>R</kbd>
+            {repeat.label} <kbd>R</kbd>
           </button>
         ) : ear ? (
           <>
@@ -80,7 +102,7 @@ export function PracticeBar(props: {
             <kbd>Space</kbd>
           </button>
         ) : (
-          <button type="button" className="btn btn-primary btn-start" onClick={props.onRestart}>
+          <button type="button" className="btn btn-primary btn-start" onClick={props.onRestart} disabled={isUntouched(s)}>
             Restart
             <kbd>R</kbd>
           </button>
@@ -96,15 +118,7 @@ export function PracticeBar(props: {
             Hint <kbd>?</kbd>
           </button>
         ) : null}
-        {ear && s.status !== 'finished' ? null : s.status === 'finished' && props.resultsHidden ? (
-          <button type="button" className="btn" onClick={props.onShowResults}>
-            Results
-          </button>
-        ) : (
-          <button type="button" className="btn" onClick={props.onNext}>
-            New exercise <kbd>N</kbd>
-          </button>
-        )}
+        {secondary}
       </div>
 
       <div className={`pb-status ${wrongFlash ? 'is-wrong' : ''} ${flow ? 'is-timed' : ''} ${hint ? 'has-hint' : ''}`}>

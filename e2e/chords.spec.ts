@@ -16,13 +16,18 @@ test.describe('Chords & progressions', () => {
     await app.open({ settings: { lesson: 'chords', chords: { task: 'drill', set: 'triads', prompt: 'symbol', inversions: 'any', mode: 'wait' } } });
     await expect(page.locator('.chord-chart .chord-card')).toHaveCount(8);
     const ts = await app.exercise(targets);
+    const restart = page.locator('.practice-bar').getByRole('button', { name: 'Restart' });
+    await expect(restart).toBeDisabled();
     for (let i = 0; i < ts.length; i++) {
       // One chord an octave up: the same pitch classes.
       const keys = i === 1 ? ts[i].voicing.map((k) => k + 12) : ts[i].voicing;
       if (i === 2) await app.tap([wrongKey(ts[i].voicing)]);
       await app.tap(keys);
+      if (i === 0) await expect(restart).toBeEnabled();
     }
     await expect(app.results()).toBeVisible();
+    // A drill is new material each time: new chords are the suggested action.
+    await expect(app.results().getByRole('button', { name: 'New chords' })).toBeFocused();
     await expect(app.results()).toContainText('7/8');
     await expect(app.results()).toContainText(`${ts[2].symbol}: a wrong key first`);
   });
@@ -79,6 +84,10 @@ test.describe('Chords & progressions', () => {
     await app.waitUntil(clock.t0 + ts.length * bar * clock.msPerTick + 1000);
     await expect(app.results()).toContainText('Tempo up: 120 → 124 bpm');
     await expect(app.results()).toContainText('Voice leading');
+    // One progression in one key: the only way on is the same again, now at the ladder's new tempo.
+    const actions = app.results().locator('.results-actions .btn');
+    await expect(actions).toHaveText([/Close/, /Again at 124 bpm/]);
+    await expect(actions.last()).toBeFocused();
     const progress = await app.savedProgress();
     expect((progress.repertoire as Record<string, { ladderTempo: number }>)['chords/prog/I-IV-V-I/F/lh-bass'].ladderTempo).toBe(124);
   });

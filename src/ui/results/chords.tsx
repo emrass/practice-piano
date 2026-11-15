@@ -24,7 +24,6 @@ export const chordsResults: ResultsView = {
     if (result.mode !== 'flow') return 'Chords in place!';
     return award?.repertoire?.newlyMastered ? 'Mastered!' : 'Clean!';
   },
-  nextLabel: 'Next',
   repertoire: true,
   trains: null,
   Body: function ChordResults({ result, award }) {

@@ -5,7 +5,6 @@ import type { ResultsView } from './types';
 export const earResults: ResultsView = {
   ribbon: (_result, passed) => (passed ? '≥ 90% — counts toward mastery' : 'Needs ≥ 90% (hints count as misses) to pass'),
   headline: (result, passed) => gradeHeadline(result, passed, 'Perfect ear!'),
-  nextLabel: 'Next phrase',
   repertoire: false,
   trains: 'your ear',
   xpNotes: (result) => ((result.replays ?? 0) > 0 ? ['Each replay reduces XP a little — try to catch it in one listen.'] : []),

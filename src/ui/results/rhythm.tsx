@@ -12,7 +12,6 @@ export const rhythmResults: ResultsView = {
       ((result.timingAccuracy ?? 0) >= 0.9 && Math.abs(rhythm.driftMs ?? 0) < 40 && Math.abs(rhythm.tendencyMs ?? 0) < 40);
     return gradeHeadline(result, passed, 'Right in the pocket!', inThePocket);
   },
-  nextLabel: 'Next rhythm',
   repertoire: false,
   trains: 'your rhythm',
   Body: function RhythmResults({ result }) {

@@ -1,4 +1,4 @@
-import { expect, test } from './support';
+import { expect, test, wrongKey } from './support';
 
 test.describe('Sight reading', () => {
   test('Wait: the cursor waits; a wrong key is counted, the passage passes', async ({ app }) => {
@@ -13,6 +13,25 @@ test.describe('Sight reading', () => {
       await expect(app.results()).toBeHidden({ timeout: 300 });
     }).toPass({ timeout: 5000 });
     expect(await app.status()).not.toBe('finished');
+  });
+
+  test('Wait: Restart waits for the first note; the results suggest a new exercise', async ({ app, page }) => {
+    await app.open({ settings: { lesson: 'sight', sight: { mode: 'wait', level: 8, bars: 4, hands: 'rh' } } });
+    const bar = page.locator('.practice-bar');
+    const restart = bar.getByRole('button', { name: 'Restart' });
+    await expect(restart).toBeDisabled();
+    await expect(bar.getByRole('button', { name: 'New exercise' })).toBeVisible();
+    const steps = await app.steps();
+    await app.tap([wrongKey(steps[0])]);
+    await expect(restart).toBeEnabled();
+    // Restarting clears the run, so there is again nothing to restart.
+    await page.keyboard.press('KeyR');
+    await expect(restart).toBeDisabled();
+    await app.playSteps();
+    const actions = app.results().locator('.results-actions .btn');
+    await expect(actions).toHaveText([/Close/, /Retry/, /New exercise/]);
+    await expect(actions.last()).toBeFocused();
+    await expect(page.locator('.pb-message')).toHaveText('Finished — on the piano: C retry · D new exercise');
   });
 
   test('Wait: with the guide off, a hint shows the note and costs the step', async ({ app, page }) => {

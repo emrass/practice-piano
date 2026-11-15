@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react';
 import { scaleResult } from '../../core/scales/analysis';
 import { itemId, parseItemId, SCALE_TYPES, type ScaleItem } from '../../core/scales/catalog';
-import { generateScaleExercise, initialNpm, type ScaleExercise } from '../../core/scales/generator';
+import { bpmFor, generateScaleExercise, initialNpm, type ScaleExercise } from '../../core/scales/generator';
 import { inputBus } from '../../input/inputBus';
 import { audioEngine } from '../../platform/audio/audioEngine';
 import { MemoryCard } from '../components/MemoryCard';
 import { ScalesPanel } from '../components/ScalesPanel';
 import { PracticeController } from '../practice/PracticeController';
+import { repertoireContinuation } from './continuation';
 import { randomFrom, reviewView, useRepertoire } from './shared';
 import type { LessonContext, LessonRuntime } from './types';
 
@@ -72,12 +73,20 @@ export function useScalesLesson(ctx: LessonContext, active: boolean): LessonRunt
     else if (sc.tonic === 'shuffle') setShuffleTonic(randomFrom(SCALE_TYPES[sc.type].tonics, item.tonic));
     ctx.reseed();
   };
+  // After a run that moved the ladder, "Again" is at the new tempo.
+  const ladderNpm = ctx.progress.repertoire[exercise.scale.itemId]?.ladderTempo ?? exercise.scale.npm;
+  const continuation = repertoireContinuation({
+    review: sc.source === 'review',
+    shuffle: sc.tonic === 'shuffle',
+    movedToBpm: ladderNpm === exercise.scale.npm ? undefined : bpmFor(item, exercise.scale.noteValue, ladderNpm),
+  });
   const tempo = (deltaBpm: number) =>
     rep.changeTempo({ itemId: exercise.scale.itemId, tempo: exercise.scale.npm, notesPerBeat: exercise.scale.notesPerBeat }, deltaBpm);
   return {
     exercise,
     session,
     next,
+    continuation,
     step: (direction) => tempo(4 * direction),
     onPatch: (patch) => {
       const p = patch.scales;
