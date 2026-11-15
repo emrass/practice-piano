@@ -256,7 +256,8 @@ A lesson is a set of modules, one of each kind, and App.tsx only picks the activ
   play from memory), the Wait / Flow switch, keyboard span and mappings (and which keyboard
   display settings don't apply, greyed out in the bar above the keys), review and weak-spot
   actions for the Progress tab. Shared pieces live in `ui/lessons/shared.ts` (weak-spot focus,
-  review queue and manual tempo ladder for repertoire lessons). `useLesson` in
+  review queue and manual tempo ladder for repertoire lessons, the session options, and
+  `useBuiltFor`, whose key lists the fields that make a new exercise or session). `useLesson` in
   `ui/lessons/index.ts` runs every lesson's hook (hooks can't be conditional); only the active one
   builds an exercise.
 - **Results and Progress** — a `ResultsView` in `ui/results/` (ribbon, headline, measurements) and
