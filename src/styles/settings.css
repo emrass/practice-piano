@@ -14,23 +14,11 @@
   outline: none;
 }
 
-/* The title and close button stay put while the sections scroll. */
+/* The title, setup guide and close buttons, and the tabs below, stay put while a tab scrolls. */
 .settings-head {
   flex: none;
   margin: 0;
   padding: 16px 18px 12px 22px;
-}
-
-.settings-title {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-}
-
-.settings-subtitle {
-  margin: 0;
-  font-size: 12.5px;
-  color: var(--ink-3);
 }
 
 .settings-head-actions {
@@ -43,8 +31,6 @@
 .settings-tabs {
   flex: none;
   display: flex;
-  align-items: center;
-  gap: 12px;
   padding: 0 22px;
   border-bottom: 1px solid var(--rule);
 }
@@ -74,36 +60,6 @@
 .settings-tablist button.is-active {
   color: var(--ink);
   border-bottom-color: var(--accent);
-}
-
-.settings-tabs-setup {
-  margin-left: auto;
-  white-space: nowrap;
-}
-
-.link-btn {
-  border: 0;
-  background: transparent;
-  padding: 0;
-  font: inherit;
-  font-weight: 600;
-  color: var(--accent);
-  cursor: pointer;
-}
-
-.link-btn:hover {
-  text-decoration: underline;
-}
-
-.settings-foot {
-  flex: none;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px 22px;
-  border-top: 1px solid var(--rule-2);
-  background: var(--paper-2);
 }
 
 /* Calibration status and the button that measures it, on one line. */
@@ -169,8 +125,7 @@
   }
 
   .settings-scroll,
-  .settings-tabs,
-  .settings-foot {
+  .settings-tabs {
     padding-left: 16px;
     padding-right: 16px;
   }
@@ -179,7 +134,4 @@
     padding-bottom: calc(18px + env(safe-area-inset-bottom));
   }
 
-  .settings-foot {
-    padding-bottom: calc(10px + env(safe-area-inset-bottom));
-  }
 }

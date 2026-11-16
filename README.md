@@ -50,7 +50,7 @@ The app is made to be played on a **real piano or keyboard over MIDI** (USB or B
 first time it opens, a short **setup guide** walks through connecting the piano (and confirms it
 when you play a key), asks how well you play to set a starting point for every lesson, and offers
 to line up the metronome with your audio setup. Every step can be skipped, and the guide can be
-run again from *Piano & audio → Run setup guide again…*. *Piano & audio* (the piano button in the
+run again from *Piano & audio → Setup guide…*. *Piano & audio* (the piano button in the
 top bar: *Connect a piano*, or your piano's name) holds the settings every lesson shares: the
 piano connection, latency and metronome, and how playing is scored.
 
@@ -126,8 +126,9 @@ contains the current web code.
   pitch + timing scoring with latency compensation, `Space` (or a sustain-pedal tap) to start / stop.
 - **Latency calibration** — tap along with a click on your piano to measure your exact setup
   (Bluetooth MIDI, Bluetooth audio, speakers); an optional silent pass with a flashing circle
-  separates out how late you *hear* the click, which sets the playhead delay. Quick presets
-  (*device speakers* ~15 ms, *headphones on the piano* ~180 ms) and manual sliders remain.
+  separates out how late you *hear* the click, which sets the playhead delay. Manual sliders
+  remain, and the setup guide offers two presets (*device speakers* ~15 ms, *headphones on the
+  piano* ~180 ms).
 - **First-run setup** — connect a piano with instructions for the platform at hand (Web MIDI,
   the native app's Bluetooth pairing, or a browser that cannot use MIDI), pick one of five
   stages that sets all five lessons, adjust reading / ear / scales & chords separately if you

@@ -24,17 +24,10 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'playing', label: 'Playing' },
 ];
 
-// TEMPORARY (design review): where "Run setup guide again" lives. Picked with ?setup=… in the URL.
-type SetupPlacement = 'header' | 'footer' | 'tabs' | 'subtitle';
-const SETUP_PLACEMENT: SetupPlacement = ((): SetupPlacement => {
-  const v = new URLSearchParams(window.location.search).get('setup');
-  return v === 'footer' || v === 'tabs' || v === 'subtitle' ? v : 'header';
-})();
-
 /**
  * Piano & audio: the settings that apply to every lesson (the piano, timing and sound, how
- * playing is scored), one tab each. Opened from the piano chip in the top bar, connected or
- * not, always on the Piano tab.
+ * playing is scored), one tab each, and the setup guide in the header. Opened from the piano
+ * chip in the top bar, connected or not, always on the Piano tab.
  */
 export function PianoAudioDialog(props: {
   settings: Settings;
@@ -87,29 +80,15 @@ export function PianoAudioDialog(props: {
     tabRefs.current[TABS[next].id]?.focus();
   };
 
-  const setupButton = (className: string, label = 'Run setup guide again…') => (
-    <button type="button" className={className} onClick={props.onSetup}>
-      {label}
-    </button>
-  );
-
   return (
     <div className="modal-backdrop is-sheet" role="dialog" aria-modal="true" aria-labelledby="piano-audio-title" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal-card settings" ref={card} tabIndex={-1}>
         <div className="modal-head settings-head">
-          <div className="settings-title">
-            <h2 id="piano-audio-title">Piano &amp; audio</h2>
-            {SETUP_PLACEMENT === 'subtitle' ? (
-              <p className="settings-subtitle">
-                Applies to every lesson ·{' '}
-                <button type="button" className="link-btn" onClick={props.onSetup}>
-                  Run setup guide again
-                </button>
-              </p>
-            ) : null}
-          </div>
+          <h2 id="piano-audio-title">Piano &amp; audio</h2>
           <div className="settings-head-actions">
-            {SETUP_PLACEMENT === 'header' ? setupButton('btn btn-small', 'Setup guide…') : null}
+            <button type="button" className="btn btn-small" title="Run the first-run setup guide again" onClick={props.onSetup}>
+              Setup guide…
+            </button>
             <button type="button" className="icon-btn" aria-label="Close Piano & audio" onClick={onClose}>
               ✕
             </button>
@@ -137,7 +116,6 @@ export function PianoAudioDialog(props: {
               </button>
             ))}
           </div>
-          {SETUP_PLACEMENT === 'tabs' ? setupButton('link-btn settings-tabs-setup', 'Setup guide…') : null}
         </div>
 
         <div className="settings-scroll" role="tabpanel" id={`${ids}-panel`} aria-labelledby={`${ids}-tab-${tab}`}>
@@ -279,13 +257,6 @@ export function PianoAudioDialog(props: {
             </section>
           ) : null}
         </div>
-
-        {SETUP_PLACEMENT === 'footer' ? (
-          <div className="settings-foot">
-            <span className="field-hint">Connect your piano, set your level, line up the metronome.</span>
-            {setupButton('btn btn-small', 'Run setup guide…')}
-          </div>
-        ) : null}
       </div>
     </div>
   );

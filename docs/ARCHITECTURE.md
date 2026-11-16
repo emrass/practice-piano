@@ -136,8 +136,8 @@ review. Restart in Wait is off while the run is untouched (`isUntouched`, `ui/pr
 
 - `Settings.setupGuideSeen` (default `false`) decides whether `SetupGuide` opens with the app;
   closing it by any route sets the flag. Because it is a setting, a reset or an imported backup
-  without the flag shows the guide again. `App.tsx` also opens it on request (*Run setup guide
-  again…* in Piano & audio).
+  without the flag shows the guide again. `App.tsx` also opens it on request (*Setup guide…* in
+  the Piano & audio header).
 - While open, the guide takes all input with `inputBus.capture()`, like latency calibration, so
   the key played to check the connection is not scored by the exercise underneath. It steps
   aside (state kept) while the calibration dialog is open.
@@ -152,9 +152,12 @@ review. Restart in Wait is off while the run is untouched (`isUntouched`, `ui/pr
 
 ## Piano & audio
 
-- `PianoAudioDialog` holds the settings every lesson shares: the piano (connection, device,
-  keyboard size), audio & timing (calibration, latency, metronome, count-in) and playing
-  (sustain scoring, chord grace, piano shortcuts, key sound). The connection check ("We hear
+- `PianoAudioDialog` holds the settings every lesson shares, one tab each: Piano (connection,
+  device, keyboard size), Audio & timing (calibration, latency, metronome, count-in) and Playing
+  (sustain scoring, chord grace, piano shortcuts, key sound). It always opens on Piano, has a
+  fixed height so switching tabs doesn't resize it, and keeps *Setup guide…* in the header so it
+  is reachable from every tab. The latency presets live only in the setup guide; here the
+  calibration result sits next to its button, above the sliders. The connection check ("We hear
   you") is its input check; held keys and the pedal show in the keyboard bar. It is not a
   sidebar tab: the sidebar is only about the current lesson (Exercise, Progress).
 - The top-bar piano chip always opens it, connected or not; without a piano it shows the same
