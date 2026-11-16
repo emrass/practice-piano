@@ -4,20 +4,26 @@
  * its contents, so every deploy that changes a file produces a new worker.
  *
  * - install: download every file of the build into a cache named after that hash.
- * - fetch: answer same-origin GETs from the cache (page navigations get the cached index.html),
- *   falling back to the network. Nothing is cached at runtime, so the cache only ever holds
- *   one build.
- * - update: the browser re-checks this file on each visit. A new worker installs in the
- *   background and takes over right away (skipWaiting) without reloading the open page; the
- *   page keeps running the code it already loaded, and the next launch starts the new version.
- *   That is safe because the app is a single bundle with no lazily loaded chunks. If code
- *   splitting is ever added, keep the previous build's cache until no page uses it.
+ * - fetch, page navigations: network first, so a launch after a deploy opens the new version.
+ *   The page is revalidated past the HTTP cache (GitHub Pages sends max-age=600). Offline, on an
+ *   error status or after NETWORK_TIMEOUT_MS the cached index.html answers instead. The fresh
+ *   page is not cached: the cache only ever holds one complete build.
+ * - fetch, everything else: cache first (the build's files are content-hashed), falling back to
+ *   the network. That also serves a fresh index.html whose files the old cache doesn't have yet.
+ * - update: the browser re-checks this file on each visit, and src/platform/serviceWorker.ts asks
+ *   again whenever the app comes back to the foreground. A new worker installs in the background
+ *   and takes over right away (skipWaiting); the page reloads itself into the new version once
+ *   no exercise is under way. That is safe because the app is a single bundle with no lazily
+ *   loaded chunks. If code splitting is ever added, keep the previous build's cache until no
+ *   page uses it.
  */
 
 const VERSION = '__PP_VERSION__';
 const FILES = /** @type {string[]} */ (__PP_FILES__);
 const CACHE = `practice-piano-${VERSION}`;
 const INDEX = new URL('./index.html', self.location.href).href;
+/** How long a launch waits for the network before it opens the cached page (as Workbox's pageCache). */
+const NETWORK_TIMEOUT_MS = 3000;
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -42,12 +48,27 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET' || new URL(request.url).origin !== self.location.origin) return;
-  event.respondWith(
-    (async () => {
-      const cache = await caches.open(CACHE);
-      // ignoreVary: the cached copies were fetched without the Origin header that module scripts send.
-      const hit = await cache.match(request.mode === 'navigate' ? INDEX : request, { ignoreSearch: true, ignoreVary: true });
-      return hit ?? fetch(request);
-    })(),
-  );
+  event.respondWith(request.mode === 'navigate' ? page(request) : file(request));
 });
+
+/** The app's page: the deployed one if the network answers in time, else the cached build's. */
+async function page(request) {
+  // `no-cache`: revalidate with the server (a cheap 304 when nothing changed) instead of taking
+  // a copy from the HTTP cache that could predate the last deploy.
+  const network = fetch(request, { cache: 'no-cache' }).then(
+    (response) => (response.ok || response.type === 'opaqueredirect' ? response : undefined),
+    () => undefined,
+  );
+  const timeout = new Promise((resolve) => setTimeout(resolve, NETWORK_TIMEOUT_MS));
+  const fresh = await Promise.race([network, timeout]);
+  if (fresh) return fresh;
+  const cached = await (await caches.open(CACHE)).match(INDEX, { ignoreSearch: true });
+  return cached ?? (await network) ?? Response.error();
+}
+
+async function file(request) {
+  const cache = await caches.open(CACHE);
+  // ignoreVary: the cached copies were fetched without the Origin header that module scripts send.
+  const hit = await cache.match(request, { ignoreSearch: true, ignoreVary: true });
+  return hit ?? fetch(request);
+}

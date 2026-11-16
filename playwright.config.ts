@@ -40,8 +40,9 @@ export default defineConfig({
       timeout: 60_000,
     },
     {
-      // Its own output folder, so it never overwrites dist/.
-      command: `npx vite build --outDir dist-e2e && npx vite preview --outDir dist-e2e --port ${PREVIEW_PORT} --strictPort --host 127.0.0.1`,
+      // Its own output folders, so it never overwrites dist/. dist-e2e-next is a second deploy
+      // for the update tests, which serve both builds themselves.
+      command: `npx vite build --outDir dist-e2e && npx vite build --config e2e/next-build.config.ts --outDir dist-e2e-next && npx vite preview --outDir dist-e2e --port ${PREVIEW_PORT} --strictPort --host 127.0.0.1`,
       url: `http://127.0.0.1:${PREVIEW_PORT}/`,
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,

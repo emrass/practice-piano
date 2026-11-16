@@ -177,9 +177,17 @@ gets plain objects back.
 - `pwa/vitePwa.ts` (website build only — not `vite dev`, not `--mode native`) adds the web app
   manifest, icons (`pwa/icons/`, rendered from the native app icon by `scripts/pwa-icons.ts`), the
   iOS home-screen tags and `sw.js` from `pwa/sw.js`. The worker precaches every file of the build
-  under a content hash and serves it cache-first, so the app opens offline after one visit. A new
-  deploy installs in the background and is used from the next launch; the open page is never
-  reloaded. `e2e/pwa.spec.ts` checks it against a production build (`vite preview`).
+  under a content hash, so the app opens offline after one visit. The page itself is loaded
+  network-first (revalidated past the HTTP cache, cached copy after 3 s or offline), so a launch
+  after a deploy opens the new version; the hashed files are served cache-first.
+- `platform/serviceWorker.ts` registers the worker and looks for a new version whenever the app
+  comes back to the foreground (an installed iPad app is resumed, not relaunched). When a new
+  worker takes over and the page runs other files than its build, the page reloads, but only
+  while it is visible and App's reload guard says nothing is lost: no dialog open and the session
+  `isIdle` (`ui/practice/session.ts`: no count-in, moving Flow/rhythm run, played-in Wait run or
+  heard ear phrase). Otherwise it waits for the next return. `e2e/pwa.spec.ts` checks offline use
+  against a production build (`vite preview`), and updates against two builds it serves itself
+  (`dist-e2e`, `dist-e2e-next` from `e2e/next-build.config.ts`).
 
 ## Ear training
 

@@ -12,6 +12,7 @@ import { KeySound } from '../input/keySound';
 import { audioEngine } from '../platform/audio/audioEngine';
 import { MidiService } from '../platform/midi/midiService';
 import { isNativeApp } from '../platform/native';
+import { setReloadGuard } from '../platform/serviceWorker';
 import { requestPersistentStorageOnce } from '../platform/storageProtection';
 import { KeyboardDock } from './components/KeyboardDock';
 import { LatencyCalibration } from './components/LatencyCalibration';
@@ -28,7 +29,7 @@ import { type AutoStartFrom, useEarAutoStart } from './hooks/useEarAutoStart';
 import { usePianoShortcuts } from './hooks/usePianoShortcuts';
 import { type LessonRuntime, useLesson } from './lessons';
 import type { Continuation } from './lessons/types';
-import type { Session } from './practice/session';
+import { isIdle, type Session } from './practice/session';
 import { type Profile, useProfile } from './state/useProfile';
 
 const midiService = new MidiService(inputBus);
@@ -131,6 +132,22 @@ function Studio({ profile }: { profile: Profile }) {
   }, [controller, exercise]);
   useEffect(() => controller.finished.on(onFinished), [controller, onFinished]);
   useEffect(() => controller.setMetronomeVolume(s.metronomeVolume), [controller, s.metronomeVolume]);
+
+  // ---- App updates ------------------------------------------------------------------
+  // A new version of the web app reloads the page only when that loses nothing: no run under way
+  // and no dialog open (platform/serviceWorker.ts).
+  const dialogOpenRef = useRef(false);
+  useLayoutEffect(() => {
+    dialogOpenRef.current = setupOpen || settingsOpen || calibrating;
+  });
+  useEffect(
+    () =>
+      setReloadGuard(() => {
+        const session = runtimeRef.current?.session;
+        return !dialogOpenRef.current && (!session || isIdle(session.state.get()));
+      }),
+    [],
+  );
 
   const startStop = useCallback(() => {
     const mode = controller.state.get().mode;
