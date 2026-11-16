@@ -189,7 +189,7 @@ test('Reopened from Piano & audio, the guide changes nothing unless something is
   await app.open({ settings: { lesson: 'sight', sight: { level: 30, hands: 'lh' }, audioSetup: 'headphones', latencyMs: 180 } });
   await expect(guide(page)).toHaveCount(0);
   const settings = await app.openPianoAudio();
-  await settings.getByRole('button', { name: 'Run setup guide again…' }).click();
+  await settings.getByRole('button', { name: 'Setup guide…' }).click();
   // The settings close: only the guide is left.
   await expect(guide(page)).toHaveCount(1);
   await expect(guide(page)).toContainText('Connect your piano');

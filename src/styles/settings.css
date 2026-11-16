@@ -1,7 +1,9 @@
-/* Piano & audio settings (PianoAudioDialog.tsx): a dialog on the shared modal card, a full-screen sheet on phones. */
+/* Piano & audio settings (PianoAudioDialog.tsx): a tabbed dialog on the shared modal card, a full-screen sheet on phones. */
 
+/* A fixed height (that of the tallest tab) so the card doesn't jump when the tab changes. */
 .modal-card.settings {
   width: min(560px, 100%);
+  height: min(560px, 100%);
   display: flex;
   flex-direction: column;
   padding: 0;
@@ -17,7 +19,114 @@
   flex: none;
   margin: 0;
   padding: 16px 18px 12px 22px;
-  border-bottom: 1px solid var(--rule-2);
+}
+
+.settings-title {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.settings-subtitle {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+.settings-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Underlined tabs, as in the sidebar. */
+.settings-tabs {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 22px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.settings-tablist {
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+}
+
+.settings-tablist button {
+  border: 0;
+  background: transparent;
+  padding: 9px 10px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-3);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  white-space: nowrap;
+}
+
+.settings-tablist button:first-child {
+  padding-left: 0;
+}
+
+.settings-tablist button.is-active {
+  color: var(--ink);
+  border-bottom-color: var(--accent);
+}
+
+.settings-tabs-setup {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.link-btn {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.link-btn:hover {
+  text-decoration: underline;
+}
+
+.settings-foot {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 22px;
+  border-top: 1px solid var(--rule-2);
+  background: var(--paper-2);
+}
+
+/* Calibration status and the button that measures it, on one line. */
+.calib-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.calib-row-text {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+
+.calib-row-text b {
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.calib-row-text span {
+  color: var(--ink-3);
 }
 
 .settings-scroll {
@@ -52,7 +161,6 @@
     border: 0;
     border-radius: 0;
     padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
   }
 
   .settings-head {
@@ -60,8 +168,18 @@
     padding-right: 12px;
   }
 
-  .settings-scroll {
+  .settings-scroll,
+  .settings-tabs,
+  .settings-foot {
     padding-left: 16px;
     padding-right: 16px;
+  }
+
+  .settings-scroll {
+    padding-bottom: calc(18px + env(safe-area-inset-bottom));
+  }
+
+  .settings-foot {
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
   }
 }
