@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isUntouched, type PracticeState } from './session';
+import { isIdle, isUntouched, type PracticeState } from './session';
 
 const state = (patch: Partial<PracticeState> = {}): PracticeState => ({
   status: 'running',
@@ -39,5 +39,33 @@ describe('isUntouched', () => {
     expect(isUntouched(state({ status: 'ready' }))).toBe(false);
     expect(isUntouched(state({ status: 'countin' }))).toBe(false);
     expect(isUntouched(state({ status: 'finished' }))).toBe(false);
+  });
+});
+
+describe('isIdle', () => {
+  it('a run that has not started or has finished is idle', () => {
+    expect(isIdle(state({ status: 'ready' }))).toBe(true);
+    expect(isIdle(state({ status: 'finished' }))).toBe(true);
+    expect(isIdle(state({ status: 'ready', mode: 'flow' }))).toBe(true);
+  });
+
+  it('a Wait run with nothing played yet is idle, one that was played in is not', () => {
+    expect(isIdle(state())).toBe(true);
+    expect(isIdle(state(live({ wrong: 1 })))).toBe(false);
+    expect(isIdle(state({ hint: { count: 1, nudge: false } }))).toBe(false);
+  });
+
+  it('a count-in or a moving Flow or rhythm run is never idle', () => {
+    expect(isIdle(state({ status: 'countin', mode: 'flow' }))).toBe(false);
+    expect(isIdle(state({ status: 'countin' }))).toBe(false);
+    expect(isIdle(state({ mode: 'flow' }))).toBe(false);
+  });
+
+  it('ear training is busy while a phrase plays or once it was heard', () => {
+    const ear = (patch: Partial<NonNullable<PracticeState['ear']>>) => ({ ear: { playing: false, listened: false, replays: 0, hints: 0, ...patch } });
+    expect(isIdle(state({ status: 'ready', mode: 'ear', ...ear({}) }))).toBe(true);
+    expect(isIdle(state({ status: 'running', mode: 'ear', ...ear({ playing: true, listened: true }) }))).toBe(false);
+    expect(isIdle(state({ status: 'running', mode: 'ear', ...ear({ listened: true }) }))).toBe(false);
+    expect(isIdle(state({ status: 'finished', mode: 'ear', ...ear({ playing: true, listened: true }) }))).toBe(false);
   });
 });

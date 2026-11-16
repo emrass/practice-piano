@@ -43,6 +43,17 @@ export function isUntouched(state: PracticeState): boolean {
 }
 
 /**
+ * Nothing would be lost if the page reloaded now (to start a new version of the app): no run
+ * counting in, playing or under way, and no phrase playing. A Wait run starts on its own, so one
+ * with nothing played in it yet counts as idle; a Flow or rhythm run that is moving does not.
+ */
+export function isIdle(state: PracticeState): boolean {
+  if (state.ear?.playing) return false;
+  if (state.status === 'ready' || state.status === 'finished') return true;
+  return state.mode === 'wait' && isUntouched(state);
+}
+
+/**
  * What the UI needs from any lesson's practice session (sight-reading Wait/Flow, ear
  * training, rhythm, scales, chords). Score view, practice bar, keyboard, results and piano
  * shortcuts all work against this interface; `SessionBase` (sessionBase.ts) holds the
