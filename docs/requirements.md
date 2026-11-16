@@ -31,7 +31,7 @@ Build **`practice-piano.com`**, an interactive piano practice application focuse
 - **Audio & Wireless Latency Workflows:**
   - **No piano note synthesizer required in v1** (the user hears the electric piano directly), though audio handling should not prevent adding synthetic piano audio later.
   - **Built-in metronome sound** for rhythm-driven practice (Flow Mode).
-  - Must support two distinct user audio setups with configurable timing/latency compensation (`0–300 ms` slider plus quick presets):
+  - Must support two distinct user audio setups with configurable timing/latency compensation (`0–300 ms` sliders and a calibration in *Piano & audio*; the setup guide also offers these two as presets):
     1. **Device Speakers (`~15 ms`):** Piano connects via Bluetooth MIDI; piano speakers play keys and laptop/iPad speakers play the metronome.
     2. **Headphones on Piano (`~180 ms`):** Headphones connect to the piano; laptop/iPad streams metronome audio back to the piano over Bluetooth audio while receiving Bluetooth MIDI.
 
