@@ -23,6 +23,8 @@
    on inheritance), and CSS overrides both. */
 .score-svg {
   fill: var(--ink);
+  /* VexFlow sets stroke="black" on the root, and stems and the brace outline inherit it. */
+  stroke: var(--ink);
 }
 
 .score-svg [fill]:not([fill='none']) {
@@ -39,6 +41,7 @@
   stroke: var(--ink-2);
 }
 
+.score-svg .vf-pp-note,
 .score-svg .vf-pp-note [fill]:not([fill='none']),
 .score-svg .vf-pp-note [stroke]:not([stroke='none']) {
   transition: fill 0.12s, stroke 0.12s;
@@ -49,6 +52,7 @@
   fill: var(--accent);
 }
 
+.score-svg .vf-pp-note.is-current,
 .score-svg .vf-pp-note.is-current [stroke]:not([stroke='none']) {
   stroke: var(--accent);
 }
@@ -58,6 +62,7 @@
   fill: var(--ok);
 }
 
+.score-svg .vf-pp-note.is-good,
 .score-svg .vf-pp-note.is-good [stroke]:not([stroke='none']) {
   stroke: var(--ok);
 }
@@ -67,6 +72,7 @@
   fill: var(--warn);
 }
 
+.score-svg .vf-pp-note.is-ok,
 .score-svg .vf-pp-note.is-ok [stroke]:not([stroke='none']) {
   stroke: var(--warn);
 }
@@ -78,6 +84,8 @@
   fill: var(--bad);
 }
 
+.score-svg .vf-pp-note.is-bad,
+.score-svg .vf-pp-note.is-missed,
 .score-svg .vf-pp-note.is-bad [stroke]:not([stroke='none']),
 .score-svg .vf-pp-note.is-missed [stroke]:not([stroke='none']) {
   stroke: var(--bad);
@@ -180,6 +188,7 @@
   fill: var(--ink-3);
 }
 
+.score-svg .vf-pp-note.is-call,
 .score-svg .vf-pp-note.is-call [stroke]:not([stroke='none']) {
   stroke: var(--ink-3);
 }
