@@ -14,7 +14,7 @@ const targets = (ex: Record<string, unknown>) =>
 test.describe('Chords & progressions', () => {
   test('Drill (Wait): any octave counts, a wrong key first is noted, the chart shows symbols', async ({ app, page }) => {
     await app.open({ settings: { lesson: 'chords', chords: { task: 'drill', set: 'triads', prompt: 'symbol', inversions: 'any', mode: 'wait' } } });
-    await expect(page.locator('.chord-chart .chord-card')).toHaveCount(8);
+    await expect(page.locator('.chord-chart .chord-cell')).toHaveCount(8);
     const ts = await app.exercise(targets);
     const restart = page.locator('.practice-bar').getByRole('button', { name: 'Restart' });
     await expect(restart).toBeDisabled();
@@ -40,7 +40,7 @@ test.describe('Chords & progressions', () => {
     // The chord is the question: a wrong key does not give it away, it points at the hint.
     await expect(page.locator('.key.is-expected')).toHaveCount(0);
     await expect(hintButton).toHaveClass(/is-nudge/);
-    await expect(page.locator('.pb-message')).toContainText('Stuck? Press ? for a hint');
+    await expect(page.locator('.practice-message')).toContainText('Stuck? Press ? for a hint');
     await page.keyboard.press('Slash');
     await expect(page.locator('.key.is-expected')).toHaveCount(ts[0].voicing.length);
     await expect(hintButton).toBeDisabled();
@@ -72,8 +72,8 @@ test.describe('Chords & progressions', () => {
       settings: { lesson: 'chords', countInBars: 1, chords: { task: 'progression', progression: 'I-IV-V-I', key: 'F', hands: 'lh-bass', mode: 'flow' } },
       progress: progressWith({ 'chords/prog/I-IV-V-I/F/lh-bass': repertoireItem(120, 0) }),
     });
-    await expect(page.locator('.score-card .pp-chord-symbol').first()).toContainText('F');
-    await expect(page.locator('.score-card .pp-chord-numeral').first()).toHaveText('I');
+    await expect(page.locator('.score .chord-symbol').first()).toContainText('F');
+    await expect(page.locator('.score .chord-numeral').first()).toHaveText('I');
     const ts = await app.exercise(targets);
     const clock = await app.startFlow();
     const bar = 16;
@@ -114,6 +114,6 @@ test.describe('Chords & progressions', () => {
     await expect(keyLabel).toHaveText('E♯');
     // Part of the chord held (the whole chord would move on to the next one).
     await app.noteOn([eSharp]);
-    await expect(page.locator('.held-notes .note-chip')).toHaveText([`E♯${Math.floor(eSharp / 12) - 1}`]);
+    await expect(page.locator('.keyboard-tags .tag')).toHaveText([`E♯${Math.floor(eSharp / 12) - 1}`]);
   });
 });

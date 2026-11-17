@@ -7,6 +7,15 @@ export function signedMs(ms: number | null, early: string, late: string): string
   return `${Math.abs(ms)} ms ${ms < 0 ? early : late}`;
 }
 
+/**
+ * A signed timing offset as a results tile: the size is the value, and the note names it with its
+ * direction ("12 ms" over "Tendency · early"). Within ±8 ms the direction reads "centered".
+ */
+export function offsetTile(name: string, ms: number | null, early: string, late: string): { value: string; note: string } {
+  if (ms === null) return { value: '—', note: name };
+  return { value: `${Math.abs(ms)} ms`, note: `${name} · ${Math.abs(ms) < 8 ? 'centered' : ms < 0 ? early : late}` };
+}
+
 /** ' · 2 hints' after a Wait run's wrong-note count, nothing when no hint was asked for. */
 export function hintNote(result: ExerciseResult): string {
   const n = result.hints ?? 0;

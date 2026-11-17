@@ -6,6 +6,7 @@ A square button that shows only an icon. For the few actions that are known by t
 - **You provide** an icon from the set and an `aria-label` that says what pressing it does ("Switch to dark theme", not "Moon").
 - Toggles carry `aria-pressed`; on turns the icon to `accent` (or `keyboard-accent` on the keyboard case) **and** swaps the icon for its "on" drawing, so state is never color alone.
 - Add a `title` with the same words for pointer users.
+- A toggle that cannot be used here but must stay focusable so its `title` can say why takes `aria-disabled="true"`: dimmed, no hover, and the handler does nothing.
 - `.icon-btn-bare` drops the border inside a dialog head or on the keyboard case. `.icon-btn-sm` is 32px for dense bars.
 
 ```html

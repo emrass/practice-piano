@@ -73,7 +73,7 @@ export function MetaStrip(props: { exercise: Exercise; firstSight: boolean; focu
         ['Rhythm', RHYTHM_COMPLEXITY_LABELS[ex.meta.rhythmComplexity] ?? '—'],
       ];
   return (
-    <div className="meta-strip">
+    <div className="card meta-strip">
       <div className="meta-tier">
         {scale || chords ? (
           <span className="meta-tier-name meta-item-title" title={(scale ?? chords)!.title}>

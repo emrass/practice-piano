@@ -1,5 +1,6 @@
 import { gradeHeadline, hintNote, pct } from './format';
 import type { ResultsView } from './types';
+import { StatTile } from '../components/controls';
 
 /** Sight reading. Body is defined inline so this file only exports the view (react-refresh). */
 export const sightResults: ResultsView = {
@@ -12,31 +13,14 @@ export const sightResults: ResultsView = {
     const flow = result.mode === 'flow';
     return (
       <div className="results-grid">
-        <div className="rg-item rg-main">
-          <span className="rg-v">{pct(result.pitchAccuracy)}</span>
-          <span className="rg-k">Pitch accuracy</span>
-        </div>
+        <StatTile main value={pct(result.pitchAccuracy)} note="Pitch accuracy" />
         {flow ? (
-          <div className="rg-item">
-            <span className="rg-v">{pct(result.timingAccuracy)}</span>
-            <span className="rg-k">Timing{result.meanAbsTimingMs !== null ? ` · ±${Math.round(result.meanAbsTimingMs)} ms` : ''}</span>
-          </div>
+          <StatTile value={pct(result.timingAccuracy)} note={`Timing${result.meanAbsTimingMs !== null ? ` · ±${Math.round(result.meanAbsTimingMs)} ms` : ''}`} />
         ) : (
-          <div className="rg-item">
-            <span className="rg-v">{result.medianReactionMs === null ? '—' : `${(result.medianReactionMs / 1000).toFixed(2)} s`}</span>
-            <span className="rg-k">Median reaction</span>
-          </div>
+          <StatTile value={result.medianReactionMs === null ? '—' : `${(result.medianReactionMs / 1000).toFixed(2)} s`} note="Median reaction" />
         )}
-        <div className="rg-item">
-          <span className="rg-v">
-            {result.cleanSteps}/{result.totalSteps}
-          </span>
-          <span className="rg-k">{flow ? 'Steps fully hit' : 'First-try steps'}</span>
-        </div>
-        <div className="rg-item">
-          <span className="rg-v">{result.wrongNotes + result.missedNotes}</span>
-          <span className="rg-k">{flow ? 'Wrong + missed' : `Wrong notes${hintNote(result)}`}</span>
-        </div>
+        <StatTile value={`${result.cleanSteps}/${result.totalSteps}`} note={flow ? 'Steps fully hit' : 'First-try steps'} />
+        <StatTile value={result.wrongNotes + result.missedNotes} note={flow ? 'Wrong + missed' : `Wrong notes${hintNote(result)}`} />
       </div>
     );
   },

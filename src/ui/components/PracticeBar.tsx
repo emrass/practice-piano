@@ -1,12 +1,16 @@
 import { useStore } from '../../lib/store';
 import type { Continuation } from '../lessons/types';
 import { isUntouched, type Session } from '../practice/session';
+import { Stat } from './controls';
 
 function pct(v: number | null | undefined): string {
   return v === null || v === undefined ? '—' : `${Math.round(v * 100)}%`;
 }
 
 const GRADE_TEXT = { perfect: 'Perfect', good: 'Good', early: 'Early', late: 'Late' } as const;
+const GRADE_TONE = { perfect: 'badge-success', good: 'badge-success', early: 'badge-warning', late: 'badge-warning' } as const;
+/** The longest bar the beat dots show (6/8): their row keeps that width in every meter. */
+const MAX_BEATS = 6;
 
 export function PracticeBar(props: {
   controller: Session;
@@ -25,7 +29,6 @@ export function PracticeBar(props: {
 }) {
   const s = useStore(props.controller.state);
   const wrongFlash = s.wrong !== null;
-  const gradeFlash = s.lastGrade !== null;
   const flow = s.mode === 'flow';
   const ear = s.mode === 'ear' ? s.ear : undefined;
   const active = s.status === 'countin' || s.status === 'running';
@@ -60,32 +63,34 @@ export function PracticeBar(props: {
     ? Array.from({ length: s.countIn.total }, (_, i) => (i < s.countIn!.beat ? 'is-on' : ''))
     : s.beat
       ? Array.from({ length: s.beat.beatsPerBar }, (_, i) => (i === s.beat!.index ? 'is-on' : ''))
-      : Array.from({ length: 4 }, () => 'is-idle');
+      : Array.from({ length: 4 }, () => '');
+  const idle = !s.countIn && !s.beat;
+  const grade = s.lastGrade;
 
   return (
-    <div className="practice-bar">
-      <div className="pb-actions">
+    <div className="card practice-bar">
+      <div className="practice-actions">
         {ear && s.status === 'finished' ? (
-          <button type="button" className="btn btn-primary btn-start" onClick={props.onRetry}>
+          <button type="button" className="btn btn-primary btn-lg" onClick={props.onRetry}>
             {repeat.label} <kbd>R</kbd>
           </button>
         ) : ear ? (
           <>
-            <button type="button" className="btn btn-primary btn-start" onClick={() => props.controller.start()}>
+            <button type="button" className="btn btn-primary btn-lg" onClick={() => props.controller.start()}>
               {ear.listened ? 'Replay' : 'Listen'}
               <kbd>Space</kbd>
             </button>
-            <button type="button" className="btn" onClick={props.onHint} disabled={s.status !== 'running' || ear.playing}>
+            <button type="button" className="btn btn-lg" onClick={props.onHint} disabled={s.status !== 'running' || ear.playing}>
               Hint <kbd>?</kbd>
             </button>
           </>
         ) : flow ? (
-          <button type="button" className={`btn ${active ? 'btn-inverse' : 'btn-primary'} btn-start`} onClick={props.onStartStop}>
+          <button type="button" className={`btn btn-lg ${active ? 'btn-inverse' : 'btn-primary'}`} onClick={props.onStartStop}>
             {active ? 'Stop' : 'Start'}
             <kbd>Space</kbd>
           </button>
         ) : (
-          <button type="button" className="btn btn-primary btn-start" onClick={props.onRestart} disabled={isUntouched(s)}>
+          <button type="button" className="btn btn-primary btn-lg" onClick={props.onRestart} disabled={isUntouched(s)}>
             Restart
             <kbd>R</kbd>
           </button>
@@ -93,7 +98,7 @@ export function PracticeBar(props: {
         {hint ? (
           <button
             type="button"
-            className={`btn ${nudge ? 'is-nudge' : ''}`}
+            className={`btn btn-lg ${nudge ? 'is-nudge' : ''}`}
             onClick={props.onHint}
             disabled={s.status !== 'running' || guideShowing || s.revealed.length > 0}
             title={guideShowing ? 'The keyboard guide already shows the keys' : 'Show the keys to play — this step then no longer counts as first try'}
@@ -103,46 +108,41 @@ export function PracticeBar(props: {
         ) : null}
         {/* Closed results stay one press away, next to the way on. */}
         {s.status === 'finished' && props.resultsHidden ? (
-          <button type="button" className="btn" onClick={props.onShowResults}>
+          <button type="button" className="btn btn-lg" onClick={props.onShowResults}>
             Results
           </button>
         ) : null}
         {next ? (
-          <button type="button" className="btn" onClick={props.onNext}>
+          <button type="button" className="btn btn-lg" onClick={props.onNext}>
             {next.label} <kbd>N</kbd>
           </button>
         ) : null}
       </div>
 
-      <div className={`pb-status ${wrongFlash ? 'is-wrong' : ''} ${flow ? 'is-timed' : ''} ${hint ? 'has-hint' : ''}`}>
-        <div className={`beat-dots ${s.countIn ? 'is-countin' : ''}`} aria-hidden="true">
+      {/* Wide: with beat dots and a grade (Flow) or beside a third button (Hint), the status takes its own row sooner. */}
+      <div className={`practice-status ${wrongFlash ? 'is-wrong' : ''} ${flow || hint ? 'is-wide' : ''}`}>
+        <div className={`beat-dots ${s.countIn ? 'is-countin' : ''} ${idle ? 'is-idle' : ''}`} style={{ ['--beats' as string]: MAX_BEATS }} aria-hidden="true">
           {dots.map((cls, i) => (
             <span key={i} className={`beat-dot ${cls} ${i === 0 ? 'is-downbeat' : ''}`} />
           ))}
         </div>
-        <span className="pb-message">{wrongFlash ? (s.rhythm ? 'Use your rhythm keys' : 'Not that one — try again') : message}</span>
-        {/* Timing grades only come in Flow (and rhythm); elsewhere the chip would just hold space the message needs. */}
+        <p className="practice-message" role="status">
+          {wrongFlash ? (s.rhythm ? 'Use your rhythm keys' : 'Not that one — try again') : message}
+        </p>
+        {/* Timing grades only come in Flow (and rhythm); elsewhere the badge would just hold space the message needs. */}
         {flow ? (
-          <span className={`grade-chip ${gradeFlash && s.lastGrade ? `is-${s.lastGrade.grade}` : 'is-hidden'}`}>
-            {s.lastGrade ? `${GRADE_TEXT[s.lastGrade.grade]} ${s.lastGrade.grade === 'perfect' ? '' : `${Math.abs(Math.round(s.lastGrade.deltaMs))} ms`}` : ''}
+          <span className={`badge practice-grade ${grade ? GRADE_TONE[grade.grade] : 'is-hidden'}`}>
+            {/* Never empty, so the badge keeps its height while hidden. */}
+            {grade ? `${GRADE_TEXT[grade.grade]}${grade.grade === 'perfect' ? '' : ` ${Math.abs(Math.round(grade.deltaMs))} ms`}` : 'Perfect'}
           </span>
         ) : null}
       </div>
 
-      <dl className="pb-stats">
-        <div>
-          <dt>Accuracy</dt>
-          <dd>{pct(s.live.correct + s.live.wrong + s.live.missed === 0 ? null : s.live.accuracy)}</dd>
-        </div>
-        <div>
-          <dt>{flow ? 'Timing' : ear ? 'Replays' : 'Wrong'}</dt>
-          <dd>{flow ? pct(s.live.timing) : ear ? ear.replays : s.live.wrong}</dd>
-        </div>
-        <div>
-          <dt>Streak</dt>
-          <dd>{s.live.streak}</dd>
-        </div>
-      </dl>
+      <div className="practice-stats">
+        <Stat label="Accuracy" value={pct(s.live.correct + s.live.wrong + s.live.missed === 0 ? null : s.live.accuracy)} />
+        <Stat label={flow ? 'Timing' : ear ? 'Replays' : 'Wrong'} value={flow ? pct(s.live.timing) : ear ? ear.replays : s.live.wrong} />
+        <Stat label="Streak" value={s.live.streak} />
+      </div>
     </div>
   );
 }

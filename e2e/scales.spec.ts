@@ -20,7 +20,7 @@ test.describe('Scales & arpeggios', () => {
 
   test('Wait: notes in place, fingering printed, nothing on the ladder changes', async ({ app, page }) => {
     await app.open({ settings: scale({ mode: 'wait' }) });
-    await expect(page.locator('.score-card svg .pp-finger').first()).toBeVisible();
+    await expect(page.locator('.score svg .pp-finger').first()).toBeVisible();
     await app.playSteps();
     await expect(app.results()).toContainText('Notes in place');
   });
@@ -41,7 +41,7 @@ test.describe('Scales & arpeggios', () => {
     await expect(actions).toHaveText([/Close/, /Again/]);
     await expect(actions.last()).toBeFocused();
     await expect(app.results().locator('.piano-legend .legend-key')).toHaveText(['C', 'E', 'F', 'G']);
-    await expect(page.locator('.pb-message')).toHaveText('Finished — on the piano: C again');
+    await expect(page.locator('.practice-message')).toHaveText('Finished — on the piano: C again');
     await page.keyboard.press('KeyN');
     await expect(app.results()).toBeVisible();
     // Enter takes the suggested action: the same scale again.
@@ -67,7 +67,7 @@ test.describe('Scales & arpeggios', () => {
   test('Play from memory hides the notation', async ({ app, page }) => {
     await app.open({ settings: scale({ mode: 'wait', notation: false }) });
     await expect(page.locator('.memory-card')).toBeVisible();
-    await expect(page.locator('.score-card svg')).toHaveCount(0);
+    await expect(page.locator('.score svg')).toHaveCount(0);
   });
 
   test('Review shows the due item in the panel; Wait leaves it due; editing it picks from it', async ({ app, page }) => {

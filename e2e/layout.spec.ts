@@ -27,11 +27,11 @@ for (const width of [390, 820, 1024, 1180, 1280, 1440]) {
     test(`Practice bar message is never clipped at ${width}px (${mode})`, async ({ app, page }) => {
       await page.setViewportSize({ width, height: 860 });
       await app.open({ settings: { lesson: 'sight', sight: { mode } } });
-      const message = page.locator('.pb-message');
+      const message = page.locator('.practice-message');
       await message.evaluate((el, text) => (el.textContent = text), LONGEST);
       const cut = await message.evaluate((el) => el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1);
       expect(cut, 'message is cut off').toBe(false);
-      const stats = await page.locator('.pb-stats div').evaluateAll((ds) => ds.some((d) => d.scrollWidth > d.clientWidth + 1));
+      const stats = await page.locator('.practice-stats .stat').evaluateAll((ds) => ds.some((d) => d.scrollWidth > d.clientWidth + 1));
       expect(stats, 'a stat label overflows its column').toBe(false);
     });
   }
@@ -42,12 +42,12 @@ for (const width of [360, 390, 1440]) {
     await page.setViewportSize({ width, height: 800 });
     await app.open({ settings: { lesson: 'sight', pianoShortcuts: true, sight: { mode: 'wait', level: 3, bars: 4, hands: 'rh' } } });
     await app.playSteps();
-    const card = page.locator('.results-card');
+    const card = page.locator('.results');
     await expect(card).toBeVisible();
     expect(await card.evaluate((el) => el.scrollWidth <= el.clientWidth + 1), 'results card overflows sideways').toBe(true);
     const box = await card.boundingBox();
     expect(box!.x + box!.width).toBeLessThanOrEqual(width);
-    const labels = await page.locator('.key-action').evaluateAll((ls) => ls.map((l) => l.getBoundingClientRect()).map((r) => ({ l: r.left, r: r.right, t: r.top, b: r.bottom })));
+    const labels = await page.locator('.key-flag').evaluateAll((ls) => ls.map((l) => l.getBoundingClientRect()).map((r) => ({ l: r.left, r: r.right, t: r.top, b: r.bottom })));
     expect(labels).toHaveLength(5);
     const overlaps = labels.some((a, i) => labels.slice(i + 1).some((b) => a.l < b.r - 1 && b.l < a.r - 1 && a.t < b.b - 1 && b.t < a.b - 1));
     expect(overlaps, 'two shortcut labels overlap').toBe(false);
@@ -56,18 +56,18 @@ for (const width of [360, 390, 1440]) {
 
 test('Key sound toggle above the keys flips the setting and persists', async ({ app, page }) => {
   await app.open({ settings: { lesson: 'sight', keySound: false } });
-  const button = page.locator('.kb-sound');
+  const button = page.getByRole('button', { name: 'Key sound for on-screen and computer keys' });
   await expect(button).toHaveAttribute('aria-pressed', 'false');
   await button.click();
   await expect(button).toHaveAttribute('aria-pressed', 'true');
   await expect.poll(async () => (await app.savedSettings()).keySound).toBe(true);
   await page.reload();
-  await expect(page.locator('.kb-sound')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('button', { name: 'Key sound for on-screen and computer keys' })).toHaveAttribute('aria-pressed', 'true');
 });
 
 test('Keyboard guide button above the keys flips the setting, persists and lights the keys', async ({ app, page }) => {
   await app.open({ settings: { lesson: 'sight', showKeyboardGuide: true, sight: { mode: 'wait', level: 8, hands: 'rh' } } });
-  const guide = page.locator('.kb-guide');
+  const guide = page.getByRole('button', { name: 'Keyboard guide' });
   await expect(guide).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('.key.is-expected')).not.toHaveCount(0);
   await guide.click();
@@ -75,12 +75,12 @@ test('Keyboard guide button above the keys flips the setting, persists and light
   await expect(page.locator('.key.is-expected')).toHaveCount(0);
   await expect.poll(async () => (await app.savedSettings()).showKeyboardGuide).toBe(false);
   await page.reload();
-  await expect(page.locator('.kb-guide')).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.getByRole('button', { name: 'Keyboard guide' })).toHaveAttribute('aria-pressed', 'false');
 });
 
 test('The keyboard guide is grayed out, with the reason, where it would give the answer away', async ({ app, page }) => {
   await app.open({ settings: { lesson: 'ear', showKeyboardGuide: true } });
-  const guide = page.locator('.kb-guide');
+  const guide = page.getByRole('button', { name: 'Keyboard guide' });
   await expect(guide).toHaveAttribute('aria-disabled', 'true');
   await expect(guide).toHaveAttribute('aria-pressed', 'false');
   await expect(guide).toHaveAttribute('title', /never shows the answer/);
@@ -111,7 +111,7 @@ for (const width of [390, 1440]) {
     await menu.getByRole('switch').nth(0).click(); // note names on the keys
     await expect(page.locator('.key-label', { hasText: /^D$/ })).toHaveCount(0);
     await menu.getByRole('switch').nth(1).click(); // computer-key hints
-    await expect(page.locator('.key-qwerty').first()).toBeVisible();
+    await expect(page.locator('.key-hint').first()).toBeVisible();
     const keys = await page.locator('.key').count();
     await menu.getByRole('radio', { name: 'Full keyboard' }).click();
     await expect.poll(() => page.locator('.key').count()).toBeGreaterThan(keys);
@@ -130,7 +130,7 @@ test('Rhythm grays out computer-key hints (it uses J and F)', async ({ app, page
   const menu = page.getByRole('dialog', { name: 'Keyboard display' });
   await expect(menu.getByRole('switch').nth(1)).toBeDisabled();
   await expect(menu).toContainText('Rhythm uses J and F');
-  await expect(page.locator('.key-qwerty')).toHaveCount(0);
+  await expect(page.locator('.key-hint')).toHaveCount(0);
 });
 
 test('Your keyboard size is set under Piano & audio', async ({ app, page }) => {

@@ -16,7 +16,7 @@ test('With a piano connected, the chip opens Piano & audio; a key played there i
   const dialog = await app.openPianoAudio();
   await expect(dialog).toContainText('Found Test Piano');
   // The connection check is the input check: held keys and the pedal show in the keyboard bar.
-  await expect(dialog.locator('.monitor')).toHaveCount(0);
+  await expect(dialog.locator('.pedal')).toHaveCount(0);
   // One tab per section, opened on Piano; the setup guide is a button in the header.
   await expect(dialog.getByRole('tab')).toHaveText(['Piano', 'Audio & timing', 'Playing']);
   await expect(dialog.getByRole('tab', { selected: true })).toHaveText('Piano');

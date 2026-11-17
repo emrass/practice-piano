@@ -16,7 +16,7 @@ test.describe('Rhythm', () => {
     const run = await app.playFlow({ skipBars: calls });
     await app.waitUntil(run.endMs + 1500);
     await expect(app.results()).toBeVisible();
-    const hits = await app.results().locator('.rg-main .rg-v').innerText();
+    const hits = await app.results().locator('.stat.is-key .stat-value').innerText();
     expect(parseInt(hits)).toBeGreaterThanOrEqual(90);
   });
 });

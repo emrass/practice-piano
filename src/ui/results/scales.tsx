@@ -1,7 +1,8 @@
 import { nps } from '../../core/scales/generator';
 import { gradeHeadline, hintNote, pct } from './format';
+import { TempoChange } from './TempoChange';
 import type { ResultsView } from './types';
-import { Icon } from '../components/Icon';
+import { Callout, StatTile } from '../components/controls';
 
 const CROSSING_TEXT = { 'thumb-under': 'thumb under', 'finger-over': 'finger over' } as const;
 
@@ -24,70 +25,37 @@ export const scalesResults: ResultsView = {
     const scale = result.scale;
     const flow = result.mode === 'flow';
     const change = award?.repertoire;
-    const bpm = (npm: number) => `${Math.round(npm / scale.notesPerBeat)} bpm`;
     return (
       <>
         <div className="results-grid">
-          <div className="rg-item rg-main">
-            <span className="rg-v">{pct(result.pitchAccuracy)}</span>
-            <span className="rg-k">Notes</span>
-          </div>
+          <StatTile main value={pct(result.pitchAccuracy)} note="Notes" />
           {flow ? (
-            <div className="rg-item">
-              <span className="rg-v">{pct(result.timingAccuracy)}</span>
-              <span className="rg-k">Timing{scale.steadinessMs !== null ? ` · ±${scale.steadinessMs} ms` : ''}</span>
-            </div>
+            <StatTile value={pct(result.timingAccuracy)} note={`Timing${scale.steadinessMs !== null ? ` · ±${scale.steadinessMs} ms` : ''}`} />
           ) : (
-            <div className="rg-item">
-              <span className="rg-v">{result.medianReactionMs === null ? '—' : `${(result.medianReactionMs / 1000).toFixed(2)} s`}</span>
-              <span className="rg-k">Per note</span>
-            </div>
+            <StatTile value={result.medianReactionMs === null ? '—' : `${(result.medianReactionMs / 1000).toFixed(2)} s`} note="Per note" />
           )}
           {flow ? (
-            <div className="rg-item" title="Spread of key velocity — lower is more even">
-              <span className="rg-v rg-v-small">{scale.velocitySpread === null ? '—' : `±${Math.round(scale.velocitySpread * 100)}%`}</span>
-              <span className="rg-k">Evenness (touch)</span>
-            </div>
+            <StatTile
+              title="Spread of key velocity — lower is more even"
+              value={scale.velocitySpread === null ? '—' : `±${Math.round(scale.velocitySpread * 100)}%`}
+              note="Evenness (touch)"
+            />
           ) : (
-            <div className="rg-item">
-              <span className="rg-v">
-                {result.cleanSteps}/{result.totalSteps}
-              </span>
-              <span className="rg-k">First-try steps</span>
-            </div>
+            <StatTile value={`${result.cleanSteps}/${result.totalSteps}`} note="First-try steps" />
           )}
           {scale.syncMs !== null ? (
-            <div className="rg-item" title="Average gap between the hands on notes played together">
-              <span className="rg-v rg-v-small">{scale.syncMs} ms</span>
-              <span className="rg-k">Hands apart</span>
-            </div>
+            <StatTile title="Average gap between the hands on notes played together" value={`${scale.syncMs} ms`} note="Hands apart" />
           ) : (
-            <div className="rg-item">
-              <span className="rg-v">{result.wrongNotes + result.missedNotes}</span>
-              <span className="rg-k">{flow ? 'Wrong + missed' : `Wrong notes${hintNote(result)}`}</span>
-            </div>
+            <StatTile value={result.wrongNotes + result.missedNotes} note={flow ? 'Wrong + missed' : `Wrong notes${hintNote(result)}`} />
           )}
         </div>
         {flow && change ? (
-          <div className={`scale-ladder ${change.toTempo > change.fromTempo ? 'is-up' : change.toTempo < change.fromTempo ? 'is-down' : ''}`}>
-            {change.toTempo > change.fromTempo
-              ? `Tempo up: ${bpm(change.fromTempo)} → ${bpm(change.toTempo)}`
-              : change.toTempo < change.fromTempo
-                ? `Tempo down to ${bpm(change.toTempo)} — get it clean first`
-                : `Tempo stays at ${bpm(change.toTempo)}`}
-            {change.newlyMastered ? (
-              <>
-                {' · '}
-                <Icon name="star" /> mastered at {nps(scale.npm)}
-              </>
-            ) : null}
-            {change.dueInDays > 0 ? ` · review in ${change.dueInDays} day${change.dueInDays === 1 ? '' : 's'}` : ''}
-          </div>
+          <TempoChange change={change} bpm={(npm) => Math.round(npm / scale.notesPerBeat)} masteredAt={nps(scale.npm)} />
         ) : change ? (
-          <div className="scale-ladder is-wait">Practice run — the tempo ladder and review date move only in Flow</div>
+          <Callout>Practice run — the tempo ladder and review date move only in Flow</Callout>
         ) : null}
         {scale.bumps.length || scale.thumbAccent ? (
-          <ul className="scale-notes">
+          <ul className="results-notes">
             {scale.bumps.map((b) => (
               <li key={`${b.hand}${b.label}`}>
                 Timing bump on <b>{b.label}</b> ({b.hand === 'rh' ? 'RH' : 'LH'}

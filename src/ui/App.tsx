@@ -310,7 +310,7 @@ function Studio({ profile }: { profile: Profile }) {
 
         <main className="stage">
           <MetaStrip exercise={exercise} firstSight={firstSight} focus={runtime.focusActive} />
-          <div className="score-card">
+          <div className="score">
             {runtime.stage ? (
               runtime.stage(controller)
             ) : (

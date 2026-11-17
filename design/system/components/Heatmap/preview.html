@@ -1,4 +1,4 @@
-<!-- @dsCard group="Data" height=158 -->
+<!-- @dsCard group="Data" height=282 -->
 <!doctype html>
 <html lang="en">
 <head><meta charset="utf-8"><title>Heatmap</title></head>
@@ -6,13 +6,22 @@
 <div class="ds-stack ds-panel ds-narrow">
   <div>
     <div class="heat-title"><span>Treble</span></div>
-    <div class="heatmap" role="img" aria-label="Note accuracy, treble clef, C4 to C6. Weakest: A5 at 75 percent.">
-      <span class="heat-key"></span><span class="heat-key"></span><span class="heat-key heat-5"></span><span class="heat-key heat-5"></span><span class="heat-key heat-5"></span><span class="heat-key heat-4"></span><span class="heat-key heat-5"></span><span class="heat-key heat-5"></span><span class="heat-key heat-5"></span><span class="heat-key heat-5"></span><span class="heat-key heat-4"></span><span class="heat-key heat-5"></span><span class="heat-key heat-5"></span><span class="heat-key heat-3"></span><span class="heat-key"></span><span class="heat-key"></span><span class="heat-key"></span><span class="heat-key"></span>
+    <div class="heatmap" role="img" aria-label="Note accuracy, treble clef, A3 to D6. Weakest: A5 at 75 percent.">
+      <span class="heat-key"></span><span class="heat-key"></span><span class="heat-key heat-5"></span><span class="heat-key heat-5"><span class="heat-sharp heat-4"></span></span><span class="heat-key heat-5"></span><span class="heat-key heat-4"></span><span class="heat-key heat-5"></span><span class="heat-key heat-5"></span><span class="heat-key heat-5"></span><span class="heat-key heat-5"></span><span class="heat-key heat-4"></span><span class="heat-key heat-5"></span><span class="heat-key heat-5"></span><span class="heat-key heat-3"></span><span class="heat-key"></span><span class="heat-key"></span><span class="heat-key"></span><span class="heat-key"></span>
     </div>
-    <div class="heat-axis"><span>C4</span><span>C5</span><span>C6</span></div>
+    <div class="heat-axis" aria-hidden="true"><span></span><span></span><span>C4</span><span></span><span></span><span></span><span></span><span></span><span></span><span>C5</span><span></span><span></span><span></span><span></span><span></span><span></span><span>C6</span><span></span></div>
+  </div>
+  <div class="keyboard" style="height:112px" aria-label="The same bands as a layer on the on-screen keyboard">
+    <div class="keys" style="grid-row:1 / -1">
+      <div class="key key-white" style="left:0;width:20%"><span class="key-heat heat-5"></span><span class="key-label is-c">C4</span></div>
+      <div class="key key-white" style="left:20%;width:20%"><span class="key-heat heat-4"></span><span class="key-label">D</span></div>
+      <div class="key key-white" style="left:40%;width:20%"><span class="key-heat heat-2"></span><span class="key-label">E</span></div>
+      <div class="key key-white" style="left:60%;width:20%"><span class="key-label">F</span></div>
+      <div class="key key-white" style="left:80%;width:20%"><span class="key-heat heat-1"></span><span class="key-label">G</span></div>
+    </div>
   </div>
   <ul class="heat-legend" aria-label="Accuracy bands">
-    <li><span class="heat-swatch heat-1"></span>under 60%</li><li><span class="heat-swatch heat-2"></span>60–74</li><li><span class="heat-swatch heat-3"></span>75–84</li><li><span class="heat-swatch heat-4"></span>85–94</li><li><span class="heat-swatch heat-5"></span>95+</li>
+    <li><span class="heat-swatch heat-1"></span>under 60%</li><li><span class="heat-swatch heat-2"></span>60–74%</li><li><span class="heat-swatch heat-3"></span>75–84%</li><li><span class="heat-swatch heat-4"></span>85–94%</li><li><span class="heat-swatch heat-5"></span>95% and up</li>
   </ul>
 </div>
 </body>

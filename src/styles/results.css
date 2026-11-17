@@ -1,158 +1,13 @@
-/* Results card shown after a run, with the piano-shortcut legend. */
+/* Results. The card is the design system's Results (bundle.css); here are the piano-shortcut
+   legend, which the system has no component for, and what the shell drops on a phone. */
 
-.results-backdrop {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  background: var(--veil);
-  backdrop-filter: blur(2px);
-  animation: fade-in var(--duration-base) var(--ease-out);
-  z-index: var(--z-sticky);
-  padding: var(--space-12);
-}
-
-.results-card {
-  width: min(480px, 100%);
-  /* One track that may shrink below its content, so long rows wrap instead of widening the card. */
-  grid-template-columns: minmax(0, 1fr);
-  max-height: 100%;
-  overflow: auto;
-  background: var(--surface-overlay);
-  border: var(--stroke-thin) solid var(--border);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-3);
-  padding: 0 var(--space-24) var(--space-20);
-  display: grid;
-  gap: var(--space-12);
-}
-
-.results-ribbon {
-  margin: 0 calc(-1 * var(--space-24));
-  padding: var(--space-8) var(--space-24);
-  font: var(--type-label-sm);
-  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-}
-
-.results-ribbon.is-pass {
-  background: var(--success-soft);
-  color: var(--success);
-}
-
-.results-ribbon.is-fail {
-  background: var(--surface-well);
-  color: var(--text-subtle);
-}
-
-.results-card h2 {
-  font: var(--type-headline);
-  margin: 0;
-}
-
-.results-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-8);
-}
-
-.rg-item {
-  display: grid;
-  gap: var(--space-2);
-  padding: var(--space-8);
-  border-radius: var(--radius-md);
-  background: var(--surface-well);
-  text-align: center;
-}
-
-.rg-v {
-  font: var(--type-numeral);
-  font-variant-numeric: tabular-nums;
-}
-
-.rg-main .rg-v {
-  color: var(--accent);
-}
-
-.rg-v.rg-v-small {
-  font: var(--type-title-sm);
-  align-self: center;
-  min-height: 29px;
-  display: grid;
-  place-items: center;
-}
-
-.rg-wide {
-  grid-column: 1 / -1;
-  padding: var(--space-8);
-}
-
-.rg-wide b {
-  color: var(--text);
-}
-
-.rg-k {
-  font: var(--type-label-sm);
-  color: var(--text-subtle);
-}
-
-.results-xp {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.xp-total {
-  font: var(--type-numeral);
-  color: var(--reward-text);
-}
-
-.xp-bonus {
-  font: var(--type-label);
-  color: var(--reward-text);
-}
-
-.xp-note {
-  font: var(--type-caption);
-  color: var(--text-subtle);
-}
-
-.results-tier {
-  display: grid;
-  gap: var(--space-6);
-}
-
-.rt-head {
-  display: flex;
-  justify-content: space-between;
-  font: var(--type-label);
-}
-
-.rt-mastered {
-  font: var(--type-label);
-  font-weight: 700;
-  color: var(--success);
-}
-
-.results-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: var(--space-8);
-}
-
-@keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-}
-
-/* ---------- Piano shortcuts ---------- */
 .piano-legend {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-6) var(--space-8);
+  gap: var(--space-4) var(--space-6);
   font: var(--type-label-sm);
-  padding: var(--space-8) var(--space-12);
+  padding: var(--space-6) var(--space-8);
   border-radius: var(--radius-md);
   background: var(--surface-well);
 }
@@ -174,12 +29,6 @@
   color: var(--key-ink-c);
   font: var(--type-micro);
   box-shadow: inset 0 -3px 0 var(--key-white-shade);
-}
-
-@media (max-width: 760px) {
-  .results-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 480px) {

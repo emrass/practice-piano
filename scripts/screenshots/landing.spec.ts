@@ -120,13 +120,13 @@ test.describe('desktop 1440×900 @2x', () => {
     await open(app, page, { lesson: 'scales', scales: { mode: 'flow', type: 'major', tonic: 'D', hands: 'together', octaves: 2, noteValue: 'eighth' } }, { seed: 1 });
     const run = await playFlow(app, page, { seed: 4, jitterMs: 10, thumbBumpMs: 48, heavyThumb: true });
     await app.waitUntil(run.endMs + 1500);
-    const card = page.locator('.results-card');
+    const card = page.locator('.results');
     await expect(card).toContainText('Tempo up');
     await saveShot(page, 'scales-feedback', await clipTo(card, size(960, 661)), size(960, 661));
     await page.keyboard.press('Escape');
     await expect(card).toBeHidden();
     await page.waitForTimeout(300);
-    await saveShot(page, 'hero-scale', await clipTo(page.locator('.score-card'), size(2000, 461)), size(2000, 461));
+    await saveShot(page, 'hero-scale', await clipTo(page.locator('.stage > .score'), size(2000, 461)), size(2000, 461));
   });
 
   test('sight-flow.webp, shortcuts.webp', async ({ app, page }) => {
@@ -139,7 +139,7 @@ test.describe('desktop 1440×900 @2x', () => {
     // Results closed: the piano still shows the shortcut labels until the next exercise.
     await page.keyboard.press('Escape');
     await page.waitForTimeout(300);
-    await saveShot(page, 'shortcuts', await clipTo(page.locator('.keyboard-dock'), size(1600, 294)), size(1600, 294));
+    await saveShot(page, 'shortcuts', await clipTo(page.locator('.stage > .keyboard'), size(1600, 294)), size(1600, 294));
   });
 
   test('dark.webp', async ({ app, page }) => {
@@ -172,7 +172,7 @@ test.describe('desktop 1440×900 @2x', () => {
     await nextExerciseUntil(app, page, () => app.exercise((ex) => ex.steps.filter((s) => s.measureIndex < 2).length >= 24));
     const run = await playFlow(app, page, { seed: 6, jitterMs: 16 });
     await app.waitUntil(run.t0 + (run.endMs - run.t0) * 0.4);
-    await saveShot(page, 'rhythm-hands', await clipTo(page.locator('.score-card'), size(2000, 446)), size(2000, 446));
+    await saveShot(page, 'rhythm-hands', await clipTo(page.locator('.stage > .score'), size(2000, 446)), size(2000, 446));
   });
 
   test('rhythm-pulse.webp', async ({ app, page }) => {

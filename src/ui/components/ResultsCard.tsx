@@ -5,11 +5,13 @@ import { isPass, type Award } from '../../core/progress/progress';
 import { pianoLegend } from '../lessons/continuation';
 import type { Continuation } from '../lessons/types';
 import { resultsView } from '../results';
-import { ProgressBar } from './controls';
+import { Callout, ProgressBar } from './controls';
+import { Icon } from './Icon';
 
 /**
- * End-of-run card: shared chrome here, the lesson's ribbon, headline and measurements from its
- * ResultsView, and its repeat / next actions from the exercise's continuation.
+ * End-of-run card (the design system's Results): shared chrome here, the lesson's ribbon, verdict
+ * and measurements from its ResultsView, and its repeat / next actions from the exercise's
+ * continuation. Order: ribbon, verdict, tiles, what happens next, notes, XP, actions.
  */
 export function ResultsCard(props: {
   result: ExerciseResult;
@@ -34,40 +36,46 @@ export function ResultsCard(props: {
   const Body = view.Body;
   const passed = isPass(result);
   return (
-    <div className="results-backdrop" role="dialog" aria-modal="false" aria-labelledby="results-title">
-      <div className="results-card">
-        <div className={`results-ribbon ${passed ? 'is-pass' : 'is-fail'}`}>{view.ribbon(result, passed)}</div>
-        <h2 id="results-title">{view.headline(result, passed, award)}</h2>
+    <div className="veil" role="dialog" aria-modal="false" aria-labelledby="results-title">
+      <div className="results">
+        <p className={`results-ribbon ${passed ? 'is-pass' : ''}`}>
+          {passed ? <Icon name="check" /> : null}
+          {view.ribbon(result, passed)}
+        </p>
+        <h2 className="results-verdict" id="results-title">
+          {view.headline(result, passed, award)}
+        </h2>
         <Body result={result} award={award} />
+        {/* What happens next, for the lessons with tiers (scales and chords state theirs in the Body). */}
+        {award && tier && !view.repertoire ? (
+          <Callout>
+            <div className="progress-row" style={{ ['--cols' as string]: 'auto 1fr auto' }}>
+              <b>{tier.name}</b>
+              <ProgressBar label="Tier progress" value={Math.min(award.tierPasses, award.tierRequired)} max={award.tierRequired} complete={award.newlyMastered} />
+              <span className="num">
+                {Math.min(award.tierPasses, award.tierRequired)}/{award.tierRequired} passes
+              </span>
+            </div>
+            {award.newlyMastered ? <div>Tier mastered! Try the next band when you feel ready.</div> : null}
+          </Callout>
+        ) : null}
         {award ? (
-          <div className="results-xp">
-            <span className="xp-total">+{award.xp} XP</span>
-            {award.firstSightBonus > 0 ? <span className="xp-bonus">incl. first-sight bonus +{award.firstSightBonus}</span> : null}
+          <div className="stat">
+            <span className="stat-value results-xp">+{award.xp} XP</span>
+            {award.firstSightBonus > 0 ? <span className="stat-note">incl. first-sight bonus +{award.firstSightBonus}</span> : null}
             {!award.firstAttempt && !view.repertoire && view.trains !== null ? (
-              <span className="xp-note">Repeat passage — reduced XP. New passages train {view.trains} best.</span>
+              <span className="stat-note">Repeat passage — reduced XP. New passages train {view.trains} best.</span>
             ) : null}
             {view.xpNotes?.(result).map((note) => (
-              <span key={note} className="xp-note">
+              <span key={note} className="stat-note">
                 {note}
               </span>
             ))}
           </div>
         ) : null}
-        {award && tier && !view.repertoire ? (
-          <div className="results-tier">
-            <div className="rt-head">
-              <span>{tier.name}</span>
-              <span>
-                {Math.min(award.tierPasses, award.tierRequired)}/{award.tierRequired} passes
-              </span>
-            </div>
-            <ProgressBar label="Tier progress" value={Math.min(award.tierPasses, award.tierRequired)} max={award.tierRequired} complete={award.newlyMastered} />
-            {award.newlyMastered ? <div className="rt-mastered">Tier mastered! Try the next band when you feel ready.</div> : null}
-          </div>
-        ) : null}
         {props.pianoShortcuts ? (
           <div className="piano-legend" aria-label="Piano shortcuts">
-            <span className="muted">Piano:</span>
+            <span>Piano:</span>
             {pianoLegend(props.continuation).map((a) => (
               <span key={a.key} className="legend-item">
                 <span className="legend-key">{a.key}</span>

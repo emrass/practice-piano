@@ -3,43 +3,69 @@ import type { Clef } from '../../core/exercise';
 import { isBlackKey } from '../../core/keyboard/range';
 import { midiLabel } from '../../core/music/pitch';
 import type { ProgressState } from '../../core/progress/progress';
-import { findWeakSpots, noteHeatmap } from '../../core/progress/sight';
-import { heatColor, pct } from './format';
+import { findWeakSpots, MIN_NOTE_ATTEMPTS, noteHeatmap } from '../../core/progress/sight';
+import { HEAT_BANDS, heatBand, pct } from './format';
 import { TierMastery } from './TierMastery';
 import type { ProgressSectionProps } from './types';
 import { ProgressBar } from '../components/controls';
 
 const HEAT_RANGE: Record<Clef, [number, number]> = { treble: [55, 96], bass: [28, 67] };
 
-/** Keyboard-shaped accuracy map of one clef's range. */
+type Heat = { attempts: number; accuracy: number };
+
+/** A note with enough attempts to be judged; fewer stay blank. */
+const judged = (h: Heat | undefined): h is Heat => !!h && h.attempts >= MIN_NOTE_ATTEMPTS;
+
+function keyTitle(midi: number, h: Heat | undefined): string {
+  if (!h) return `${midiLabel(midi)}: no data`;
+  return `${midiLabel(midi)}: ${pct(h.accuracy)} of ${h.attempts}${judged(h) ? '' : ' (too few to judge)'}`;
+}
+
+/** Heatmap: one clef's range as a strip of piano keys, each in the band of its accuracy. */
 function Heatmap(props: { progress: ProgressState; clef: Clef }) {
   const heat = useMemo(() => noteHeatmap(props.progress, props.clef), [props.progress, props.clef]);
   const [lo, hi] = HEAT_RANGE[props.clef];
   const whites: number[] = [];
   for (let m = lo; m <= hi; m++) if (!isBlackKey(m)) whites.push(m);
+  const weakest = [...heat].filter(([m, h]) => m >= lo && m <= hi && judged(h)).sort((a, b) => a[1].accuracy - b[1].accuracy)[0];
+  const name = props.clef === 'treble' ? 'Treble' : 'Bass';
+  const summary = `Note accuracy, ${props.clef} clef, ${midiLabel(lo)} to ${midiLabel(hi)}. ${
+    weakest ? `Weakest: ${midiLabel(weakest[0])} at ${Math.round(weakest[1].accuracy * 100)} percent.` : 'No notes judged yet.'
+  }`;
   return (
-    <div className="note-heatmap" aria-label={`${props.clef} clef accuracy by note`}>
-      <div className="heatmap-label">{props.clef === 'treble' ? '𝄞 Treble' : '𝄢 Bass'}</div>
-      <div className="heatmap-keys">
+    <div>
+      <div className="heat-title">{name}</div>
+      <div className="heatmap" role="img" aria-label={summary}>
         {whites.map((m) => {
           const h = heat.get(m);
-          const sharp = heat.get(m + 1);
+          const sharp = isBlackKey(m + 1) && m + 1 <= hi ? heat.get(m + 1) : undefined;
           return (
-            <div
-              key={m}
-              className="heat-key"
-              title={h ? `${midiLabel(m)}: ${pct(h.accuracy)} of ${h.attempts}` : `${midiLabel(m)}: no data`}
-              style={h ? { background: heatColor(h.accuracy) } : undefined}
-            >
-              {m % 12 === 0 ? <span>{midiLabel(m)}</span> : null}
-              {sharp && isBlackKey(m + 1) ? (
-                <i className="heat-sharp" style={{ background: heatColor(sharp.accuracy) }} title={`${midiLabel(m + 1)}: ${pct(sharp.accuracy)}`} />
-              ) : null}
-            </div>
+            <span key={m} className={`heat-key ${judged(h) ? `heat-${heatBand(h.accuracy)}` : ''}`} title={keyTitle(m, h)}>
+              {judged(sharp) ? <span className={`heat-sharp heat-${heatBand(sharp.accuracy)}`} title={keyTitle(m + 1, sharp)} /> : null}
+            </span>
           );
         })}
       </div>
+      <div className="heat-axis" aria-hidden="true">
+        {whites.map((m) => (
+          <span key={m}>{m % 12 === 0 ? midiLabel(m) : null}</span>
+        ))}
+      </div>
     </div>
+  );
+}
+
+/** What the five colors mean, once for both strips. */
+function HeatLegend() {
+  return (
+    <ul className="heat-legend" aria-label="Accuracy bands">
+      {HEAT_BANDS.map((b) => (
+        <li key={b.band}>
+          <span className={`heat-swatch heat-${b.band}`} />
+          {b.label}
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -86,6 +112,7 @@ export function SightSection(props: ProgressSectionProps) {
         <div className="section-title">Note accuracy</div>
         <Heatmap progress={progress} clef="treble" />
         <Heatmap progress={progress} clef="bass" />
+        <HeatLegend />
       </section>
 
       <TierMastery lesson="sight" level={props.settings.sight.level} progress={progress} />
