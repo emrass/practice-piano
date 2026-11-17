@@ -22,16 +22,17 @@ design/
       <Name>/preview.html a bare page showing its variants and states
     assets/               the mark, the icon set, font licenses
     fonts/                Newsreader (voice), Figtree (interface), Caveat (landing page only)
-  tokens.css              generated from tokens.json: CSS custom properties and @font-face
-  site-fonts.css          generated: the faces only the landing page uses (Caveat)
   scripts/                build, check and preview (plain Node, no dependencies)
+  dist/                   built on demand, not committed:
+    tokens.css            CSS custom properties and @font-face for the app
+    site-fonts.css        the faces only the landing page uses (Caveat)
 ```
 
 ## Commands
 
 ```sh
 npm run design:preview   # every component in light and dark at http://localhost:4174
-npm run design:build     # regenerate tokens.css and site-fonts.css after editing tokens.json
+npm run design:build     # write design/dist/tokens.css and site-fonts.css from tokens.json
 npm run design:check     # validate the system; part of `npm run check`, so CI runs it
 ```
 
@@ -43,8 +44,8 @@ npm run design:check     # validate the system; part of `npm run check`, so CI r
 - `bundle.css` contains a literal color, duration or type size, or uses a variable that is not
   a token;
 - the text styles restated at the top of `bundle.css` differ from `tokens.json`;
-- a component lacks its README or preview, a font lacks its license, or a generated
-  stylesheet is out of date;
+- a component lacks its README or preview, a font lacks its license, or `tokens.json` no
+  longer compiles;
 - the mark differs from `public/favicon.svg`, or the Score preview loads a VexFlow version
   other than the app's.
 
@@ -54,19 +55,24 @@ Read `system/guides/04-governance.md` first. In short:
 
 1. Edit `system/tokens.json` (values), `system/components/bundle.css` (looks) or a README (rules).
    Components use semantic tokens, never palette steps or literal values.
-2. Run `npm run design:build` if tokens changed, then `npm run design:check`.
-3. Look at the result in both themes with `npm run design:preview`.
-4. Commit the regenerated stylesheets together with the change.
+2. Run `npm run design:check`.
+3. Look at the result in both themes with `npm run design:preview`. It compiles the tokens on
+   every request, so a reload shows the change.
 
 ## Using it
 
-- **The app** imports `design/tokens.css` and `design/system/components/bundle.css` (in
-  that order) and sets `data-theme="light"` or `"dark"` on `<html>`. Vite follows the font URLs
-  in `tokens.css` and hashes the files, so the service worker caches them with the rest of the
-  build and the native app bundles them. `tokens.css` leaves out Caveat, so the app never
-  downloads it.
-- **The landing page** has no build step. It takes copies of `tokens.css` and `site-fonts.css`
-  with the font paths adjusted, plus the font files and the mark.
+The stylesheets in `design/dist/` are build output. `tokens.json` is the only source, so there
+is no generated file to keep in step and nothing to commit after a token change.
+
+- **The app**, once it adopts the system, builds `design/dist/tokens.css` as part of `vite` and
+  `vite build` (a small plugin that calls `compile()` from `scripts/build.mjs` and rebuilds when
+  `tokens.json` changes), imports it followed by `design/system/components/bundle.css`, and sets
+  `data-theme="light"` or `"dark"` on `<html>`. Vite follows the font URLs in `tokens.css` and
+  hashes the files, so the service worker caches them with the rest of the build and the native
+  app bundles them. `tokens.css` leaves out Caveat, so the app never downloads it.
+- **The landing page** has no build step. Whatever copies files into it runs
+  `npm run design:build` here first, then takes `tokens.css` and `site-fonts.css` with the font
+  paths adjusted, plus the font files and the mark.
 - **In CSS**, tokens are custom properties: `var(--surface-card)`, `var(--space-12)`,
   `font: var(--type-body)`. Text styles with tracking also have `var(--tracking-overline)`.
 
