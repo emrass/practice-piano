@@ -4,13 +4,15 @@ import { tierForLevel } from '../generator/tiers';
 import { findTier, LESSONS, type LessonId } from '../lessons';
 import { applyRepertoireRun, normalizeRepertoire, type RepertoireChange } from '../repertoire/repertoire';
 import { chordsRules } from './chords';
+import { dayKey, isDayKey, previousDay } from './days';
 import { earRules } from './ear';
 import { rhythmRules } from './rhythm';
 import { scalesRules } from './scales';
 import { sightRules } from './sight';
-import type { HistoryEntry, LessonProgressRules, ProgressState } from './types';
+import type { DayLog, HistoryEntry, LessonDay, LessonProgressRules, ProgressState } from './types';
 
 export type { ProgressState } from './types';
+export { dayKey } from './days';
 
 export const PROGRESS_SCHEMA_VERSION = 1;
 const MAX_HISTORY = 200;
@@ -66,18 +68,6 @@ export function emptyProgress(): ProgressState {
   };
 }
 
-/** Local calendar day, YYYY-MM-DD. */
-export function dayKey(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
-
-function previousDay(key: string): string {
-  const [y, m, d] = key.split('-').map(Number);
-  return dayKey(new Date(y, m - 1, d - 1));
-}
 
 export function updateStreak(streak: ProgressState['streak'], today: string): ProgressState['streak'] {
   if (streak.lastDay === today) return streak;
@@ -182,6 +172,7 @@ export function applyResult(progress: ProgressState, result: ExerciseResult, now
   day.exercises++;
   day.xp += award.xp;
   day.practiceMs += Math.min(result.durationMs, 30 * 60 * 1000);
+  addToLessonDay(((day.lessons ??= {})[result.lesson] ??= emptyLessonDay()), result);
   next.days = trimRecord(next.days, MAX_DAYS);
 
   if (LESSONS[result.lesson].repertoire) recordRepertoireRun(next, award, result, now);
@@ -206,6 +197,24 @@ export function applyResult(progress: ProgressState, result: ExerciseResult, now
   });
   if (next.history.length > MAX_HISTORY) next.history.splice(0, next.history.length - MAX_HISTORY);
   return { progress: next, award };
+}
+
+function emptyLessonDay(): LessonDay {
+  return { runs: 0, pitchSum: 0, timingRuns: 0, timingSum: 0, levelSum: 0 };
+}
+
+/** Adds one run (a result, or a history entry when backfilling) to its lesson's day. */
+function addToLessonDay(
+  ld: LessonDay,
+  run: { lesson: LessonId; pitchAccuracy: number; timingAccuracy: number | null; level: number },
+): void {
+  ld.runs++;
+  ld.pitchSum += run.pitchAccuracy;
+  if (run.timingAccuracy !== null) {
+    ld.timingRuns++;
+    ld.timingSum += run.timingAccuracy;
+  }
+  if (!LESSONS[run.lesson].repertoire) ld.levelSum += run.level;
 }
 
 function recordTierRun(next: ProgressState, award: Award, result: ExerciseResult, now: Date): void {
@@ -252,6 +261,53 @@ function migrateHistoryEntry(entry: Omit<HistoryEntry, 'lesson'> & { lesson?: Le
   return { ...entry, lesson: entry.lesson ?? 'sight' };
 }
 
+const finite = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+
+/** A stored lesson breakdown's valid entries, or undefined when there are none. */
+function normalizeLessonDays(raw: unknown): DayLog['lessons'] {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return undefined;
+  const out: DayLog['lessons'] = {};
+  for (const [lesson, v] of Object.entries(raw as Record<string, Partial<LessonDay>>)) {
+    if (!(lesson in LESSONS) || !v || !finite(v.runs) || v.runs <= 0 || !finite(v.pitchSum)) continue;
+    out[lesson as LessonId] = {
+      runs: v.runs,
+      pitchSum: v.pitchSum,
+      timingRuns: finite(v.timingRuns) ? v.timingRuns : 0,
+      timingSum: finite(v.timingSum) ? v.timingSum : 0,
+      levelSum: finite(v.levelSum) ? v.levelSum : 0,
+    };
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
+/**
+ * Valid day logs. Days saved before the per-lesson breakdown existed get it from the history
+ * where it still holds their runs (the oldest of those days may be partial).
+ */
+function normalizeDays(raw: unknown, history: readonly HistoryEntry[]): Record<string, DayLog> {
+  const out: Record<string, DayLog> = {};
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return out;
+  for (const [key, v] of Object.entries(raw as Record<string, Partial<DayLog>>)) {
+    if (!isDayKey(key) || !v || typeof v !== 'object') continue;
+    const day: DayLog = { exercises: finite(v.exercises) ? v.exercises : 0, xp: finite(v.xp) ? v.xp : 0, practiceMs: finite(v.practiceMs) ? v.practiceMs : 0 };
+    const lessons = normalizeLessonDays(v.lessons);
+    if (lessons) day.lessons = lessons;
+    out[key] = day;
+  }
+  const backfill = new Set(Object.keys(out).filter((k) => !out[k].lessons));
+  for (const h of history) {
+    const key = dayKey(new Date(h.at));
+    if (!backfill.has(key) || !(h.lesson in LESSONS) || !finite(h.pitchAccuracy)) continue;
+    addToLessonDay(((out[key].lessons ??= {})[h.lesson] ??= emptyLessonDay()), {
+      lesson: h.lesson,
+      pitchAccuracy: h.pitchAccuracy,
+      timingAccuracy: finite(h.timingAccuracy) ? h.timingAccuracy : null,
+      level: finite(h.level) ? h.level : 0,
+    });
+  }
+  return trimRecord(out, MAX_DAYS);
+}
+
 /** Defensive normalization for data loaded from storage or an import file. */
 export function normalizeProgress(raw: unknown): ProgressState {
   const base = emptyProgress();
@@ -259,6 +315,7 @@ export function normalizeProgress(raw: unknown): ProgressState {
   const r = raw as Partial<ProgressState>;
   const num = (v: unknown, d: number) => (typeof v === 'number' && Number.isFinite(v) ? v : d);
   const obj = <T>(v: unknown, d: T): T => (v && typeof v === 'object' && !Array.isArray(v) ? (v as T) : d);
+  const history = Array.isArray(r.history) ? r.history.slice(-MAX_HISTORY).map(migrateHistoryEntry) : [];
   return {
     schemaVersion: PROGRESS_SCHEMA_VERSION,
     xp: num(r.xp, 0),
@@ -268,11 +325,11 @@ export function normalizeProgress(raw: unknown): ProgressState {
       best: num(r.streak?.best, 0),
       lastDay: typeof r.streak?.lastDay === 'string' ? r.streak.lastDay : null,
     },
-    days: obj(r.days, base.days),
+    days: normalizeDays(r.days, history),
     tiers: obj(r.tiers, base.tiers),
     stats: obj(r.stats, base.stats),
     attempts: obj(r.attempts, base.attempts),
-    history: Array.isArray(r.history) ? r.history.slice(-MAX_HISTORY).map(migrateHistoryEntry) : [],
+    history,
     repertoire: normalizeRepertoire(r.repertoire),
   };
 }

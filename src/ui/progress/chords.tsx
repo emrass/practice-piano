@@ -3,7 +3,8 @@ import { chordItemTitle, parseChordItemId, QUALITIES, type ChordQuality } from '
 import { median } from '../../core/eval/types';
 import { findWeakChords } from '../../core/progress/chords';
 import { dueItems } from '../../core/repertoire/repertoire';
-import { DAY, pct } from './format';
+import { pct } from './format';
+import { RepertoireList } from './RepertoireList';
 import type { ProgressSectionProps } from './types';
 
 /** Chords & progressions: accuracy and speed per chord quality, weak spots, and the items' ladders. */
@@ -63,23 +64,12 @@ export function ChordStats(props: ProgressSectionProps) {
           Your chords <span className="muted">· {mastered}/{entries.length} mastered</span>
         </div>
         {entries.length ? (
-          <ul className="repertoire-list">
-            {entries.map(({ id, it, item }) => {
-              const days = Math.ceil((it.dueAt - props.now) / DAY);
-              return (
-                <li key={id} className={it.mastered ? 'is-mastered' : ''}>
-                  <span className="rep-name">{chordItemTitle(item!)}</span>
-                  <span className="rep-tempo" title="Ladder tempo">
-                    ♩ {it.ladderTempo}
-                  </span>
-                  <span className="rep-state">{it.mastered ? '★' : days <= 0 ? 'due' : `${days}d`}</span>
-                  <div className="progress-track">
-                    <div className={`progress-fill ${it.mastered ? 'is-mastered' : ''}`} style={{ width: `${Math.min(100, (it.ladderTempo / goalBpm) * 100)}%` }} />
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+          <RepertoireList
+            entries={entries.map(({ id, it, item }) => ({ id, it, title: chordItemTitle(item!) }))}
+            goal={goalBpm}
+            format={(bpm) => `♩ ${bpm}`}
+            now={props.now}
+          />
         ) : (
           <p className="field-hint">Drills and progressions you play appear here with their tempo ladder, and come back for review on a spaced schedule.</p>
         )}

@@ -114,15 +114,48 @@
 
 .repertoire-list li {
   display: grid;
+  gap: 6px;
+  border-radius: 8px;
+}
+
+.repertoire-list li.is-open {
+  background: var(--card);
+  padding-bottom: 8px;
+}
+
+/* The row is a button that opens the item's ladder history. */
+.rep-row {
+  display: grid;
   grid-template-columns: 1fr auto 34px;
   align-items: center;
   gap: 2px 8px;
+  width: 100%;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
   font-size: 12.5px;
+  text-align: left;
 }
 
-.repertoire-list li .progress-track {
+.rep-row:hover {
+  background: var(--card);
+}
+
+.rep-row .progress-track {
+  display: block;
   grid-column: 1 / -1;
   height: 4px;
+}
+
+.rep-row .progress-fill {
+  display: block;
+}
+
+.rep-history {
+  display: grid;
+  gap: 4px;
+  padding: 0 8px;
 }
 
 .rep-name {

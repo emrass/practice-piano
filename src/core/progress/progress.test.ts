@@ -172,6 +172,47 @@ describe('normalizeProgress', () => {
   });
 });
 
+describe('per-lesson day roll-up', () => {
+  it('sums each lesson\'s runs per day', () => {
+    let p = applyResult(emptyProgress(), result({ pitchAccuracy: 0.8, level: 10 }), day1).progress;
+    p = applyResult(p, result({ pitchAccuracy: 1, level: 20, mode: 'flow', timingAccuracy: 0.5 }), day1).progress;
+    expect(p.days[dayKey(day1)].lessons).toEqual({ sight: { runs: 2, pitchSum: 1.8, timingRuns: 1, timingSum: 0.5, levelSum: 30 } });
+  });
+
+  it('backfills days saved without the breakdown from the history', () => {
+    const entry = { exerciseId: 'x', mode: 'wait', tierId: 't01', medianReactionMs: null, xp: 10, firstSight: false, passed: true, timingAccuracy: null };
+    const p = normalizeProgress({
+      days: {
+        [dayKey(day1)]: { exercises: 2, xp: 20, practiceMs: 60000 },
+        [dayKey(day2)]: { exercises: 1, xp: 5, practiceMs: 1000, lessons: { ear: { runs: 1, pitchSum: 0.5, timingRuns: 0, timingSum: 0, levelSum: 4 } } },
+        [dayKey(day4)]: { exercises: 1, xp: 5, practiceMs: 1000 },
+        'not-a-day': { exercises: 1 },
+      },
+      history: [
+        { ...entry, at: day1.getTime(), lesson: 'sight', level: 3, pitchAccuracy: 1 },
+        { ...entry, at: day1.getTime() + 1000, level: 5, pitchAccuracy: 0.5, timingAccuracy: 0.9, mode: 'flow' },
+        // Already broken down: left as stored.
+        { ...entry, at: day2.getTime(), lesson: 'sight', level: 3, pitchAccuracy: 1 },
+      ],
+    });
+    expect(Object.keys(p.days)).toEqual([dayKey(day1), dayKey(day2), dayKey(day4)]);
+    expect(p.days[dayKey(day1)].lessons).toEqual({ sight: { runs: 2, pitchSum: 1.5, timingRuns: 1, timingSum: 0.9, levelSum: 8 } });
+    expect(p.days[dayKey(day2)].lessons).toEqual({ ear: { runs: 1, pitchSum: 0.5, timingRuns: 0, timingSum: 0, levelSum: 4 } });
+    // Older than the history: no breakdown, still a practice day.
+    expect(p.days[dayKey(day4)]).toEqual({ exercises: 1, xp: 5, practiceMs: 1000 });
+  });
+
+  it('drops malformed day logs and lesson entries', () => {
+    const p = normalizeProgress({
+      days: {
+        [dayKey(day1)]: { exercises: 'two', xp: 5, practiceMs: 1000, lessons: { sight: { runs: 0, pitchSum: 0 }, piano: { runs: 1, pitchSum: 1 }, ear: { runs: 1, pitchSum: 1 } } },
+        [dayKey(day2)]: 'x',
+      },
+    });
+    expect(p.days).toEqual({ [dayKey(day1)]: { exercises: 0, xp: 5, practiceMs: 1000, lessons: { ear: { runs: 1, pitchSum: 1, timingRuns: 0, timingSum: 0, levelSum: 0 } } } });
+  });
+});
+
 describe('ear training progress', () => {
   const earNotes = (pattern: [number, boolean][]): NoteResult[] =>
     pattern.map(([midi, correct], i) => ({ midi, hand: 'rh', clef: 'treble', correct, step: i }));

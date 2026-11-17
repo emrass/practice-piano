@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import type { ProgressState } from '../../core/progress/progress';
 import type { Settings } from '../../core/settings';
+import type { TrendSeries } from './charts/TrendChart';
 
 /** What the Progress tab asks of a lesson: its summary tile labels and its own section(s). */
 export interface ProgressView {
@@ -14,6 +15,8 @@ export interface ProgressView {
     /** Third tile: median reaction time, or the rushing/dragging tendency (rhythm). */
     third: 'reaction' | 'tendency';
   };
+  /** Lines of the trend chart: the accuracy label, a timing label (if the lesson has timing), and the level. */
+  trend: TrendSeries;
   /** The lesson's own section(s), rendered between the summary and "Your data". */
   Section: (props: ProgressSectionProps) => ReactNode;
 }

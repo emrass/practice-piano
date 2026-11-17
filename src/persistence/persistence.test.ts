@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_SETTINGS, applySettingsPatch, normalizeSettings } from '../core/settings';
 import { applyResult, emptyProgress } from '../core/progress/progress';
+import { setLadder } from '../core/repertoire/repertoire';
 import { LocalIdentityProvider } from './identity';
 import { BackupError, parseBackup, ProfileRepository } from './profileRepository';
 import { LocalStorageAdapter, MemoryStorageAdapter } from './storage';
@@ -55,6 +56,7 @@ describe('ProfileRepository', () => {
   it('round-trips a JSON backup into a different install', async () => {
     const a = repo().repo;
     const progress = applyResult(emptyProgress(), sampleResult, new Date(2026, 0, 1)).progress;
+    progress.repertoire['major/C/rh'] = setLadder(undefined, 120, new Date(2026, 0, 1).getTime());
     await a.saveSettings(applySettingsPatch(DEFAULT_SETTINGS, { sight: { level: 37 }, theme: 'dark' }));
     await a.saveProgress(progress);
     const json = await a.exportBackup(new Date('2026-01-02T00:00:00Z'));
@@ -67,6 +69,9 @@ describe('ProfileRepository', () => {
     expect(loaded.settings.theme).toBe('dark');
     expect(loaded.progress.xp).toBe(progress.xp);
     expect(loaded.progress.history).toHaveLength(1);
+    // Trend data travels with the backup.
+    expect(loaded.progress.days['2026-01-01'].lessons?.sight?.runs).toBe(1);
+    expect(loaded.progress.repertoire['major/C/rh'].ladderLog).toEqual([['2026-01-01', 120]]);
   });
 
   it('loads stored progress and backups recorded before lessons existed', async () => {
@@ -82,6 +87,7 @@ describe('ProfileRepository', () => {
     const b = repo().repo;
     await b.importBackup(JSON.stringify(backup));
     expect((await b.load()).progress.history).toEqual([{ ...entry, lesson: 'sight' }]);
+    expect((await b.load()).progress.days).toEqual({});
   });
 
   it('rejects invalid backups with a helpful message', () => {

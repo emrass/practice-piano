@@ -1,7 +1,7 @@
 import { dueItems } from '../../core/repertoire/repertoire';
 import { HANDS_LABEL, itemTitle, parseItemId } from '../../core/scales/catalog';
 import { nps } from '../../core/scales/generator';
-import { DAY } from './format';
+import { RepertoireList } from './RepertoireList';
 import type { ProgressSectionProps } from './types';
 
 /** Scales & arpeggios: every item played, with its ladder tempo, mastery and review date. */
@@ -26,26 +26,21 @@ export function RepertoireStats(props: ProgressSectionProps) {
       <div className="section-title">
         Your scales <span className="muted">· {mastered}/{entries.length} mastered</span>
       </div>
-      <ul className="repertoire-list">
-        {entries.map(({ id, it, item }) => {
-          const days = Math.ceil((it.dueAt - props.now) / DAY);
-          return (
-            <li key={id} className={it.mastered ? 'is-mastered' : ''}>
-              <span className="rep-name">
-                {itemTitle(item!.type, item!.tonic)}
-                <small>{HANDS_LABEL[item!.hands]}</small>
-              </span>
-              <span className="rep-tempo" title="Ladder tempo">
-                {nps(it.ladderTempo)}
-              </span>
-              <span className="rep-state">{it.mastered ? '★' : days <= 0 ? 'due' : `${days}d`}</span>
-              <div className="progress-track">
-                <div className={`progress-fill ${it.mastered ? 'is-mastered' : ''}`} style={{ width: `${Math.min(100, (it.ladderTempo / (goalNps * 60)) * 100)}%` }} />
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+      <RepertoireList
+        entries={entries.map(({ id, it, item }) => ({
+          id,
+          it,
+          title: (
+            <>
+              {itemTitle(item!.type, item!.tonic)}
+              <small>{HANDS_LABEL[item!.hands]}</small>
+            </>
+          ),
+        }))}
+        goal={goalNps * 60}
+        format={nps}
+        now={props.now}
+      />
       <button type="button" className="btn btn-block" disabled={due.length === 0} onClick={props.onReview}>
         Review due items{due.length ? ` (${due.length})` : ''}
       </button>
