@@ -67,7 +67,7 @@ Use the semantic tokens. The palette steps (`sepia-*`, `oxblood-*`, `gold-*`, `v
 
 ## Building with it
 
-- **Tokens** are CSS custom properties: `var(--surface-card)`, `var(--space-12)`, `var(--radius-md)`, `var(--font-serif)`. Text styles are classes (`.title`, `.numeral`) and, inside component CSS, the `--type-*` shorthands in `components/bundle.css`.
+- **Tokens** are CSS custom properties: `var(--surface-card)`, `var(--space-12)`, `var(--radius-md)`, `var(--font-serif)`. A text style is one declaration, `font: var(--type-title)`; styles with tracking add `letter-spacing: var(--tracking-overline)`.
 - **Components** are plain classes in `components/bundle.css`: a block (`.btn`), modifiers with a hyphen (`.btn-primary`, `.btn-lg`), and state from ARIA wherever ARIA has a word for it (`aria-pressed`, `aria-checked`, `aria-selected`, `aria-current`, `disabled`). `.is-*` classes are only for states ARIA cannot name (`.is-wrong`, `.is-held`).
 - **No literal colors, type sizes, shadows or durations in component CSS.** One that is not a token is either a mistake or a missing token. Measurements that are one component's own anatomy (a switch's track, a key's height) stay with that component.
 - **Page-level media queries are for the shell only.** A component adapts to its own width with a container query.
