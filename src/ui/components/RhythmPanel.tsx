@@ -2,21 +2,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { figureName } from '../../core/generator/rhythm';
 import { midiLabel } from '../../core/music/pitch';
 import { TIME_SIGNATURE_IDS, TIME_SIGNATURES, type TimeSignatureId } from '../../core/music/rhythm';
-import {
-  RHYTHM_TEXTURES,
-  rhythmProfile,
-  TASK_INFO,
-  TEXTURE_INFO,
-  type RhythmHands,
-  type RhythmTask,
-  type RhythmTexture,
-} from '../../core/rhythm/generator';
+import { RHYTHM_TEXTURES, rhythmProfile, TASK_INFO, TEXTURE_INFO, type RhythmHands, type RhythmTask, type RhythmTexture } from '../../core/rhythm/generator';
 import { rhythmTierForLevel } from '../../core/rhythm/tiers';
 import type { ProgressState } from '../../core/progress/progress';
 import type { TimeStat } from '../../core/progress/rhythm';
 import type { Settings, SettingsPatch } from '../../core/settings';
 import { inputBus } from '../../input/inputBus';
-import { CommitSlider, Field, Segmented, Select, Toggle } from './controls';
+import { CommitSlider, Field, ProgressBar, Segmented, Select, Toggle } from './controls';
 
 type Learning = 'rh' | 'lh' | null;
 
@@ -35,12 +27,7 @@ function useKeyLearning(onLearn: (hand: 'rh' | 'lh', midi: number) => void) {
   return [learning, setLearning] as const;
 }
 
-export function RhythmPanel(props: {
-  settings: Settings;
-  progress: ProgressState;
-  update: (patch: SettingsPatch) => void;
-  weakFigures: TimeStat[];
-}) {
+export function RhythmPanel(props: { settings: Settings; progress: ProgressState; update: (patch: SettingsPatch) => void; weakFigures: TimeStat[] }) {
   const { settings: s, update } = props;
   const [preview, setPreview] = useState<number | null>(null);
   const shown = preview ?? s.rhythm.level;
@@ -70,7 +57,7 @@ export function RhythmPanel(props: {
         <span className="key-assign-hand">{hand === 'rh' ? 'Right hand' : 'Left hand'}</span>
         <span className="key-assign-note">{active ? 'Press a key…' : midiLabel(midi)}</span>
         <kbd title="Computer keyboard">{hand === 'rh' ? 'J' : 'F'}</kbd>
-        <button type="button" className="btn btn-small" onClick={() => setLearning(active ? null : hand)}>
+        <button type="button" className="btn btn-sm" onClick={() => setLearning(active ? null : hand)}>
           {active ? 'Cancel' : 'Change'}
         </button>
       </div>
@@ -79,7 +66,7 @@ export function RhythmPanel(props: {
 
   return (
     <div className="panel-body">
-      <section className="panel-section">
+      <section className="section">
         <CommitSlider
           className="difficulty-slider"
           label="Rhythm level"
@@ -97,21 +84,16 @@ export function RhythmPanel(props: {
           <span className="tier-name">{tier.name}</span>
           <span className="tier-summary">{tier.summary}</span>
         </div>
-        <div className="tier-progress" title="Pass distinct exercises with ≥ 90% hits and ≥ 70% timing to master this tier">
-          <div className="progress-track">
-            <div
-              className={`progress-fill ${tierState?.mastered ? 'is-mastered' : ''}`}
-              style={{ width: `${Math.min(100, ((tierState?.passes ?? 0) / tier.passesRequired) * 100)}%` }}
-            />
-          </div>
-          <span className="tier-count">{tierState?.mastered ? 'Mastered' : `${Math.min(tierState?.passes ?? 0, tier.passesRequired)}/${tier.passesRequired}`}</span>
+        <div className="progress-row" title="Pass distinct exercises with ≥ 90% hits and ≥ 70% timing to master this tier">
+          <ProgressBar label="Tier progress" value={Math.min(tierState?.passes ?? 0, tier.passesRequired)} max={tier.passesRequired} complete={!!tierState?.mastered} />
+          <span className="num">{tierState?.mastered ? 'Mastered' : `${Math.min(tierState?.passes ?? 0, tier.passesRequired)}/${tier.passesRequired}`}</span>
         </div>
         <p className="field-hint ear-profile">
           {meters} · ~{tempo} bpm · Echo {profile.echoBars === 1 ? '1 bar' : '2 bars'} · Pulse {profile.pulse.on} on / {profile.pulse.off} off
         </p>
       </section>
 
-      <section className="panel-section">
+      <section className="section">
         <Field label="Task" hint={TASK_INFO[s.rhythm.task].help}>
           <Segmented<RhythmTask>
             label="Task"
@@ -157,14 +139,14 @@ export function RhythmPanel(props: {
         </Field>
       </section>
 
-      <section className="panel-section">
+      <section className="section">
         <div className="section-title">Your keys</div>
         {s.rhythm.hands !== 'lh' ? keyRow('rh') : null}
         {s.rhythm.hands !== 'rh' ? keyRow('lh') : null}
         <p className="field-hint">Only these keys count, so a stray note is never held against you.</p>
       </section>
 
-      <section className="panel-section">
+      <section className="section">
         <Toggle
           label="Weak-spot practice"
           hint={
@@ -177,33 +159,35 @@ export function RhythmPanel(props: {
         />
       </section>
 
-      <details className="panel-section advanced" open={overrides > 0 || undefined}>
+      <details className="section disclosure" open={overrides > 0 || undefined}>
         <summary>
-          Overrides <span className="muted">{overrides ? `${overrides} active` : 'all auto'}</span>
+          Overrides <span className="disclosure-meta">{overrides ? `${overrides} active` : 'all auto'}</span>
         </summary>
-        <Select<'auto' | TimeSignatureId>
-          label="Time"
-          value={s.rhythm.timeSignature}
-          onChange={(rhythmTimeSignature) => update({ rhythm: { timeSignature: rhythmTimeSignature } })}
-          options={[{ value: 'auto', label: 'Auto' }, ...TIME_SIGNATURE_IDS.map((t) => ({ value: t, label: t }))]}
-        />
-        <div className="bpm-row">
-          <CommitSlider
-            label="Tempo"
-            min={30}
-            max={200}
-            value={s.rhythm.bpm ?? tempo}
-            onCommit={(rhythmBpm) => update({ rhythm: { bpm: rhythmBpm } })}
-            format={(v) => (s.rhythm.bpm === null ? `Auto · ${v} bpm` : `${v} bpm`)}
+        <div className="disclosure-body">
+          <Select<'auto' | TimeSignatureId>
+            label="Time"
+            value={s.rhythm.timeSignature}
+            onChange={(rhythmTimeSignature) => update({ rhythm: { timeSignature: rhythmTimeSignature } })}
+            options={[{ value: 'auto', label: 'Auto' }, ...TIME_SIGNATURE_IDS.map((t) => ({ value: t, label: t }))]}
           />
-          <button type="button" className="btn btn-small" disabled={s.rhythm.bpm === null} onClick={() => update({ rhythm: { bpm: null } })}>
-            Auto
-          </button>
+          <div className="bpm-row">
+            <CommitSlider
+              label="Tempo"
+              min={30}
+              max={200}
+              value={s.rhythm.bpm ?? tempo}
+              onCommit={(rhythmBpm) => update({ rhythm: { bpm: rhythmBpm } })}
+              format={(v) => (s.rhythm.bpm === null ? `Auto · ${v} bpm` : `${v} bpm`)}
+            />
+            <button type="button" className="btn btn-sm" disabled={s.rhythm.bpm === null} onClick={() => update({ rhythm: { bpm: null } })}>
+              Auto
+            </button>
+          </div>
+          <p className="field-hint">Polyrhythms are always written in 3/4. Tempo counts dotted quarters in 6/8.</p>
         </div>
-        <p className="field-hint">Polyrhythms are always written in 3/4. Tempo counts dotted quarters in 6/8.</p>
       </details>
 
-      <section className="panel-section">
+      <section className="section">
         <div className="section-title">Sound</div>
         <CommitSlider
           label="Metronome"
@@ -214,7 +198,15 @@ export function RhythmPanel(props: {
           onCommit={(v) => update({ metronomeVolume: v / 100 })}
           format={(v) => `${v}%`}
         />
-        <CommitSlider label="Echo voice" min={0} max={100} step={5} value={Math.round(s.synthVolume * 100)} onCommit={(v) => update({ synthVolume: v / 100 })} format={(v) => `${v}%`} />
+        <CommitSlider
+          label="Echo voice"
+          min={0}
+          max={100}
+          step={5}
+          value={Math.round(s.synthVolume * 100)}
+          onCommit={(v) => update({ synthVolume: v / 100 })}
+          format={(v) => `${v}%`}
+        />
       </section>
     </div>
   );

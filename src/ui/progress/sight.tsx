@@ -7,6 +7,7 @@ import { findWeakSpots, noteHeatmap } from '../../core/progress/sight';
 import { heatColor, pct } from './format';
 import { TierMastery } from './TierMastery';
 import type { ProgressSectionProps } from './types';
+import { ProgressBar } from '../components/controls';
 
 const HEAT_RANGE: Record<Clef, [number, number]> = { treble: [55, 96], bass: [28, 67] };
 
@@ -17,7 +18,7 @@ function Heatmap(props: { progress: ProgressState; clef: Clef }) {
   const whites: number[] = [];
   for (let m = lo; m <= hi; m++) if (!isBlackKey(m)) whites.push(m);
   return (
-    <div className="heatmap" aria-label={`${props.clef} clef accuracy by note`}>
+    <div className="note-heatmap" aria-label={`${props.clef} clef accuracy by note`}>
       <div className="heatmap-label">{props.clef === 'treble' ? '𝄞 Treble' : '𝄢 Bass'}</div>
       <div className="heatmap-keys">
         {whites.map((m) => {
@@ -48,18 +49,18 @@ export function SightSection(props: ProgressSectionProps) {
   const weak = useMemo(() => findWeakSpots(progress), [progress]);
   return (
     <>
-      <section className="panel-section">
+      <section className="section">
         <div className="section-title">Weak spots</div>
         {weak.notes.length === 0 ? (
           <p className="field-hint">No consistent weak notes yet — keep reading! Notes need a few attempts before they’re judged.</p>
         ) : (
-          <ul className="weak-list">
+          <ul className="data-list data-list-cards weak-list">
             {weak.notes.map((n) => (
               <li key={`${n.clef}${n.midi}`}>
-                <span className="weak-note">{midiLabel(n.midi)}</span>
-                <span className="muted">{n.clef}</span>
-                <span>{pct(n.accuracy)}</span>
-                <span className="muted">{n.medianReactionMs ? `${(n.medianReactionMs / 1000).toFixed(1)}s` : ''}</span>
+                <span className="data-key">{midiLabel(n.midi)}</span>
+                <span className="data-meta">{n.clef}</span>
+                <span className="data-num">{pct(n.accuracy)}</span>
+                <span className="data-num data-meta">{n.medianReactionMs ? `${(n.medianReactionMs / 1000).toFixed(1)}s` : ''}</span>
               </li>
             ))}
           </ul>
@@ -67,12 +68,10 @@ export function SightSection(props: ProgressSectionProps) {
         {weak.clefs.length ? (
           <div className="clef-bars">
             {weak.clefs.map((c) => (
-              <div key={c.clef} className="clef-bar">
+              <div key={c.clef} className="progress-row">
                 <span>{c.clef === 'treble' ? 'Treble' : 'Bass'}</span>
-                <div className="progress-track">
-                  <div className="progress-fill" style={{ width: `${c.accuracy * 100}%` }} />
-                </div>
-                <span>{pct(c.accuracy)}</span>
+                <ProgressBar label="Accuracy" value={Math.round(c.accuracy * 100)} max={100} />
+                <span className="num">{pct(c.accuracy)}</span>
               </div>
             ))}
           </div>
@@ -83,7 +82,7 @@ export function SightSection(props: ProgressSectionProps) {
         </button>
       </section>
 
-      <section className="panel-section">
+      <section className="section">
         <div className="section-title">Note accuracy</div>
         <Heatmap progress={progress} clef="treble" />
         <Heatmap progress={progress} clef="bass" />

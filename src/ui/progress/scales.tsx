@@ -3,6 +3,8 @@ import { HANDS_LABEL, itemTitle, parseItemId } from '../../core/scales/catalog';
 import { nps } from '../../core/scales/generator';
 import { DAY } from './format';
 import type { ProgressSectionProps } from './types';
+import { ProgressBar } from '../components/controls';
+import { MasteredMark } from './MasteredMark';
 
 /** Scales & arpeggios: every item played, with its ladder tempo, mastery and review date. */
 export function RepertoireStats(props: ProgressSectionProps) {
@@ -15,18 +17,21 @@ export function RepertoireStats(props: ProgressSectionProps) {
   const mastered = entries.filter((e) => e.it.mastered).length;
   if (!entries.length) {
     return (
-      <section className="panel-section">
+      <section className="section">
         <div className="section-title">Your scales</div>
         <p className="field-hint">Items you play appear here with their tempo ladder, and come back for review on a spaced schedule.</p>
       </section>
     );
   }
   return (
-    <section className="panel-section">
+    <section className="section">
       <div className="section-title">
-        Your scales <span className="muted">· {mastered}/{entries.length} mastered</span>
+        Your scales{' '}
+        <span className="muted">
+          · {mastered}/{entries.length} mastered
+        </span>
       </div>
-      <ul className="repertoire-list">
+      <ul className="data-list repertoire-list">
         {entries.map(({ id, it, item }) => {
           const days = Math.ceil((it.dueAt - props.now) / DAY);
           return (
@@ -35,13 +40,11 @@ export function RepertoireStats(props: ProgressSectionProps) {
                 {itemTitle(item!.type, item!.tonic)}
                 <small>{HANDS_LABEL[item!.hands]}</small>
               </span>
-              <span className="rep-tempo" title="Ladder tempo">
+              <span className="data-num" title="Ladder tempo">
                 {nps(it.ladderTempo)}
               </span>
-              <span className="rep-state">{it.mastered ? '★' : days <= 0 ? 'due' : `${days}d`}</span>
-              <div className="progress-track">
-                <div className={`progress-fill ${it.mastered ? 'is-mastered' : ''}`} style={{ width: `${Math.min(100, (it.ladderTempo / (goalNps * 60)) * 100)}%` }} />
-              </div>
+              <span className="data-state">{it.mastered ? <MasteredMark /> : days <= 0 ? 'due' : `${days}d`}</span>
+              <ProgressBar label="Tempo ladder" value={it.ladderTempo} max={goalNps * 60} complete={it.mastered} small />
             </li>
           );
         })}

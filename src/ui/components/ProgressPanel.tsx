@@ -8,6 +8,7 @@ import { isNativeApp } from '../../platform/native';
 import { isAppleMobileBrowserTab, isStoragePersisted } from '../../platform/storageProtection';
 import { PROGRESS_VIEWS, pct } from '../progress';
 import { profileRepository } from '../state/useProfile';
+import { Callout } from './controls';
 
 /**
  * The Progress tab: shared summary tiles, the lesson's own section (see `src/ui/progress/`), then backup/import/reset.
@@ -72,51 +73,47 @@ export function ProgressPanel(props: {
 
   return (
     <div className="panel-body">
-      <section className="panel-section">
+      <section className="section">
         <div className="stat-tiles">
-          <div className="tile">
-            <span className="tile-v">{progress.xp.toLocaleString()}</span>
-            <span className="tile-k">XP</span>
+          <div className="stat stat-tile stat-tile-card stat-sm">
+            <span className="stat-value">{progress.xp.toLocaleString()}</span>
+            <span className="stat-note">XP</span>
           </div>
-          <div className="tile">
-            <span className="tile-v">{streak}</span>
-            <span className="tile-k">Day streak · best {progress.streak.best}</span>
+          <div className="stat stat-tile stat-tile-card stat-sm">
+            <span className="stat-value">{streak}</span>
+            <span className="stat-note">Day streak · best {progress.streak.best}</span>
           </div>
-          <div className="tile">
-            <span className="tile-v">{progress.exercisesCompleted}</span>
-            <span className="tile-k">Exercises</span>
+          <div className="stat stat-tile stat-tile-card stat-sm">
+            <span className="stat-value">{progress.exercisesCompleted}</span>
+            <span className="stat-note">Exercises</span>
           </div>
-          <div className="tile">
-            <span className="tile-v">{pct(summary.pitchAccuracy)}</span>
-            <span className="tile-k">{view.summary.pitch}</span>
+          <div className="stat stat-tile stat-tile-card stat-sm">
+            <span className="stat-value">{pct(summary.pitchAccuracy)}</span>
+            <span className="stat-note">{view.summary.pitch}</span>
           </div>
-          <div className="tile">
-            <span className="tile-v">{view.summary.second === 'replays' ? summary.replays : pct(summary.timingAccuracy)}</span>
-            <span className="tile-k">{view.summary.secondLabel}</span>
+          <div className="stat stat-tile stat-tile-card stat-sm">
+            <span className="stat-value">{view.summary.second === 'replays' ? summary.replays : pct(summary.timingAccuracy)}</span>
+            <span className="stat-note">{view.summary.secondLabel}</span>
           </div>
           {view.summary.third === 'tendency' ? (
-            <div className="tile" title="Average offset of your hits: early = rushing, late = dragging">
-              <span className="tile-v">{overallTendency === null ? '—' : Math.abs(overallTendency) < 8 ? '±0' : `${overallTendency > 0 ? '+' : '−'}${Math.abs(overallTendency)}`}</span>
-              <span className="tile-k">Tendency ms{overallTendency !== null && Math.abs(overallTendency) >= 8 ? (overallTendency < 0 ? ' · rushes' : ' · drags') : ''}</span>
+            <div className="stat stat-tile stat-tile-card stat-sm" title="Average offset of your hits: early = rushing, late = dragging">
+              <span className="stat-value">
+                {overallTendency === null ? '–' : Math.abs(overallTendency) < 8 ? '±0' : `${overallTendency > 0 ? '+' : '−'}${Math.abs(overallTendency)}`}
+              </span>
+              <span className="stat-note">Tendency ms{overallTendency !== null && Math.abs(overallTendency) >= 8 ? (overallTendency < 0 ? ' · rushes' : ' · drags') : ''}</span>
             </div>
           ) : (
-            <div className="tile">
-              <span className="tile-v">{summary.medianReactionMs === null ? '—' : `${(summary.medianReactionMs / 1000).toFixed(2)}s`}</span>
-              <span className="tile-k">Median reaction</span>
+            <div className="stat stat-tile stat-tile-card stat-sm">
+              <span className="stat-value">{summary.medianReactionMs === null ? '–' : `${(summary.medianReactionMs / 1000).toFixed(2)}s`}</span>
+              <span className="stat-note">Median reaction</span>
             </div>
           )}
         </div>
       </section>
 
-      <Section
-        progress={progress}
-        settings={props.settings}
-        now={props.now}
-        onReview={() => props.onReview?.()}
-        onPracticeWeakSpots={props.onPracticeWeakSpots}
-      />
+      <Section progress={progress} settings={props.settings} now={props.now} onReview={() => props.onReview?.()} onPracticeWeakSpots={props.onPracticeWeakSpots} />
 
-      <section className="panel-section">
+      <section className="section">
         <div className="section-title">Your data</div>
         <StorageStatus storageKind={props.storageKind} />
         <div className="button-row">
@@ -160,11 +157,11 @@ export function ProgressPanel(props: {
             </button>
           </div>
         ) : (
-          <button type="button" className="btn btn-ghost-danger" onClick={() => setConfirmReset(true)}>
+          <button type="button" className="btn btn-ghost btn-danger-text" onClick={() => setConfirmReset(true)}>
             Reset progress…
           </button>
         )}
-        {message ? <p className="status-line is-ok">{message}</p> : null}
+        {message ? <Callout>{message}</Callout> : null}
       </section>
     </div>
   );
@@ -195,8 +192,8 @@ function StorageStatus({ storageKind }: { storageKind: string }) {
   if (isAppleMobileBrowserTab()) {
     return (
       <p className="field-hint storage-status">
-        Saved in this browser on this device. On iPad and iPhone, a browser can delete it after 7 days without a visit. To keep it, add the app to your
-        Home Screen (Share → Add to Home Screen). The Home Screen app starts empty: use Export JSON here, then Import… there.
+        Saved in this browser on this device. On iPad and iPhone, a browser can delete it after 7 days without a visit. To keep it, add the app to your Home Screen (Share → Add to
+        Home Screen). The Home Screen app starts empty: use Export JSON here, then Import… there.
       </p>
     );
   }

@@ -1,4 +1,4 @@
-/* Progress panel: stat tiles, weak notes, heatmap and tier ladder. */
+/* Progress panel: the layout of its tiles, lists and bars, and the note heatmap. */
 
 .stat-tiles {
   display: grid;
@@ -6,62 +6,32 @@
   gap: var(--space-8);
 }
 
-.tile {
-  display: grid;
-  gap: var(--space-2);
-  padding: var(--space-8);
-  border-radius: var(--radius-md);
-  background: var(--surface-card);
-  border: var(--stroke-thin) solid var(--border-subtle);
-}
-
-.tile-v {
-  font: var(--type-numeral-sm);
-  font-variant-numeric: tabular-nums;
-}
-
-.tile-k {
-  font: var(--type-label-sm);
-  color: var(--text-subtle);
-}
-
+/* Column templates of the data lists and progress rows (DataList, ProgressBar). */
 .weak-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: var(--space-4);
-}
-
-.weak-list li {
-  display: grid;
-  grid-template-columns: 52px 1fr 48px 40px;
-  gap: var(--space-6);
-  font: var(--type-body-sm);
-  padding: var(--space-6) var(--space-8);
-  border-radius: var(--radius-md);
-  background: var(--surface-card);
-}
-
-.weak-note {
-  font-weight: 700;
-  color: var(--accent);
+  --cols: 52px 1fr 48px 40px;
 }
 
 .clef-bars {
+  --cols: 52px 1fr 40px;
   display: grid;
   gap: var(--space-6);
 }
 
-.clef-bar {
-  display: grid;
-  grid-template-columns: 52px 1fr 40px;
-  align-items: center;
-  gap: var(--space-8);
-  font: var(--type-label-sm);
+.time-bars {
+  --cols: minmax(0, 132px) 1fr 40px;
 }
 
-.heatmap {
+.time-bars .progress-row > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tier-ladder {
+  --cols: 54px 1fr 40px;
+}
+
+.note-heatmap {
   display: grid;
   gap: var(--space-4);
 }
@@ -103,41 +73,4 @@
   height: 55%;
   z-index: var(--z-raised);
   border-radius: 0 0 var(--radius-xs) var(--radius-xs);
-}
-
-.tier-ladder {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: var(--space-4);
-}
-
-.tier-ladder li {
-  display: grid;
-  grid-template-columns: 54px 1fr 40px;
-  gap: var(--space-8);
-  font: var(--type-body-sm);
-  padding: var(--space-6) var(--space-8);
-  border-radius: var(--radius-md);
-}
-
-.tier-ladder li.is-current {
-  background: var(--accent-soft);
-  font-weight: 600;
-}
-
-.tier-ladder li.is-mastered .tl-state {
-  color: var(--reward-text);
-}
-
-.tl-range {
-  color: var(--text-subtle);
-  font-variant-numeric: tabular-nums;
-}
-
-.tl-state {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-  color: var(--text-subtle);
 }

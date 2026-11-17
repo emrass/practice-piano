@@ -241,3 +241,10 @@
   font: var(--type-label-sm);
   fill: var(--text-subtle);
 }
+
+/* Until the score moves onto the design system's Score component (bundle.css), a wrong note
+   flashes the cursor (the animation above) rather than leaving it red. */
+.score-cursor.is-wrong {
+  background: var(--score-cursor);
+  box-shadow: inset 0 0 0 1.5px var(--score-cursor-edge);
+}

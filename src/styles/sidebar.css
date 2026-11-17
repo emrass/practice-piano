@@ -8,27 +8,9 @@
   background: var(--surface-panel);
 }
 
-.sidebar-tabs {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-4);
+.sidebar > .tabs {
+  flex: none;
   padding: var(--space-8) var(--space-12) 0;
-  border-bottom: var(--stroke-thin) solid var(--border);
-}
-
-.sidebar-tabs button {
-  border: 0;
-  background: transparent;
-  padding: var(--space-8) var(--space-4) var(--space-12);
-  font: var(--type-label);
-  color: var(--text-subtle);
-  border-bottom: var(--stroke-thick) solid transparent;
-  margin-bottom: -1px;
-}
-
-.sidebar-tabs button.is-active {
-  color: var(--text);
-  border-bottom-color: var(--accent);
 }
 
 .sidebar-scroll {
@@ -41,67 +23,9 @@
   padding: var(--space-6) var(--space-16) var(--space-32);
 }
 
-.panel-section {
-  padding: var(--space-16) 0;
-  border-bottom: var(--stroke-thin) solid var(--border-subtle);
-  display: grid;
-  gap: var(--space-12);
-}
-
-.panel-section:last-child {
-  border-bottom: 0;
-}
-
-.section-title {
-  font: var(--type-title-sm);
-}
-
-.field {
-  display: grid;
-  gap: var(--space-6);
-}
-
-.field-label,
-.select-field label,
-.slider-head label {
-  font: var(--type-overline);
-  letter-spacing: var(--tracking-overline);
-  text-transform: uppercase;
-  color: var(--text-subtle);
-}
-
-.field-hint {
-  font: var(--type-body-sm);
-  color: var(--text-subtle);
-  margin: 0;
-}
-
-/* Over the Next button while a due review item is on screen. */
-.review-note {
-  margin: 0;
-  padding: var(--space-8) var(--space-12);
-  border-radius: var(--radius-md);
-  background: var(--surface-well);
-  font: var(--type-body-sm);
-  color: var(--text-muted);
-}
-
-.review-note.is-wait {
-  background: linear-gradient(var(--warning-soft), var(--warning-soft)), var(--surface-well);
-}
-
-.status-line {
-  margin: 0;
-  font: var(--type-body-sm);
-  color: var(--text-muted);
-  padding: var(--space-8) var(--space-12);
-  border-radius: var(--radius-md);
-  background: var(--surface-card);
-  border: var(--stroke-thin) solid var(--border-subtle);
-}
-
-.status-line.is-ok {
-  border-color: var(--success);
+/* A section is a grid: buttons that should keep their own width say so. */
+.section > .btn-danger-text {
+  justify-self: start;
 }
 
 .grid-2 {

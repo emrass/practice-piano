@@ -1,130 +1,14 @@
-/* First-run setup guide (SetupGuide.tsx). Sits on the shared modal card. */
+/* First-run setup guide (SetupGuide.tsx), on the design system's Dialog. */
 
-.modal-card.setup {
-  width: min(560px, 100%);
-  display: grid;
-  gap: var(--space-12);
-}
-
-.modal-card.setup:focus {
+.dialog.setup:focus,
+.dialog.settings:focus {
   outline: none;
-}
-
-.modal-card.setup .modal-head {
-  align-items: flex-start;
-  margin-bottom: 0;
-}
-
-.setup-progress {
-  font: var(--type-overline);
-  letter-spacing: var(--tracking-overline);
-  text-transform: uppercase;
-  color: var(--text-subtle);
-  margin-bottom: var(--space-2);
-}
-
-.setup-body {
-  display: grid;
-  gap: var(--space-12);
-  font: var(--type-body);
-}
-
-.setup-body p,
-.setup-body ul {
-  margin: 0;
-}
-
-.setup-body kbd {
-  padding: 1px var(--space-4);
-  border-radius: var(--radius-xs);
-  background: var(--surface-well);
-}
-
-.status-line.is-warn,
-.setup-note.is-warn {
-  border-color: var(--warning);
-}
-
-/* Buttons wrap on narrow screens; the way forward stays at the end. */
-.setup-actions {
-  flex-wrap: wrap;
-  margin-top: var(--space-4);
-}
-
-.setup-actions .btn {
-  white-space: normal;
-  min-height: var(--size-control-md);
-  height: auto;
-  padding-block: var(--space-6);
-}
-
-/* "Found your piano — play a key", then "We hear you". */
-.setup-listen {
-  display: flex;
-  align-items: center;
-  gap: var(--space-12);
-  padding: var(--space-12);
-  border-radius: var(--radius-md);
-  background: var(--surface-well);
-  border: var(--stroke-thin) solid var(--border);
-}
-
-.setup-listen > div {
-  display: grid;
-  gap: var(--space-2);
-  min-width: 0;
-}
-
-.setup-listen b {
-  font: var(--type-numeral-sm);
-  overflow-wrap: anywhere;
-}
-
-.setup-listen span {
-  color: var(--text-muted);
-}
-
-.setup-listen-mark {
-  flex: none;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  font: var(--type-title);
-  color: var(--text-subtle);
-  border: var(--stroke-thick) dashed var(--border-strong);
-}
-
-.setup-listen.is-heard {
-  border-color: var(--success);
-  background: linear-gradient(var(--success-soft), var(--success-soft)), var(--surface-well);
-}
-
-.setup-listen.is-heard .setup-listen-mark {
-  border: var(--stroke-thick) solid var(--success);
-  background: var(--success);
-  color: var(--on-success);
-}
-
-.setup-note {
-  display: grid;
-  gap: var(--space-6);
-  padding: var(--space-12) var(--space-16);
-  border-radius: var(--radius-md);
-  background: var(--surface-well);
-  border: var(--stroke-thin) solid var(--border);
-}
-
-.setup-note ul {
-  padding-left: var(--space-20);
-  display: grid;
-  gap: var(--space-4);
 }
 
 /* The two ways to connect: a label column and what to do. */
 .setup-ways {
   list-style: none;
+  margin: 0;
   padding: 0;
   display: grid;
   gap: var(--space-8);
@@ -145,74 +29,18 @@
   color: var(--text-muted);
 }
 
-/* Stage choices and latency presets: a name and one line about it. */
-.setup-stages,
-.setup-presets {
-  display: grid;
-  gap: var(--space-6);
-}
-
-.setup-stage {
-  display: grid;
-  gap: var(--space-2);
-  text-align: left;
-  padding: var(--space-8) var(--space-12);
-  border-radius: var(--radius-md);
-  border: var(--stroke-thin) solid var(--border);
-  background: var(--surface-card);
-  font: var(--type-body-sm);
-}
-
-.setup-stage span {
-  color: var(--text-muted);
-}
-
-.setup-stage:hover {
-  border-color: var(--border-strong);
-}
-
-.setup-stage.is-active {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-}
-
-.setup-stage.is-active b {
-  color: var(--accent);
-}
-
 .setup-skills {
   display: grid;
   gap: var(--space-8);
-  padding: var(--space-12) var(--space-16);
-  border-radius: var(--radius-md);
-  background: var(--surface-well);
 }
 
-.setup-skills-head {
-  font: var(--type-body);
-}
-
-.setup-skills select {
+.setup-skills .select {
   text-overflow: ellipsis;
 }
 
 @media (max-width: 480px) {
-  .modal-card.setup {
-    padding: var(--space-16);
-  }
-
   .setup-ways li {
     grid-template-columns: 1fr;
     gap: var(--space-2);
-  }
-
-  /* One button per row, the way forward first. */
-  .setup-actions {
-    flex-direction: column-reverse;
-    align-items: stretch;
-  }
-
-  .setup-actions .btn-ghost {
-    margin-right: 0;
   }
 }

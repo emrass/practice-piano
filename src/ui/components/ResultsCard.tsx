@@ -5,6 +5,7 @@ import { isPass, type Award } from '../../core/progress/progress';
 import { pianoLegend } from '../lessons/continuation';
 import type { Continuation } from '../lessons/types';
 import { resultsView } from '../results';
+import { ProgressBar } from './controls';
 
 /**
  * End-of-run card: shared chrome here, the lesson's ribbon, headline and measurements from its
@@ -60,9 +61,7 @@ export function ResultsCard(props: {
                 {Math.min(award.tierPasses, award.tierRequired)}/{award.tierRequired} passes
               </span>
             </div>
-            <div className="progress-track">
-              <div className="progress-fill" style={{ width: `${Math.min(100, (award.tierPasses / award.tierRequired) * 100)}%` }} />
-            </div>
+            <ProgressBar label="Tier progress" value={Math.min(award.tierPasses, award.tierRequired)} max={award.tierRequired} complete={award.newlyMastered} />
             {award.newlyMastered ? <div className="rt-mastered">Tier mastered! Try the next band when you feel ready.</div> : null}
           </div>
         ) : null}

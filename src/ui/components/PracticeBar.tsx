@@ -71,7 +71,7 @@ export function PracticeBar(props: {
           </button>
         ) : ear ? (
           <>
-            <button type="button" className={`btn btn-primary btn-start ${ear.playing ? 'is-playing' : ''}`} onClick={() => props.controller.start()}>
+            <button type="button" className="btn btn-primary btn-start" onClick={() => props.controller.start()}>
               {ear.listened ? 'Replay' : 'Listen'}
               <kbd>Space</kbd>
             </button>
@@ -80,7 +80,7 @@ export function PracticeBar(props: {
             </button>
           </>
         ) : flow ? (
-          <button type="button" className={`btn btn-primary btn-start ${active ? 'is-stop' : ''}`} onClick={props.onStartStop}>
+          <button type="button" className={`btn ${active ? 'btn-inverse' : 'btn-primary'} btn-start`} onClick={props.onStartStop}>
             {active ? 'Stop' : 'Start'}
             <kbd>Space</kbd>
           </button>

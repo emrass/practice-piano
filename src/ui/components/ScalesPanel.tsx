@@ -2,7 +2,8 @@ import { HANDS_LABEL, NOTE_VALUE_LABEL, SCALE_TYPE_IDS, SCALE_TYPES, tonicLabel,
 import { nps, tempoText, type ScaleExercise } from '../../core/scales/generator';
 import type { ProgressState } from '../../core/progress/progress';
 import type { Settings, SettingsPatch } from '../../core/settings';
-import { CommitSlider, Field, ReviewNote, Segmented, Select, Toggle } from './controls';
+import { CommitSlider, Field, ProgressBar, ReviewNote, Segmented, Select, Toggle } from './controls';
+import { Icon } from './Icon';
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -34,7 +35,7 @@ export function ScalesPanel(props: {
 
   return (
     <div className="panel-body">
-      <section className="panel-section">
+      <section className="section">
         <Field label="Practice">
           <Segmented<'scale' | 'arpeggio'>
             label="Kind"
@@ -101,38 +102,45 @@ export function ScalesPanel(props: {
         {props.reviewing ? <ReviewNote mode={s.scales.mode} /> : null}
       </section>
 
-      <section className="panel-section">
+      <section className="section">
         <div className="section-title">Tempo ladder</div>
-        <div className="item-status">
+        <div className="well item-status">
           <div className="item-status-title">{ex.scale.title}</div>
           <div className="item-status-sub">
             {HANDS_LABEL[ex.scale.item.hands]} · {ex.scale.octaves} octave{ex.scale.octaves > 1 ? 's' : ''}
-            {item?.mastered ? <span className="badge badge-mastered">★ Mastered</span> : null}
+            {item?.mastered ? (
+              <span className="badge badge-mastered">
+                <Icon name="star" />
+                Mastered
+              </span>
+            ) : null}
           </div>
           <div className="ladder-row">
-            <button type="button" className="btn btn-small" onClick={() => props.onTempo(-4)} aria-label="Slower">
+            <button type="button" className="btn btn-sm" onClick={() => props.onTempo(-4)} aria-label="Slower">
               −
             </button>
             <span className="ladder-tempo">{tempoText(ex.scale.item, ex.scale.noteValue, ex.scale.npm)}</span>
-            <button type="button" className="btn btn-small" onClick={() => props.onTempo(4)} aria-label="Faster">
+            <button type="button" className="btn btn-sm" onClick={() => props.onTempo(4)} aria-label="Faster">
               +
             </button>
           </div>
-          <div className="progress-track" title={`${nps(ex.scale.npm)} of your ${nps(goalNpm)} goal`}>
-            <div className={`progress-fill ${item?.mastered ? 'is-mastered' : ''}`} style={{ width: `${Math.min(100, (ex.scale.npm / goalNpm) * 100)}%` }} />
+          <div title={`${nps(ex.scale.npm)} of your ${nps(goalNpm)} goal`}>
+            <ProgressBar label="Tempo ladder" value={ex.scale.npm} max={goalNpm} complete={!!item?.mastered} />
           </div>
           <p className="field-hint">
             {nps(ex.scale.npm)} · goal {nps(goalNpm)}
-            {item ? ` · best clean ${item.bestCleanTempo ? nps(item.bestCleanTempo) : '—'} · ${item.cleanRuns} clean run${item.cleanRuns === 1 ? '' : 's'} · ${dueText(item.dueAt, now)}` : ' · new item'}
+            {item
+              ? ` · best clean ${item.bestCleanTempo ? nps(item.bestCleanTempo) : '—'} · ${item.cleanRuns} clean run${item.cleanRuns === 1 ? '' : 's'} · ${dueText(item.dueAt, now)}`
+              : ' · new item'}
           </p>
         </div>
         <p className="field-hint">
-          In <b>Flow</b>, a clean run (≥ 95 % notes, ≥ 80 % timing) adds 4 bpm; a messy one (&lt; 90 %) takes 4 off. <b>Wait</b> is for learning the notes and
-          fingering at your own pace.
+          In <b>Flow</b>, a clean run (≥ 95 % notes, ≥ 80 % timing) adds 4 bpm; a messy one (&lt; 90 %) takes 4 off. <b>Wait</b> is for learning the notes and fingering at your own
+          pace.
         </p>
       </section>
 
-      <section className="panel-section">
+      <section className="section">
         <Toggle
           label="Review due items"
           hint={
@@ -147,9 +155,14 @@ export function ScalesPanel(props: {
         />
       </section>
 
-      <section className="panel-section">
+      <section className="section">
         <div className="section-title">Display</div>
-        <Toggle label="Fingering" hint="Standard fingering above / below the notes" checked={s.scales.showFingering} onChange={(showFingering) => update({ scales: { showFingering } })} />
+        <Toggle
+          label="Fingering"
+          hint="Standard fingering above / below the notes"
+          checked={s.scales.showFingering}
+          onChange={(showFingering) => update({ scales: { showFingering } })}
+        />
         <Toggle
           label="Play from memory"
           hint="Hide the notation — just the name of the scale"

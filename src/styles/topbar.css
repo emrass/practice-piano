@@ -1,4 +1,4 @@
-/* Top bar: brand, status chips, lesson and mode switchers. */
+/* Top bar: logo, status chips, lesson and mode switchers, laid out for each width. */
 
 .topbar {
   display: flex;
@@ -12,34 +12,6 @@
   backdrop-filter: blur(8px);
 }
 
-.brand {
-  display: flex;
-  align-items: center;
-  gap: var(--space-8);
-  min-width: 0;
-}
-
-.brand-mark {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-md);
-  background:
-    linear-gradient(90deg, transparent 0 22%, var(--text) 22% 34%, transparent 34% 56%, var(--text) 56% 68%, transparent 68%) top / 100% 58% no-repeat,
-    linear-gradient(90deg, var(--surface-sheet) 0 30%, var(--border) 30% 33%, var(--surface-sheet) 33% 63%, var(--border) 63% 66%, var(--surface-sheet) 66%);
-  border: var(--stroke-thick) solid var(--accent);
-  flex: none;
-}
-
-.brand-name {
-  font: 600 1.25rem/1 var(--font-serif); /* literal: the wordmark has its own size (Logo) */
-  letter-spacing: 0.01em;
-  white-space: nowrap;
-}
-
-.brand-tld {
-  color: var(--accent);
-}
-
 .topbar-right {
   margin-left: auto;
   display: flex;
@@ -47,60 +19,12 @@
   gap: var(--space-8);
 }
 
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-6);
-  height: 30px;
-  padding: 0 var(--space-12);
-  border-radius: var(--radius-full);
-  border: var(--stroke-thin) solid var(--border);
-  background: var(--surface-card);
-  font: var(--type-label-sm);
-  color: var(--text-muted);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-.chip-icon {
-  color: var(--reward);
-}
-
-.chip-xp {
-  color: var(--reward-text);
-}
-
 .chip-midi {
   max-width: 230px;
 }
 
-.chip-midi-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.chip-midi .dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--border-strong);
-  flex: none;
-}
-
-.chip-midi.is-on .dot {
-  background: var(--success);
-  box-shadow: 0 0 0 3px var(--success-soft);
-}
-
 .topbar-lesson .segmented {
   width: 760px;
-}
-
-/* Size each lesson from its own label, then share out the spare room. Equal fifths (the
-   default `flex: 1 1 0`) left "Chords & progressions" about 129px, which fits SF Pro but cuts
-   the label off in wider fallback fonts such as DejaVu Sans (Linux) or Roboto. */
-.topbar-lesson .segmented button {
-  flex: 1 1 auto;
 }
 
 .topbar-mode .segmented {
@@ -130,16 +54,12 @@
 
 /* Five lessons: the top bar drops the wordmark and chip labels before it runs out of room. */
 @media (max-width: 900px) {
-  .brand-name,
+  .logo-name,
   .chip-xp,
   .chip-streak {
     display: none;
   }
-  .chip-midi {
-    max-width: 34px;
-    padding: 0 var(--space-12);
-  }
-  .chip-midi-name {
+  .chip-midi .chip-text {
     display: none;
   }
 }
@@ -152,13 +72,13 @@
   .topbar-lesson .segmented {
     width: 252px;
   }
-  .topbar-lesson .segmented button {
+  .topbar-lesson .segmented > button {
     padding: 0 var(--space-2);
   }
   .topbar-mode .segmented {
     width: 96px;
   }
-  .topbar-mode .segmented button {
+  .topbar-mode .segmented > button {
     padding: 0 var(--space-4);
   }
   .label-long,

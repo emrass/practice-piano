@@ -5,6 +5,7 @@ import type { Settings, SettingsPatch } from '../../core/settings';
 import type { MidiState } from '../../platform/midi/midiService';
 import type { LessonRuntime } from '../lessons';
 import { Segmented } from './controls';
+import { Icon, Logo } from './Icon';
 
 /** The MIDI chip's text: the device played from, or why there is none. */
 function midiLabelText(midi: MidiState): string {
@@ -36,12 +37,7 @@ export function TopBar(props: {
   const midiConnected = props.midi.inputs.some((i) => i.connected);
   return (
     <header className="topbar">
-      <div className="brand">
-        <span className="brand-mark" aria-hidden="true" />
-        <span className="brand-name">
-          practice-piano<span className="brand-tld">.com</span>
-        </span>
-      </div>
+      <Logo />
       <div className="topbar-lesson">
         <Segmented<LessonId>
           label="Lesson"
@@ -70,34 +66,28 @@ export function TopBar(props: {
         />
       </div>
       <div className="topbar-right">
-        <span className="chip chip-streak" title="Daily practice streak">
-          <span className="chip-icon">◆</span>
+        <span className="chip chip-reward chip-streak" title="Daily practice streak">
+          <Icon name="streak" />
           {streak} day{streak === 1 ? '' : 's'}
         </span>
-        <span className="chip chip-xp" title="Experience points">
+        <span className="chip chip-reward chip-xp" title="Experience points">
           {props.progress.xp.toLocaleString()} XP
         </span>
-        <button
-          type="button"
-          className={`chip chip-midi ${midiConnected ? 'is-on' : ''}`}
-          onClick={props.onOpenMidi}
-          aria-haspopup="dialog"
-          title="Piano & audio settings"
-        >
-          <span className="dot" aria-hidden="true" />
-          <span className="chip-midi-name">{midiLabelText(props.midi)}</span>
+        <button type="button" className="chip chip-midi" onClick={props.onOpenMidi} aria-haspopup="dialog" title="Piano & audio settings">
+          <span className={`status-dot ${midiConnected ? 'is-on' : ''}`} aria-hidden="true" />
+          <span className="chip-text">{midiLabelText(props.midi)}</span>
         </button>
         <button
           type="button"
           className="icon-btn"
           onClick={() => props.update({ theme: s.theme === 'dark' ? 'light' : 'dark' })}
           aria-label={s.theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-          title="Toggle light / dark"
+          title={s.theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
         >
-          {s.theme === 'dark' ? '☀' : '☾'}
+          <Icon name={s.theme === 'dark' ? 'sun' : 'moon'} />
         </button>
-        <button type="button" className="icon-btn drawer-toggle" onClick={props.onToggleDrawer} aria-label="Settings">
-          ☰
+        <button type="button" className="icon-btn drawer-toggle" onClick={props.onToggleDrawer} aria-label="Settings" title="Settings">
+          <Icon name="menu" />
         </button>
       </div>
     </header>

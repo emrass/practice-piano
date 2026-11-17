@@ -4,6 +4,7 @@ import type { ProgressState } from '../../core/progress/progress';
 import { pct } from './format';
 import { TierMastery } from './TierMastery';
 import type { ProgressSectionProps } from './types';
+import { ProgressBar } from '../components/controls';
 
 /** Accuracy per melodic interval, then harmonic intervals and chords. */
 function IntervalBars(props: { progress: ProgressState }) {
@@ -20,12 +21,10 @@ function IntervalBars(props: { progress: ProgressState }) {
       {[...rows, ...chordRows].map((r) => {
         const acc = r.agg.correct / Math.max(1, r.agg.attempts);
         return (
-          <div key={r.name} className="clef-bar" title={`${r.agg.correct}/${r.agg.attempts} found unaided`}>
+          <div key={r.name} className="progress-row" title={`${r.agg.correct}/${r.agg.attempts} found unaided`}>
             <span>{r.name}</span>
-            <div className="progress-track">
-              <div className="progress-fill" style={{ width: `${acc * 100}%` }} />
-            </div>
-            <span>{pct(acc)}</span>
+            <ProgressBar label="Accuracy" value={Math.round(acc * 100)} max={100} />
+            <span className="num">{pct(acc)}</span>
           </div>
         );
       })}
@@ -39,12 +38,10 @@ export function EarSection(props: ProgressSectionProps) {
   const weakIntervals = useMemo(() => findWeakIntervals(progress), [progress]);
   return (
     <>
-      <section className="panel-section">
+      <section className="section">
         <div className="section-title">Intervals</div>
         <IntervalBars progress={progress} />
-        {weakIntervals.length ? (
-          <p className="field-hint">Weakest: {weakIntervals.map((w) => `${INTERVAL_NAMES[w.semitones]} (${pct(w.accuracy)})`).join(', ')}</p>
-        ) : null}
+        {weakIntervals.length ? <p className="field-hint">Weakest: {weakIntervals.map((w) => `${INTERVAL_NAMES[w.semitones]} (${pct(w.accuracy)})`).join(', ')}</p> : null}
         <button type="button" className="btn btn-block" disabled={weakIntervals.length === 0} onClick={props.onPracticeWeakSpots}>
           Practice weak intervals
         </button>

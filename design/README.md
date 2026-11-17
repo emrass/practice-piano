@@ -4,10 +4,11 @@ The look and behavior of practice-piano.com, written down once: design tokens, c
 guidelines, icons and fonts. It covers the app in this repository and the landing page in
 [practice-piano-site](https://github.com/emrass/practice-piano-site).
 
-**Status:** the app builds and imports the tokens, and its stylesheets in `src/styles` use them
-for every color, type size, radius, spacing step, shadow, duration and layer. They do not use the
-component classes yet; `system/guides/05-adoption.md` maps every current class to its
-replacement and lists what will look different.
+**Status:** the app builds and imports the tokens and the component stylesheet. Its controls,
+dialogs, panels and the top bar use the components (React wrappers in `src/ui/components`:
+`controls.tsx`, `Dialog.tsx`, `Icon.tsx`). The stage components (score, keyboard, practice bar,
+results, chord chart, heatmap) still use the app's own classes in `src/styles`;
+`system/guides/05-adoption.md` maps them to their replacements.
 
 ## What is here
 
@@ -73,8 +74,8 @@ is no generated file to keep in step and nothing to commit after a token change.
   service worker caches them with the rest of the build and the native app bundles them. The
   plugin also preloads the Newsreader roman and Figtree files and writes the theme-color meta
   (`surface-sheet`); the web app manifest takes its colors from the tokens too. `tokens.css`
-  leaves out Caveat, so the app never downloads it. `design/system/components/bundle.css` is
-  next: the app does not import it yet.
+  leaves out Caveat, so the app never downloads it. `design/system/components/bundle.css`
+  follows it in `src/main.tsx`, before the app's own stylesheets.
 - **The landing page** has no build step. Whatever copies files into it runs
   `npm run design:build` here first, then takes `tokens.css` and `site-fonts.css` with the font
   paths adjusted, plus the font files and the mark.
