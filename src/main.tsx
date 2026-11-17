@@ -20,7 +20,6 @@ import './styles/progress.css';
 import './styles/monitor.css';
 import './styles/modal.css';
 import './styles/setup.css';
-import './styles/settings.css';
 import './styles/lessons/rhythm.css';
 import './styles/lessons/scales.css';
 import './styles/lessons/chords.css';
