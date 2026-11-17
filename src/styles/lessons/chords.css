@@ -1,20 +1,20 @@
 /* Chords lesson: chord chart. */
 
 .chord-chart {
+  container-type: inline-size;
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 14px;
-  padding: 18px clamp(14px, 3vw, 36px);
+  gap: var(--space-12);
+  padding: var(--space-16) clamp(var(--space-16), 3vw, var(--space-32));
   overflow-y: auto;
 }
 
 .chord-chart-title {
-  color: var(--ink-3);
-  font-weight: 600;
-  font-size: 13px;
+  color: var(--text-subtle);
+  font: var(--type-label);
   text-align: center;
 }
 
@@ -25,7 +25,7 @@
   width: min(100%, 860px);
   display: grid;
   gap: 0;
-  border-left: 2px solid var(--ink-2);
+  border-left: var(--stroke-thick) solid var(--score-staff);
 }
 
 .chord-card {
@@ -33,62 +33,66 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 2px;
+  gap: var(--space-2);
   min-width: 0;
   min-height: clamp(54px, 9vh, 84px);
-  padding: 10px 14px;
-  border-right: 2px solid var(--ink-2);
-  border-bottom: 1px solid var(--rule-2);
-  transition: background-color 0.15s;
+  padding: var(--space-8) var(--space-16);
+  border-right: var(--stroke-thick) solid var(--score-staff);
+  border-bottom: var(--stroke-thin) solid var(--border-subtle);
+  transition: background-color var(--duration-fast) var(--ease-out);
 }
 
 .chord-card-symbol {
   overflow-wrap: anywhere;
-  font-family: var(--serif);
-  font-size: clamp(22px, 3.2vw, 34px);
+  font: var(--type-headline);
   font-weight: 700;
-  line-height: 1.1;
-  color: var(--ink);
+  color: var(--text);
+}
+
+/* Four bars on a phone: a step down, so a symbol such as C♯m stays on one line. */
+@container (max-width: 480px) {
+  .chord-card-symbol {
+    font: var(--type-title);
+    font-weight: 700;
+  }
 }
 
 .chord-card-numeral {
   white-space: nowrap;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink-3);
+  font: var(--type-label);
+  color: var(--text-subtle);
 }
 
 .chord-card.is-current,
 .chord-card.is-next {
-  background: var(--cursor);
-  box-shadow: inset 0 -3px 0 var(--cursor-edge);
+  background: var(--score-cursor);
+  box-shadow: inset 0 -3px 0 var(--score-cursor-edge);
 }
 
 .chord-card.is-good .chord-card-symbol {
-  color: var(--ok);
+  color: var(--success);
 }
 
 .chord-card.is-ok .chord-card-symbol {
-  color: var(--warn);
+  color: var(--warning);
 }
 
 .chord-card.is-bad .chord-card-symbol,
 .chord-card.is-missed .chord-card-symbol {
-  color: var(--bad);
+  color: var(--danger);
 }
 
 .chord-card.is-missed {
-  opacity: 0.6;
+  opacity: var(--opacity-missed);
 }
 
 .chord-hint {
   align-self: center;
-  padding: 6px 12px;
-  border-radius: 999px;
+  padding: var(--space-6) var(--space-12);
+  border-radius: var(--radius-full);
   background: var(--accent-soft);
   color: var(--accent);
-  font-weight: 600;
-  font-size: 13px;
+  font: var(--type-label);
 }
 
 @media (prefers-reduced-motion: reduce) {

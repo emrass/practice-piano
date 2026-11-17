@@ -230,8 +230,11 @@ function Studio({ profile }: { profile: Profile }) {
 
   // ---- Theme ------------------------------------------------------------------------
   useEffect(() => {
-    document.documentElement.dataset.theme = s.theme;
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', s.theme === 'dark' ? '#1b1815' : '#f5efe3');
+    const root = document.documentElement;
+    root.dataset.theme = s.theme;
+    // The browser and status bar take the top bar's surface (see design/vitePlugin.ts).
+    const surface = getComputedStyle(root).getPropertyValue('--surface-sheet').trim();
+    if (surface) document.querySelector('meta[name="theme-color"]')?.setAttribute('content', surface);
   }, [s.theme]);
 
   const span = runtime.keyboard.span;
@@ -300,8 +303,9 @@ function Studio({ profile }: { profile: Profile }) {
       />
 
       <div className="workspace">
-        <aside className={`sidebar ${drawerOpen ? 'is-open' : ''}`}>{panels}</aside>
+        {/* Before the sidebar, so the drawer paints over it on the same layer (--z-drawer). */}
         {drawerOpen ? <div className="drawer-backdrop" onClick={() => setDrawerOpen(false)} /> : null}
+        <aside className={`sidebar ${drawerOpen ? 'is-open' : ''}`}>{panels}</aside>
 
         <main className="stage">
           <MetaStrip exercise={exercise} firstSight={firstSight} focus={runtime.focusActive} />

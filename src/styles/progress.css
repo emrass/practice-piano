@@ -3,29 +3,26 @@
 .stat-tiles {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  gap: var(--space-8);
 }
 
 .tile {
   display: grid;
-  gap: 2px;
-  padding: 10px;
-  border-radius: 10px;
-  background: var(--card);
-  border: 1px solid var(--rule-2);
+  gap: var(--space-2);
+  padding: var(--space-8);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  border: var(--stroke-thin) solid var(--border-subtle);
 }
 
 .tile-v {
-  font-family: var(--serif);
-  font-size: 20px;
-  font-weight: 600;
+  font: var(--type-numeral-sm);
   font-variant-numeric: tabular-nums;
 }
 
 .tile-k {
-  font-size: 11px;
-  color: var(--ink-3);
-  font-weight: 600;
+  font: var(--type-label-sm);
+  color: var(--text-subtle);
 }
 
 .weak-list {
@@ -33,17 +30,17 @@
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 4px;
+  gap: var(--space-4);
 }
 
 .weak-list li {
   display: grid;
   grid-template-columns: 52px 1fr 48px 40px;
-  gap: 6px;
-  font-size: 12.5px;
-  padding: 5px 8px;
-  border-radius: 8px;
-  background: var(--card);
+  gap: var(--space-6);
+  font: var(--type-body-sm);
+  padding: var(--space-6) var(--space-8);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
 }
 
 .weak-note {
@@ -53,51 +50,49 @@
 
 .clef-bars {
   display: grid;
-  gap: 6px;
+  gap: var(--space-6);
 }
 
 .clef-bar {
   display: grid;
   grid-template-columns: 52px 1fr 40px;
   align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  font-weight: 600;
+  gap: var(--space-8);
+  font: var(--type-label-sm);
 }
 
 .heatmap {
   display: grid;
-  gap: 4px;
+  gap: var(--space-4);
 }
 
 .heatmap-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--ink-2);
+  font: var(--type-label-sm);
+  color: var(--text-muted);
 }
 
 .heatmap-keys {
   display: flex;
   height: 38px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
-  border: 1px solid var(--rule);
+  border: var(--stroke-thin) solid var(--border);
 }
 
 .heat-key {
   flex: 1;
   position: relative;
-  background: var(--card);
-  border-right: 1px solid var(--rule-2);
+  background: var(--surface-card);
+  border-right: var(--stroke-thin) solid var(--border-subtle);
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  font-size: 8px;
-  color: var(--ink-3);
+  font: var(--type-micro);
+  color: var(--text-subtle);
 }
 
 .heat-key span {
-  padding-bottom: 2px;
+  padding-bottom: var(--space-2);
 }
 
 .heat-sharp {
@@ -106,8 +101,8 @@
   top: 0;
   width: 60%;
   height: 55%;
-  z-index: 1;
-  border-radius: 0 0 2px 2px;
+  z-index: var(--z-raised);
+  border-radius: 0 0 var(--radius-xs) var(--radius-xs);
 }
 
 .tier-ladder {
@@ -115,16 +110,16 @@
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 3px;
+  gap: var(--space-4);
 }
 
 .tier-ladder li {
   display: grid;
   grid-template-columns: 54px 1fr 40px;
-  gap: 8px;
-  font-size: 12.5px;
-  padding: 5px 8px;
-  border-radius: 8px;
+  gap: var(--space-8);
+  font: var(--type-body-sm);
+  padding: var(--space-6) var(--space-8);
+  border-radius: var(--radius-md);
 }
 
 .tier-ladder li.is-current {
@@ -133,16 +128,16 @@
 }
 
 .tier-ladder li.is-mastered .tl-state {
-  color: var(--gold);
+  color: var(--reward-text);
 }
 
 .tl-range {
-  color: var(--ink-3);
+  color: var(--text-subtle);
   font-variant-numeric: tabular-nums;
 }
 
 .tl-state {
   text-align: right;
   font-variant-numeric: tabular-nums;
-  color: var(--ink-3);
+  color: var(--text-subtle);
 }

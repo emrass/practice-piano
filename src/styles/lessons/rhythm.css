@@ -5,14 +5,14 @@
   display: grid;
   grid-template-columns: 1fr auto auto auto;
   align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-  border-radius: 9px;
-  background: var(--paper-2);
+  gap: var(--space-8);
+  padding: var(--space-6) var(--space-8);
+  border-radius: var(--radius-md);
+  background: var(--surface-well);
 }
 
 .key-assign + .key-assign {
-  margin-top: 6px;
+  margin-top: var(--space-6);
 }
 
 .key-assign.is-learning {
@@ -21,20 +21,16 @@
 }
 
 .key-assign-hand {
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--ink-2);
+  font: var(--type-label);
+  color: var(--text-muted);
 }
 
 .key-assign-note {
-  font-family: var(--serif);
-  font-weight: 700;
-  font-size: 15px;
+  font: var(--type-title-sm);
 }
 
 .key-assign.is-learning .key-assign-note {
-  font-family: var(--sans);
-  font-size: 12px;
+  font: var(--type-label-sm);
   color: var(--accent);
 }
 

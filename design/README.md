@@ -4,9 +4,10 @@ The look and behavior of practice-piano.com, written down once: design tokens, c
 guidelines, icons and fonts. It covers the app in this repository and the landing page in
 [practice-piano-site](https://github.com/emrass/practice-piano-site).
 
-**Status:** the system is defined here, but the app's styles in `src/styles` do not use it yet.
-Moving the app onto it is a separate step; `system/guides/05-adoption.md` maps every current
-variable and class to its replacement and lists what will look different.
+**Status:** the app builds and imports the tokens, and its stylesheets in `src/styles` use them
+for every color, type size, radius, spacing step, shadow, duration and layer. They do not use the
+component classes yet; `system/guides/05-adoption.md` maps every current class to its
+replacement and lists what will look different.
 
 ## What is here
 
@@ -41,8 +42,9 @@ npm run design:check     # validate the system; part of `npm run check`, so CI r
 - a text color drops below 4.5:1, or a mark that carries meaning below 3:1, on the surfaces it
   is meant for, in either theme (246 pairs);
 - a token has no usage note, a duplicate name, or an alias that leads nowhere;
-- `bundle.css` contains a literal color, duration or type size, or uses a variable that is not
-  a token;
+- `bundle.css` or a stylesheet in the app's `src/styles` contains a literal color, duration or
+  type size, or uses a variable that is not a token (a line can state an exception with a
+  `/* literal: why */` comment, except for colors); the app's stylesheets may not redefine a token;
 - the text styles restated at the top of `bundle.css` differ from `tokens.json`;
 - a component lacks its README or preview, a font lacks its license, or `tokens.json` no
   longer compiles;
@@ -64,12 +66,15 @@ Read `system/guides/04-governance.md` first. In short:
 The stylesheets in `design/dist/` are build output. `tokens.json` is the only source, so there
 is no generated file to keep in step and nothing to commit after a token change.
 
-- **The app**, once it adopts the system, builds `design/dist/tokens.css` as part of `vite` and
-  `vite build` (a small plugin that calls `compile()` from `scripts/build.mjs` and rebuilds when
-  `tokens.json` changes), imports it followed by `design/system/components/bundle.css`, and sets
-  `data-theme="light"` or `"dark"` on `<html>`. Vite follows the font URLs in `tokens.css` and
-  hashes the files, so the service worker caches them with the rest of the build and the native
-  app bundles them. `tokens.css` leaves out Caveat, so the app never downloads it.
+- **The app** builds `design/dist/tokens.css` as part of `vite` and `vite build`
+  (`design/vitePlugin.ts` calls `compile()` from `scripts/build.mjs` and rebuilds when
+  `tokens.json` changes), imports it first in `src/main.tsx`, and sets `data-theme="light"` or
+  `"dark"` on `<html>`. Vite follows the font URLs in `tokens.css` and hashes the files, so the
+  service worker caches them with the rest of the build and the native app bundles them. The
+  plugin also preloads the Newsreader roman and Figtree files and writes the theme-color meta
+  (`surface-sheet`); the web app manifest takes its colors from the tokens too. `tokens.css`
+  leaves out Caveat, so the app never downloads it. `design/system/components/bundle.css` is
+  next: the app does not import it yet.
 - **The landing page** has no build step. Whatever copies files into it runs
   `npm run design:build` here first, then takes `tokens.css` and `site-fonts.css` with the font
   paths adjusted, plus the font files and the mark.

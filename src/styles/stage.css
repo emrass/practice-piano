@@ -5,8 +5,8 @@
   grid-template-columns: minmax(0, 1fr);
   /* The practice bar is 62px on one row and grows when it stacks (see .practice-bar). */
   grid-template-rows: 54px minmax(0, 1fr) auto auto;
-  gap: 10px;
-  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  gap: var(--space-12);
+  padding: var(--space-12) var(--space-16) calc(var(--space-12) + env(safe-area-inset-bottom));
   min-height: 0;
   min-width: 0;
 }
@@ -15,35 +15,31 @@
   display: grid;
   grid-template-columns: minmax(170px, 1.3fr) repeat(6, minmax(0, 1fr)) auto;
   align-items: center;
-  gap: 4px;
-  padding: 0 6px 0 14px;
-  border-radius: var(--radius);
-  background: var(--card);
-  border: 1px solid var(--rule);
-  box-shadow: var(--shadow);
+  gap: var(--space-4);
+  padding: 0 var(--space-6) 0 var(--space-16);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+  border: var(--stroke-thin) solid var(--border);
+  box-shadow: var(--shadow-1);
   overflow: hidden;
 }
 
 .meta-tier {
   display: flex;
   align-items: baseline;
-  gap: 10px;
+  gap: var(--space-8);
   min-width: 0;
 }
 
 .meta-level {
-  font-family: var(--serif);
-  font-size: 22px;
-  font-weight: 600;
+  font: var(--type-numeral);
   color: var(--accent);
   font-variant-numeric: tabular-nums;
   min-width: 2.6em;
 }
 
 .meta-tier-name {
-  font-family: var(--serif);
-  font-weight: 600;
-  font-size: 14.5px;
+  font: var(--type-title-sm);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -51,23 +47,21 @@
 
 .meta-item {
   display: grid;
-  gap: 1px;
+  gap: var(--space-2);
   min-width: 0;
-  padding-left: 12px;
-  border-left: 1px solid var(--rule-2);
+  padding-left: var(--space-12);
+  border-left: var(--stroke-thin) solid var(--border-subtle);
 }
 
 .meta-k {
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.07em;
+  font: var(--type-overline);
+  letter-spacing: var(--tracking-overline);
   text-transform: uppercase;
-  color: var(--ink-3);
+  color: var(--text-subtle);
 }
 
 .meta-v {
-  font-weight: 600;
-  font-size: 13px;
+  font: var(--type-label);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -76,27 +70,27 @@
 
 .meta-badges {
   display: flex;
-  gap: 6px;
+  gap: var(--space-6);
   width: 190px;
   justify-content: flex-end;
 }
 
 .badge {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 4px 9px;
-  border-radius: 999px;
+  font: var(--type-micro);
+  letter-spacing: var(--tracking-micro);
+  padding: var(--space-4) var(--space-8);
+  border-radius: var(--radius-full);
   white-space: nowrap;
 }
 
 .badge-sight {
-  background: color-mix(in srgb, var(--gold) 18%, transparent);
-  color: var(--gold);
+  background: var(--reward-soft);
+  color: var(--reward-text);
 }
 
 .badge-sight.is-off {
-  background: var(--rule-2);
-  color: var(--ink-3);
+  background: var(--surface-well);
+  color: var(--text-subtle);
 }
 
 .badge-focus {
@@ -112,17 +106,11 @@
   position: relative;
   min-height: 0;
   display: flex;
-  border-radius: var(--radius);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.5), transparent 120px),
-    var(--paper);
-  border: 1px solid var(--rule);
-  box-shadow: var(--shadow);
+  border-radius: var(--radius-lg);
+  background: var(--surface-sheet);
+  border: var(--stroke-thin) solid var(--border);
+  box-shadow: var(--shadow-1);
   overflow: hidden;
-}
-
-[data-theme='dark'] .score-card {
-  background: var(--paper);
 }
 
 @media (max-width: 1240px) {
@@ -136,8 +124,8 @@
 
 @media (max-width: 760px) {
   .stage {
-    padding: 8px;
-    gap: 8px;
+    padding: var(--space-8);
+    gap: var(--space-8);
     grid-template-rows: 50px minmax(0, 1fr) auto auto;
   }
   .meta-strip {

@@ -4,31 +4,30 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  border-right: 1px solid var(--rule);
-  background: var(--paper-2);
+  border-right: var(--stroke-thin) solid var(--border);
+  background: var(--surface-panel);
 }
 
 .sidebar-tabs {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 4px;
-  padding: 10px 12px 0;
-  border-bottom: 1px solid var(--rule);
+  gap: var(--space-4);
+  padding: var(--space-8) var(--space-12) 0;
+  border-bottom: var(--stroke-thin) solid var(--border);
 }
 
 .sidebar-tabs button {
   border: 0;
   background: transparent;
-  padding: 9px 4px 10px;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--ink-3);
-  border-bottom: 2px solid transparent;
+  padding: var(--space-8) var(--space-4) var(--space-12);
+  font: var(--type-label);
+  color: var(--text-subtle);
+  border-bottom: var(--stroke-thick) solid transparent;
   margin-bottom: -1px;
 }
 
 .sidebar-tabs button.is-active {
-  color: var(--ink);
+  color: var(--text);
   border-bottom-color: var(--accent);
 }
 
@@ -39,14 +38,14 @@
 }
 
 .panel-body {
-  padding: 6px 14px 28px;
+  padding: var(--space-6) var(--space-16) var(--space-32);
 }
 
 .panel-section {
-  padding: 14px 0;
-  border-bottom: 1px solid var(--rule-2);
+  padding: var(--space-16) 0;
+  border-bottom: var(--stroke-thin) solid var(--border-subtle);
   display: grid;
-  gap: 12px;
+  gap: var(--space-12);
 }
 
 .panel-section:last-child {
@@ -54,72 +53,67 @@
 }
 
 .section-title {
-  font-family: var(--serif);
-  font-size: 15px;
-  font-weight: 600;
+  font: var(--type-title-sm);
 }
 
 .field {
   display: grid;
-  gap: 6px;
+  gap: var(--space-6);
 }
 
 .field-label,
 .select-field label,
 .slider-head label {
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
+  font: var(--type-overline);
+  letter-spacing: var(--tracking-overline);
   text-transform: uppercase;
-  color: var(--ink-3);
+  color: var(--text-subtle);
 }
 
 .field-hint {
-  font-size: 12.5px;
-  color: var(--ink-3);
+  font: var(--type-body-sm);
+  color: var(--text-subtle);
   margin: 0;
-  line-height: 1.5;
 }
 
 /* Over the Next button while a due review item is on screen. */
 .review-note {
   margin: 0;
-  padding: 7px 10px;
-  border-radius: 8px;
-  background: var(--paper-2);
-  font-size: 12.5px;
-  line-height: 1.45;
-  color: var(--ink-2);
+  padding: var(--space-8) var(--space-12);
+  border-radius: var(--radius-md);
+  background: var(--surface-well);
+  font: var(--type-body-sm);
+  color: var(--text-muted);
 }
 
 .review-note.is-wait {
-  background: color-mix(in srgb, var(--warn) 14%, var(--paper-2));
+  background: linear-gradient(var(--warning-soft), var(--warning-soft)), var(--surface-well);
 }
 
 .status-line {
   margin: 0;
-  font-size: 12.5px;
-  color: var(--ink-2);
-  padding: 8px 10px;
-  border-radius: var(--radius-sm);
-  background: var(--card);
-  border: 1px solid var(--rule-2);
+  font: var(--type-body-sm);
+  color: var(--text-muted);
+  padding: var(--space-8) var(--space-12);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  border: var(--stroke-thin) solid var(--border-subtle);
 }
 
 .status-line.is-ok {
-  border-color: color-mix(in srgb, var(--ok) 40%, transparent);
+  border-color: var(--success);
 }
 
 .grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: var(--space-12);
 }
 
 .button-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-8);
 }
 
 .drawer-toggle,
@@ -130,14 +124,14 @@
 @media (max-width: 1080px) {
   .sidebar {
     position: fixed;
-    z-index: 20;
+    z-index: var(--z-drawer);
     top: calc(var(--topbar-h) + env(safe-area-inset-top));
     bottom: 0;
     left: 0;
     width: min(380px, 92vw);
     transform: translateX(-102%);
-    transition: transform 0.22s ease;
-    box-shadow: 0 0 40px rgba(0, 0, 0, 0.25);
+    transition: transform var(--duration-base) var(--ease-out);
+    box-shadow: var(--shadow-2);
   }
   .sidebar.is-open {
     transform: none;
@@ -146,8 +140,8 @@
     display: block;
     position: fixed;
     inset: 0;
-    z-index: 19;
-    background: rgba(20, 12, 6, 0.25);
+    z-index: var(--z-drawer); /* the sidebar comes after it in the page, so it paints on top */
+    background: var(--scrim);
   }
   .drawer-toggle {
     display: grid;
