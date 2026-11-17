@@ -275,10 +275,18 @@ const CALLOUT_ICON: Record<CalloutTone, IconName> = { success: 'check', warning:
  * Callout: one thing to know right here. A toned callout has a title with an icon that says
  * the same thing as the color.
  */
-export function Callout(props: { tone?: CalloutTone; title?: ReactNode; children?: ReactNode; className?: string; live?: boolean }) {
-  const cls = ['callout', props.tone ? `callout-${props.tone}` : '', props.className ?? ''].filter(Boolean).join(' ');
-  return (
-    <div className={cls} aria-live={props.live ? 'polite' : undefined}>
+export function Callout(props: {
+  tone?: CalloutTone;
+  title?: ReactNode;
+  children?: ReactNode;
+  /** The one button that belongs to the note, at its right. */
+  action?: ReactNode;
+  className?: string;
+  live?: boolean;
+}) {
+  const cls = ['callout', props.tone ? `callout-${props.tone}` : '', props.action ? 'callout-with-action' : '', props.className ?? ''].filter(Boolean).join(' ');
+  const text = (
+    <>
       {props.title ? (
         <span className="callout-title">
           {props.tone ? <Icon name={CALLOUT_ICON[props.tone]} /> : null}
@@ -286,6 +294,18 @@ export function Callout(props: { tone?: CalloutTone; title?: ReactNode; children
         </span>
       ) : null}
       {props.children ? <div>{props.children}</div> : null}
+    </>
+  );
+  return (
+    <div className={cls} aria-live={props.live ? 'polite' : undefined}>
+      {props.action ? (
+        <>
+          <div className="callout-text">{text}</div>
+          {props.action}
+        </>
+      ) : (
+        text
+      )}
     </div>
   );
 }

@@ -242,13 +242,17 @@ function CalibrationRow(props: { settings: Settings; onCalibrate: () => void }) 
       ? ['Set by hand', 'Not calibrated']
       : ['Not calibrated', `Using the “${LATENCY_PRESETS[s.audioSetup === 'headphones' ? 'headphones' : 'speakers'].label}” estimate`];
   return (
-    <div className="calib-row">
-      <Callout tone={calibrated ? 'success' : undefined} title={title}>
-        {detail}
-      </Callout>
-      <button type="button" className={`btn btn-sm ${calibrated ? '' : 'btn-primary'}`} onClick={props.onCalibrate}>
-        {calibrated ? 'Calibrate again…' : 'Calibrate…'}
-      </button>
-    </div>
+    <Callout
+      className="calib-row"
+      tone={calibrated ? 'success' : undefined}
+      title={title}
+      action={
+        <button type="button" className={`btn btn-sm ${calibrated ? '' : 'btn-primary'}`} onClick={props.onCalibrate}>
+          {calibrated ? 'Calibrate again…' : 'Calibrate…'}
+        </button>
+      }
+    >
+      {detail}
+    </Callout>
   );
 }
