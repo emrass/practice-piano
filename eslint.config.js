@@ -32,6 +32,13 @@ export default defineConfig([
     rules: { 'react-hooks/rules-of-hooks': 'off' },
   },
   {
+    // Design system tooling: plain Node scripts.
+    files: ['design/scripts/**/*.mjs'],
+    extends: [js.configs.recommended],
+    languageOptions: { ecmaVersion: 2023, sourceType: 'module', globals: globals.node },
+    rules: { eqeqeq: ['error', 'smart'], 'prefer-const': 'error' },
+  },
+  {
     // The service worker template; the build plugin fills in __PP_FILES__.
     files: ['pwa/sw.js'],
     extends: [js.configs.recommended],

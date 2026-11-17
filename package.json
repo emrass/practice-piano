@@ -16,7 +16,10 @@
     "test:watch": "vitest",
     "typecheck": "tsc -b",
     "lint": "eslint .",
-    "check": "npm run typecheck && npm run lint && npm run test && npm run build",
+    "check": "npm run typecheck && npm run lint && npm run design:check && npm run test && npm run build",
+    "design:build": "node design/scripts/build.mjs",
+    "design:check": "node design/scripts/check.mjs",
+    "design:preview": "node design/scripts/preview.mjs",
     "e2e": "playwright test",
     "screenshots": "playwright test -c scripts/screenshots/playwright.config.ts"
   },

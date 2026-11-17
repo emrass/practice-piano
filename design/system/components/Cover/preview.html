@@ -1,0 +1,54 @@
+<!-- @dsCard height=288 -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Practice Piano</title>
+<style>
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--surface-canvas); color: var(--text); font-family: var(--font-sans); overflow: hidden; }
+  .cover { position: relative; height: 288px; overflow: hidden; }
+  .art { position: absolute; top: 0; left: 480px; width: 480px; height: 288px; overflow: hidden; }
+  .art svg { display: block; width: 480px; height: 288px; }
+  .brand { fill: var(--accent); }
+  .paper { fill: var(--key-white); }
+  .deep { fill: var(--surface-inverse); }
+  .blk { rx: var(--radius-lg); }
+  .line { stroke: var(--key-ink); stroke-width: var(--stroke-thin); fill: none; }
+  .n-good { fill: var(--heat-5); }
+  .n-ok { fill: var(--heat-3); }
+  .n-ink { fill: var(--key-black); }
+  .words { position: absolute; left: var(--space-24); bottom: var(--space-24); max-width: 440px; }
+  .name { margin: 0; font-family: var(--font-serif); font-size: 96px; line-height: .95; font-weight: 600; letter-spacing: -0.015em; color: var(--text); }
+  .tagline { margin: var(--space-8) 0 0 4px; font-size: 14px; line-height: 20px; color: var(--text-muted); }
+</style>
+</head>
+<body>
+<div class="cover">
+<div class="art" aria-hidden="true">
+<svg viewBox="0 0 480 288" width="480" height="288">
+<!--
+  blocks      accent 120×256 bled off the top (oxblood, the one brand color, tallest) · key-white 320×192 bleeding off the right edge (the sheet) · surface-inverse 152×72 bled off the top (ink; flips with the theme so it never sinks into the ground): about 35% of 960×288
+  arrangement one tall oxblood slab with two satellites, bottoms on one line space-24 above the edge, space-16 gutters
+  pattern     a few hairline rules, from "the score lives on surface-sheet and nothing else does": the five lines of a staff at a space-12 pitch across the sheet, six noteheads on it in the feedback colors (heat-5 right, heat-3 nearly, key-black not yet played)
+  scales      sides in space-8 multiples; gutters space-16; staff pitch space-12; noteheads space-16 × space-12; corners radius-lg; rules stroke-thin
+-->
+<rect class="brand blk" x="24" y="-16" width="120" height="280" rx="12"/>
+<rect class="deep blk" x="160" y="-16" width="152" height="72" rx="12"/>
+<rect class="paper blk" x="160" y="72" width="336" height="192" rx="12"/>
+<path class="line" d="M160 144.5h320M160 156.5h320M160 168.5h320M160 180.5h320M160 192.5h320"/>
+<ellipse class="n-good" cx="200" cy="186.5" rx="8" ry="6" transform="rotate(-20 200 186.5)"/>
+<ellipse class="n-good" cx="248" cy="174.5" rx="8" ry="6" transform="rotate(-20 248 174.5)"/>
+<ellipse class="n-good" cx="296" cy="162.5" rx="8" ry="6" transform="rotate(-20 296 162.5)"/>
+<ellipse class="n-ok" cx="344" cy="150.5" rx="8" ry="6" transform="rotate(-20 344 150.5)"/>
+<ellipse class="n-ink" cx="392" cy="162.5" rx="8" ry="6" transform="rotate(-20 392 162.5)"/>
+<ellipse class="n-ink" cx="440" cy="180.5" rx="8" ry="6" transform="rotate(-20 440 180.5)"/>
+</svg>
+</div>
+<div class="words">
+<h1 class="name">Practice Piano</h1>
+<p class="tagline">Paper, ink and one oxblood pencil, read from the piano bench.</p>
+</div>
+</div>
+</body>
+</html>

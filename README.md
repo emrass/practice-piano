@@ -197,6 +197,7 @@ src/
   ui/            React app: lessons/ (one module per lesson), practice/ (sessions), results/,
                  progress/ (per-lesson views), components/, VexFlow renderer
   styles/        vanilla CSS
+design/          design system: tokens, component styles and guidelines (see design/README.md)
 e2e/             browser tests: fake Web MIDI piano, seeded profile, one spec per lesson + layout
 native/          Xcode project (SwiftUI + WKWebView + CoreMIDI + CoreAudioKit)
 docs/            architecture, native build guide, requirements, didactic concept
