@@ -3,51 +3,49 @@
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 40;
+  z-index: var(--z-dialog);
   display: grid;
   place-items: center;
-  padding: 16px;
-  background: rgba(30, 20, 12, 0.35);
+  padding: var(--space-16);
+  background: var(--scrim);
   backdrop-filter: blur(3px);
-  animation: fade-in 0.15s ease;
+  animation: fade-in var(--duration-base) var(--ease-out);
 }
 
 .modal-card {
   width: min(520px, 100%);
   max-height: 100%;
   overflow: auto;
-  background: var(--card);
-  border: 1px solid var(--rule);
-  border-radius: 16px;
-  box-shadow: 0 30px 80px -20px rgba(30, 18, 8, 0.5);
-  padding: 18px 22px 20px;
+  background: var(--surface-overlay);
+  border: var(--stroke-thin) solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-3);
+  padding: var(--space-16) var(--space-24) var(--space-20);
 }
 
 .modal-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 6px;
+  margin-bottom: var(--space-6);
 }
 
 .modal-head h2 {
   margin: 0;
-  font-family: var(--serif);
-  font-size: 22px;
+  font: var(--type-title);
 }
 
 .modal-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
-  margin-top: 6px;
+  gap: var(--space-8);
+  margin-top: var(--space-6);
 }
 
 .calib-body {
   display: grid;
-  gap: 12px;
-  font-size: 14px;
-  line-height: 1.55;
+  gap: var(--space-12);
+  font: var(--type-body);
 }
 
 .calib-body p {
@@ -55,7 +53,7 @@
 }
 
 .calib-warn {
-  color: var(--warn);
+  color: var(--warning);
   font-weight: 600;
 }
 
@@ -72,9 +70,7 @@
 }
 
 .calib-instruction {
-  font-family: var(--serif);
-  font-size: 19px;
-  font-weight: 600;
+  font: var(--type-title);
 }
 
 .calib-count {
@@ -87,18 +83,18 @@
   border-radius: 50%;
   display: grid;
   place-items: center;
-  font-size: 54px;
-  color: var(--ink-3);
-  background: var(--paper-2);
-  border: 2px dashed var(--rule);
+  font: var(--type-display);
+  color: var(--text-subtle);
+  background: var(--surface-well);
+  border: var(--stroke-thick) dashed var(--border-strong);
 }
 
 .calib-flash {
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  background: var(--paper-2);
-  border: 2px solid var(--rule);
+  background: var(--surface-well);
+  border: var(--stroke-thick) solid var(--border);
 }
 
 .calib-flash.is-on {
@@ -110,44 +106,41 @@
 .calib-results {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: var(--space-12);
   margin: 0;
 }
 
 .calib-results > div {
   display: grid;
-  gap: 2px;
-  padding: 12px;
-  border-radius: 12px;
-  background: var(--paper-2);
+  gap: var(--space-2);
+  padding: var(--space-12);
+  border-radius: var(--radius-md);
+  background: var(--surface-well);
 }
 
 .calib-results dt {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
+  font: var(--type-overline);
+  letter-spacing: var(--tracking-overline);
   text-transform: uppercase;
-  color: var(--ink-3);
+  color: var(--text-subtle);
 }
 
 .calib-results dd {
   margin: 0;
-  font-family: var(--serif);
-  font-size: 28px;
-  font-weight: 600;
+  font: var(--type-numeral-lg);
   color: var(--accent);
   font-variant-numeric: tabular-nums;
 }
 
 .calib-quality {
-  font-size: 12px;
-  color: var(--ink-3);
+  font: var(--type-caption);
+  color: var(--text-subtle);
 }
 
 .calib-quality.is-good {
-  color: var(--ok);
+  color: var(--success);
 }
 
 .calib-quality.is-poor {
-  color: var(--warn);
+  color: var(--warning);
 }

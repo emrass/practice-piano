@@ -2,6 +2,8 @@ import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve, sep } from 'node:path';
 import type { Plugin, ResolvedConfig } from 'vite';
+import { readTokens, resolveColor } from '../design/scripts/build.mjs';
+import { THEME_COLOR_TOKEN } from '../design/vitePlugin.ts';
 
 /**
  * Installable, offline-capable hosted app: web app manifest, icons, iOS home-screen tags and a
@@ -61,7 +63,9 @@ export function pwa(enabled: boolean): Plugin {
 
 const ICONS = ['icon-192.png', 'icon-512.png', 'maskable-512.png', 'apple-touch-icon.png'];
 
-// Colors from src/styles/base.css (light theme): --bg for the splash, --paper-2 like the theme-color meta.
+// Colors from the design tokens (light theme): the desk for the splash screen, and the top bar's
+// surface for the title bar, like the theme-color meta (design/vitePlugin.ts).
+const tokens = readTokens();
 const MANIFEST = {
   id: './',
   name: 'Practice Piano',
@@ -70,8 +74,8 @@ const MANIFEST = {
   start_url: './',
   scope: './',
   display: 'standalone',
-  background_color: '#efe7d7',
-  theme_color: '#f5efe3',
+  background_color: resolveColor(tokens, 'surface-canvas', 'light'),
+  theme_color: resolveColor(tokens, THEME_COLOR_TOKEN, 'light'),
   icons: [
     { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
     { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },

@@ -3,7 +3,7 @@
 .modal-card.setup {
   width: min(560px, 100%);
   display: grid;
-  gap: 14px;
+  gap: var(--space-12);
 }
 
 .modal-card.setup:focus {
@@ -16,19 +16,17 @@
 }
 
 .setup-progress {
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
+  font: var(--type-overline);
+  letter-spacing: var(--tracking-overline);
   text-transform: uppercase;
-  color: var(--ink-3);
-  margin-bottom: 2px;
+  color: var(--text-subtle);
+  margin-bottom: var(--space-2);
 }
 
 .setup-body {
   display: grid;
-  gap: 12px;
-  font-size: 14px;
-  line-height: 1.55;
+  gap: var(--space-12);
+  font: var(--type-body);
 }
 
 .setup-body p,
@@ -37,57 +35,53 @@
 }
 
 .setup-body kbd {
-  font-family: var(--mono);
-  font-size: 12px;
-  padding: 1px 5px;
-  border-radius: 5px;
-  border: 1px solid var(--rule);
-  background: var(--paper-2);
+  padding: 1px var(--space-4);
+  border-radius: var(--radius-xs);
+  background: var(--surface-well);
 }
 
 .status-line.is-warn,
 .setup-note.is-warn {
-  border-color: color-mix(in srgb, var(--warn) 55%, transparent);
+  border-color: var(--warning);
 }
 
 /* Buttons wrap on narrow screens; the way forward stays at the end. */
 .setup-actions {
   flex-wrap: wrap;
-  margin-top: 4px;
+  margin-top: var(--space-4);
 }
 
 .setup-actions .btn {
   white-space: normal;
-  min-height: 36px;
+  min-height: var(--size-control-md);
   height: auto;
-  padding-block: 6px;
+  padding-block: var(--space-6);
 }
 
 /* "Found your piano — play a key", then "We hear you". */
 .setup-listen {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 14px;
-  border-radius: 12px;
-  background: var(--paper-2);
-  border: 1px solid var(--rule);
+  gap: var(--space-12);
+  padding: var(--space-12);
+  border-radius: var(--radius-md);
+  background: var(--surface-well);
+  border: var(--stroke-thin) solid var(--border);
 }
 
 .setup-listen > div {
   display: grid;
-  gap: 2px;
+  gap: var(--space-2);
   min-width: 0;
 }
 
 .setup-listen b {
-  font-family: var(--serif);
-  font-size: 17px;
+  font: var(--type-numeral-sm);
   overflow-wrap: anywhere;
 }
 
 .setup-listen span {
-  color: var(--ink-2);
+  color: var(--text-muted);
 }
 
 .setup-listen-mark {
@@ -97,35 +91,35 @@
   border-radius: 50%;
   display: grid;
   place-items: center;
-  font-size: 22px;
-  color: var(--ink-3);
-  border: 2px dashed var(--rule);
+  font: var(--type-title);
+  color: var(--text-subtle);
+  border: var(--stroke-thick) dashed var(--border-strong);
 }
 
 .setup-listen.is-heard {
-  border-color: color-mix(in srgb, var(--ok) 45%, transparent);
-  background: var(--ok-soft);
+  border-color: var(--success);
+  background: linear-gradient(var(--success-soft), var(--success-soft)), var(--surface-well);
 }
 
 .setup-listen.is-heard .setup-listen-mark {
-  border: 2px solid var(--ok);
-  background: var(--ok);
-  color: var(--card);
+  border: var(--stroke-thick) solid var(--success);
+  background: var(--success);
+  color: var(--on-success);
 }
 
 .setup-note {
   display: grid;
-  gap: 6px;
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: var(--paper-2);
-  border: 1px solid var(--rule);
+  gap: var(--space-6);
+  padding: var(--space-12) var(--space-16);
+  border-radius: var(--radius-md);
+  background: var(--surface-well);
+  border: var(--stroke-thin) solid var(--border);
 }
 
 .setup-note ul {
-  padding-left: 18px;
+  padding-left: var(--space-20);
   display: grid;
-  gap: 4px;
+  gap: var(--space-4);
 }
 
 /* The two ways to connect: a label column and what to do. */
@@ -133,49 +127,48 @@
   list-style: none;
   padding: 0;
   display: grid;
-  gap: 8px;
+  gap: var(--space-8);
 }
 
 .setup-ways li {
   display: grid;
   grid-template-columns: 76px 1fr;
-  gap: 10px;
-  font-size: 13px;
+  gap: var(--space-8);
+  font: var(--type-body-sm);
 }
 
 .setup-ways li > b {
-  color: var(--ink);
+  color: var(--text);
 }
 
 .setup-ways li > span {
-  color: var(--ink-2);
+  color: var(--text-muted);
 }
 
 /* Stage choices and latency presets: a name and one line about it. */
 .setup-stages,
 .setup-presets {
   display: grid;
-  gap: 6px;
+  gap: var(--space-6);
 }
 
 .setup-stage {
   display: grid;
-  gap: 1px;
+  gap: var(--space-2);
   text-align: left;
-  padding: 8px 12px;
-  border-radius: 10px;
-  border: 1px solid var(--rule);
-  background: var(--card);
-  font-size: 13px;
-  line-height: 1.4;
+  padding: var(--space-8) var(--space-12);
+  border-radius: var(--radius-md);
+  border: var(--stroke-thin) solid var(--border);
+  background: var(--surface-card);
+  font: var(--type-body-sm);
 }
 
 .setup-stage span {
-  color: var(--ink-2);
+  color: var(--text-muted);
 }
 
 .setup-stage:hover {
-  border-color: var(--ink-3);
+  border-color: var(--border-strong);
 }
 
 .setup-stage.is-active {
@@ -189,14 +182,14 @@
 
 .setup-skills {
   display: grid;
-  gap: 10px;
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: var(--paper-2);
+  gap: var(--space-8);
+  padding: var(--space-12) var(--space-16);
+  border-radius: var(--radius-md);
+  background: var(--surface-well);
 }
 
 .setup-skills-head {
-  font-size: 13.5px;
+  font: var(--type-body);
 }
 
 .setup-skills select {
@@ -205,12 +198,12 @@
 
 @media (max-width: 480px) {
   .modal-card.setup {
-    padding: 14px 14px 16px;
+    padding: var(--space-16);
   }
 
   .setup-ways li {
     grid-template-columns: 1fr;
-    gap: 2px;
+    gap: var(--space-2);
   }
 
   /* One button per row, the way forward first. */

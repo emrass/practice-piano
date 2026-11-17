@@ -1,60 +1,56 @@
 .keyboard-dock {
   display: grid;
   grid-template-rows: 30px 1fr;
-  gap: 6px;
+  gap: var(--space-6);
   height: 196px;
-  padding: 8px 10px 10px;
-  border-radius: var(--radius);
-  background: linear-gradient(180deg, #3a312b, #2a231f);
-  box-shadow: var(--shadow);
-}
-
-[data-theme='dark'] .keyboard-dock {
-  background: linear-gradient(180deg, #2a2420, #15110f);
+  padding: var(--space-8) var(--space-12) var(--space-12);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, var(--keyboard-case-top), var(--keyboard-case-bottom));
+  box-shadow: var(--shadow-1);
 }
 
 .keyboard-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  color: #e8dcc8;
-  padding: 0 4px;
+  gap: var(--space-8);
+  color: var(--keyboard-text);
+  padding: 0 var(--space-4);
 }
 
 .keyboard-head .muted {
-  color: #a89880;
-  font-size: 12px;
+  color: var(--keyboard-text-muted);
+  font: var(--type-caption);
   font-variant-numeric: tabular-nums;
 }
 
 .keyboard-head .pedal {
-  color: #a89880;
+  color: var(--keyboard-text-muted);
 }
 
 .keyboard-head .pedal.is-down {
-  color: #e6b450;
+  color: var(--keyboard-accent);
 }
 
 .keyboard-head .note-chip {
-  background: rgba(255, 220, 200, 0.14);
-  color: #ffd9c8;
+  background: color-mix(in srgb, var(--keyboard-text) 14%, transparent);
+  color: var(--keyboard-text);
 }
 
 .keyboard-head .note-chip.is-sustained {
-  background: rgba(230, 180, 80, 0.16);
-  color: #e6b450;
+  background: color-mix(in srgb, var(--keyboard-accent) 16%, transparent);
+  color: var(--keyboard-accent);
 }
 
 .kb-right {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-4);
 }
 
 /* Guide, display menu and key sound: small icon buttons on the dark bar (gold = on). */
 .kb-range {
-  margin-right: 6px;
+  margin-right: var(--space-6);
 }
 
 .kb-icon {
@@ -64,34 +60,34 @@
   height: 22px;
   padding: 0;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: transparent;
-  color: #a89880;
+  color: var(--keyboard-text-muted);
   cursor: pointer;
 }
 
 .kb-icon:hover,
 .kb-icon.is-open {
-  background: rgba(255, 255, 255, 0.08);
-  color: #e8dcc8;
+  background: color-mix(in srgb, var(--keyboard-text) 10%, transparent);
+  color: var(--keyboard-text);
 }
 
 .kb-icon.is-on {
-  color: #e6b450;
+  color: var(--keyboard-accent);
 }
 
 .kb-icon[aria-disabled='true'] {
-  opacity: 0.4;
+  opacity: var(--opacity-disabled);
   cursor: not-allowed;
 }
 
 .kb-icon[aria-disabled='true']:hover {
   background: transparent;
-  color: #a89880;
+  color: var(--keyboard-text-muted);
 }
 
 .kb-icon:focus-visible {
-  outline: 2px solid #e6b450;
+  outline: var(--stroke-thick) solid var(--keyboard-accent);
   outline-offset: 1px;
 }
 
@@ -103,27 +99,23 @@
 .kb-popover {
   position: absolute;
   right: -34px;
-  bottom: calc(100% + 10px);
-  z-index: 40;
+  bottom: calc(100% + var(--space-8));
+  z-index: var(--z-popover);
   display: grid;
-  gap: 12px;
+  gap: var(--space-12);
   width: 300px;
   max-width: calc(100vw - 24px);
-  padding: 14px;
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  background: var(--card);
-  color: var(--ink);
-  box-shadow: var(--shadow);
-  animation: fade-in 0.12s ease-out;
+  padding: var(--space-16);
+  border: var(--stroke-thin) solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-overlay);
+  color: var(--text);
+  box-shadow: var(--shadow-2);
+  animation: fade-in var(--duration-fast) var(--ease-out);
 }
 
 .kb-popover .segmented {
   width: 100%;
-}
-
-.keyboard-head .muted:not(.kb-range) {
-  font-size: 12px;
 }
 
 .piano {
@@ -133,8 +125,8 @@
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
-  border-top: 3px solid #8c2f22;
-  border-radius: 2px 2px 6px 6px;
+  border-top: 3px solid var(--keyboard-felt);
+  border-radius: 2px 2px var(--radius-sm) var(--radius-sm);
   overflow: hidden;
 }
 
@@ -146,67 +138,65 @@
   justify-content: flex-end;
   align-items: center;
   cursor: pointer;
-  transition: background 0.05s;
+  transition: background var(--duration-instant);
 }
 
 .key-white {
   height: 100%;
-  background: linear-gradient(180deg, #f3eee4 0%, var(--key-white) 12%, var(--key-white) 92%, #ece4d6 100%);
-  border-left: 1px solid var(--key-white-edge);
-  border-bottom: 1px solid var(--key-white-edge);
-  border-radius: 0 0 5px 5px;
+  background: linear-gradient(180deg, var(--key-white-shade) 0%, var(--key-white) 12%, var(--key-white) 92%, var(--key-white-shade) 100%);
+  border-left: var(--stroke-thin) solid var(--key-white-edge);
+  border-bottom: var(--stroke-thin) solid var(--key-white-edge);
+  border-radius: 0 0 var(--radius-xs) var(--radius-xs);
   /* No stacking context of its own, so a shortcut label wider than its key can paint over the
      neighboring white keys (black keys still cover everything). */
 }
 
 .key-black {
   height: 62%;
-  background: linear-gradient(180deg, var(--key-black-top), var(--key-black) 85%, #000 100%);
-  border-radius: 0 0 4px 4px;
-  box-shadow:
-    inset 0 -4px 0 rgba(255, 255, 255, 0.08),
-    0 2px 3px rgba(0, 0, 0, 0.45);
-  z-index: 2;
+  background: linear-gradient(180deg, var(--key-black-top), var(--key-black) 85%);
+  border-radius: 0 0 var(--radius-xs) var(--radius-xs);
+  box-shadow: var(--shadow-knob);
+  z-index: var(--z-raised);
 }
 
 .key-white.is-expected {
-  background: linear-gradient(180deg, #f3eee4, var(--key-expected) 30%);
+  background: linear-gradient(180deg, var(--key-white-shade), var(--key-expected) 30%);
 }
 
 .key-black.is-expected {
-  background: linear-gradient(180deg, #6b5a26, #a8913f);
+  background: var(--key-black-expected);
 }
 
 .key-white.is-held {
-  background: linear-gradient(180deg, #e6dccb, var(--key-held) 40%);
+  background: linear-gradient(180deg, var(--key-white-shade), var(--key-held) 40%);
 }
 
 .key-black.is-held {
-  background: linear-gradient(180deg, #7a3426, #a24633);
+  background: var(--key-black-held);
 }
 
 .key-white.is-sustained {
-  background: linear-gradient(180deg, #f3eee4, color-mix(in srgb, var(--key-held) 45%, var(--key-white)) 40%);
+  background: linear-gradient(180deg, var(--key-white-shade), color-mix(in srgb, var(--key-held) 45%, var(--key-white)) 40%);
 }
 
 .key-white.is-correct {
-  background: linear-gradient(180deg, #e6dccb, var(--key-correct) 40%);
+  background: linear-gradient(180deg, var(--key-white-shade), var(--key-correct) 40%);
 }
 
 .key-black.is-correct {
-  background: linear-gradient(180deg, #2c5a3c, #3f7d55);
+  background: var(--key-black-correct);
 }
 
 .key.is-wrong {
-  animation: key-wrong 0.45s ease;
+  animation: key-wrong var(--duration-slow) var(--ease-out);
 }
 
 .key-white.is-wrong {
-  background: linear-gradient(180deg, #f0d5cf, #e88c7f 40%);
+  background: linear-gradient(180deg, var(--key-white-shade), var(--key-wrong) 40%);
 }
 
 .key-black.is-wrong {
-  background: linear-gradient(180deg, #8a2216, #c0392b);
+  background: var(--key-black-wrong);
 }
 
 @keyframes key-wrong {
@@ -219,42 +209,41 @@
 }
 
 .key-label {
-  font-size: clamp(8px, calc(100vw / var(--white-count) / 3.4), 12px);
-  font-weight: 700;
-  color: #9a8c7a;
-  margin-bottom: 7px;
+  font: var(--type-micro);
+  font-size: clamp(8px, calc(100vw / var(--white-count, 52) / 3.4), 12px); /* literal: scales with the width of a key */
+  color: var(--key-ink);
+  margin-bottom: var(--space-6);
   pointer-events: none;
   white-space: nowrap;
 }
 
 .key-label.is-c {
-  color: #8c2f22;
+  color: var(--key-ink-c);
 }
 
 .key-label-black {
-  color: #f1e4cc;
-  margin-bottom: 5px;
+  color: var(--key-black-ink);
+  margin-bottom: var(--space-4);
 }
 
 .key-qwerty {
-  font-family: var(--mono);
-  font-size: 9.5px;
-  color: #b2a48f;
-  margin-bottom: 2px;
+  font: var(--type-kbd);
+  color: var(--key-ink);
+  margin-bottom: var(--space-2);
   pointer-events: none;
 }
 
 .key-black .key-qwerty {
-  color: #8a7c68;
+  color: var(--key-black-ink);
 }
 
 .key-heat {
   position: absolute;
   left: 15%;
   right: 15%;
-  top: 6px;
+  top: var(--space-6);
   height: 6px;
-  border-radius: 3px;
+  border-radius: var(--radius-full);
 }
 
 @media (max-height: 780px) {
@@ -266,7 +255,7 @@
 @media (max-width: 760px) {
   .keyboard-dock {
     height: 150px;
-    padding: 6px;
+    padding: var(--space-6);
   }
   .keyboard-head .kb-range {
     display: none;
@@ -274,7 +263,7 @@
 }
 
 .key-white.is-action {
-  background: linear-gradient(180deg, #f3eee4, color-mix(in srgb, var(--accent) 14%, var(--key-white)) 45%);
+  background: linear-gradient(180deg, var(--key-white-shade), color-mix(in srgb, var(--key-ink-c) 14%, var(--key-white)) 45%);
 }
 
 .key-action {
@@ -282,16 +271,15 @@
   bottom: 28px;
   left: 50%;
   translate: -50% 0;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  padding: 2px 5px;
-  border-radius: 5px;
-  background: #8c2f22;
-  color: #fff8f0;
+  font: var(--type-micro);
+  letter-spacing: var(--tracking-micro);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-xs);
+  background: var(--key-ink-c);
+  color: var(--key-white);
   white-space: nowrap;
   pointer-events: none;
-  z-index: 2;
+  z-index: var(--z-raised);
 }
 
 /* Narrow keys (phones, long ranges): the labels are wider than their keys, so they drop to the
@@ -304,8 +292,7 @@
 @container (max-width: 44px) {
   .key-action {
     bottom: 5px;
-    font-size: 9.5px;
-    padding: 2px 4px;
+    padding: var(--space-2) var(--space-4);
   }
   .key-action.is-alt {
     bottom: 24px;
@@ -317,7 +304,7 @@
 
 /* Rhythm mode: the designated keys. */
 .key-white.is-marked:not(.is-held):not(.is-expected) {
-  background: linear-gradient(180deg, #f3eee4, color-mix(in srgb, var(--accent) 10%, var(--key-white)) 45%);
+  background: linear-gradient(180deg, var(--key-white-shade), color-mix(in srgb, var(--key-ink-c) 10%, var(--key-white)) 45%);
 }
 
 .key-marker {
@@ -325,16 +312,15 @@
   bottom: 28px;
   left: 50%;
   translate: -50% 0;
-  font-size: 9.5px;
-  font-weight: 800;
-  letter-spacing: 0.03em;
-  padding: 2px 5px;
-  border-radius: 5px;
-  background: var(--accent);
-  color: #fff8f0;
+  font: var(--type-micro);
+  letter-spacing: var(--tracking-micro);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-xs);
+  background: var(--key-ink-c);
+  color: var(--key-white);
   white-space: nowrap;
   pointer-events: none;
-  z-index: 2;
+  z-index: var(--z-raised);
 }
 
 .key-black .key-marker {
@@ -350,6 +336,6 @@
     display: none;
   }
   .key-marker {
-    padding: 2px 3px;
+    padding: var(--space-2);
   }
 }

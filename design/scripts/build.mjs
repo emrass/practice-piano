@@ -33,6 +33,17 @@ export function aliasOf(value) {
   return /^\{(.+)\}$/.exec(value)?.[1];
 }
 
+/** A color token's literal value in one theme, following aliases. Throws on a missing token or a loop. */
+export function resolveColor(tokens, name, theme, seen = []) {
+  const token = tokens.color.tokens.find((t) => t.name === name);
+  if (!token) throw new Error(`"${seen.at(-1) ?? name}" points at "${name}", which is not a color token`);
+  if (seen.includes(name)) throw new Error(`"${name}" is part of an alias loop`);
+  const fallback = tokens.color.themes[0].id;
+  const value = typeof token.value === 'string' ? token.value : (token.value[theme] ?? token.value[fallback]);
+  const target = aliasOf(value);
+  return target ? resolveColor(tokens, target, theme, [...seen, name]) : value;
+}
+
 const cssValue = (value) => (aliasOf(value) ? `var(--${aliasOf(value)})` : value);
 
 const fontFace = (font, fontBase) =>
@@ -99,7 +110,7 @@ export function compile(tokens, fontBase = '../system/') {
   return out.join('\n');
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const tokens = readTokens();
   mkdirSync(dirname(CSS_PATH), { recursive: true });
   for (const [path, css] of [

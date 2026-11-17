@@ -18,37 +18,36 @@
 .settings-head {
   flex: none;
   margin: 0;
-  padding: 16px 18px 12px 22px;
+  padding: var(--space-16) var(--space-16) var(--space-12) var(--space-24);
 }
 
 .settings-head-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-8);
 }
 
 /* Underlined tabs, as in the sidebar. */
 .settings-tabs {
   flex: none;
   display: flex;
-  padding: 0 22px;
-  border-bottom: 1px solid var(--rule);
+  padding: 0 var(--space-24);
+  border-bottom: var(--stroke-thin) solid var(--border);
 }
 
 .settings-tablist {
   display: flex;
-  gap: 4px;
+  gap: var(--space-4);
   min-width: 0;
 }
 
 .settings-tablist button {
   border: 0;
   background: transparent;
-  padding: 9px 10px 10px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink-3);
-  border-bottom: 2px solid transparent;
+  padding: var(--space-8) var(--space-12) var(--space-12);
+  font: var(--type-label);
+  color: var(--text-subtle);
+  border-bottom: var(--stroke-thick) solid transparent;
   margin-bottom: -1px;
   white-space: nowrap;
 }
@@ -58,7 +57,7 @@
 }
 
 .settings-tablist button.is-active {
-  color: var(--ink);
+  color: var(--text);
   border-bottom-color: var(--accent);
 }
 
@@ -66,23 +65,23 @@
 .calib-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-12);
 }
 
 .calib-row-text {
   flex: 1;
   min-width: 0;
   display: grid;
-  gap: 1px;
+  gap: var(--space-2);
 }
 
 .calib-row-text b {
-  color: var(--ink);
-  font-size: 13px;
+  color: var(--text);
+  font: var(--type-label);
 }
 
 .calib-row-text span {
-  color: var(--ink-3);
+  color: var(--text-subtle);
 }
 
 .settings-scroll {
@@ -90,14 +89,13 @@
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 4px 22px 18px;
+  padding: var(--space-4) var(--space-24) var(--space-16);
 }
 
 .connect-status {
   display: grid;
-  gap: 12px;
-  font-size: 13.5px;
-  line-height: 1.5;
+  gap: var(--space-12);
+  font: var(--type-body);
 }
 
 .connect-status p,
@@ -120,18 +118,18 @@
   }
 
   .settings-head {
-    padding-left: 16px;
-    padding-right: 12px;
+    padding-left: var(--space-16);
+    padding-right: var(--space-12);
   }
 
   .settings-scroll,
   .settings-tabs {
-    padding-left: 16px;
-    padding-right: 16px;
+    padding-left: var(--space-16);
+    padding-right: var(--space-16);
   }
 
   .settings-scroll {
-    padding-bottom: calc(18px + env(safe-area-inset-bottom));
+    padding-bottom: calc(var(--space-16) + env(safe-area-inset-bottom));
   }
 
 }

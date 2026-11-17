@@ -1,7 +1,7 @@
 /* App shell: fixed rows so nothing outside the score ever moves. */
 
 .app {
-  --topbar-h: 58px;
+  --topbar-h: var(--size-topbar);
   height: 100dvh;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -11,7 +11,7 @@
 
 .workspace {
   display: grid;
-  grid-template-columns: 340px minmax(0, 1fr);
+  grid-template-columns: var(--size-sidebar) minmax(0, 1fr);
   min-height: 0;
 }
 

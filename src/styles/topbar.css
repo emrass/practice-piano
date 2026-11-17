@@ -5,36 +5,33 @@
   align-items: center;
   min-width: 0;
   overflow: hidden;
-  gap: 18px;
-  padding: 0 18px;
-  border-bottom: 1px solid var(--rule);
-  background: color-mix(in srgb, var(--paper) 85%, transparent);
+  gap: var(--space-16);
+  padding: 0 var(--space-16);
+  border-bottom: var(--stroke-thin) solid var(--border);
+  background: color-mix(in srgb, var(--surface-sheet) 85%, transparent);
   backdrop-filter: blur(8px);
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-8);
   min-width: 0;
 }
 
 .brand-mark {
   width: 28px;
   height: 28px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background:
-    linear-gradient(90deg, transparent 0 22%, var(--ink) 22% 34%, transparent 34% 56%, var(--ink) 56% 68%, transparent 68%) top / 100% 58% no-repeat,
-    linear-gradient(90deg, var(--paper) 0 30%, var(--rule) 30% 33%, var(--paper) 33% 63%, var(--rule) 63% 66%, var(--paper) 66%);
-  border: 2px solid var(--accent);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    linear-gradient(90deg, transparent 0 22%, var(--text) 22% 34%, transparent 34% 56%, var(--text) 56% 68%, transparent 68%) top / 100% 58% no-repeat,
+    linear-gradient(90deg, var(--surface-sheet) 0 30%, var(--border) 30% 33%, var(--surface-sheet) 33% 63%, var(--border) 63% 66%, var(--surface-sheet) 66%);
+  border: var(--stroke-thick) solid var(--accent);
   flex: none;
 }
 
 .brand-name {
-  font-family: var(--serif);
-  font-size: 19px;
-  font-weight: 600;
+  font: 600 1.25rem/1 var(--font-serif); /* literal: the wordmark has its own size (Logo) */
   letter-spacing: 0.01em;
   white-space: nowrap;
 }
@@ -47,31 +44,30 @@
   margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-8);
 }
 
 .chip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-6);
   height: 30px;
-  padding: 0 11px;
-  border-radius: 999px;
-  border: 1px solid var(--rule);
-  background: var(--card);
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--ink-2);
+  padding: 0 var(--space-12);
+  border-radius: var(--radius-full);
+  border: var(--stroke-thin) solid var(--border);
+  background: var(--surface-card);
+  font: var(--type-label-sm);
+  color: var(--text-muted);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
 .chip-icon {
-  color: var(--gold);
+  color: var(--reward);
 }
 
 .chip-xp {
-  color: var(--gold);
+  color: var(--reward-text);
 }
 
 .chip-midi {
@@ -87,13 +83,13 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--ink-3);
+  background: var(--border-strong);
   flex: none;
 }
 
 .chip-midi.is-on .dot {
-  background: var(--ok);
-  box-shadow: 0 0 0 3px var(--ok-soft);
+  background: var(--success);
+  box-shadow: 0 0 0 3px var(--success-soft);
 }
 
 .topbar-lesson .segmented {
@@ -141,7 +137,7 @@
   }
   .chip-midi {
     max-width: 34px;
-    padding: 0 12px;
+    padding: 0 var(--space-12);
   }
   .chip-midi-name {
     display: none;
@@ -150,21 +146,20 @@
 
 @media (max-width: 760px) {
   .topbar {
-    gap: 10px;
-    padding: 0 10px;
+    gap: var(--space-8);
+    padding: 0 var(--space-8);
   }
   .topbar-lesson .segmented {
     width: 252px;
   }
   .topbar-lesson .segmented button {
-    padding: 0 3px;
-    font-size: 11.5px;
+    padding: 0 var(--space-2);
   }
   .topbar-mode .segmented {
     width: 96px;
   }
   .topbar-mode .segmented button {
-    padding: 0 4px;
+    padding: 0 var(--space-4);
   }
   .label-long,
   .topbar-mode.is-hidden {
@@ -180,8 +175,8 @@
   .topbar {
     flex-wrap: wrap;
     align-content: center;
-    row-gap: 6px;
-    padding: 6px 10px;
+    row-gap: var(--space-6);
+    padding: var(--space-6) var(--space-8);
   }
   .topbar-lesson {
     order: 3;

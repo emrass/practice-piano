@@ -2,7 +2,7 @@
 //   node design/scripts/check.mjs
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { DESIGN, aliasOf, compile, compileSiteFonts, listFamilies, readTokens, typeShorthand } from './build.mjs';
+import { DESIGN, compile, compileSiteFonts, listFamilies, readTokens, resolveColor, typeShorthand } from './build.mjs';
 
 const SYSTEM = join(DESIGN, 'system');
 const REPO = join(DESIGN, '..');
@@ -27,15 +27,7 @@ for (const [family, { tokens: list }] of listFamilies(tokens)) {
 const themes = tokens.color.themes.map((t) => t.id);
 const colors = new Map(tokens.color.tokens.map((t) => [t.name, t]));
 
-/** A color token's literal value in one theme, following aliases. */
-function resolve(name, theme, seen = []) {
-  const token = colors.get(name);
-  if (!token) throw new Error(`"${seen.at(-1) ?? name}" points at "${name}", which is not a color token`);
-  if (seen.includes(name)) throw new Error(`"${name}" is part of an alias loop`);
-  const value = typeof token.value === 'string' ? token.value : (token.value[theme] ?? token.value[themes[0]]);
-  const target = aliasOf(value);
-  return target ? resolve(target, theme, [...seen, name]) : value;
-}
+const resolve = (name, theme) => resolveColor(tokens, name, theme);
 
 for (const token of colors.values()) {
   for (const theme of themes) {
@@ -139,23 +131,32 @@ for (const tint of ['key-black-expected', 'key-black-held', 'key-black-correct',
 
 // ---------- Component stylesheet ----------
 
-const bundle = read(SYSTEM, 'components/bundle.css');
-const bundleLines = bundle.split('\n');
-const declared = new Set([...bundle.matchAll(/(?:^|[\s;{"])--([a-z0-9-]+)\s*:/g)].map((m) => m[1]));
-const known = new Set([...all.keys(), ...Object.keys(tokens.type.families).map((key) => `font-${key}`), ...declared]);
+/** Custom properties a stylesheet declares itself (component parameters such as --fill). */
+const declaredIn = (css) => new Set([...css.matchAll(/(?:^|[\s;{"])--([a-z0-9-]+)\s*:/g)].map((m) => m[1]));
+const fontStacks = Object.keys(tokens.type.families).map((key) => `font-${key}`);
 
-// A var() with a fallback is a parameter the markup sets (--value, --cols); the rest must be tokens.
-for (const [, name] of bundle.matchAll(/var\(--([a-z0-9-]+)\)/g)) {
-  if (!known.has(name)) fail(`bundle.css: var(--${name}) is not a token`);
+/**
+ * The rules every stylesheet built on the system follows: no literal colors, durations or type
+ * sizes, and every var() without a fallback is a token (or a variable the stylesheet declares).
+ * A var() with a fallback is a parameter the markup sets (--value, --cols). A line may state an
+ * exception with a `/* literal: why *\/` comment; colors have none.
+ */
+function lintStylesheet(name, css, known) {
+  for (const [, variable] of css.matchAll(/var\(--([a-z0-9-]+)\)/g)) {
+    if (!known.has(variable)) fail(`${name}: var(--${variable}) is not a token`);
+  }
+  css.split('\n').forEach((line, index) => {
+    const at = `${name}:${index + 1}`;
+    if (/#[0-9a-f]{3,8}\b|\b(?:rgb|hsl|oklch|oklab|lab|lch)a?\(/i.test(line)) fail(`${at}: literal color; use a token`);
+    if (line.includes('/* literal:') || /^\s+--/.test(line)) return; // a stated exception, or a variable definition
+    if (/[\s(,]\d*\.?\d+m?s\b/.test(line)) fail(`${at}: literal duration; use a duration token`);
+    if (/\bfont(?:-size)?\s*:[^;]*\d(?:rem|px|em)\b/.test(line)) fail(`${at}: literal type size; use a --type-* text style`);
+  });
 }
 
-bundleLines.forEach((line, index) => {
-  const at = `bundle.css:${index + 1}`;
-  if (/#[0-9a-f]{3,8}\b|\b(?:rgb|hsl|oklch|oklab|lab|lch)a?\(/i.test(line)) fail(`${at}: literal color; use a token`);
-  if (line.includes('/* literal:') || /^\s+--/.test(line)) return; // a stated exception, or a variable definition
-  if (/[\s(,]\d*\.?\d+m?s\b/.test(line)) fail(`${at}: literal duration; use a duration token`);
-  if (/\bfont(?:-size)?\s*:[^;]*\d(?:rem|px|em)\b/.test(line)) fail(`${at}: literal type size; use a --type-* text style`);
-});
+const bundle = read(SYSTEM, 'components/bundle.css');
+const declared = declaredIn(bundle);
+lintStylesheet('bundle.css', bundle, new Set([...all.keys(), ...fontStacks, ...declared]));
 
 // The --type-* and --tracking-* variables in bundle.css restate tokens.json; they must agree.
 const restated = new Map([...bundle.matchAll(/^\s+--((?:type|tracking)-[a-z0-9-]+):\s*([^;]+);/gm)].map((m) => [m[1], m[2]]));
@@ -173,6 +174,22 @@ for (const [name, value] of restated) {
 for (const [, name] of bundle.matchAll(/var\(--((?:type|tracking)-[a-z0-9-]+)/g)) {
   if (!restated.has(name)) fail(`bundle.css: var(--${name}) is used but not defined at the top of the file`);
 }
+
+// ---------- The app's stylesheets (src/styles) ----------
+
+// The same rules as bundle.css. Text styles come from tokens.css here, so --type-* and
+// --tracking-* count as tokens; a variable the app declares must not shadow one.
+const APP_STYLES = join(REPO, 'src/styles');
+const appStyles = readdirSync(APP_STYLES, { recursive: true })
+  .filter((file) => file.endsWith('.css'))
+  .sort()
+  .map((file) => ({ name: `src/styles/${file.split('\\').join('/')}`, css: read(APP_STYLES, file) }));
+const appDeclared = new Set(appStyles.flatMap(({ css }) => [...declaredIn(css)]));
+const tokenNames = new Set([...all.keys(), ...fontStacks, ...expected.keys()]);
+for (const name of appDeclared) {
+  if (tokenNames.has(name)) fail(`src/styles: --${name} redefines a token; change it in tokens.json`);
+}
+for (const { name, css } of appStyles) lintStylesheet(name, css, new Set([...tokenNames, ...appDeclared]));
 
 // ---------- Files ----------
 
@@ -231,4 +248,4 @@ if (failures.length) {
   console.error(`Design system: ${failures.length} problem${failures.length === 1 ? '' : 's'}\n${failures.map((f) => `  - ${f}`).join('\n')}`);
   process.exit(1);
 }
-console.log(`Design system OK: ${all.size} tokens, ${pairs} contrast checks, ${components.length - 1} components, ${icons.length} icons.`);
+console.log(`Design system OK: ${all.size} tokens, ${pairs} contrast checks, ${components.length - 1} components, ${icons.length} icons, ${appStyles.length} app stylesheets.`);

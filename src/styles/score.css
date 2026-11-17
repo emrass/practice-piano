@@ -22,29 +22,31 @@
 /* Theme the engraving: VexFlow writes presentation attributes (or none at all, relying
    on inheritance), and CSS overrides both. */
 .score-svg {
-  fill: var(--ink);
+  fill: var(--text);
   /* VexFlow sets stroke="black" on the root, and stems and the brace outline inherit it. */
-  stroke: var(--ink);
+  stroke: var(--text);
 }
 
 .score-svg [fill]:not([fill='none']) {
-  fill: var(--ink);
+  fill: var(--text);
 }
 
 .score-svg [stroke]:not([stroke='none']) {
-  stroke: var(--ink);
+  stroke: var(--text);
 }
 
 .score-svg .vf-stave [fill]:not([fill='none']),
 .score-svg .vf-stave [stroke]:not([stroke='none']) {
-  fill: var(--ink-2);
-  stroke: var(--ink-2);
+  fill: var(--score-staff);
+  stroke: var(--score-staff);
 }
 
 .score-svg .vf-pp-note,
 .score-svg .vf-pp-note [fill]:not([fill='none']),
 .score-svg .vf-pp-note [stroke]:not([stroke='none']) {
-  transition: fill 0.12s, stroke 0.12s;
+  transition:
+    fill var(--duration-fast),
+    stroke var(--duration-fast);
 }
 
 .score-svg .vf-pp-note.is-current,
@@ -59,56 +61,52 @@
 
 .score-svg .vf-pp-note.is-good,
 .score-svg .vf-pp-note.is-good [fill]:not([fill='none']) {
-  fill: var(--ok);
+  fill: var(--score-good);
 }
 
 .score-svg .vf-pp-note.is-good,
 .score-svg .vf-pp-note.is-good [stroke]:not([stroke='none']) {
-  stroke: var(--ok);
+  stroke: var(--score-good);
 }
 
 .score-svg .vf-pp-note.is-ok,
 .score-svg .vf-pp-note.is-ok [fill]:not([fill='none']) {
-  fill: var(--warn);
+  fill: var(--score-ok);
 }
 
 .score-svg .vf-pp-note.is-ok,
 .score-svg .vf-pp-note.is-ok [stroke]:not([stroke='none']) {
-  stroke: var(--warn);
+  stroke: var(--score-ok);
 }
 
 .score-svg .vf-pp-note.is-bad,
 .score-svg .vf-pp-note.is-missed,
 .score-svg .vf-pp-note.is-bad [fill]:not([fill='none']),
 .score-svg .vf-pp-note.is-missed [fill]:not([fill='none']) {
-  fill: var(--bad);
+  fill: var(--score-bad);
 }
 
 .score-svg .vf-pp-note.is-bad,
 .score-svg .vf-pp-note.is-missed,
 .score-svg .vf-pp-note.is-bad [stroke]:not([stroke='none']),
 .score-svg .vf-pp-note.is-missed [stroke]:not([stroke='none']) {
-  stroke: var(--bad);
+  stroke: var(--score-bad);
 }
 
 .score-svg .vf-pp-note.is-missed {
-  opacity: 0.55;
+  opacity: var(--opacity-missed);
 }
 
 .score-svg .pp-label {
-  font-family: var(--sans);
-  font-size: 11px;
-  font-weight: 700;
-  fill: var(--label);
+  font: var(--type-micro);
+  letter-spacing: var(--tracking-micro);
+  fill: var(--score-label);
   stroke: none;
-  letter-spacing: 0.02em;
 }
 
 .score-svg .pp-bar-number {
-  font-family: var(--serif);
-  font-size: 11px;
-  font-style: italic;
-  fill: var(--ink-3);
+  font: var(--type-bar-number);
+  fill: var(--score-label);
   stroke: none;
 }
 
@@ -124,27 +122,27 @@
 
 .score-cursor {
   width: 30px;
-  border-radius: 8px;
-  background: var(--cursor);
-  box-shadow: inset 0 0 0 1.5px var(--cursor-edge);
+  border-radius: var(--radius-md);
+  background: var(--score-cursor);
+  box-shadow: inset 0 0 0 1.5px var(--score-cursor-edge);
   transition:
-    transform 0.16s cubic-bezier(0.3, 0.7, 0.3, 1),
-    opacity 0.2s,
-    height 0.16s;
+    transform var(--duration-base) var(--ease-out),
+    opacity var(--duration-base) var(--ease-out),
+    height var(--duration-base) var(--ease-out);
 }
 
 .score-cursor.is-wrong {
-  animation: cursor-wrong 0.45s ease;
+  animation: cursor-wrong var(--duration-slow) var(--ease-out);
 }
 
 @keyframes cursor-wrong {
   0%,
   100% {
-    background: var(--cursor);
+    background: var(--score-cursor);
   }
   20% {
-    background: var(--bad-soft);
-    box-shadow: inset 0 0 0 2px var(--bad);
+    background: var(--danger-soft);
+    box-shadow: inset 0 0 0 2px var(--danger);
     translate: -3px 0;
   }
   45% {
@@ -157,17 +155,17 @@
 
 .score-playhead {
   width: 3px;
-  border-radius: 2px;
+  border-radius: var(--radius-full);
   background: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 .score-error {
   position: absolute;
-  inset: 16px;
+  inset: var(--space-16);
   display: grid;
   place-items: center;
-  color: var(--bad);
+  color: var(--danger);
   font-weight: 600;
 }
 
@@ -179,26 +177,24 @@
 }
 
 .score-svg .vf-pp-measure {
-  transition: opacity 0.25s;
+  transition: opacity var(--duration-base) var(--ease-out);
 }
 
 /* Rhythm Echo: the bars the app played. */
 .score-svg .vf-pp-note.is-call,
 .score-svg .vf-pp-note.is-call [fill]:not([fill='none']) {
-  fill: var(--ink-3);
+  fill: var(--text-subtle);
 }
 
 .score-svg .vf-pp-note.is-call,
 .score-svg .vf-pp-note.is-call [stroke]:not([stroke='none']) {
-  stroke: var(--ink-3);
+  stroke: var(--text-subtle);
 }
 
 .score-svg .pp-hand-label {
-  font-family: var(--sans);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  fill: var(--ink-3);
+  font: var(--type-overline);
+  letter-spacing: var(--tracking-overline);
+  fill: var(--score-label);
   stroke: none;
 }
 
@@ -212,25 +208,21 @@
 
 .score-svg .pp-placeholder rect {
   fill: var(--accent-soft);
-  stroke: var(--cursor-edge);
+  stroke: var(--score-cursor-edge);
   stroke-width: 1.2;
   stroke-dasharray: 3 2;
 }
 
 .score-svg .pp-placeholder-mark {
-  font-family: var(--serif);
-  font-size: 16px;
-  font-weight: 700;
+  font: var(--type-title-sm);
   fill: var(--accent);
   stroke: none;
 }
 
 /* Scales: fingering numbers (thumb crossings stand out). */
 .score-svg .pp-finger {
-  font-family: var(--sans);
-  font-size: 11px;
-  font-weight: 700;
-  fill: var(--ink-2);
+  font: var(--type-micro);
+  fill: var(--text-muted);
   stroke: none;
 }
 
@@ -240,16 +232,12 @@
 
 /* Chords: symbols above the staff, Roman numerals quieter beside them. */
 .score-svg .pp-chord-symbol {
-  font-family: var(--serif);
-  font-size: 17px;
-  font-weight: 700;
-  fill: var(--ink);
+  font: var(--type-chord);
+  fill: var(--text);
   stroke: none;
 }
 
 .score-svg .pp-chord-numeral {
-  font-family: var(--sans);
-  font-size: 12px;
-  font-weight: 600;
-  fill: var(--ink-3);
+  font: var(--type-label-sm);
+  fill: var(--text-subtle);
 }
