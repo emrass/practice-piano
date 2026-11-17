@@ -1,0 +1,52 @@
+<!-- @dsCard group="Practice" height=309 -->
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Score</title></head>
+<body>
+<div class="ds-stack">
+  <div class="score" id="p-score" style="min-height:200px"><p class="ds-note" style="padding:var(--space-16)">Loading the engraving…</p></div>
+  <p class="ds-note">Engraved live with VexFlow 4.2.5, as in the app. Left bar: Wait mode, with the cursor on the current note. Right bar: Flow, with the playhead.</p>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.5/build/cjs/vexflow.js"></script>
+<script>
+(function () {
+  var host = document.getElementById('p-score');
+  if (!window.Vex) { host.firstElementChild.textContent = 'The engraving library did not load. Note colors: text (unplayed), accent (current), score-good, score-ok, score-bad.'; return; }
+  host.textContent = '';
+  var W = 720, H = 200, VF = Vex.Flow;
+  var vf = new VF.Factory({ renderer: { elementId: 'p-score', width: W, height: H } });
+  var score = vf.EasyScore();
+  var bars = [
+    { x: 16, w: 372, clef: true, notes: 'E4/q, F4, D4, C4', names: ['E', 'F', 'D', 'C'], state: ['is-good', 'is-good', 'is-current', ''] },
+    { x: 388, w: 316, notes: 'A4/q, B4, D5, C5', names: ['A', 'B', 'D', 'C'], state: ['is-good', 'is-ok', 'is-bad', 'is-missed'], mark: [null, '~', '\u00d7', '\u00d7'] }
+  ];
+  var drawn = [];
+  bars.forEach(function (b) {
+    var notes = score.notes(b.notes, { stem: 'up' });
+    var system = vf.System({ x: b.x, y: 24, width: b.w, spaceBetweenStaves: 10 });
+    var stave = system.addStave({ voices: [score.voice(notes)] });
+    if (b.clef) stave.addClef('treble').addTimeSignature('4/4');
+    drawn.push({ b: b, notes: notes });
+  });
+  vf.draw();
+  var svg = host.querySelector('svg');
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.removeAttribute('width'); svg.removeAttribute('height'); svg.removeAttribute('style');
+  svg.setAttribute('class', 'score-svg'); svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', 'Two bars of music with played, current, late, wrong and missed notes');
+  var NS = 'http://www.w3.org/2000/svg', xs = [];
+  function text(cls, x, y, s) { var t = document.createElementNS(NS, 'text'); t.setAttribute('class', cls); t.setAttribute('x', x); t.setAttribute('y', y); t.setAttribute('text-anchor', 'middle'); t.textContent = s; svg.appendChild(t); }
+  drawn.forEach(function (d) {
+    d.notes.forEach(function (n, i) {
+      var el = n.getSVGElement ? n.getSVGElement() : n.attrs.el, x = n.getAbsoluteX() + 6;
+      if (el) el.setAttribute('class', (el.getAttribute('class') || '') + ' note ' + d.b.state[i]);
+      text('score-label', x, 152, d.b.names[i]);
+      if (d.b.mark && d.b.mark[i]) text('score-mark' + (d.b.mark[i] === '~' ? ' is-ok' : ''), x, 170, d.b.mark[i]);
+      xs.push(x);
+    });
+  });
+  function place(cls, x, top, h) { var e = document.createElement('div'); e.className = cls; e.style.cssText = 'left:' + (x / W * 100) + '%;top:' + (top / H * 100) + '%;height:' + (h / H * 100) + '%'; host.appendChild(e); return e; }
+  place('score-cursor', xs[2] - 15, 44, 92).style.width = (30 / W * 100) + '%';
+  place('score-playhead', xs[7] + 34, 50, 76);
+})();
+</script>
+</body>
+</html>

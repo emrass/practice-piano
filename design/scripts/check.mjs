@@ -1,0 +1,231 @@
+// Checks the design system: token hygiene, contrast, the component stylesheet and its files.
+//   node design/scripts/check.mjs
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { CSS_PATH, DESIGN, SITE_FONTS_PATH, aliasOf, compile, compileSiteFonts, listFamilies, readTokens, typeShorthand } from './build.mjs';
+
+const SYSTEM = join(DESIGN, 'system');
+const REPO = join(DESIGN, '..');
+const tokens = readTokens();
+const failures = [];
+const fail = (message) => failures.push(message);
+const read = (...parts) => readFileSync(join(...parts), 'utf8');
+
+// ---------- Tokens: names, notes, aliases ----------
+
+const NAME = /^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/;
+const all = new Map();
+for (const [family, { tokens: list }] of listFamilies(tokens)) {
+  for (const token of list) {
+    if (!NAME.test(token.name)) fail(`${family}: "${token.name}" is not a valid token name`);
+    if (all.has(token.name)) fail(`${family}: "${token.name}" is defined twice`);
+    if (!token.usage) fail(`${family}: "${token.name}" has no usage note`);
+    all.set(token.name, token);
+  }
+}
+
+const themes = tokens.color.themes.map((t) => t.id);
+const colors = new Map(tokens.color.tokens.map((t) => [t.name, t]));
+
+/** A color token's literal value in one theme, following aliases. */
+function resolve(name, theme, seen = []) {
+  const token = colors.get(name);
+  if (!token) throw new Error(`"${seen.at(-1) ?? name}" points at "${name}", which is not a color token`);
+  if (seen.includes(name)) throw new Error(`"${name}" is part of an alias loop`);
+  const value = typeof token.value === 'string' ? token.value : (token.value[theme] ?? token.value[themes[0]]);
+  const target = aliasOf(value);
+  return target ? resolve(target, theme, [...seen, name]) : value;
+}
+
+for (const token of colors.values()) {
+  for (const theme of themes) {
+    try {
+      parseColor(resolve(token.name, theme));
+    } catch (error) {
+      fail(`color: ${error.message}`);
+    }
+  }
+}
+
+// ---------- Contrast (WCAG 2) ----------
+
+function parseColor(value) {
+  const hex = /^#([0-9a-f]{3,8})$/i.exec(value)?.[1];
+  if (hex && [3, 6, 8].includes(hex.length)) {
+    const full = hex.length === 3 ? [...hex].map((c) => c + c).join('') : hex;
+    const channel = (i) => parseInt(full.slice(i, i + 2), 16);
+    return { r: channel(0), g: channel(2), b: channel(4), a: full.length === 8 ? channel(6) / 255 : 1 };
+  }
+  const rgb = /^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+)\s*)?\)$/.exec(value);
+  if (rgb) return { r: +rgb[1], g: +rgb[2], b: +rgb[3], a: rgb[4] === undefined ? 1 : +rgb[4] };
+  throw new Error(`cannot read the color "${value}" (use hex or rgb/rgba)`);
+}
+
+const over = (top, bottom) => ({
+  r: top.r * top.a + bottom.r * (1 - top.a),
+  g: top.g * top.a + bottom.g * (1 - top.a),
+  b: top.b * top.a + bottom.b * (1 - top.a),
+  a: 1,
+});
+
+function luminance({ r, g, b }) {
+  const linear = (c) => (c / 255 <= 0.04045 ? c / 255 / 12.92 : ((c / 255 + 0.055) / 1.055) ** 2.4);
+  return 0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(b);
+}
+
+function contrast(a, b) {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+let pairs = 0;
+/** `fg` on `bg` must reach `min` in every theme; `tint` is a translucent token laid over `bg` first. */
+function pair(fg, bg, min, tint) {
+  for (const theme of themes) {
+    pairs += 1;
+    try {
+      let ground = parseColor(resolve(bg, theme));
+      if (tint) ground = over(parseColor(resolve(tint, theme)), ground);
+      const ratio = contrast(over(parseColor(resolve(fg, theme)), ground), ground);
+      if (ratio < min) fail(`contrast: ${fg} on ${bg}${tint ? ` under ${tint}` : ''} is ${ratio.toFixed(2)}:1 in ${theme}, needs ${min}:1`);
+    } catch (error) {
+      fail(`contrast: ${error.message}`);
+    }
+  }
+}
+
+// Text needs 4.5:1; marks that carry meaning (edges, rings, noteheads, fills) need 3:1.
+const GROUNDS = ['surface-card', 'surface-sheet', 'surface-panel', 'surface-well', 'surface-overlay'];
+for (const ground of [...GROUNDS, 'surface-canvas']) {
+  pair('text', ground, 7);
+  pair('text-muted', ground, 4.5);
+  pair('accent', ground, 4.5);
+  pair('success', ground, 4.5);
+  pair('danger', ground, 4.5);
+  pair('focus-ring', ground, 3);
+  pair('border-strong', ground, 3);
+}
+for (const ground of GROUNDS) {
+  pair('text-subtle', ground, 4.5);
+  pair('warning', ground, 4.5);
+  pair('reward-text', ground, 4.5);
+  pair('reward', ground, 3);
+  pair('accent', ground, 4.5, 'accent-soft');
+  pair('success', ground, 4.5, 'success-soft');
+  pair('warning', ground, 4.5, 'warning-soft');
+  pair('danger', ground, 4.5, 'danger-soft');
+  pair('reward-text', ground, 4.5, 'reward-soft');
+  pair('text', ground, 7, 'surface-hover');
+}
+pair('on-accent', 'accent', 4.5);
+pair('on-accent', 'accent-hover', 4.5);
+pair('on-success', 'success', 4.5);
+pair('on-danger', 'danger', 4.5);
+pair('on-reward', 'reward', 4.5);
+pair('on-inverse', 'surface-inverse', 4.5);
+pair('score-staff', 'surface-sheet', 3);
+pair('score-label', 'surface-sheet', 4.5);
+for (const mark of ['score-good', 'score-ok', 'score-bad', 'score-cursor-edge']) pair(mark, 'surface-sheet', 3);
+for (const ground of ['keyboard-case-top', 'keyboard-case-bottom']) {
+  for (const fg of ['keyboard-text', 'keyboard-text-muted', 'keyboard-accent']) pair(fg, ground, 4.5);
+}
+pair('key-ink', 'key-white', 4.5);
+pair('key-ink-c', 'key-white', 4.5);
+pair('key-white', 'key-ink-c', 4.5); // the flag on a key
+pair('key-black-ink', 'key-black', 4.5);
+pair('key-black-ink', 'key-black-top', 4.5);
+for (const tint of ['key-expected', 'key-held', 'key-correct', 'key-wrong']) pair('key-ink-strong', tint, 4.5);
+for (const tint of ['key-black-expected', 'key-black-held', 'key-black-correct', 'key-black-wrong']) pair('key-black-ink', tint, 3);
+
+// ---------- Component stylesheet ----------
+
+const bundle = read(SYSTEM, 'components/bundle.css');
+const bundleLines = bundle.split('\n');
+const declared = new Set([...bundle.matchAll(/(?:^|[\s;{"])--([a-z0-9-]+)\s*:/g)].map((m) => m[1]));
+const known = new Set([...all.keys(), ...Object.keys(tokens.type.families).map((key) => `font-${key}`), ...declared]);
+
+// A var() with a fallback is a parameter the markup sets (--value, --cols); the rest must be tokens.
+for (const [, name] of bundle.matchAll(/var\(--([a-z0-9-]+)\)/g)) {
+  if (!known.has(name)) fail(`bundle.css: var(--${name}) is not a token`);
+}
+
+bundleLines.forEach((line, index) => {
+  const at = `bundle.css:${index + 1}`;
+  if (/#[0-9a-f]{3,8}\b|\b(?:rgb|hsl|oklch|oklab|lab|lch)a?\(/i.test(line)) fail(`${at}: literal color; use a token`);
+  if (line.includes('/* literal:') || /^\s+--/.test(line)) return; // a stated exception, or a variable definition
+  if (/[\s(,]\d*\.?\d+m?s\b/.test(line)) fail(`${at}: literal duration; use a duration token`);
+  if (/\bfont(?:-size)?\s*:[^;]*\d(?:rem|px|em)\b/.test(line)) fail(`${at}: literal type size; use a --type-* text style`);
+});
+
+// The --type-* and --tracking-* variables in bundle.css restate tokens.json; they must agree.
+const restated = new Map([...bundle.matchAll(/^\s+--((?:type|tracking)-[a-z0-9-]+):\s*([^;]+);/gm)].map((m) => [m[1], m[2]]));
+const expected = new Map();
+for (const group of tokens.type.groups) {
+  for (const style of group.styles) {
+    expected.set(`type-${style.name}`, typeShorthand(style, group));
+    if (style.letterSpacing) expected.set(`tracking-${style.name}`, style.letterSpacing);
+  }
+}
+for (const [name, value] of restated) {
+  if (!expected.has(name)) fail(`bundle.css: --${name} has no text style in tokens.json`);
+  else if (expected.get(name) !== value) fail(`bundle.css: --${name} is "${value}", tokens.json says "${expected.get(name)}"`);
+}
+for (const [, name] of bundle.matchAll(/var\(--((?:type|tracking)-[a-z0-9-]+)/g)) {
+  if (!restated.has(name)) fail(`bundle.css: var(--${name}) is used but not defined at the top of the file`);
+}
+
+// ---------- Files ----------
+
+const components = readdirSync(join(SYSTEM, 'components'), { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => entry.name);
+for (const name of components) {
+  const preview = join(SYSTEM, 'components', name, 'preview.html');
+  if (!existsSync(preview)) fail(`components/${name}: no preview.html`);
+  else if (!read(preview).startsWith('<!-- @dsCard')) fail(`components/${name}/preview.html: line 1 must be the @dsCard marker`);
+  const readme = join(SYSTEM, 'components', name, 'README.md');
+  if (name === 'Cover') {
+    if (existsSync(readme)) fail('components/Cover: the cover has a preview only, no README');
+  } else if (!existsSync(readme)) fail(`components/${name}: no README.md`);
+  else if (!read(readme).startsWith(`# ${name}\n`)) fail(`components/${name}/README.md: must start with "# ${name}"`);
+}
+
+const icons = readdirSync(join(SYSTEM, 'assets/Icons')).filter((file) => file.endsWith('.svg'));
+for (const file of icons) {
+  if (!read(SYSTEM, 'assets/Icons', file).includes('viewBox="0 0 20 20"')) fail(`assets/Icons/${file}: icons are drawn on a 20-unit grid`);
+}
+
+const listedFonts = new Set(tokens.type.fonts.map((font) => font.file));
+for (const file of listedFonts) if (!existsSync(join(SYSTEM, file))) fail(`${file}: listed in tokens.json but missing`);
+for (const file of readdirSync(join(SYSTEM, 'fonts'))) {
+  if (!listedFonts.has(`fonts/${file}`)) fail(`fonts/${file}: not listed in tokens.json (type.fonts)`);
+}
+for (const family of new Set(tokens.type.fonts.map((font) => font.family))) {
+  if (!existsSync(join(SYSTEM, 'assets/Licenses', `OFL-${family}.txt`))) fail(`assets/Licenses: no license text for ${family}`);
+}
+
+// The mark is also the favicon; the two files must stay the same picture.
+if (read(SYSTEM, 'assets/Logos/practice-piano-mark.svg') !== read(REPO, 'public/favicon.svg')) {
+  fail('assets/Logos/practice-piano-mark.svg and public/favicon.svg differ');
+}
+
+// The Score preview engraves with the app's own VexFlow version.
+const vexflow = JSON.parse(read(REPO, 'package.json')).dependencies.vexflow;
+if (!read(SYSTEM, 'components/Score/preview.html').includes(`vexflow@${vexflow}/`)) {
+  fail(`components/Score/preview.html: must load vexflow@${vexflow}, the version in package.json`);
+}
+
+for (const [path, css] of [[CSS_PATH, compile(tokens)], [SITE_FONTS_PATH, compileSiteFonts(tokens)]]) {
+  if (!existsSync(path) || read(path) !== css) {
+    fail('The generated stylesheets in design/ are out of date. Run `npm run design:build` and commit the result.');
+    break;
+  }
+}
+
+// ---------- Report ----------
+
+if (failures.length) {
+  console.error(`Design system: ${failures.length} problem${failures.length === 1 ? '' : 's'}\n${failures.map((f) => `  - ${f}`).join('\n')}`);
+  process.exit(1);
+}
+console.log(`Design system OK: ${all.size} tokens, ${pairs} contrast checks, ${components.length - 1} components, ${icons.length} icons.`);
