@@ -50,11 +50,16 @@ export function Icon(props: { name: IconName; large?: boolean; className?: strin
   );
 }
 
+/** The mark alone, decorative (the splash screen). */
+export function LogoMark() {
+  return <img className="logo-mark" src={markUrl} alt="" width={28} height={28} />;
+}
+
 /** The mark and the live wordmark (see design/system/components/Logo). */
 export function Logo() {
   return (
     <div className="logo">
-      <img className="logo-mark" src={markUrl} alt="" width={28} height={28} />
+      <LogoMark />
       <span className="logo-name">
         practice-piano<span className="logo-tld">.com</span>
       </span>
