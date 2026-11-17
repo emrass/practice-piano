@@ -2,7 +2,7 @@
 //   node design/scripts/check.mjs
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { CSS_PATH, DESIGN, SITE_FONTS_PATH, aliasOf, compile, compileSiteFonts, listFamilies, readTokens, typeShorthand } from './build.mjs';
+import { DESIGN, aliasOf, compile, compileSiteFonts, listFamilies, readTokens, typeShorthand } from './build.mjs';
 
 const SYSTEM = join(DESIGN, 'system');
 const REPO = join(DESIGN, '..');
@@ -215,11 +215,14 @@ if (!read(SYSTEM, 'components/Score/preview.html').includes(`vexflow@${vexflow}/
   fail(`components/Score/preview.html: must load vexflow@${vexflow}, the version in package.json`);
 }
 
-for (const [path, css] of [[CSS_PATH, compile(tokens)], [SITE_FONTS_PATH, compileSiteFonts(tokens)]]) {
-  if (!existsSync(path) || read(path) !== css) {
-    fail('The generated stylesheets in design/ are out of date. Run `npm run design:build` and commit the result.');
-    break;
+// The stylesheets are built on demand, not committed; make sure they still compile, and that
+// the landing-page font stays out of the app's stylesheet.
+try {
+  if (compile(tokens).includes('"Caveat"') || !compileSiteFonts(tokens).includes('"Caveat"')) {
+    fail('build: Caveat belongs in site-fonts.css only');
   }
+} catch (error) {
+  fail(`build: tokens.json does not compile (${error.message})`);
 }
 
 // ---------- Report ----------
