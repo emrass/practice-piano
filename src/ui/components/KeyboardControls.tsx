@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import type { Settings, SettingsPatch } from '../../core/settings';
 import type { KeyboardAvailability } from '../lessons/types';
 import { Field, Segmented, Toggle } from './controls';
+import { Icon } from './Icon';
 
 /**
  * The keyboard's display preferences, in the bar above the keys: the keyboard guide as a
@@ -25,11 +26,7 @@ export function KeyboardControls(props: { settings: Settings; update: (patch: Se
           if (!guideReason) update({ showKeyboardGuide: !s.showKeyboardGuide });
         }}
       >
-        <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
-          <rect x="2.5" y="4" width="15" height="12" rx="1.5" fill="none" stroke="currentColor" strokeWidth="1.5" />
-          <path d="M7.5 4v12M12.5 4v12" stroke="currentColor" strokeWidth="1.2" />
-          {guideOn ? <rect x="8.3" y="9" width="3.4" height="6.2" fill="currentColor" /> : null}
-        </svg>
+        <Icon name={guideOn ? 'guide-on' : 'guide'} />
       </button>
       <DisplayMenu {...props} />
     </>
@@ -75,14 +72,10 @@ function DisplayMenu(props: { settings: Settings; update: (patch: SettingsPatch)
         title="Keyboard display: note names, computer-key hints, keyboard view"
         onClick={() => setOpen((o) => !o)}
       >
-        <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
-          <path d="M3 6h14M3 14h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          <circle cx="7" cy="6" r="2.2" fill="currentColor" />
-          <circle cx="13" cy="14" r="2.2" fill="currentColor" />
-        </svg>
+        <Icon name="sliders" />
       </button>
       {open ? (
-        <div className="kb-popover" role="dialog" aria-label="Keyboard display" id={id}>
+        <div className="popover kb-popover" role="dialog" aria-label="Keyboard display" id={id}>
           <Toggle label="Note names on the keys" checked={s.showKeyNames} onChange={(showKeyNames) => update({ showKeyNames })} />
           <Toggle
             label="Computer-key hints"

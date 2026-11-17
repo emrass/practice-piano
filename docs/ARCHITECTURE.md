@@ -22,7 +22,12 @@
 `src/styles` has one stylesheet per feature, imported in layers by `src/main.tsx`. They are built
 on the design system in `design/` (see `design/README.md`): `design/vitePlugin.ts` compiles
 `design/system/tokens.json` into `design/dist/tokens.css` whenever `vite` starts or builds and
-whenever the file changes, and `main.tsx` imports it before everything else. Every color, text
+whenever the file changes, and `main.tsx` imports it before everything else, followed by the
+components (`design/system/components/bundle.css`). The React side of the components lives in
+`ui/components/controls.tsx` (segmented control, tabs, choice cards, slider, switch, select,
+progress bar, callout), `ui/components/Dialog.tsx` and `ui/components/Icon.tsx` (the icon set,
+inlined from `design/system/assets/Icons`, and the Logo); state is ARIA (`aria-checked`,
+`aria-selected`, `aria-pressed`), not classes. Every color, text
 style, radius, spacing step, shadow, duration and z-index is a token; `npm run design:check`
 fails on a literal color, duration or type size in `src/styles`, or on a variable that is not a
 token. The theme is `data-theme` on `<html>`, set from the settings in `App.tsx`, which also sets

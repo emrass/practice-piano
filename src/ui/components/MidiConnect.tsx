@@ -1,5 +1,6 @@
 import { midiLabel } from '../../core/music/pitch';
 import type { MidiService, MidiState } from '../../platform/midi/midiService';
+import { Callout } from './controls';
 import { connectedInputs, midiStatusText } from './midiStatus';
 
 /** Connecting a piano: what the Piano & audio settings and the setup guide share (texts in midiStatus.ts). */
@@ -24,8 +25,8 @@ export function MidiButtons(props: { midi: MidiService; canPairBluetooth: boolea
 export function BrowserBluetoothHelp() {
   return (
     <>
-      On macOS, pair the piano once in <b>Audio MIDI Setup → Window → Show MIDI Studio → Bluetooth</b> (the “Bluetooth” toolbar button), then press Rescan here. On
-      iPad, browsers can’t use MIDI — install the practice-piano app, which has a built-in pairing button.
+      On macOS, pair the piano once in <b>Audio MIDI Setup → Window → Show MIDI Studio → Bluetooth</b> (the “Bluetooth” toolbar button), then press Rescan here. On iPad, browsers
+      can’t use MIDI — install the practice-piano app, which has a built-in pairing button.
     </>
   );
 }
@@ -41,20 +42,13 @@ export function ConnectionStatus(props: { midi: MidiState; service: MidiService;
 
   if (connected.length) {
     return (
-      <div className={`setup-listen ${heard !== null ? 'is-heard' : ''}`} aria-live="polite">
-        <span className="setup-listen-mark" aria-hidden="true">
-          {heard !== null ? '✓' : '♪'}
-        </span>
+      <div aria-live="polite">
         {heard !== null ? (
-          <div>
-            <b>We hear you: {midiLabel(heard)}</b>
-            <span>on {midi.lastInputName ?? names}. Your piano is ready.</span>
-          </div>
+          <Callout tone="success" title={`We hear you: ${midiLabel(heard)}`}>
+            On {midi.lastInputName ?? names}. Your piano is ready.
+          </Callout>
         ) : (
-          <div>
-            <b>Found {names}</b>
-            <span>Play any key on it to check the connection.</span>
-          </div>
+          <Callout title={`Found ${names}`}>Play any key on it to check the connection.</Callout>
         )}
       </div>
     );
@@ -62,8 +56,7 @@ export function ConnectionStatus(props: { midi: MidiState; service: MidiService;
 
   if (midi.status === 'unsupported') {
     return (
-      <div className="setup-note is-warn">
-        <b>This browser can’t connect to a piano.</b>
+      <Callout tone="warning" title="This browser can’t connect to a piano">
         <ul>
           <li>
             On a computer, open this page in <b>Chrome</b> or <b>Edge</b>.
@@ -72,14 +65,14 @@ export function ConnectionStatus(props: { midi: MidiState; service: MidiService;
             On an iPad or iPhone, use the <b>Practice Piano app</b>: browsers there cannot use MIDI.
           </li>
         </ul>
-      </div>
+      </Callout>
     );
   }
 
   if (midi.status === 'ready') {
     return (
       <>
-        <p className="status-line">No piano found yet.</p>
+        <Callout title="No piano found yet" />
         <ul className="setup-ways">
           <li>
             <b>USB</b>
@@ -99,7 +92,7 @@ export function ConnectionStatus(props: { midi: MidiState; service: MidiService;
 
   return (
     <>
-      <p className={`status-line ${midi.status === 'initializing' ? '' : 'is-warn'}`}>{midiStatusText(midi)}</p>
+      <Callout tone={midi.status === 'initializing' ? undefined : 'warning'} title={midiStatusText(midi)} />
       {midi.status === 'initializing' ? (
         <p className="field-hint">If your browser asks whether this site may use MIDI devices, choose Allow.</p>
       ) : (

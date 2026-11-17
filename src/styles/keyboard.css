@@ -95,23 +95,12 @@
   position: relative;
 }
 
-/* Opens upward from the bar, over the practice bar, in the page's own colors. */
+/* The display menu (a Popover) opens upward from the bar, over the practice bar. */
 .kb-popover {
   position: absolute;
   right: -34px;
   bottom: calc(100% + var(--space-8));
   z-index: var(--z-popover);
-  display: grid;
-  gap: var(--space-12);
-  width: 300px;
-  max-width: calc(100vw - 24px);
-  padding: var(--space-16);
-  border: var(--stroke-thin) solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--surface-overlay);
-  color: var(--text);
-  box-shadow: var(--shadow-2);
-  animation: fade-in var(--duration-fast) var(--ease-out);
 }
 
 .kb-popover .segmented {
@@ -338,4 +327,16 @@
   .key-marker {
     padding: var(--space-2);
   }
+}
+
+/* Until the keyboard moves onto the design system's Keyboard component (bundle.css), its
+   rules that share these class names stay out: no state marks on the keys, and the bar keeps
+   its own row height and type. */
+.key:is(.is-expected, .is-wrong)::before {
+  content: none;
+}
+
+.keyboard-head {
+  min-height: 0;
+  font: inherit;
 }

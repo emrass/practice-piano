@@ -110,7 +110,7 @@ async function nextExerciseUntil(app: App, page: Page, fits: () => Promise<boole
 /** The sidebar from just above a section's title, cut to the image's aspect ratio. */
 async function sidebarFrom(page: Page, title: string, s: Size) {
   const sidebar = (await page.locator('.sidebar').boundingBox())!;
-  const head = (await page.locator('.panel-section .section-title').filter({ hasText: title }).first().boundingBox())!;
+  const head = (await page.locator('.section .section-title').filter({ hasText: title }).first().boundingBox())!;
   return clipTo({ x: sidebar.x, y: head.y - 1, width: sidebar.width, height: 0 }, s);
 }
 

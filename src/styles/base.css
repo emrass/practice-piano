@@ -1,11 +1,5 @@
-/* Page defaults. Every color, size and duration comes from the design tokens
-   (design/dist/tokens.css, built from design/system/tokens.json). */
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
+/* Page defaults beyond the design system's base (design/system/components/bundle.css). Every
+   color, size and duration comes from the tokens (design/dist/tokens.css). */
 
 html,
 body,
@@ -15,44 +9,13 @@ body,
 }
 
 body {
-  font: var(--type-body);
-  color: var(--text);
-  background: var(--surface-canvas);
-  -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior: none;
-}
-
-button,
-select,
-input {
-  font: inherit;
-  color: inherit;
-}
-
-button {
-  cursor: pointer;
-}
-
-kbd {
-  font: var(--type-kbd);
-  padding: 1px var(--space-4);
-  border-radius: var(--radius-xs);
-  border: var(--stroke-thin) solid var(--border);
-  border-bottom-width: var(--stroke-thick);
-  background: var(--surface-sheet);
-  color: var(--text-muted);
-  white-space: nowrap;
 }
 
 .muted {
   color: var(--text-subtle);
   font-weight: 400;
-}
-
-:focus-visible {
-  outline: var(--stroke-thick) solid var(--focus-ring);
-  outline-offset: 2px;
 }
 
 .splash {

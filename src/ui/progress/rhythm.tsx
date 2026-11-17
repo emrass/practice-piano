@@ -4,6 +4,7 @@ import { BEAT_POSITION_LABELS, TEXTURE_INFO, type BeatPosition, type RhythmTextu
 import { pct, tendencyText } from './format';
 import { TierMastery } from './TierMastery';
 import type { ProgressSectionProps } from './types';
+import { ProgressBar } from '../components/controls';
 
 /** Hit rate bars with timing quality and tendency, for any rhythm dimension. */
 function TimeBars(props: { rows: { label: string; stat: TimeStat }[]; empty: string }) {
@@ -13,16 +14,14 @@ function TimeBars(props: { rows: { label: string; stat: TimeStat }[]; empty: str
       {props.rows.map(({ label, stat }) => (
         <div
           key={label}
-          className="clef-bar"
+          className="progress-row"
           title={`${Math.round(stat.accuracy * stat.attempts)}/${stat.attempts} hit · timing ${pct(stat.timing)}${
             stat.tendencyMs !== null ? ` · ${tendencyText(stat.tendencyMs)}` : ''
           }${stat.steadinessMs !== null ? ` · ±${stat.steadinessMs} ms` : ''}`}
         >
           <span>{label}</span>
-          <div className="progress-track">
-            <div className="progress-fill" style={{ width: `${stat.accuracy * 100}%` }} />
-          </div>
-          <span>{pct(stat.accuracy)}</span>
+          <ProgressBar label="Accuracy" value={Math.round(stat.accuracy * 100)} max={100} />
+          <span className="num">{pct(stat.accuracy)}</span>
         </div>
       ))}
     </div>
@@ -46,24 +45,27 @@ export function RhythmSection(props: ProgressSectionProps) {
   const weak = findWeakFigures(progress);
   return (
     <>
-      <section className="panel-section">
+      <section className="section">
         <div className="section-title">Rhythm figures</div>
         <TimeBars rows={figures} empty="Figure accuracy appears after your first rhythms (and Flow-mode sight reading)." />
         {weak.length ? (
           <p className="field-hint">
-            Weakest: {weak.map((w) => `${figureName(w.key).toLowerCase()} (${pct(w.accuracy)}${w.tendencyMs !== null && Math.abs(w.tendencyMs) >= 8 ? `, ${tendencyText(w.tendencyMs)}` : ''})`).join(', ')}
+            Weakest:{' '}
+            {weak
+              .map((w) => `${figureName(w.key).toLowerCase()} (${pct(w.accuracy)}${w.tendencyMs !== null && Math.abs(w.tendencyMs) >= 8 ? `, ${tendencyText(w.tendencyMs)}` : ''})`)
+              .join(', ')}
           </p>
         ) : null}
         <button type="button" className="btn btn-block" disabled={weak.length === 0} onClick={props.onPracticeWeakSpots}>
           Practice weak figures
         </button>
       </section>
-      <section className="panel-section">
+      <section className="section">
         <div className="section-title">Where in the bar</div>
         <TimeBars rows={beats} empty="Appears after your first rhythms." />
       </section>
       {hands.length > 1 || textures.length ? (
-        <section className="panel-section">
+        <section className="section">
           <div className="section-title">Hand independence</div>
           <TimeBars rows={[...hands, ...textures]} empty="" />
           {hands.length === 2 ? (

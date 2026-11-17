@@ -51,7 +51,7 @@ test('First run: a connected piano is offered at once, confirmed by a key, and t
   const before = await page.evaluate(() => JSON.stringify(window.__ppDebug!.controller.state.get()));
   await app.tap([60]);
   await expect(guide(page)).toContainText('We hear you: C4');
-  await expect(guide(page)).toContainText('on Test Piano');
+  await expect(guide(page)).toContainText('On Test Piano');
   expect(await page.evaluate(() => JSON.stringify(window.__ppDebug!.controller.state.get()))).toBe(before);
 
   await button(page, 'Next').click();
@@ -65,7 +65,7 @@ test('First run: a connected piano is offered at once, confirmed by a key, and t
 
   await button(page, 'Next').click();
   await expect(guide(page)).toContainText('Line up the metronome');
-  await button(page, /Headphones on piano/).click();
+  await guide(page).getByRole('radio', { name: /Headphones on piano/ }).click();
   await button(page, 'Start practicing').click();
   await expect(guide(page)).toHaveCount(0);
 
@@ -86,7 +86,7 @@ test('First run: a connected piano is offered at once, confirmed by a key, and t
 
   await page.reload();
   await page.waitForFunction(() => !!window.__ppDebug?.exercise);
-  await expect(page.locator('.chip-midi')).toHaveClass(/is-on/);
+  await expect(page.locator('.chip-midi .status-dot')).toHaveClass(/is-on/);
   await expect(guide(page)).toHaveCount(0);
 });
 
@@ -129,7 +129,7 @@ test('A piano plugged in while the guide is open is found; later, the top-bar ch
 
   await page.evaluate(() => (window as unknown as { __plug(): void }).__plug());
   await expect(settings).toContainText('Found Test Piano');
-  await expect(chip).toHaveClass(/is-on/);
+  await expect(chip.locator('.status-dot')).toHaveClass(/is-on/);
 });
 
 test('A piano plugged in during the first step enables Next', async ({ page }) => {
@@ -169,7 +169,7 @@ test('Skip setup leaves the defaults and does not come back', async ({ page }) =
   await expect.poll(() => saved(page)).toMatchObject({ setupGuideSeen: true, experience: null, keySound: false, audioSetup: 'speakers', sight: { level: 1, hands: 'rh' } });
   await page.reload();
   await page.waitForFunction(() => !!window.__ppDebug?.exercise);
-  await expect(page.locator('.chip-midi')).toHaveClass(/is-on/);
+  await expect(page.locator('.chip-midi .status-dot')).toHaveClass(/is-on/);
   await expect(guide(page)).toHaveCount(0);
 });
 
@@ -196,7 +196,7 @@ test('Reopened from Piano & audio, the guide changes nothing unless something is
   await button(page, 'Next').click();
   await expect(guide(page).getByRole('radio', { checked: true })).toHaveCount(0);
   await button(page, 'Next').click();
-  await expect(button(page, /Headphones on piano/)).toHaveAttribute('aria-pressed', 'true');
+  await expect(guide(page).getByRole('radio', { name: /Headphones on piano/ })).toHaveAttribute('aria-checked', 'true');
   await button(page, 'Start practicing').click();
   await expect(guide(page)).toHaveCount(0);
   await page.waitForTimeout(500); // past the debounced save
@@ -213,7 +213,7 @@ for (const theme of ['light', 'dark'] as const) {
     }, theme);
     await openNew(page, unpluggedMidi);
     const fits = async (what: string) => {
-      const card = page.locator('.modal-card.setup');
+      const card = guide(page);
       expect(await card.evaluate((el) => el.scrollWidth <= el.clientWidth + 1), `${what}: card overflows sideways`).toBe(true);
       const box = (await card.boundingBox())!;
       expect(box.x, what).toBeGreaterThanOrEqual(0);

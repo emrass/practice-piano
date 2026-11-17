@@ -16,7 +16,8 @@ import type { WeakChordStat } from '../../core/progress/chords';
 import type { ProgressState } from '../../core/progress/progress';
 import { progressionChoice, type Settings, type SettingsPatch } from '../../core/settings';
 import { tonicLabel } from '../../core/scales/catalog';
-import { CommitSlider, Field, ReviewNote, Segmented, Select, Toggle } from './controls';
+import { CommitSlider, Field, ProgressBar, ReviewNote, Segmented, Select, Toggle } from './controls';
+import { Icon } from './Icon';
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -48,7 +49,7 @@ export function ChordsPanel(props: {
 
   return (
     <div className="panel-body">
-      <section className="panel-section">
+      <section className="section">
         <Field label="Practice">
           <Segmented<'drill' | 'progression'>
             label="Task"
@@ -111,10 +112,7 @@ export function ChordsPanel(props: {
                 label="Key"
                 value={s.chords.key}
                 onChange={(chordsKey) => update({ chords: { key: chordsKey, source: 'pick' } })}
-                options={[
-                  { value: 'shuffle', label: 'Shuffle keys' },
-                  ...keysFor(def.mode).map((k) => ({ value: k, label: `${tonicLabel(k)} ${def.mode}` })),
-                ]}
+                options={[{ value: 'shuffle', label: 'Shuffle keys' }, ...keysFor(def.mode).map((k) => ({ value: k, label: `${tonicLabel(k)} ${def.mode}` }))]}
               />
               <Field label="Hands">
                 <Segmented<ChordHands>
@@ -133,25 +131,30 @@ export function ChordsPanel(props: {
         {props.reviewing ? <ReviewNote mode={s.chords.mode} /> : null}
       </section>
 
-      <section className="panel-section">
+      <section className="section">
         <div className="section-title">Tempo ladder</div>
-        <div className="item-status">
+        <div className="well item-status">
           <div className="item-status-title">{ex.chords.title}</div>
           <div className="item-status-sub">
             One chord per bar
-            {item?.mastered ? <span className="badge badge-mastered">★ Mastered</span> : null}
+            {item?.mastered ? (
+              <span className="badge badge-mastered">
+                <Icon name="star" />
+                Mastered
+              </span>
+            ) : null}
           </div>
           <div className="ladder-row">
-            <button type="button" className="btn btn-small" onClick={() => props.onTempo(-4)} aria-label="Slower">
+            <button type="button" className="btn btn-sm" onClick={() => props.onTempo(-4)} aria-label="Slower">
               −
             </button>
             <span className="ladder-tempo">♩ = {bpm}</span>
-            <button type="button" className="btn btn-small" onClick={() => props.onTempo(4)} aria-label="Faster">
+            <button type="button" className="btn btn-sm" onClick={() => props.onTempo(4)} aria-label="Faster">
               +
             </button>
           </div>
-          <div className="progress-track" title={`${bpm} of your ${goal} bpm goal`}>
-            <div className={`progress-fill ${item?.mastered ? 'is-mastered' : ''}`} style={{ width: `${Math.min(100, (bpm / goal) * 100)}%` }} />
+          <div title={`${bpm} of your ${goal} bpm goal`}>
+            <ProgressBar label="Tempo ladder" value={bpm} max={goal} complete={!!item?.mastered} />
           </div>
           <p className="field-hint">
             {bpm} bpm · goal {goal}
@@ -159,12 +162,12 @@ export function ChordsPanel(props: {
           </p>
         </div>
         <p className="field-hint">
-          In <b>Flow</b>, play each chord on the downbeat. A clean run (≥ 90 % chords, ≥ 75 % timing) adds 4 bpm; a messy one takes 4 off. <b>Wait</b> times how
-          quickly you find each chord.
+          In <b>Flow</b>, play each chord on the downbeat. A clean run (≥ 90 % chords, ≥ 75 % timing) adds 4 bpm; a messy one takes 4 off. <b>Wait</b> times how quickly you find
+          each chord.
         </p>
       </section>
 
-      <section className="panel-section">
+      <section className="section">
         <Toggle
           label="Review due items"
           hint={
@@ -187,7 +190,7 @@ export function ChordsPanel(props: {
         ) : null}
       </section>
 
-      <section className="panel-section">
+      <section className="section">
         <div className="section-title">Display</div>
         {drill ? null : (
           <Toggle

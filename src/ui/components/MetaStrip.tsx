@@ -89,18 +89,18 @@ export function MetaStrip(props: { exercise: Exercise; firstSight: boolean; focu
         )}
       </div>
       {items.map(([k, v]) => (
-        <div className="meta-item" key={k}>
-          <span className="meta-k">{k}</span>
-          <span className="meta-v">{v}</span>
+        <div className="meta-item stat" key={k}>
+          <span className="stat-label">{k}</span>
+          <span className="stat-value is-text">{v}</span>
         </div>
       ))}
       <div className="meta-badges">
         {scale || chords ? null : (
-          <span className={`badge badge-sight ${props.firstSight ? '' : 'is-off'}`} title="Unseen passage: first-try success earns bonus XP">
+          <span className={`badge ${props.firstSight ? 'badge-reward' : ''}`} title="Unseen passage: first-try success earns bonus XP">
             {props.firstSight ? 'First sight' : 'Repeat'}
           </span>
         )}
-        <span className={`badge badge-focus ${props.focus ? '' : 'is-hidden'}`}>Weak-spot focus</span>
+        <span className={`badge badge-accent ${props.focus ? '' : 'is-hidden'}`}>Weak-spot focus</span>
       </div>
     </div>
   );

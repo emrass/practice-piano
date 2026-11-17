@@ -21,6 +21,7 @@ import { PianoAudioDialog } from './components/PianoAudioDialog';
 import { PracticeBar } from './components/PracticeBar';
 import { ProgressPanel } from './components/ProgressPanel';
 import { ResultsCard } from './components/ResultsCard';
+import { Tabs } from './components/controls';
 import { ScoreView } from './components/ScoreView';
 import { SetupGuide, type SetupStep } from './components/SetupGuide';
 import { TopBar } from './components/TopBar';
@@ -242,19 +243,18 @@ function Studio({ profile }: { profile: Profile }) {
 
   const panels = (
     <>
-      <div className="sidebar-tabs" role="tablist">
-        {(
-          [
-            ['exercise', 'Exercise'],
-            ['progress', 'Progress'],
-          ] as [Tab, string][]
-        ).map(([id, label]) => (
-          <button key={id} type="button" role="tab" aria-selected={tab === id} className={tab === id ? 'is-active' : ''} onClick={() => setTab(id)}>
-            {label}
-          </button>
-        ))}
-      </div>
-      <div className="sidebar-scroll">
+      <Tabs<Tab>
+        label="Sidebar"
+        idBase="sidebar"
+        fill
+        tabs={[
+          { id: 'exercise', label: 'Exercise' },
+          { id: 'progress', label: 'Progress' },
+        ]}
+        value={tab}
+        onChange={setTab}
+      />
+      <div className="sidebar-scroll" role="tabpanel" id="sidebar-panel" aria-labelledby={`sidebar-tab-${tab}`}>
         {tab === 'exercise' ? runtime.panel : null}
         {tab === 'progress' ? (
           <ProgressPanel

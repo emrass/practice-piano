@@ -9,6 +9,7 @@ import type { PracticeState, Session } from '../practice/session';
 import { InputMonitor } from './InputMonitor';
 import { KeyboardControls } from './KeyboardControls';
 import { PianoKeyboard } from './PianoKeyboard';
+import { Icon } from './Icon';
 
 /** The on-screen keyboard with the bar above it: held notes, range, display settings and key sound. */
 export function KeyboardDock(props: {
@@ -56,14 +57,7 @@ export function KeyboardDock(props: {
             title={soundOn ? 'Key sound on — on-screen and computer keys play a piano sound' : 'Key sound off — turn on to hear on-screen and computer keys'}
             onClick={() => props.update({ keySound: !soundOn })}
           >
-            <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
-              <path d="M3 7.5h3l4-3.5v12l-4-3.5H3z" fill="currentColor" />
-              {soundOn ? (
-                <path d="M13 7a4 4 0 0 1 0 6M15.5 4.8a7 7 0 0 1 0 10.4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-              ) : (
-                <path d="M13.2 7.6l4.4 4.8M17.6 7.6l-4.4 4.8" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-              )}
-            </svg>
+            <Icon name={soundOn ? 'sound-on' : 'sound-off'} />
           </button>
         </div>
       </div>

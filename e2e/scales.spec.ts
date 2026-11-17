@@ -78,7 +78,7 @@ test.describe('Scales & arpeggios', () => {
     await expect(panel.locator('.item-status-title')).toContainText('D major');
     await expect(panel.getByLabel('Key', { exact: true })).toHaveValue('D');
     await expect(panel.getByRole('radiogroup', { name: 'Hands' }).getByRole('radio', { checked: true })).toHaveText('Together');
-    await expect(panel.locator('.review-note.is-wait')).toContainText('stays due');
+    await expect(panel.locator('.review-note.callout-warning')).toContainText('stays due');
 
     await app.playSteps();
     await expect(app.results()).toContainText('move only in Flow');
@@ -90,7 +90,7 @@ test.describe('Scales & arpeggios', () => {
 
     // Switching to Flow changes the note; changing the hands starts a pick from D major.
     await page.getByRole('radio', { name: 'Flow', exact: true }).click();
-    await expect(panel.locator('.review-note')).not.toHaveClass(/is-wait/);
+    await expect(panel.locator('.review-note')).not.toHaveClass(/callout-warning/);
     await panel.getByRole('radiogroup', { name: 'Hands' }).getByRole('radio', { name: 'RH', exact: true }).click();
     await expect.poll(async () => (await app.savedSettings()).scales).toMatchObject({ source: 'pick', type: 'major', tonic: 'D', hands: 'rh' });
     await expect(panel.locator('.review-note')).toHaveCount(0);

@@ -75,7 +75,7 @@ for (const theme of ['light', 'dark'] as const) {
     await page.setViewportSize({ width: 360, height: 640 });
     await app.open({ settings: { lesson: 'sight', theme } });
     const dialog = await app.openPianoAudio();
-    const card = dialog.locator('.modal-card.settings');
+    const card = dialog;
     const box = (await card.boundingBox())!;
     expect(box).toMatchObject({ x: 0, width: 360 });
     expect(box.y + box.height).toBeLessThanOrEqual(640);

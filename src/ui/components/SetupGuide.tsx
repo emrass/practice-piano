@@ -6,7 +6,8 @@ import type { MidiService, MidiState } from '../../platform/midi/midiService';
 import { useHeardNote } from '../hooks/useHeardNote';
 import { ConnectionStatus } from './MidiConnect';
 import { connectedInputs } from './midiStatus';
-import { Select } from './controls';
+import { Callout, ChoiceGroup, Select } from './controls';
+import { Dialog } from './Dialog';
 
 export type SetupStep = 'connect' | 'level' | 'metronome';
 
@@ -54,6 +55,7 @@ export function SetupGuide(props: {
     return () => window.removeEventListener('keydown', onKey);
   }, [hidden, onClose]);
 
+  // Each step starts from the top of the dialog for keyboard and screen-reader users.
   useEffect(() => {
     if (!hidden) card.current?.focus();
   }, [hidden, step, explainingFallback]);
@@ -81,121 +83,106 @@ export function SetupGuide(props: {
   const title = step === 'connect' ? (explainingFallback ? 'Playing without a piano' : 'Connect your piano') : step === 'level' ? 'How well do you play?' : 'Line up the metronome';
 
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="setup-title">
-      <div className="modal-card setup" ref={card} tabIndex={-1}>
-        <div className="modal-head">
-          <div>
-            <div className="setup-progress">
-              Setup · step {index + 1} of {steps.length}
-            </div>
-            <h2 id="setup-title">{title}</h2>
-          </div>
-          <button type="button" className="icon-btn" aria-label="Close setup" onClick={onClose}>
-            ✕
-          </button>
-        </div>
-
-        {step === 'connect' && !explainingFallback ? (
-          <>
-            <ConnectStep midi={midi} service={props.midi} heard={heard} />
-            <div className="modal-actions setup-actions">
-              <button type="button" className="btn btn-ghost" onClick={onClose}>
-                Skip setup
-              </button>
-              {/* Where a piano cannot be connected at all, going on without one is the way forward. */}
-              <button type="button" className={`btn ${midi.status === 'unsupported' ? 'btn-primary' : ''}`} onClick={() => setExplainingFallback(true)}>
-                {midi.status === 'unsupported' ? 'Continue without a piano' : 'I don’t have a piano here'}
-              </button>
-              {midi.status === 'unsupported' ? null : (
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  disabled={!connected.length}
-                  onClick={() => {
-                    setNoPiano(false);
-                    setStep('level');
-                  }}
-                >
-                  Next
-                </button>
-              )}
-            </div>
-          </>
-        ) : null}
-
-        {step === 'connect' && explainingFallback ? (
-          <>
-            <div className="setup-body">
-              <p>
-                You can try every lesson with the <b>keys on the screen</b> (mouse or touch) or with your <b>computer keyboard</b>: <kbd>A</kbd>–<kbd>'</kbd> are the white
-                keys, <kbd>W</kbd> <kbd>E</kbd> <kbd>T</kbd> <kbd>Y</kbd> <kbd>U</kbd> the black ones. We’ll turn on <b>Key sound</b> so those keys make a sound.
-              </p>
-              <p>
-                It is a way to look around, not to practice: fingering, both hands and playing in time need a real keyboard. When your piano is nearby, press{' '}
-                <b>Connect a piano</b> in the top bar.
-              </p>
-            </div>
-            <div className="modal-actions setup-actions">
-              <button type="button" className="btn btn-ghost" onClick={() => setExplainingFallback(false)}>
-                Back
-              </button>
+    <Dialog title={title} eyebrow={`Setup · step ${index + 1} of ${steps.length}`} closeLabel="Close setup" onClose={onClose} className="setup" dialogRef={card}>
+      {step === 'connect' && !explainingFallback ? (
+        <>
+          <ConnectStep midi={midi} service={props.midi} heard={heard} />
+          <div className="dialog-actions">
+            <button type="button" className="btn btn-ghost" onClick={onClose}>
+              Skip setup
+            </button>
+            {/* Where a piano cannot be connected at all, going on without one is the way forward. */}
+            <button type="button" className={`btn ${midi.status === 'unsupported' ? 'btn-primary' : ''}`} onClick={() => setExplainingFallback(true)}>
+              {midi.status === 'unsupported' ? 'Continue without a piano' : 'I don’t have a piano here'}
+            </button>
+            {midi.status === 'unsupported' ? null : (
               <button
                 type="button"
                 className="btn btn-primary"
+                disabled={!connected.length}
                 onClick={() => {
-                  update({ keySound: true });
-                  setNoPiano(true);
-                  setExplainingFallback(false);
+                  setNoPiano(false);
                   setStep('level');
                 }}
               >
-                Continue without a piano
+                Next
               </button>
-            </div>
-          </>
-        ) : null}
+            )}
+          </div>
+        </>
+      ) : null}
 
-        {step === 'level' ? (
-          <>
-            <LevelStep selection={selection} onChange={setSelection} reopened={props.reopened} />
-            <div className="modal-actions setup-actions">
-              <button type="button" className="btn btn-ghost" onClick={onClose}>
-                Skip setup
-              </button>
-              <button type="button" className="btn" onClick={back}>
-                Back
-              </button>
-              <button type="button" className="btn btn-primary" onClick={next}>
-                {last ? 'Start practicing' : 'Next'}
-              </button>
-            </div>
-          </>
-        ) : null}
+      {step === 'connect' && explainingFallback ? (
+        <>
+          <div className="dialog-body">
+            <p>
+              You can try every lesson with the <b>keys on the screen</b> (mouse or touch) or with your <b>computer keyboard</b>: <kbd>A</kbd>–<kbd>'</kbd> are the white keys,{' '}
+              <kbd>W</kbd> <kbd>E</kbd> <kbd>T</kbd> <kbd>Y</kbd> <kbd>U</kbd> the black ones. We’ll turn on <b>Key sound</b> so those keys make a sound.
+            </p>
+            <p>
+              It is a way to look around, not to practice: fingering, both hands and playing in time need a real keyboard. When your piano is nearby, press <b>Connect a piano</b>{' '}
+              in the top bar.
+            </p>
+          </div>
+          <div className="dialog-actions">
+            <button type="button" className="btn btn-ghost" onClick={() => setExplainingFallback(false)}>
+              Back
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => {
+                update({ keySound: true });
+                setNoPiano(true);
+                setExplainingFallback(false);
+                setStep('level');
+              }}
+            >
+              Continue without a piano
+            </button>
+          </div>
+        </>
+      ) : null}
 
-        {step === 'metronome' ? (
-          <>
-            <MetronomeStep settings={s} update={update} onCalibrate={props.onCalibrate} />
-            <div className="modal-actions setup-actions">
-              <button type="button" className="btn btn-ghost" onClick={back}>
-                Back
-              </button>
-              <button type="button" className="btn btn-primary" onClick={next}>
-                Start practicing
-              </button>
-            </div>
-          </>
-        ) : null}
-      </div>
-    </div>
+      {step === 'level' ? (
+        <>
+          <LevelStep selection={selection} onChange={setSelection} reopened={props.reopened} />
+          <div className="dialog-actions">
+            <button type="button" className="btn btn-ghost" onClick={onClose}>
+              Skip setup
+            </button>
+            <button type="button" className="btn" onClick={back}>
+              Back
+            </button>
+            <button type="button" className="btn btn-primary" onClick={next}>
+              {last ? 'Start practicing' : 'Next'}
+            </button>
+          </div>
+        </>
+      ) : null}
+
+      {step === 'metronome' ? (
+        <>
+          <MetronomeStep settings={s} update={update} onCalibrate={props.onCalibrate} />
+          <div className="dialog-actions">
+            <button type="button" className="btn btn-ghost" onClick={back}>
+              Back
+            </button>
+            <button type="button" className="btn btn-primary" onClick={next}>
+              Start practicing
+            </button>
+          </div>
+        </>
+      ) : null}
+    </Dialog>
   );
 }
 
 function ConnectStep(props: { midi: MidiState; service: MidiService; heard: number | null }) {
   return (
-    <div className="setup-body">
+    <div className="dialog-body">
       <p>
-        Practice Piano is made to be played on a <b>real piano or keyboard</b>. It listens to what you play over <b>USB or Bluetooth MIDI</b> and scores your notes and your
-        timing.
+        Practice Piano is made to be played on a <b>real piano or keyboard</b>. It listens to what you play over <b>USB or Bluetooth MIDI</b> and scores your notes and your timing.
       </p>
       <ConnectionStatus {...props} />
     </div>
@@ -206,27 +193,18 @@ function LevelStep(props: { selection: ExperienceSelection | null; onChange: (s:
   const { selection } = props;
   const stage = stageOf(selection);
   return (
-    <div className="setup-body">
+    <div className="dialog-body">
       <p>Pick what fits best. It sets a starting point for every lesson, and you can change any level later.</p>
-      <div className="setup-stages" role="radiogroup" aria-label="How well do you play?">
-        {STAGES.map((st) => (
-          <button
-            key={st.id}
-            type="button"
-            role="radio"
-            aria-checked={stage?.id === st.id}
-            className={`setup-stage ${stage?.id === st.id ? 'is-active' : ''}`}
-            onClick={() => props.onChange(st.selection)}
-          >
-            <b>{st.name}</b>
-            <span>{st.description}</span>
-          </button>
-        ))}
-      </div>
+      <ChoiceGroup
+        label="How well do you play?"
+        value={stage?.id ?? null}
+        onChange={(id) => props.onChange(STAGES.find((st) => st.id === id)!.selection)}
+        options={STAGES.map((st) => ({ value: st.id, name: st.name, description: st.description }))}
+      />
 
       {selection ? (
-        <div className="setup-skills">
-          <p className="setup-skills-head">
+        <div className="well setup-skills">
+          <p>
             <b>We’ll start you here.</b> Change anything that doesn’t fit.
           </p>
           {EXPERIENCE_SKILLS.map((skill) => (
@@ -249,16 +227,12 @@ function MetronomeStep(props: { settings: Settings; update: (patch: SettingsPatc
   const { settings: s } = props;
   const calibrated = s.audioSetup === 'calibrated' && s.calibration;
   return (
-    <div className="setup-body">
+    <div className="dialog-body">
       <p>
-        In <b>Flow</b> mode you play in time with a metronome. Sound takes a moment to travel — longer over Bluetooth — so the app needs to know how late the click reaches
-        your ears to judge your timing fairly.
+        In <b>Flow</b> mode you play in time with a metronome. Sound takes a moment to travel — longer over Bluetooth — so the app needs to know how late the click reaches your
+        ears to judge your timing fairly.
       </p>
-      {calibrated ? (
-        <p className="status-line is-ok">
-          Calibrated · {s.calibration!.latencyMs} ms ± {s.calibration!.spreadMs} ms
-        </p>
-      ) : null}
+      {calibrated ? <Callout tone="success" title={`Calibrated · ${s.calibration!.latencyMs} ms ± ${s.calibration!.spreadMs} ms`} /> : null}
       <button type="button" className={`btn btn-block ${calibrated ? '' : 'btn-primary'}`} onClick={props.onCalibrate}>
         {calibrated ? 'Calibrate again…' : 'Calibrate now (about 30 seconds)…'}
       </button>
@@ -266,22 +240,16 @@ function MetronomeStep(props: { settings: Settings; update: (patch: SettingsPatc
 
       <div className="field">
         <div className="field-label">Or pick the closest setup</div>
-        <div className="setup-presets">
-          {(['speakers', 'headphones'] as const).map((id) => (
-            <button
-              key={id}
-              type="button"
-              aria-pressed={s.audioSetup === id}
-              className={`setup-stage ${s.audioSetup === id ? 'is-active' : ''}`}
-              onClick={() => props.update({ audioSetup: id, latencyMs: LATENCY_PRESETS[id].latencyMs, playheadDelayMs: LATENCY_PRESETS[id].playheadDelayMs })}
-            >
-              <b>
-                {LATENCY_PRESETS[id].label} · {LATENCY_PRESETS[id].latencyMs} ms
-              </b>
-              <span>{LATENCY_PRESETS[id].help}</span>
-            </button>
-          ))}
-        </div>
+        <ChoiceGroup
+          label="Or pick the closest setup"
+          value={s.audioSetup === 'speakers' || s.audioSetup === 'headphones' ? s.audioSetup : null}
+          onChange={(id) => props.update({ audioSetup: id, latencyMs: LATENCY_PRESETS[id].latencyMs, playheadDelayMs: LATENCY_PRESETS[id].playheadDelayMs })}
+          options={(['speakers', 'headphones'] as const).map((id) => ({
+            value: id,
+            name: `${LATENCY_PRESETS[id].label} · ${LATENCY_PRESETS[id].latencyMs} ms`,
+            description: LATENCY_PRESETS[id].help,
+          }))}
+        />
       </div>
       <p className="field-hint">
         This only matters in Flow mode. You can do it later in <b>Piano &amp; audio</b>, from the piano button in the top bar.

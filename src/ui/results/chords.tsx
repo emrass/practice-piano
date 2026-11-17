@@ -1,5 +1,6 @@
 import { gradeHeadline, hintNote, pct, signedMs } from './format';
 import type { ResultsView } from './types';
+import { Icon } from '../components/Icon';
 
 const TROUBLE_TEXT = {
   missed: 'missed',
@@ -83,7 +84,12 @@ export const chordsResults: ResultsView = {
               : change.toTempo < change.fromTempo
                 ? `Tempo down to ${change.toTempo} bpm — get it clean first`
                 : `Tempo stays at ${change.toTempo} bpm`}
-            {change.newlyMastered ? ` · ★ mastered at ${c.bpm} bpm` : ''}
+            {change.newlyMastered ? (
+              <>
+                {' · '}
+                <Icon name="star" /> mastered at {c.bpm} bpm
+              </>
+            ) : null}
             {change.dueInDays > 0 ? ` · review in ${change.dueInDays} day${change.dueInDays === 1 ? '' : 's'}` : ''}
           </div>
         ) : change ? (

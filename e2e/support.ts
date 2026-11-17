@@ -85,7 +85,7 @@ export class App {
     await this.page.goto('/');
     await this.page.waitForFunction(() => !!window.__ppDebug?.exercise);
     // MIDI access resolves asynchronously; the chip shows the device once it is attached.
-    await expect(this.page.locator('.chip-midi')).toHaveClass(/is-on/);
+    await expect(this.page.locator('.chip-midi .status-dot')).toHaveClass(/is-on/);
   }
 
   /** Reads from the current exercise (runs in the page). */

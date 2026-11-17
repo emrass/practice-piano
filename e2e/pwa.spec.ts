@@ -37,7 +37,7 @@ test('After one visit, the app loads and plays offline', async ({ page, context 
   expect(await page.evaluate(() => navigator.serviceWorker.controller !== null)).toBe(true);
 
   // MIDI input reaches the keyboard.
-  await expect(page.locator('.chip-midi')).toHaveClass(/is-on/);
+  await expect(page.locator('.chip-midi .status-dot')).toHaveClass(/is-on/);
   const key = page.locator('[data-midi="60"]');
   await page.evaluate(() => window.__midi([0x90, 60, 72]));
   await expect(key).toHaveClass(/is-held/);
@@ -172,7 +172,7 @@ updates('An app that comes back to the foreground reloads into the new version w
 updates('A run under way is never cut short; the update waits for the next return', async ({ context, deploys }) => {
   const page = await firstVisit(context, deploys);
   await page.reload();
-  await expect(page.locator('.chip-midi')).toHaveClass(/is-on/);
+  await expect(page.locator('.chip-midi .status-dot')).toHaveClass(/is-on/);
 
   // Play into the Wait run: now there is something to lose.
   await page.evaluate(() => window.__midi([0x90, 60, 72]));

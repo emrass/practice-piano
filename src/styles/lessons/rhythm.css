@@ -34,13 +34,3 @@
   color: var(--accent);
 }
 
-/* Rhythm statistics: longer labels (figure names). */
-.time-bars .clef-bar {
-  grid-template-columns: minmax(0, 132px) 1fr 40px;
-}
-
-.time-bars .clef-bar > span:first-child {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}

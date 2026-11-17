@@ -1,61 +1,4 @@
-/* Modal dialog and latency calibration. */
-
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: var(--z-dialog);
-  display: grid;
-  place-items: center;
-  padding: var(--space-16);
-  background: var(--scrim);
-  backdrop-filter: blur(3px);
-  animation: fade-in var(--duration-base) var(--ease-out);
-}
-
-.modal-card {
-  width: min(520px, 100%);
-  max-height: 100%;
-  overflow: auto;
-  background: var(--surface-overlay);
-  border: var(--stroke-thin) solid var(--border);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-3);
-  padding: var(--space-16) var(--space-24) var(--space-20);
-}
-
-.modal-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--space-6);
-}
-
-.modal-head h2 {
-  margin: 0;
-  font: var(--type-title);
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-8);
-  margin-top: var(--space-6);
-}
-
-.calib-body {
-  display: grid;
-  gap: var(--space-12);
-  font: var(--type-body);
-}
-
-.calib-body p {
-  margin: 0;
-}
-
-.calib-warn {
-  color: var(--warning);
-  font-weight: 600;
-}
+/* Inside the dialogs (Dialog in design/system): the latency calibration's running test and results. */
 
 /* Fixed height so the dialog never resizes while a test runs. */
 .calib-running {
@@ -65,7 +8,7 @@
   align-content: center;
 }
 
-.calib-running .progress-track {
+.calib-running .progress {
   width: 100%;
 }
 
@@ -77,23 +20,28 @@
   font-variant-numeric: tabular-nums;
 }
 
-.calib-ear {
+.calib-ear,
+.calib-flash {
   width: 120px;
   height: 120px;
   border-radius: 50%;
   display: grid;
   place-items: center;
-  font: var(--type-display);
-  color: var(--text-subtle);
   background: var(--surface-well);
+}
+
+.calib-ear {
+  color: var(--text-subtle);
   border: var(--stroke-thick) dashed var(--border-strong);
 }
 
+/* The note icon, drawn large in the middle of the circle. */
+.calib-ear .icon {
+  width: 48px;
+  height: 48px;
+}
+
 .calib-flash {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  background: var(--surface-well);
   border: var(--stroke-thick) solid var(--border);
 }
 
@@ -107,34 +55,6 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-12);
-  margin: 0;
-}
-
-.calib-results > div {
-  display: grid;
-  gap: var(--space-2);
-  padding: var(--space-12);
-  border-radius: var(--radius-md);
-  background: var(--surface-well);
-}
-
-.calib-results dt {
-  font: var(--type-overline);
-  letter-spacing: var(--tracking-overline);
-  text-transform: uppercase;
-  color: var(--text-subtle);
-}
-
-.calib-results dd {
-  margin: 0;
-  font: var(--type-numeral-lg);
-  color: var(--accent);
-  font-variant-numeric: tabular-nums;
-}
-
-.calib-quality {
-  font: var(--type-caption);
-  color: var(--text-subtle);
 }
 
 .calib-quality.is-good {

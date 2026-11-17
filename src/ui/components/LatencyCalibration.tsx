@@ -12,6 +12,9 @@ import {
 import type { LatencyCalibration as CalibrationRecord } from '../../core/settings';
 import { inputBus } from '../../input/inputBus';
 import { audioEngine, Metronome } from '../../platform/audio/audioEngine';
+import { Callout, ProgressBar } from './controls';
+import { Dialog } from './Dialog';
+import { Icon } from './Icon';
 
 type Phase = 'intro' | 'audio' | 'visual-intro' | 'visual' | 'result' | 'failed';
 
@@ -36,12 +39,7 @@ const LEAD_IN_MS = 900;
  * compensate), then optionally to a silent flashing circle (to separate out how late the
  * audio is heard, which sets the playhead delay).
  */
-export function LatencyCalibration(props: {
-  volume: number;
-  midiConnected: boolean;
-  onApply: (outcome: CalibrationOutcome) => void;
-  onClose: () => void;
-}) {
+export function LatencyCalibration(props: { volume: number; midiConnected: boolean; onApply: (outcome: CalibrationOutcome) => void; onClose: () => void }) {
   const [phase, setPhase] = useState<Phase>('intro');
   const [taps, setTaps] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -167,60 +165,59 @@ export function LatencyCalibration(props: {
   };
 
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="calib-title">
-      <div className="modal-card calib">
-        <div className="modal-head">
-          <h2 id="calib-title">Latency calibration</h2>
-          <button type="button" className="icon-btn" aria-label="Close" onClick={props.onClose}>
-            ✕
-          </button>
-        </div>
-
-        {phase === 'intro' ? (
-          <div className="calib-body">
+    <Dialog title="Latency calibration" closeLabel="Close latency calibration" onClose={props.onClose} className="calib">
+      {phase === 'intro' ? (
+        <>
+          <div className="dialog-body">
             <p>
-              Set up exactly as you practice — same piano connection, same speakers or headphones. You’ll hear {CALIBRATION_WARMUP} lead-in clicks, then{' '}
-              {CALIBRATION_COUNTED} more at {CALIBRATION_BPM} bpm.
+              Set up exactly as you practice — same piano connection, same speakers or headphones. You’ll hear {CALIBRATION_WARMUP} lead-in clicks, then {CALIBRATION_COUNTED} more
+              at {CALIBRATION_BPM} bpm.
             </p>
             <p>
               <b>Play any key on your piano together with each click</b> — as if it were a rhythm exercise. Don’t try to compensate; just play with what you hear.
             </p>
-            {!props.midiConnected ? <p className="calib-warn">No MIDI piano is connected. You can tap on the computer, but that measures the computer keyboard, not your piano.</p> : null}
-            <div className="modal-actions">
-              <button type="button" className="btn" onClick={props.onClose}>
-                Cancel
-              </button>
-              <button type="button" className="btn btn-primary" onClick={() => run('audio')}>
-                Start listening test
-              </button>
-            </div>
+            {!props.midiConnected ? (
+              <Callout tone="warning" title="No MIDI piano is connected">
+                You can tap on the computer, but that measures the computer keyboard, not your piano.
+              </Callout>
+            ) : null}
           </div>
-        ) : null}
+          <div className="dialog-actions">
+            <button type="button" className="btn" onClick={props.onClose}>
+              Cancel
+            </button>
+            <button type="button" className="btn btn-primary" onClick={() => run('audio')}>
+              Start listening test
+            </button>
+          </div>
+        </>
+      ) : null}
 
-        {phase === 'audio' || phase === 'visual' ? (
-          <div className="calib-body calib-running" data-pulse-start={runStart.toFixed(3)}>
+      {phase === 'audio' || phase === 'visual' ? (
+        <>
+          <div className="dialog-body calib-running" data-pulse-start={runStart.toFixed(3)}>
             {phase === 'visual' ? (
               <div className="calib-flash" ref={flashRef} aria-hidden="true" />
             ) : (
               <div className="calib-ear" aria-hidden="true">
-                ♪
+                <Icon name="note" />
               </div>
             )}
             <p className="calib-instruction">{phase === 'audio' ? 'Play a key on every click' : 'Play a key every time the circle lights up'}</p>
-            <div className="progress-track">
-              <div className="progress-fill" style={{ width: `${progress * 100}%` }} />
-            </div>
-            <p className="muted calib-count">{taps} taps</p>
-            <div className="modal-actions">
-              <button type="button" className="btn" onClick={props.onClose}>
-                Cancel
-              </button>
-            </div>
+            <ProgressBar label="Test progress" value={Math.round(progress * 100)} max={100} accent />
+            <p className="field-hint calib-count">{taps} taps</p>
           </div>
-        ) : null}
+          <div className="dialog-actions">
+            <button type="button" className="btn" onClick={props.onClose}>
+              Cancel
+            </button>
+          </div>
+        </>
+      ) : null}
 
-        {phase === 'visual-intro' && audio ? (
-          <div className="calib-body">
+      {phase === 'visual-intro' && audio ? (
+        <>
+          <div className="dialog-body">
             <p>
               Listening test done: your notes arrive <b>{Math.round(audio.offsetMs)} ms</b> after the click (±{Math.round(audio.spreadMs)} ms).
             </p>
@@ -228,71 +225,77 @@ export function LatencyCalibration(props: {
               Optional second pass: tap along to a <b>silent flashing circle</b>. The difference tells us how late you <i>hear</i> the click, so the Flow-mode playhead can be
               delayed to match — most useful with Bluetooth headphones or audio streamed to the piano.
             </p>
-            <div className="modal-actions">
-              <button type="button" className="btn" onClick={() => setPhase('result')}>
-                Skip
-              </button>
-              <button type="button" className="btn btn-primary" onClick={() => run('visual')}>
-                Calibrate playhead too
-              </button>
-            </div>
           </div>
-        ) : null}
-
-        {phase === 'failed' ? (
-          <div className="calib-body">
-            <p className="calib-warn">Not enough taps lined up with the {failedKind === 'audio' ? 'clicks' : 'flashes'}. Play one key on every beat and try again.</p>
-            {failedKind === 'audio' ? (
-              <p className="muted">If you heard no clicks, check the volume and audio output.</p>
-            ) : null}
-            <div className="modal-actions">
-              <button type="button" className="btn" onClick={() => (failedKind === 'visual' && audio ? setPhase('result') : props.onClose())}>
-                {failedKind === 'visual' && audio ? 'Skip' : 'Cancel'}
-              </button>
-              <button type="button" className="btn btn-primary" onClick={() => run(failedKind)}>
-                Try again
-              </button>
-            </div>
+          <div className="dialog-actions">
+            <button type="button" className="btn" onClick={() => setPhase('result')}>
+              Skip
+            </button>
+            <button type="button" className="btn btn-primary" onClick={() => run('visual')}>
+              Calibrate playhead too
+            </button>
           </div>
-        ) : null}
+        </>
+      ) : null}
 
-        {phase === 'result' && audio && estimate ? (
-          <div className="calib-body">
-            <dl className="calib-results">
-              <div>
-                <dt>Latency compensation</dt>
-                <dd>{estimate.latencyMs} ms</dd>
-                <span className={`calib-quality is-${audio.quality}`}>
+      {phase === 'failed' ? (
+        <>
+          <div className="dialog-body">
+            <Callout tone="warning" title={`Not enough taps lined up with the ${failedKind === 'audio' ? 'clicks' : 'flashes'}`}>
+              Play one key on every beat and try again.
+            </Callout>
+            {failedKind === 'audio' ? <p className="field-hint">If you heard no clicks, check the volume and audio output.</p> : null}
+          </div>
+          <div className="dialog-actions">
+            <button type="button" className="btn" onClick={() => (failedKind === 'visual' && audio ? setPhase('result') : props.onClose())}>
+              {failedKind === 'visual' && audio ? 'Skip' : 'Cancel'}
+            </button>
+            <button type="button" className="btn btn-primary" onClick={() => run(failedKind)}>
+              Try again
+            </button>
+          </div>
+        </>
+      ) : null}
+
+      {phase === 'result' && audio && estimate ? (
+        <>
+          <div className="dialog-body">
+            <div className="calib-results">
+              <dl className="stat stat-tile stat-lg is-key">
+                <dt className="stat-label">Latency compensation</dt>
+                <dd className="stat-value">{estimate.latencyMs} ms</dd>
+                <dd className={`stat-note calib-quality is-${audio.quality}`}>
                   {QUALITY_TEXT[audio.quality]} · ±{Math.round(audio.spreadMs)} ms · {audio.used}/{audio.total} taps
-                </span>
-              </div>
-              <div>
-                <dt>Playhead delay</dt>
-                <dd>{estimate.playheadDelayMs === null ? '—' : `${estimate.playheadDelayMs} ms`}</dd>
-                <span className="calib-quality">
+                </dd>
+              </dl>
+              <dl className="stat stat-tile stat-lg">
+                <dt className="stat-label">Playhead delay</dt>
+                <dd className="stat-value">{estimate.playheadDelayMs === null ? '–' : `${estimate.playheadDelayMs} ms`}</dd>
+                <dd className="stat-note calib-quality">
                   {estimate.playheadDelayMs === null
                     ? 'Not measured — current setting kept'
                     : visual
                       ? `Visual pass ${Math.round(visual.offsetMs)} ms · ±${Math.round(visual.spreadMs)} ms`
                       : ''}
-                </span>
-              </div>
-            </dl>
-            {audio.offsetMs < 0 ? <p className="muted">You played slightly ahead of the click, which is common; compensation is set to 0 ms.</p> : null}
-            {usedComputerInput && props.midiConnected ? (
-              <p className="calib-warn">Some taps came from the computer or screen, not the piano — retry using the piano for an accurate result.</p>
-            ) : null}
-            <div className="modal-actions">
-              <button type="button" className="btn" onClick={() => run('audio')}>
-                Retry
-              </button>
-              <button type="button" className="btn btn-primary" onClick={apply}>
-                Apply
-              </button>
+                </dd>
+              </dl>
             </div>
+            {audio.offsetMs < 0 ? <p className="field-hint">You played slightly ahead of the click, which is common; compensation is set to 0 ms.</p> : null}
+            {usedComputerInput && props.midiConnected ? (
+              <Callout tone="warning" title="Some taps came from the computer or screen">
+                Retry using the piano for an accurate result.
+              </Callout>
+            ) : null}
           </div>
-        ) : null}
-      </div>
-    </div>
+          <div className="dialog-actions">
+            <button type="button" className="btn" onClick={() => run('audio')}>
+              Retry
+            </button>
+            <button type="button" className="btn btn-primary" onClick={apply}>
+              Apply
+            </button>
+          </div>
+        </>
+      ) : null}
+    </Dialog>
   );
 }

@@ -1,6 +1,7 @@
 import { nps } from '../../core/scales/generator';
 import { gradeHeadline, hintNote, pct } from './format';
 import type { ResultsView } from './types';
+import { Icon } from '../components/Icon';
 
 const CROSSING_TEXT = { 'thumb-under': 'thumb under', 'finger-over': 'finger over' } as const;
 
@@ -74,7 +75,12 @@ export const scalesResults: ResultsView = {
               : change.toTempo < change.fromTempo
                 ? `Tempo down to ${bpm(change.toTempo)} — get it clean first`
                 : `Tempo stays at ${bpm(change.toTempo)}`}
-            {change.newlyMastered ? ` · ★ mastered at ${nps(scale.npm)}` : ''}
+            {change.newlyMastered ? (
+              <>
+                {' · '}
+                <Icon name="star" /> mastered at {nps(scale.npm)}
+              </>
+            ) : null}
             {change.dueInDays > 0 ? ` · review in ${change.dueInDays} day${change.dueInDays === 1 ? '' : 's'}` : ''}
           </div>
         ) : change ? (
