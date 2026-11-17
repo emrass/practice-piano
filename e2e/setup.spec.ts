@@ -106,7 +106,7 @@ test('A browser without MIDI says so, and continuing without a piano turns the k
   await button(page, 'Start practicing').click();
   await expect(guide(page)).toHaveCount(0);
   await expect.poll(() => saved(page)).toMatchObject({ setupGuideSeen: true, keySound: true, audioSetup: 'speakers', sight: { level: 1, hands: 'rh' } });
-  await expect(page.locator('.kb-sound')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('button', { name: 'Key sound for on-screen and computer keys' })).toHaveAttribute('aria-pressed', 'true');
 });
 
 test('A piano plugged in while the guide is open is found; later, the top-bar chip shows how to connect one', async ({ page }) => {

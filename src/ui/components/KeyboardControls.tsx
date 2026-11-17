@@ -17,7 +17,7 @@ export function KeyboardControls(props: { settings: Settings; update: (patch: Se
     <>
       <button
         type="button"
-        className={`kb-icon kb-guide ${guideOn ? 'is-on' : ''}`}
+        className="icon-btn"
         aria-pressed={guideOn}
         aria-label="Keyboard guide"
         aria-disabled={guideReason ? true : undefined}
@@ -52,7 +52,7 @@ function DisplayMenu(props: { settings: Settings; update: (patch: SettingsPatch)
   const qwertyReason = a.unavailable?.qwertyHints;
   return (
     <div
-      className="kb-menu"
+      className="keyboard-menu"
       ref={root}
       onKeyDown={(e) => {
         if (e.key !== 'Escape' || !open) return;
@@ -64,7 +64,7 @@ function DisplayMenu(props: { settings: Settings; update: (patch: SettingsPatch)
       <button
         ref={button}
         type="button"
-        className={`kb-icon ${open ? 'is-open' : ''}`}
+        className="icon-btn"
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={open ? id : undefined}
@@ -75,7 +75,7 @@ function DisplayMenu(props: { settings: Settings; update: (patch: SettingsPatch)
         <Icon name="sliders" />
       </button>
       {open ? (
-        <div className="popover kb-popover" role="dialog" aria-label="Keyboard display" id={id}>
+        <div className="popover keyboard-popover" role="dialog" aria-label="Keyboard display" id={id}>
           <Toggle label="Note names on the keys" checked={s.showKeyNames} onChange={(showKeyNames) => update({ showKeyNames })} />
           <Toggle
             label="Computer-key hints"

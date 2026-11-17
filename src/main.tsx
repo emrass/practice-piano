@@ -17,7 +17,6 @@ import './styles/stage.css';
 import './styles/practice-bar.css';
 import './styles/results.css';
 import './styles/progress.css';
-import './styles/monitor.css';
 import './styles/modal.css';
 import './styles/setup.css';
 import './styles/lessons/rhythm.css';

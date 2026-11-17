@@ -54,36 +54,6 @@
   width: min(360px, 70vw);
 }
 
-.scale-ladder {
-  padding: var(--space-8) var(--space-12);
-  border-radius: var(--radius-md);
-  background: var(--surface-well);
-  font: var(--type-label);
-  text-align: center;
-}
-
-.scale-ladder.is-up {
-  background: linear-gradient(var(--success-soft), var(--success-soft)), var(--surface-well);
-}
-
-.scale-ladder.is-down {
-  background: linear-gradient(var(--danger-soft), var(--danger-soft)), var(--surface-well);
-}
-
-.scale-ladder.is-wait {
-  font-weight: 400;
-  color: var(--text-subtle);
-}
-
-.scale-notes {
-  margin: 0;
-  padding-left: var(--space-20);
-  font: var(--type-body-sm);
-  color: var(--text-muted);
-  display: grid;
-  gap: var(--space-2);
-}
-
 .rep-name {
   display: grid;
   font-weight: 600;

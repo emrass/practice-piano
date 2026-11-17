@@ -25,9 +25,17 @@ on the design system in `design/` (see `design/README.md`): `design/vitePlugin.t
 whenever the file changes, and `main.tsx` imports it before everything else, followed by the
 components (`design/system/components/bundle.css`). The React side of the components lives in
 `ui/components/controls.tsx` (segmented control, tabs, choice cards, slider, switch, select,
-progress bar, callout), `ui/components/Dialog.tsx` and `ui/components/Icon.tsx` (the icon set,
+progress bar, callout, stat), `ui/components/Dialog.tsx` and `ui/components/Icon.tsx` (the icon set,
 inlined from `design/system/assets/Icons`, and the Logo); state is ARIA (`aria-checked`,
-`aria-selected`, `aria-pressed`), not classes. Every color, text
+`aria-selected`, `aria-pressed`), not classes. The stage is the system's too: `KeyboardDock` and
+`PianoKeyboard` (Keyboard), `PracticeBar` (PracticeBar, BeatDots), `ResultsCard` and `ui/results`
+(Results), `ChordChart`, the Progress heatmap (`ui/progress/sight.tsx`, bands from `heatBand()` in
+`ui/progress/format.ts`), and the score: `ui/notation/renderScore.ts` tags each note group `.note`
+and draws the labels and, under each note, an empty `.score-mark` that `drawStepMark()` fills from
+the step's state (a tilde for nearly, a cross for wrong or missed), the same state `ScoreView` turns
+into the note's color class. The stylesheets in `src/styles` for these hold only what the shell
+decides (row heights, what changes by window size) and lesson states the system has no word for.
+Every color, text
 style, radius, spacing step, shadow, duration and z-index is a token; `npm run design:check`
 fails on a literal color, duration or type size in `src/styles`, or on a variable that is not a
 token. The theme is `data-theme` on `<html>`, set from the settings in `App.tsx`, which also sets

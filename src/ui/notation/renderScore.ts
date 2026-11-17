@@ -11,10 +11,11 @@ import {
   Stem,
   TickContext,
 } from 'vexflow/bravura';
-import { HAND_CLEF, type Clef, type Exercise, type Hand, type NoteEvent } from '../../core/exercise';
+import { type Clef, type Exercise, type Hand, type NoteEvent } from '../../core/exercise';
 import { MeasureAccidentals } from '../../core/music/keys';
 import { pitchLabel, pitchToStep, vexKey } from '../../core/music/pitch';
 import { beamLevel, durationCode, isDotted } from '../../core/music/rhythm';
+import type { StepMark } from '../practice/session';
 import { chooseScale, computeLayout, measureX, type ScoreLayout, tickToX } from './layout';
 
 export interface RenderedScore {
@@ -24,6 +25,8 @@ export interface RenderedScore {
   svg: SVGSVGElement | null;
   /** SVG groups of each step's noteheads (both hands), for coloring. */
   stepElements: Map<number, SVGGElement[]>;
+  /** The mark under each of a step's notes (both hands), empty until drawStepMark fills it. */
+  stepMarks: Map<number, SVGTextElement[]>;
   /** Engraved notehead x (layout px) per event id — used by tests to verify alignment. */
   noteX: Map<string, number>;
 }
@@ -132,7 +135,7 @@ function createNote(
   return note;
 }
 
-function addText(svg: SVGSVGElement, parent: SVGElement, x: number, y: number, text: string, cls: string, step?: number) {
+function addText(svg: SVGSVGElement, parent: SVGElement, x: number, y: number, text: string, cls: string, step?: number): SVGTextElement {
   const el = document.createElementNS(SVG_NS, 'text');
   if (step !== undefined) el.setAttribute('data-step', String(step));
   el.setAttribute('x', x.toFixed(1));
@@ -141,6 +144,21 @@ function addText(svg: SVGSVGElement, parent: SVGElement, x: number, y: number, t
   el.setAttribute('text-anchor', 'middle');
   el.textContent = text;
   (parent ?? svg).appendChild(el);
+  return el;
+}
+
+/** Baseline-to-baseline distance of the rows of text under a staff (note names, then the mark). */
+const LABEL_ROW = 12;
+/** The mark of a note state, the second cue beside its color: a tilde for nearly, a cross for wrong or missed. */
+const MARK_GLYPH: Partial<Record<StepMark, string>> = { ok: '~', bad: '×', missed: '×' };
+
+/**
+ * Sets the mark under a note from the state of its step, the same state that sets the note's
+ * color. A right note has none: it is the default outcome.
+ */
+export function drawStepMark(el: SVGTextElement, mark: StepMark | undefined): void {
+  el.textContent = (mark && MARK_GLYPH[mark]) ?? '';
+  el.classList.toggle('is-ok', mark === 'ok');
 }
 
 /**
@@ -184,6 +202,7 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
   }
   const stepByTick = new Map(ex.steps.map((s) => [s.tick, s.index]));
   const stepElements = new Map<number, SVGGElement[]>();
+  const stepMarks = new Map<number, SVGTextElement[]>();
   const noteX = new Map<string, number>();
   const labelLayer = svg ? (document.createElementNS(SVG_NS, 'g') as SVGGElement) : null;
   labelLayer?.setAttribute('class', 'pp-labels');
@@ -230,12 +249,12 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
     if (percussion && labelLayer && svg && ex.staves.length > 1) {
       for (const clef of ex.staves) {
         const y = headers[clef]!.getYForLine(2);
-        addText(svg, labelLayer, system.headerX + 13, y - 19, clef === 'treble' ? 'RH' : 'LH', 'pp-hand-label');
+        addText(svg, labelLayer, system.headerX + 13, y - 19, clef === 'treble' ? 'RH' : 'LH', 'score-label');
       }
     }
     if (labelLayer && system.index > 0 && svg) {
       const firstY = system.staveY[ex.staves[0]]!;
-      addText(svg, labelLayer, system.measuresX + 6, firstY + 30, String(system.firstMeasure + 1), 'pp-bar-number');
+      addText(svg, labelLayer, system.measuresX + 6, firstY + 30, String(system.firstMeasure + 1), 'score-bar-number');
     }
 
     // Notes, per staff and measure.
@@ -283,6 +302,7 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
           note.draw();
           ctx.closeGroup();
           if (isRest) continue;
+          group?.classList.add('note');
           noteX.set(e.id, note.getAbsoluteX());
           const stepIndex = stepByTick.get(e.startTick);
           if (group && stepIndex !== undefined) {
@@ -297,6 +317,7 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
       });
 
       // Fingering: one row per staff, above the treble staff and below the bass staff.
+      let fingerRowBelow: number | null = null;
       if (opts.showFingering && svg && labelLayer && labeled.some((l) => l.event.fingers)) {
         const above = clef === 'treble';
         const staveTop = staveBottom - 40;
@@ -321,8 +342,9 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
           const f = event.fingers?.[0];
           if (f === undefined) continue;
           const cx = (note.getNoteHeadBeginX() + note.getNoteHeadEndX()) / 2;
-          addText(svg, labelLayer, cx, rowY, String(f), `pp-finger ${f === 1 ? 'is-thumb' : ''}`, stepByTick.get(event.startTick));
+          addText(svg, labelLayer, cx, rowY, String(f), `score-label pp-finger ${f === 1 ? 'is-thumb' : ''}`, stepByTick.get(event.startTick));
         }
+        if (!above) fingerRowBelow = rowY;
       }
 
       // Chord symbols (and Roman numerals) on one row above the treble staff.
@@ -340,13 +362,13 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
           if (step !== undefined) el.setAttribute('data-step', String(step));
           el.setAttribute('x', (note.getNoteHeadBeginX() - 2).toFixed(1));
           el.setAttribute('y', rowY.toFixed(1));
-          el.setAttribute('class', 'pp-chord-symbol');
+          el.setAttribute('class', 'chord-symbol');
           const main = document.createElementNS(SVG_NS, 'tspan');
           main.textContent = symbol;
           el.appendChild(main);
           if (numeral) {
             const num = document.createElementNS(SVG_NS, 'tspan');
-            num.setAttribute('class', 'pp-chord-numeral');
+            num.setAttribute('class', 'chord-numeral');
             num.setAttribute('dx', '6');
             num.textContent = numeral;
             el.appendChild(num);
@@ -355,8 +377,10 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
         }
       }
 
-      // Note-name labels share one baseline per staff line, below stems, beams and ledger notes.
-      if (showNames && svg && labelLayer && labeled.length) {
+      // Under the staff, one baseline per staff line, below stems, beams and ledger notes: the
+      // note-name labels, then the mark of each note's state (a tilde or a cross, drawn empty
+      // here and filled by drawStepMark). Without names the marks take their row.
+      if (svg && labelLayer && labeled.length) {
         let lowest = staveBottom + 8;
         for (const { note } of labeled) {
           lowest = Math.max(lowest, ...note.getYs().map((y) => y + 6));
@@ -367,13 +391,23 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
         }
         let rowY = Math.max(staveBottom + 22, lowest + 14);
         if (clef === 'treble' && ex.staves.length > 1) rowY = Math.min(rowY, staveBottom + 40);
+        // Fingering under the bass staff has that row already: the marks go one row further down.
+        if (fingerRowBelow !== null) rowY = fingerRowBelow + LABEL_ROW + 2;
         for (const { note, event } of labeled) {
           const cx = (note.getNoteHeadBeginX() + note.getNoteHeadEndX()) / 2;
+          const step = stepByTick.get(event.startTick);
           let y = rowY;
-          for (const p of [...event.pitches].reverse()) {
-            addText(svg, labelLayer, cx, y, pitchLabel(p), `pp-label pp-label-${HAND_CLEF[hand]}`, stepByTick.get(event.startTick));
-            y += 12;
+          if (showNames) {
+            for (const p of [...event.pitches].reverse()) {
+              addText(svg, labelLayer, cx, y, pitchLabel(p), 'score-label', step);
+              y += LABEL_ROW;
+            }
+            y += 2;
           }
+          if (step === undefined) continue;
+          const marks = stepMarks.get(step) ?? [];
+          marks.push(addText(svg, labelLayer, cx, y, '', 'score-mark', step));
+          stepMarks.set(step, marks);
         }
       }
     }
@@ -401,5 +435,5 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
     }
     svg.appendChild(layer);
   }
-  return { layout, scale, svg, stepElements, noteX };
+  return { layout, scale, svg, stepElements, stepMarks, noteX };
 }

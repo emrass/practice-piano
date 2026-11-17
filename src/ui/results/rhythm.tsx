@@ -1,5 +1,6 @@
-import { gradeHeadline, pct, signedMs } from './format';
+import { gradeHeadline, offsetTile, pct } from './format';
 import type { ResultsView } from './types';
+import { StatTile } from '../components/controls';
 
 /** Rhythm. Body is defined inline so this file only exports the view (react-refresh). */
 export const rhythmResults: ResultsView = {
@@ -19,32 +20,17 @@ export const rhythmResults: ResultsView = {
     const rhythm = result.rhythm;
     return (
       <div className="results-grid">
-        <div className="rg-item rg-main">
-          <span className="rg-v">{pct(result.pitchAccuracy)}</span>
-          <span className="rg-k">Hits</span>
-        </div>
-        <div className="rg-item">
-          <span className="rg-v">{pct(result.timingAccuracy)}</span>
-          <span className="rg-k">Timing{result.meanAbsTimingMs !== null ? ` · ±${Math.round(result.meanAbsTimingMs)} ms` : ''}</span>
-        </div>
-        <div className="rg-item" title="Average offset: early = rushing, late = dragging">
-          <span className="rg-v rg-v-small">{signedMs(rhythm.tendencyMs, 'early', 'late')}</span>
-          <span className="rg-k">Tendency</span>
-        </div>
+        <StatTile main value={pct(result.pitchAccuracy)} note="Hits" />
+        <StatTile value={pct(result.timingAccuracy)} note={`Timing${result.meanAbsTimingMs !== null ? ` · ±${Math.round(result.meanAbsTimingMs)} ms` : ''}`} />
+        <StatTile title="Average offset: early = rushing, late = dragging" {...offsetTile('Tendency', rhythm.tendencyMs, 'early', 'late')} />
         {rhythm.task === 'pulse' ? (
-          <div className="rg-item" title="Silent bars compared with clicked bars">
-            <span className="rg-v rg-v-small">{signedMs(rhythm.driftMs, 'rushing', 'dragging')}</span>
-            <span className="rg-k">Drift when silent</span>
-          </div>
+          <StatTile title="Silent bars compared with clicked bars" {...offsetTile('Drift when silent', rhythm.driftMs, 'rushing', 'dragging')} />
         ) : (
-          <div className="rg-item" title="Spread of your timing — lower is steadier">
-            <span className="rg-v rg-v-small">{rhythm.steadinessMs === null ? '—' : `±${rhythm.steadinessMs} ms`}</span>
-            <span className="rg-k">Steadiness</span>
-          </div>
+          <StatTile title="Spread of your timing — lower is steadier" value={rhythm.steadinessMs === null ? '—' : `±${rhythm.steadinessMs} ms`} note="Steadiness" />
         )}
         {rhythm.hands.rh && rhythm.hands.lh ? (
-          <div className="rg-item rg-wide">
-            <span className="rg-k">
+          <div className="stat stat-tile stat-tile-wide">
+            <span className="stat-note">
               Right hand <b>{pct(rhythm.hands.rh.hitRate)}</b> · timing {pct(rhythm.hands.rh.timing)} — Left hand <b>{pct(rhythm.hands.lh.hitRate)}</b> · timing{' '}
               {pct(rhythm.hands.lh.timing)}
             </span>

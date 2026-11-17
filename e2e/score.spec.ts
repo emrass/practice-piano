@@ -23,7 +23,7 @@ function blackMarks(app: App): Promise<string[]> {
 /** Notes whose stem is drawn in a different color than their head. */
 function stemsOffColor(app: App): Promise<string[]> {
   return app.page.evaluate(() =>
-    [...document.querySelectorAll('.score-svg .vf-pp-note')].flatMap((note) => {
+    [...document.querySelectorAll('.score-svg .note')].flatMap((note) => {
       const head = note.querySelector('.vf-notehead path');
       const stem = note.querySelector('.vf-stem path');
       if (!head || !stem) return [];
@@ -46,21 +46,21 @@ test.describe('Score in dark mode', () => {
   for (const [name, settings] of Object.entries(LESSONS)) {
     test(`${name}: nothing is drawn in VexFlow's default black`, async ({ app, page }) => {
       await app.open({ settings: { ...settings, theme: 'dark' } });
-      await expect(page.locator('.score-svg .vf-pp-note').first()).toBeAttached();
+      await expect(page.locator('.score-svg .note').first()).toBeAttached();
       expect(await blackMarks(app)).toEqual([]);
     });
   }
 
   test('Stems take the color of their note: current, right and wrong', async ({ app, page }) => {
     await app.open({ settings: { theme: 'dark', lesson: 'sight', sight: { mode: 'wait', level: 8, bars: 4, hands: 'rh' } } });
-    await expect(page.locator('.score-svg .vf-pp-note.is-current')).toHaveCount(1);
+    await expect(page.locator('.score-svg .note.is-current')).toHaveCount(1);
     expect(await stemsOffColor(app)).toEqual([]);
 
     const steps = await app.steps();
     await app.tap(steps[0]);
     await app.tap([wrongKey(steps[1])]);
     await app.tap(steps[1]);
-    await expect(page.locator('.score-svg .vf-pp-note.is-good, .score-svg .vf-pp-note.is-ok, .score-svg .vf-pp-note.is-bad')).not.toHaveCount(0);
+    await expect(page.locator('.score-svg .note.is-good, .score-svg .note.is-ok, .score-svg .note.is-bad')).not.toHaveCount(0);
     await page.waitForTimeout(200); // past the color transition
     expect(await stemsOffColor(app)).toEqual([]);
     expect(await blackMarks(app)).toEqual([]);

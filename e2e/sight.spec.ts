@@ -6,7 +6,7 @@ test.describe('Sight reading', () => {
     await app.playSteps({ wrongAt: 2 });
     await expect(app.results()).toBeVisible();
     await expect(app.results()).toContainText('Wrong notes');
-    await expect(app.results().locator('.rg-main .rg-v')).not.toHaveText('0%');
+    await expect(app.results().locator('.stat.is-key .stat-value')).not.toHaveText('0%');
     // Piano shortcut: C (any octave) retries once the shortcuts arm (shortly after the end).
     await expect(async () => {
       await app.tap([60]);
@@ -31,7 +31,7 @@ test.describe('Sight reading', () => {
     const actions = app.results().locator('.results-actions .btn');
     await expect(actions).toHaveText([/Close/, /Restart/, /New exercise/]);
     await expect(actions.last()).toBeFocused();
-    await expect(page.locator('.pb-message')).toHaveText('Finished — on the piano: C restart · D new exercise');
+    await expect(page.locator('.practice-message')).toHaveText('Finished — on the piano: C restart · D new exercise');
   });
 
   test('Wait: with the results closed, the bar offers them and the next exercise; a restarted run shows its own', async ({ app, page }) => {
@@ -73,7 +73,7 @@ test.describe('Sight reading', () => {
     const run = await app.playFlow({ jitterMs: 8 });
     await app.waitUntil(run.endMs + 1500);
     await expect(app.results()).toBeVisible();
-    const pitch = await app.results().locator('.rg-main .rg-v').innerText();
+    const pitch = await app.results().locator('.stat.is-key .stat-value').innerText();
     expect(parseInt(pitch)).toBeGreaterThanOrEqual(95);
     await expect(app.results()).toContainText('Timing');
   });

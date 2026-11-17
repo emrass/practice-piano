@@ -6,8 +6,8 @@
 <div class="ds-stack">
   <div class="keyboard">
     <div class="keyboard-head">
-      <div class="keyboard-group"><span class="pedal is-down"><span class="pedal-icon" aria-hidden="true"></span>Pedal down</span><span class="tag">E3</span><span class="tag tag-sustained">A3</span></div>
-      <div class="keyboard-group"><span class="num">C3–B4</span><button class="icon-btn" aria-label="Keyboard guide" aria-pressed="true"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="4" width="15" height="12" rx="1.5"/><path d="M7.5 4v12M12.5 4v12"/><rect fill="currentColor" stroke="none" x="8.3" y="9" width="3.4" height="6.2"/></svg></button><button class="icon-btn" aria-label="Keyboard display" aria-expanded="false"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 6h14M3 14h14"/><circle fill="currentColor" stroke="none" cx="7" cy="6" r="2.2"/><circle fill="currentColor" stroke="none" cx="13" cy="14" r="2.2"/></svg></button><button class="icon-btn" aria-label="Key sound" aria-pressed="false"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path fill="currentColor" stroke="none" d="M3 7.5h3l4-3.5v12l-4-3.5H3z"/><path d="M13.2 7.6l4.4 4.8M17.6 7.6l-4.4 4.8"/></svg></button></div>
+      <div class="keyboard-group"><span class="pedal is-down"><span class="pedal-icon" aria-hidden="true"></span>Pedal down</span><div class="keyboard-tags"><span class="tag">E3</span><span class="tag tag-sustained">A3</span></div></div>
+      <div class="keyboard-group"><span class="keyboard-range num">C3–B4</span><button class="icon-btn" aria-label="Keyboard guide" aria-pressed="true"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="4" width="15" height="12" rx="1.5"/><path d="M7.5 4v12M12.5 4v12"/><rect fill="currentColor" stroke="none" x="8.3" y="9" width="3.4" height="6.2"/></svg></button><button class="icon-btn" aria-label="Keyboard display" aria-expanded="false"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 6h14M3 14h14"/><circle fill="currentColor" stroke="none" cx="7" cy="6" r="2.2"/><circle fill="currentColor" stroke="none" cx="13" cy="14" r="2.2"/></svg></button><button class="icon-btn" aria-label="Key sound" aria-pressed="false"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path fill="currentColor" stroke="none" d="M3 7.5h3l4-3.5v12l-4-3.5H3z"/><path d="M13.2 7.6l4.4 4.8M17.6 7.6l-4.4 4.8"/></svg></button></div>
     </div>
     <div class="keys" id="p-keys" role="group" aria-label="On-screen piano, C3 to B4"></div>
   </div>
@@ -15,7 +15,7 @@
 <script>
 (function () {
   var host = document.getElementById('p-keys'), names = ['C', 'D', 'E', 'F', 'G', 'A', 'B'], n = 14, w = 100 / n;
-  var state = { 2: 'is-held', 5: 'is-correct', 8: 'is-expected', 11: 'is-wrong' }, flags = { 13: 'Next' };
+  var state = { 2: 'is-held', 5: 'is-sustained', 7: 'is-expected is-held is-correct', 8: 'is-expected', 11: 'is-wrong', 13: 'is-flagged' }, flags = { 13: 'Next' };
   for (var i = 0; i < n; i++) {
     var k = document.createElement('div'), oct = 3 + Math.floor(i / 7), nm = names[i % 7];
     k.className = 'key key-white ' + (state[i] || ''); k.style.left = i * w + '%'; k.style.width = w + '%';

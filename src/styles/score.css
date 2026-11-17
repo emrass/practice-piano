@@ -1,3 +1,7 @@
+/* The score inside its card. Notes, labels, marks, the cursor and the playhead are the design
+   system's Score (bundle.css); here is the scrolling frame around the engraving, how the cursor
+   and playhead are moved, and the lesson states the system has no word for yet. */
+
 .score-scroll {
   flex: 1;
   overflow-x: hidden;
@@ -15,149 +19,13 @@
   position: relative;
 }
 
-.score-host svg {
-  display: block;
-}
-
-/* Theme the engraving: VexFlow writes presentation attributes (or none at all, relying
-   on inheritance), and CSS overrides both. */
-.score-svg {
-  fill: var(--text);
-  /* VexFlow sets stroke="black" on the root, and stems and the brace outline inherit it. */
-  stroke: var(--text);
-}
-
-.score-svg [fill]:not([fill='none']) {
-  fill: var(--text);
-}
-
-.score-svg [stroke]:not([stroke='none']) {
-  stroke: var(--text);
-}
-
-.score-svg .vf-stave [fill]:not([fill='none']),
-.score-svg .vf-stave [stroke]:not([stroke='none']) {
-  fill: var(--score-staff);
-  stroke: var(--score-staff);
-}
-
-.score-svg .vf-pp-note,
-.score-svg .vf-pp-note [fill]:not([fill='none']),
-.score-svg .vf-pp-note [stroke]:not([stroke='none']) {
-  transition:
-    fill var(--duration-fast),
-    stroke var(--duration-fast);
-}
-
-.score-svg .vf-pp-note.is-current,
-.score-svg .vf-pp-note.is-current [fill]:not([fill='none']) {
-  fill: var(--accent);
-}
-
-.score-svg .vf-pp-note.is-current,
-.score-svg .vf-pp-note.is-current [stroke]:not([stroke='none']) {
-  stroke: var(--accent);
-}
-
-.score-svg .vf-pp-note.is-good,
-.score-svg .vf-pp-note.is-good [fill]:not([fill='none']) {
-  fill: var(--score-good);
-}
-
-.score-svg .vf-pp-note.is-good,
-.score-svg .vf-pp-note.is-good [stroke]:not([stroke='none']) {
-  stroke: var(--score-good);
-}
-
-.score-svg .vf-pp-note.is-ok,
-.score-svg .vf-pp-note.is-ok [fill]:not([fill='none']) {
-  fill: var(--score-ok);
-}
-
-.score-svg .vf-pp-note.is-ok,
-.score-svg .vf-pp-note.is-ok [stroke]:not([stroke='none']) {
-  stroke: var(--score-ok);
-}
-
-.score-svg .vf-pp-note.is-bad,
-.score-svg .vf-pp-note.is-missed,
-.score-svg .vf-pp-note.is-bad [fill]:not([fill='none']),
-.score-svg .vf-pp-note.is-missed [fill]:not([fill='none']) {
-  fill: var(--score-bad);
-}
-
-.score-svg .vf-pp-note.is-bad,
-.score-svg .vf-pp-note.is-missed,
-.score-svg .vf-pp-note.is-bad [stroke]:not([stroke='none']),
-.score-svg .vf-pp-note.is-missed [stroke]:not([stroke='none']) {
-  stroke: var(--score-bad);
-}
-
-.score-svg .vf-pp-note.is-missed {
-  opacity: var(--opacity-missed);
-}
-
-.score-svg .pp-label {
-  font: var(--type-micro);
-  letter-spacing: var(--tracking-micro);
-  fill: var(--score-label);
-  stroke: none;
-}
-
-.score-svg .pp-bar-number {
-  font: var(--type-bar-number);
-  fill: var(--score-label);
-  stroke: none;
-}
-
+/* Placed with a transform from the top left corner; hidden until a run shows them. */
 .score-cursor,
 .score-playhead {
-  position: absolute;
   left: 0;
   top: 0;
-  pointer-events: none;
   opacity: 0;
   will-change: transform;
-}
-
-.score-cursor {
-  width: 30px;
-  border-radius: var(--radius-md);
-  background: var(--score-cursor);
-  box-shadow: inset 0 0 0 1.5px var(--score-cursor-edge);
-  transition:
-    transform var(--duration-base) var(--ease-out),
-    opacity var(--duration-base) var(--ease-out),
-    height var(--duration-base) var(--ease-out);
-}
-
-.score-cursor.is-wrong {
-  animation: cursor-wrong var(--duration-slow) var(--ease-out);
-}
-
-@keyframes cursor-wrong {
-  0%,
-  100% {
-    background: var(--score-cursor);
-  }
-  20% {
-    background: var(--danger-soft);
-    box-shadow: inset 0 0 0 2px var(--danger);
-    translate: -3px 0;
-  }
-  45% {
-    translate: 3px 0;
-  }
-  70% {
-    translate: -2px 0;
-  }
-}
-
-.score-playhead {
-  width: 3px;
-  border-radius: var(--radius-full);
-  background: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 .score-error {
@@ -170,8 +38,9 @@
 }
 
 /* Ear training: notes stay hidden until found. Rhythm Echo: bars stay hidden until answered. */
-.score-svg .vf-pp-note.is-hidden,
-.score-svg .pp-label.is-hidden,
+.score-svg .note.is-hidden,
+.score-svg .score-label.is-hidden,
+.score-svg .score-mark.is-hidden,
 .score-svg .vf-pp-measure.is-hidden {
   opacity: 0;
 }
@@ -181,23 +50,17 @@
 }
 
 /* Rhythm Echo: the bars the app played. */
-.score-svg .vf-pp-note.is-call,
-.score-svg .vf-pp-note.is-call [fill]:not([fill='none']) {
+.score-svg .note.is-call,
+.score-svg .note.is-call [fill]:not([fill='none']) {
   fill: var(--text-subtle);
 }
 
-.score-svg .vf-pp-note.is-call,
-.score-svg .vf-pp-note.is-call [stroke]:not([stroke='none']) {
+.score-svg .note.is-call,
+.score-svg .note.is-call [stroke]:not([stroke='none']) {
   stroke: var(--text-subtle);
 }
 
-.score-svg .pp-hand-label {
-  font: var(--type-overline);
-  letter-spacing: var(--tracking-overline);
-  fill: var(--score-label);
-  stroke: none;
-}
-
+/* Ear training: a "?" holds the place of a note not found yet. */
 .score-svg .pp-placeholder {
   display: none;
 }
@@ -217,34 +80,4 @@
   font: var(--type-title-sm);
   fill: var(--accent);
   stroke: none;
-}
-
-/* Scales: fingering numbers (thumb crossings stand out). */
-.score-svg .pp-finger {
-  font: var(--type-micro);
-  fill: var(--text-muted);
-  stroke: none;
-}
-
-.score-svg .pp-finger.is-thumb {
-  fill: var(--accent);
-}
-
-/* Chords: symbols above the staff, Roman numerals quieter beside them. */
-.score-svg .pp-chord-symbol {
-  font: var(--type-chord);
-  fill: var(--text);
-  stroke: none;
-}
-
-.score-svg .pp-chord-numeral {
-  font: var(--type-label-sm);
-  fill: var(--text-subtle);
-}
-
-/* Until the score moves onto the design system's Score component (bundle.css), a wrong note
-   flashes the cursor (the animation above) rather than leaving it red. */
-.score-cursor.is-wrong {
-  background: var(--score-cursor);
-  box-shadow: inset 0 0 0 1.5px var(--score-cursor-edge);
 }

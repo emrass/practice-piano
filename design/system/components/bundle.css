@@ -64,17 +64,17 @@ button { cursor: pointer; }
 
 /* ---------- Icon button ---------- */
 .icon-btn { position: relative; display: inline-grid; place-items: center; flex: none; width: var(--size-control-md); height: var(--size-control-md); padding: 0; border: var(--stroke-thin) solid var(--border); border-radius: var(--radius-md); background: var(--surface-card); color: var(--text-muted); transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }
-.icon-btn:hover:not(:disabled) { border-color: var(--border-strong); color: var(--text); }
+.icon-btn:hover:not(:disabled, [aria-disabled="true"]) { border-color: var(--border-strong); color: var(--text); }
 .icon-btn:disabled, .icon-btn[aria-disabled="true"] { opacity: var(--opacity-disabled); cursor: not-allowed; }
 .icon-btn-sm { width: var(--size-control-sm); height: var(--size-control-sm); }
 .icon-btn-bare { border-color: transparent; background: transparent; }
-.icon-btn-bare:hover:not(:disabled) { border-color: transparent; background: var(--surface-hover); }
+.icon-btn-bare:hover:not(:disabled, [aria-disabled="true"]) { border-color: transparent; background: var(--surface-hover); }
 .icon-btn[aria-pressed="true"] { color: var(--accent); }
 
 /* Touch: every control reaches size-target-min without changing size. */
 @media (pointer: coarse) {
   .btn::after, .icon-btn::after, button.chip::after { content: ""; position: absolute; inset: -4px; }
-  .btn-sm::after, .icon-btn-sm::after, button.chip::after { inset: -6px; }
+  .btn-sm::after, .icon-btn-sm::after, .keyboard .icon-btn::after, button.chip::after { inset: -6px; }
   .btn-lg::after { inset: 0; }
 }
 
@@ -188,7 +188,8 @@ kbd { display: inline-block; padding: 1px var(--space-4); border: var(--stroke-t
 .progress-row > .num { color: var(--text-subtle); text-align: right; }
 
 /* ---------- Beat dots ---------- */
-.beat-dots { display: flex; align-items: center; gap: var(--space-6); flex: none; }
+/* --beats is the longest bar the row will show; its width is reserved so nothing beside it moves. */
+.beat-dots { display: flex; align-items: center; gap: var(--space-6); flex: none; width: calc(var(--beats, 4) * (12px + var(--space-6)) - var(--space-6)); }
 .beat-dot { width: 12px; height: 12px; border: var(--stroke-thick) solid var(--border-strong); border-radius: 50%; transition: background-color var(--duration-instant), transform var(--duration-instant); }
 .beat-dot.is-downbeat { border-color: var(--text-muted); }
 .beat-dot.is-on { border-color: var(--accent); background: var(--accent); transform: scale(1.15); }
@@ -225,10 +226,14 @@ kbd { display: inline-block; padding: 1px var(--space-4); border: var(--stroke-t
 
 /* ---------- Heatmap ---------- */
 .heatmap { display: flex; height: 40px; border: var(--stroke-thin) solid var(--border); border-radius: var(--radius-sm); background: var(--surface-card); overflow: hidden; }
-.heat-key { flex: 1; border-right: var(--stroke-thin) solid var(--border-subtle); }
+.heat-key { position: relative; flex: 1; border-right: var(--stroke-thin) solid var(--border-subtle); }
 .heat-key:last-child { border-right: 0; }
 .heat-1 { background: var(--heat-1); } .heat-2 { background: var(--heat-2); } .heat-3 { background: var(--heat-3); } .heat-4 { background: var(--heat-4); } .heat-5 { background: var(--heat-5); }
-.heat-axis { display: flex; justify-content: space-between; margin-top: var(--space-2); font: var(--type-caption); color: var(--text-subtle); }
+/* A black key with data: a short key over the right edge of the white key before it. */
+.heat-sharp { position: absolute; top: 0; right: -30%; z-index: var(--z-raised); width: 60%; height: 55%; border-radius: 0 0 var(--radius-xs) var(--radius-xs); outline: var(--stroke-thin) solid var(--surface-card); }
+/* One cell per white key, so a label sits under its key whatever the range; only the Cs are named. */
+.heat-axis { display: flex; margin-top: var(--space-2); font: var(--type-caption); color: var(--text-subtle); }
+.heat-axis > span { display: flex; flex: 1 1 0; justify-content: center; min-width: 0; white-space: nowrap; }
 .heat-title { display: flex; align-items: center; gap: var(--space-4); margin-bottom: var(--space-4); font: var(--type-label-sm); color: var(--text-muted); }
 .heat-legend { display: flex; flex-wrap: wrap; gap: var(--space-4) var(--space-12); margin: 0; padding: 0; list-style: none; font: var(--type-caption); color: var(--text-subtle); }
 .heat-legend li { display: inline-flex; align-items: center; gap: var(--space-4); }
@@ -269,26 +274,34 @@ kbd { display: inline-block; padding: 1px var(--space-4); border: var(--stroke-t
   .dialog-actions { flex-direction: column-reverse; align-items: stretch; }
   .dialog-actions > .btn-ghost:first-child { margin-right: 0; }
 }
-.popover { display: grid; gap: var(--space-12); width: 300px; max-width: calc(100vw - 24px); padding: var(--space-16); border: var(--stroke-thin) solid var(--border); border-radius: var(--radius-lg); background: var(--surface-overlay); color: var(--text); box-shadow: var(--shadow-2); animation: fade-in var(--duration-fast) var(--ease-out); }
+.popover { display: grid; gap: var(--space-12); width: 300px; max-width: calc(100vw - 24px); padding: var(--space-16); border: var(--stroke-thin) solid var(--border); border-radius: var(--radius-lg); background: var(--surface-overlay); color: var(--text); font: var(--type-body); box-shadow: var(--shadow-2); animation: fade-in var(--duration-fast) var(--ease-out); }
 
 /* ---------- Keyboard ---------- */
-.keyboard { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: var(--space-6); height: 196px; padding: var(--space-8) var(--space-12) var(--space-12); border-radius: var(--radius-lg); background: linear-gradient(180deg, var(--keyboard-case-top), var(--keyboard-case-bottom)); box-shadow: var(--shadow-1); color: var(--keyboard-text); }
+.keyboard { container: keyboard / inline-size; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: var(--space-6); height: 196px; padding: var(--space-8) var(--space-12) var(--space-12); border-radius: var(--radius-lg); background: linear-gradient(180deg, var(--keyboard-case-top), var(--keyboard-case-bottom)); box-shadow: var(--shadow-1); color: var(--keyboard-text); }
 .keyboard :focus-visible { outline-color: var(--keyboard-accent); }
+.keyboard .popover :focus-visible { outline-color: var(--focus-ring); }
 .keyboard-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-12); min-height: var(--size-control-sm); color: var(--keyboard-text-muted); font: var(--type-label-sm); }
 .keyboard-group { display: flex; align-items: center; gap: var(--space-8); min-width: 0; }
+.keyboard-group:last-child { flex: none; }
+/* Held notes: one row, clipped at the end, never pushing the controls on the right. */
+.keyboard-tags { display: flex; align-items: center; gap: var(--space-4); min-width: 0; overflow: hidden; white-space: nowrap; }
+@container keyboard (max-width: 480px) { .keyboard-range { display: none; } }
 .keyboard .icon-btn { width: var(--size-control-sm); height: var(--size-control-sm); border-color: transparent; background: transparent; color: var(--keyboard-text-muted); }
-.keyboard .icon-btn:hover:not(:disabled), .keyboard .icon-btn[aria-expanded="true"] { border-color: transparent; background: color-mix(in srgb, var(--keyboard-text) 10%, transparent); color: var(--keyboard-text); }
+.keyboard .icon-btn:hover:not(:disabled, [aria-disabled="true"]), .keyboard .icon-btn[aria-expanded="true"] { border-color: transparent; background: color-mix(in srgb, var(--keyboard-text) 10%, transparent); color: var(--keyboard-text); }
 .keyboard .icon-btn[aria-pressed="true"] { color: var(--keyboard-accent); }
 .keyboard .tag { background: color-mix(in srgb, var(--keyboard-text) 14%, transparent); color: var(--keyboard-text); }
 .keyboard .tag-sustained { color: var(--keyboard-accent); }
-.pedal { display: inline-flex; align-items: center; gap: var(--space-6); }
+.pedal { display: inline-flex; flex: none; align-items: center; gap: var(--space-6); min-width: 98px; } /* room for "Pedal down", so the tags beside it never shift */
 .pedal-icon { width: 22px; height: 12px; border: var(--stroke-thick) solid currentColor; border-radius: 3px 3px 6px 6px; transition: transform var(--duration-instant), background-color var(--duration-instant); }
 .pedal.is-down { color: var(--keyboard-accent); }
 .pedal.is-down .pedal-icon { background: currentColor; transform: translateY(2px) scaleY(0.8); }
 .keys { position: relative; height: 100%; min-height: 0; border-top: 3px solid var(--keyboard-felt); border-radius: 2px 2px var(--radius-sm) var(--radius-sm); overflow: hidden; user-select: none; -webkit-user-select: none; touch-action: none; }
-.key { position: absolute; top: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; cursor: pointer; }
+.key { position: absolute; top: 0; container-type: inline-size; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; cursor: pointer; }
 .key-white { --fill: var(--key-white); height: 100%; border-left: var(--stroke-thin) solid var(--key-white-edge); border-bottom: var(--stroke-thin) solid var(--key-white-edge); border-radius: 0 0 var(--radius-xs) var(--radius-xs); background: linear-gradient(180deg, var(--key-white-shade), var(--fill) 14%, var(--fill) 92%, var(--key-white-shade)); color: var(--key-ink); }
 .key-black { --fill: var(--key-black); height: 62%; z-index: var(--z-raised); border-radius: 0 0 var(--radius-xs) var(--radius-xs); background: linear-gradient(180deg, var(--key-black-top), var(--fill) 85%); box-shadow: var(--shadow-knob); color: var(--key-black-ink); }
+/* A key that carries a flag in any octave, then a key sounding on the pedal: both give way to the states below. */
+.key-white.is-flagged { --fill: color-mix(in srgb, var(--key-ink-c) 12%, var(--key-white)); }
+.key-white.is-sustained { --fill: color-mix(in srgb, var(--key-held) 45%, var(--key-white)); }
 .key-white.is-expected { --fill: var(--key-expected); }
 .key-white.is-held { --fill: var(--key-held); }
 .key-white.is-correct { --fill: var(--key-correct); }
@@ -300,12 +313,28 @@ kbd { display: inline-block; padding: 1px var(--space-4); border: var(--stroke-t
 .key-black.is-wrong { --fill: var(--key-black-wrong); background: var(--fill); }
 /* Second cue beside the tint: a dot for "play this", a cross for "wrong". */
 .key.is-expected::before { content: ""; width: 6px; height: 6px; margin-bottom: var(--space-4); border-radius: 50%; background: currentColor; }
+.key.is-correct::before { content: none; }
 .key.is-wrong::before { content: "\00d7"; margin-bottom: var(--space-2); font: var(--type-label); }
 .key.is-wrong { animation: shake var(--duration-slow) var(--ease-out); }
-.key-label { margin-bottom: var(--space-6); font: var(--type-micro); pointer-events: none; white-space: nowrap; }
+/* Labels shrink with the key, from micro down to 9px; on a key under 13px all but the Cs hide. */
+.key-label { margin-bottom: var(--space-6); font: var(--type-micro); font-size: clamp(0.5625rem, 55cqw, 0.6875rem); pointer-events: none; white-space: nowrap; } /* literal: follows the key's width */
+.key-black .key-label { margin-bottom: var(--space-4); }
+@container (max-width: 13px) { .key-label:not(.is-c) { display: none; } }
 .key-white:not(.is-expected, .is-held, .is-correct, .is-wrong) .key-label.is-c { color: var(--key-ink-c); }
 .key-hint { margin-bottom: var(--space-2); font: var(--type-kbd); pointer-events: none; }
-.key-flag { position: absolute; bottom: 28px; left: 50%; z-index: var(--z-raised); translate: -50% 0; padding: var(--space-2) var(--space-4); border-radius: var(--radius-xs); background: var(--key-ink-c); color: var(--key-white); font: var(--type-micro); white-space: nowrap; pointer-events: none; }
+.key-flag { position: absolute; bottom: 28px; left: 50%; z-index: var(--z-raised); translate: -50% 0; padding: var(--space-2) var(--space-4); border-radius: var(--radius-xs); background: var(--key-ink-c); color: var(--key-white); font: var(--type-micro); letter-spacing: var(--tracking-micro); white-space: nowrap; pointer-events: none; }
+.key-flag small { font: inherit; }
+.key-black > .key-flag { bottom: 12px; }
+/* Narrow keys (a phone, a long range): a flag is wider than its key, so it drops to the foot of the
+   key, over the note name, and every other one (.is-alt) sits a row up, clear of its neighbors. */
+@container (max-width: 44px) {
+  .key-white > .key-flag { bottom: var(--space-4); }
+  .key-white > .key-flag.is-alt { bottom: var(--space-24); }
+  .key-white > .key-flag small { display: none; }
+  .key-white > .key-flag ~ .key-label { visibility: hidden; }
+}
+/* The heat layer: a bar at the top of a key, in the band's color (see Heatmap). */
+.key-heat { position: absolute; top: var(--space-6); left: 15%; right: 15%; height: 6px; border-radius: var(--radius-full); }
 
 /* ---------- Score ---------- */
 .score { position: relative; border: var(--stroke-thin) solid var(--border); border-radius: var(--radius-lg); background: var(--surface-sheet); box-shadow: var(--shadow-1); color: var(--text); overflow: hidden; }
@@ -330,6 +359,7 @@ kbd { display: inline-block; padding: 1px var(--space-4); border: var(--stroke-t
 .score-svg .score-mark { fill: var(--score-bad); stroke: none; font: var(--type-label); }
 .score-svg .score-mark.is-ok { fill: var(--score-ok); }
 .score-svg .chord-symbol { fill: var(--text); stroke: none; font: var(--type-chord); }
+.score-svg .chord-numeral { fill: var(--text-subtle); font: var(--type-label-sm); }
 .score-svg .score-bar-number { fill: var(--score-label); stroke: none; font: var(--type-bar-number); }
 .score-cursor { position: absolute; border-radius: var(--radius-md); background: var(--score-cursor); box-shadow: inset 0 0 0 1.5px var(--score-cursor-edge); pointer-events: none; transition: transform var(--duration-base) var(--ease-out), height var(--duration-base) var(--ease-out); }
 .score-cursor.is-wrong { background: var(--danger-soft); box-shadow: inset 0 0 0 2px var(--danger); animation: shake var(--duration-slow) var(--ease-out); }
@@ -339,6 +369,8 @@ kbd { display: inline-block; padding: 1px var(--space-4); border: var(--stroke-t
 /* ---------- Practice bar ---------- */
 .practice-bar { container: practice-bar / inline-size; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-8) var(--space-16); min-height: 64px; padding: var(--space-8) var(--space-12); }
 .practice-actions { display: flex; flex: none; gap: var(--space-8); }
+/* The first action swaps labels (Start, Stop): it keeps one width. */
+.practice-actions > .btn:first-child { min-width: 132px; }
 .practice-status { display: flex; flex: 1 1 0; align-items: center; gap: var(--space-16); min-width: 0; min-height: var(--size-control-lg); padding: 0 var(--space-12); border-radius: var(--radius-md); transition: background-color var(--duration-base) var(--ease-out); }
 .practice-status.is-wrong { background: var(--danger-soft); }
 .practice-message { flex: 1; min-width: 0; margin: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; font: var(--type-body-lg); line-height: 1.3; color: var(--text-muted); }
@@ -355,20 +387,38 @@ kbd { display: inline-block; padding: 1px var(--space-4); border: var(--stroke-t
   .practice-status.is-wide { flex-basis: 100%; order: -1; }
   .practice-status.is-wide ~ .practice-stats { margin-left: auto; }
 }
+/* Narrow (a phone, a small window): tighter buttons and stats, so they still share the row under the status. */
+@container practice-bar (max-width: 720px) {
+  .practice-actions > .btn, .practice-actions > .btn:first-child { min-width: 0; padding: 0 var(--space-8); }
+  .practice-stats { gap: var(--space-12); }
+  .practice-stats .stat { width: auto; min-width: 44px; }
+  .practice-stats .stat-value { font: var(--type-numeral-sm); font-variant-numeric: tabular-nums lining-nums; }
+}
+/* A phone: three buttons and two stats still share that row, so the labels step down. The buttons stay 44px tall. */
+@container practice-bar (max-width: 480px) {
+  .practice-actions > .btn { font: var(--type-label); }
+}
+/* Narrower still, with a grade: the beat dots and the grade keep a line and the message takes the one under it. */
+@container practice-bar (max-width: 560px) {
+  .practice-status:has(> .practice-grade) { flex-wrap: wrap; row-gap: var(--space-2); padding: var(--space-6) var(--space-12); }
+  .practice-status:has(> .practice-grade) > .practice-message { order: 1; flex-basis: 100%; }
+  .practice-status > .practice-grade { margin-left: auto; }
+}
 
 /* ---------- Results ---------- */
-.results { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-16); width: min(480px, 100%); max-height: 100%; padding: 0 var(--space-24) var(--space-24); border: var(--stroke-thin) solid var(--border); border-radius: var(--radius-xl); background: var(--surface-overlay); box-shadow: var(--shadow-3); overflow: auto; }
+.results { container: results / inline-size; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-16); width: min(480px, 100%); max-height: 100%; padding: 0 var(--space-24) var(--space-24); border: var(--stroke-thin) solid var(--border); border-radius: var(--radius-xl); background: var(--surface-overlay); box-shadow: var(--shadow-3); overflow: auto; }
 .results-ribbon { display: flex; align-items: center; gap: var(--space-6); margin: 0 calc(var(--space-24) * -1); padding: var(--space-8) var(--space-24); background: var(--surface-well); color: var(--text-muted); font: var(--type-label-sm); }
 .results-ribbon.is-pass { background: var(--success-soft); color: var(--success); }
 .results-verdict { margin: 0; font: var(--type-headline); }
 .results-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-8); }
+.results-grid > .stat-tile-wide { grid-column: 1 / -1; }
 .results-notes { display: grid; gap: var(--space-4); margin: 0; padding-left: var(--space-20); color: var(--text-muted); }
 .results-xp { font: var(--type-numeral); color: var(--reward-text); }
 .results-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-8); }
-@container (max-width: 400px) { .results-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@container results (max-width: 400px) { .results-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 /* ---------- Chord chart ---------- */
-.chord-grid { display: grid; grid-template-columns: repeat(var(--bars, 4), minmax(0, 1fr)); margin: 0; padding: 0; border-left: var(--stroke-thick) solid var(--score-staff); list-style: none; }
+.chord-grid { container: chord-grid / inline-size; display: grid; grid-template-columns: repeat(var(--bars, 4), minmax(0, 1fr)); margin: 0; padding: 0; border-left: var(--stroke-thick) solid var(--score-staff); list-style: none; }
 .chord-cell { position: relative; display: flex; flex-direction: column; justify-content: center; gap: var(--space-2); min-width: 0; min-height: 72px; padding: var(--space-8) var(--space-16); border-right: var(--stroke-thick) solid var(--score-staff); border-bottom: var(--stroke-thin) solid var(--border-subtle); transition: background-color var(--duration-fast) var(--ease-out); }
 .chord-cell-symbol { font: var(--type-headline); font-weight: 700; color: var(--text); overflow-wrap: anywhere; }
 .chord-cell-numeral { font: var(--type-label); color: var(--text-subtle); white-space: nowrap; }
@@ -378,6 +428,11 @@ kbd { display: inline-block; padding: 1px var(--space-4); border: var(--stroke-t
 .chord-cell.is-ok :is(.chord-cell-symbol, .chord-cell-mark) { color: var(--warning); }
 .chord-cell:is(.is-bad, .is-missed) :is(.chord-cell-symbol, .chord-cell-mark) { color: var(--danger); }
 .chord-cell.is-missed .chord-cell-symbol { opacity: var(--opacity-missed); }
+/* Four bars on a phone: a step down, so a symbol such as C♯m stays on one line. */
+@container chord-grid (max-width: 480px) {
+  .chord-cell { padding: var(--space-8); }
+  .chord-cell-symbol { font: var(--type-title); font-weight: 700; }
+}
 
 /* ---------- Logo ---------- */
 .logo { display: inline-flex; align-items: center; gap: var(--space-8); color: var(--text); text-decoration: none; }

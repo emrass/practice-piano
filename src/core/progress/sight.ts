@@ -36,11 +36,14 @@ export interface WeakSpots {
   weakestClef: Clef | null;
 }
 
+/** Attempts a note needs before it is judged: listed as a weak spot, or colored in the heatmap. */
+export const MIN_NOTE_ATTEMPTS = 4;
+
 /**
  * Notes that are consistently missed or slow. A note needs a minimum number of attempts
  * so one slip doesn't flag it.
  */
-export function findWeakSpots(progress: ProgressState, minAttempts = 4, limit = 6): WeakSpots {
+export function findWeakSpots(progress: ProgressState, minAttempts = MIN_NOTE_ATTEMPTS, limit = 6): WeakSpots {
   const noteStats = progress.stats.note ?? {};
   const all = Object.entries(noteStats).map(([key, agg]) => {
     const [clef, midi] = key.split(':');

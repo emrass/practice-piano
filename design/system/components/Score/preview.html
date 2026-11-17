@@ -43,6 +43,8 @@
       xs.push(x);
     });
   });
+  var chord = document.createElementNS(NS, 'text'); chord.setAttribute('class', 'chord-symbol'); chord.setAttribute('x', xs[0] - 8); chord.setAttribute('y', 40); chord.textContent = 'C';
+  var numeral = document.createElementNS(NS, 'tspan'); numeral.setAttribute('class', 'chord-numeral'); numeral.setAttribute('dx', 6); numeral.textContent = 'I'; chord.appendChild(numeral); svg.appendChild(chord);
   function place(cls, x, top, h) { var e = document.createElement('div'); e.className = cls; e.style.cssText = 'left:' + (x / W * 100) + '%;top:' + (top / H * 100) + '%;height:' + (h / H * 100) + '%'; host.appendChild(e); return e; }
   place('score-cursor', xs[2] - 15, 44, 92).style.width = (30 / W * 100) + '%';
   place('score-playhead', xs[7] + 34, 50, 76);

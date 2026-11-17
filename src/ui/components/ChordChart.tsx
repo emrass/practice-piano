@@ -1,10 +1,19 @@
 import type { ChordExercise } from '../../core/chords/generator';
 import { useStore } from '../../lib/store';
-import type { Session } from '../practice/session';
+import type { Session, StepMark } from '../practice/session';
+import { Icon } from './Icon';
+
+/** The mark in a played cell's corner, the second cue beside its color, and its name for screen readers. */
+const CELL_MARK: Partial<Record<StepMark, { name: string; glyph: 'check' | '~' | '×' }>> = {
+  good: { name: 'right', glyph: 'check' },
+  ok: { name: 'nearly', glyph: '~' },
+  bad: { name: 'wrong', glyph: '×' },
+  missed: { name: 'missed', glyph: '×' },
+};
 
 /**
- * Chords without notation: a lead-sheet style chart, one card per bar. The card being asked
- * for is marked; played ones take their result color.
+ * Chords without notation (the design system's ChordChart): a lead-sheet grid, one cell per bar.
+ * The cell being asked for is marked; played ones take their result color and a mark.
  */
 export function ChordChart(props: { exercise: ChordExercise; controller: Session }) {
   const state = useStore(props.controller.state);
@@ -15,21 +24,21 @@ export function ChordChart(props: { exercise: ChordExercise; controller: Session
   return (
     <div className="chord-chart" aria-label={title}>
       <div className="chord-chart-title">{title}</div>
-      <ol className="chord-grid" style={{ gridTemplateColumns: `repeat(${perRow}, minmax(0, 1fr))` }}>
+      <ol className="chord-grid" style={{ ['--bars' as string]: perRow }}>
         {targets.map((t) => {
           const mark = state.marks[t.index];
-          const cls = [
-            'chord-card',
-            t.index === current && state.status !== 'ready' ? 'is-current' : '',
-            t.index === current && state.status === 'ready' ? 'is-next' : '',
-            mark ? `is-${mark}` : '',
-          ].join(' ');
+          const cue = mark ? CELL_MARK[mark] : undefined;
           return (
-            <li key={t.index} className={cls} aria-current={t.index === current ? 'step' : undefined}>
-              <span className="chord-card-symbol">{t.symbol}</span>
-              {t.numeral ? <span className="chord-card-numeral">{t.numeral}</span> : null}
+            <li key={t.index} className={`chord-cell ${mark ? `is-${mark}` : ''}`} aria-current={t.index === current ? 'true' : undefined}>
+              <span className="chord-cell-symbol">{t.symbol}</span>
+              {t.numeral ? <span className="chord-cell-numeral">{t.numeral}</span> : null}
               {item.task === 'drill' && t.bassPc !== null && t.spec.inversion > 0 ? (
-                <span className="chord-card-numeral">{['', '1st inv.', '2nd inv.', '3rd inv.'][t.spec.inversion]}</span>
+                <span className="chord-cell-numeral">{['', '1st inv.', '2nd inv.', '3rd inv.'][t.spec.inversion]}</span>
+              ) : null}
+              {cue ? (
+                <span className="chord-cell-mark" role="img" aria-label={cue.name}>
+                  {cue.glyph === 'check' ? <Icon name="check" /> : cue.glyph}
+                </span>
               ) : null}
             </li>
           );

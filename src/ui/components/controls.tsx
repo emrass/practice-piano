@@ -267,6 +267,29 @@ export function ProgressBar(props: { label: string; value: number; max: number; 
   );
 }
 
+/** Stat: a live figure under its label (the practice bar). */
+export function Stat(props: { label: string; value: ReactNode }) {
+  return (
+    <dl className="stat">
+      <dt className="stat-label">{props.label}</dt>
+      <dd className="stat-value">{props.value}</dd>
+    </dl>
+  );
+}
+
+/**
+ * Stat tile: a value over a sentence-case note, in a well (the results card). `main` marks the
+ * one figure that decides pass or fail.
+ */
+export function StatTile(props: { value: ReactNode; note: ReactNode; main?: boolean; title?: string }) {
+  return (
+    <div className={`stat stat-tile ${props.main ? 'is-key' : ''}`} title={props.title}>
+      <span className="stat-value">{props.value}</span>
+      <span className="stat-note">{props.note}</span>
+    </div>
+  );
+}
+
 export type CalloutTone = 'success' | 'warning' | 'danger';
 
 const CALLOUT_ICON: Record<CalloutTone, IconName> = { success: 'check', warning: 'warning', danger: 'warning' };

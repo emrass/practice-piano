@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { Exercise } from '../../core/exercise';
 import { useStore } from '../../lib/store';
 import { systemForTick, tickToX } from '../notation/layout';
-import { renderScore, type RenderedScore } from '../notation/renderScore';
+import { drawStepMark, renderScore, type RenderedScore } from '../notation/renderScore';
 import type { StepMark } from '../practice/session';
 import type { Session } from '../practice/session';
 
@@ -86,6 +86,8 @@ export function ScoreView(props: { exercise: Exercise; showNoteNames: boolean; c
         g.classList.toggle('is-current', current);
         g.classList.toggle('is-hidden', index >= hiddenFrom);
       }
+      // The second cue under the note, from the same state as its color.
+      for (const el of r.stepMarks.get(index) ?? []) drawStepMark(el, mark);
     }
     const barsFrom = state.visibleBars ?? Infinity;
     r.svg?.querySelectorAll<SVGElement>('[data-measure]').forEach((el) => {
@@ -120,11 +122,12 @@ export function ScoreView(props: { exercise: Exercise; showNoteNames: boolean; c
     }
   }, [state.marks, state.stepIndex, state.status, state.mode, state.visibleSteps, state.visibleBars, exercise, width, viewHeight, showNoteNames, height]);
 
-  // Wrong-note flash on the cursor.
+  // A wrong note turns the cursor red and shakes it once, for as long as the practice bar says so.
   useEffect(() => {
     const cursor = cursorRef.current;
-    if (!cursor || !state.wrong) return;
+    if (!cursor) return;
     cursor.classList.remove('is-wrong');
+    if (!state.wrong) return;
     void cursor.offsetWidth; // restart the animation
     cursor.classList.add('is-wrong');
   }, [state.wrong]);

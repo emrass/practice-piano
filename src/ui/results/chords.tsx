@@ -1,6 +1,7 @@
 import { gradeHeadline, hintNote, pct, signedMs } from './format';
+import { TempoChange } from './TempoChange';
 import type { ResultsView } from './types';
-import { Icon } from '../components/Icon';
+import { Callout, StatTile } from '../components/controls';
 
 const TROUBLE_TEXT = {
   missed: 'missed',
@@ -35,68 +36,46 @@ export const chordsResults: ResultsView = {
     return (
       <>
         <div className="results-grid">
-          <div className="rg-item rg-main">
-            <span className="rg-v">
-              {c.correct}/{c.chords}
-            </span>
-            <span className="rg-k">{flow ? 'Chords on the beat' : 'Right first time'}</span>
-          </div>
+          <StatTile main value={`${c.correct}/${c.chords}`} note={flow ? 'Chords on the beat' : 'Right first time'} />
           {flow ? (
-            <div className="rg-item" title="Average offset of your chords: early = rushing, late = dragging">
-              <span className="rg-v">{pct(result.timingAccuracy)}</span>
-              <span className="rg-k">Timing · {signedMs(c.tendencyMs, 'early', 'late').toLowerCase()}</span>
-            </div>
+            <StatTile
+              title="Average offset of your chords: early = rushing, late = dragging"
+              value={pct(result.timingAccuracy)}
+              note={`Timing · ${signedMs(c.tendencyMs, 'early', 'late').toLowerCase()}`}
+            />
           ) : (
-            <div className="rg-item" title="Median time from a chord being asked to it being played">
-              <span className="rg-v">{c.medianReactionMs === null ? '—' : `${(c.medianReactionMs / 1000).toFixed(1)} s`}</span>
-              <span className="rg-k">To find a chord</span>
-            </div>
+            <StatTile
+              title="Median time from a chord being asked to it being played"
+              value={c.medianReactionMs === null ? '—' : `${(c.medianReactionMs / 1000).toFixed(1)} s`}
+              note="To find a chord"
+            />
           )}
           {flow ? (
-            <div className="rg-item" title="Time between the first and last key of a chord — lower sounds together">
-              <span className="rg-v rg-v-small">{c.spreadMs === null ? '—' : `${c.spreadMs} ms`}</span>
-              <span className="rg-k">Keys together</span>
-            </div>
+            <StatTile title="Time between the first and last key of a chord — lower sounds together" value={c.spreadMs === null ? '—' : `${c.spreadMs} ms`} note="Keys together" />
           ) : (
-            <div className="rg-item">
-              <span className="rg-v">{result.wrongNotes}</span>
-              <span className="rg-k">Wrong keys{hintNote(result)}</span>
-            </div>
+            <StatTile value={result.wrongNotes} note={`Wrong keys${hintNote(result)}`} />
           )}
           {c.voiceLeading !== null && c.movement ? (
-            <div className="rg-item" title="How far your hand moved between chords, compared with the smallest move possible">
-              <span className="rg-v rg-v-small">{pct(c.voiceLeading)}</span>
-              <span className="rg-k">
-                Voice leading · {c.movement.played} vs {c.movement.minimal} st
-              </span>
-            </div>
+            <StatTile
+              title="How far your hand moved between chords, compared with the smallest move possible"
+              value={pct(c.voiceLeading)}
+              note={
+                <>
+                  Voice leading · {c.movement.played} vs {c.movement.minimal} st
+                </>
+              }
+            />
           ) : (
-            <div className="rg-item">
-              <span className="rg-v">{c.chords - c.correct}</span>
-              <span className="rg-k">{flow ? 'Missed' : 'Needed a retry'}</span>
-            </div>
+            <StatTile value={c.chords - c.correct} note={flow ? 'Missed' : 'Needed a retry'} />
           )}
         </div>
         {flow && change ? (
-          <div className={`scale-ladder ${change.toTempo > change.fromTempo ? 'is-up' : change.toTempo < change.fromTempo ? 'is-down' : ''}`}>
-            {change.toTempo > change.fromTempo
-              ? `Tempo up: ${change.fromTempo} → ${change.toTempo} bpm`
-              : change.toTempo < change.fromTempo
-                ? `Tempo down to ${change.toTempo} bpm — get it clean first`
-                : `Tempo stays at ${change.toTempo} bpm`}
-            {change.newlyMastered ? (
-              <>
-                {' · '}
-                <Icon name="star" /> mastered at {c.bpm} bpm
-              </>
-            ) : null}
-            {change.dueInDays > 0 ? ` · review in ${change.dueInDays} day${change.dueInDays === 1 ? '' : 's'}` : ''}
-          </div>
+          <TempoChange change={change} bpm={(tempo) => tempo} masteredAt={`${c.bpm} bpm`} />
         ) : change ? (
-          <div className="scale-ladder is-wait">Practice run — the tempo ladder and review date move only in Flow</div>
+          <Callout>Practice run — the tempo ladder and review date move only in Flow</Callout>
         ) : null}
         {c.trouble.length || (c.voiceLeading !== null && c.voiceLeading < 0.8) ? (
-          <ul className="scale-notes">
+          <ul className="results-notes">
             {c.trouble.map((t) => (
               <li key={`${t.symbol}${t.reason}`}>
                 <b>{t.symbol}</b>: {TROUBLE_TEXT[t.reason]}

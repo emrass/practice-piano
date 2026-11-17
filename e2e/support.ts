@@ -183,7 +183,7 @@ export class App {
   }
 
   results() {
-    return this.page.locator('.results-card');
+    return this.page.locator('.results');
   }
 
   async openTab(name: 'Exercise' | 'Progress'): Promise<void> {

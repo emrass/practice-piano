@@ -3,6 +3,7 @@ import { isBlackKey } from '../../core/keyboard/range';
 import { midiToQwertyLabel } from '../../core/input/qwerty';
 import { type PcSpelling, pitchLabel, spellMidiIn } from '../../core/music/pitch';
 import { inputBus } from '../../input/inputBus';
+import { heatBand } from '../progress/format';
 
 export interface PianoKeyboardProps {
   min: number;
@@ -50,12 +51,6 @@ function keyGeometry(min: number, max: number): KeyGeom[] {
   return out;
 }
 
-function heatColor(acc: number): string {
-  // red (0) → amber (0.75) → green (1)
-  const hue = Math.max(0, Math.min(120, (acc - 0.5) * 240));
-  return `hsl(${hue} 70% 50% / 0.55)`;
-}
-
 /** Interactive on-screen keyboard (mouse / touch / pen), also used as a live display. */
 export const PianoKeyboard = memo(function PianoKeyboard(props: PianoKeyboardProps) {
   const keys = useMemo(() => keyGeometry(props.min, props.max), [props.min, props.max]);
@@ -63,7 +58,6 @@ export const PianoKeyboard = memo(function PianoKeyboard(props: PianoKeyboardPro
   const held = useMemo(() => new Set(props.held), [props.held]);
   const sustained = useMemo(() => new Set(props.sustained), [props.sustained]);
   const expected = useMemo(() => new Set(props.expected), [props.expected]);
-  const whiteCount = keys.filter((k) => !k.black).length;
   // Label shortcut keys in the octave nearest the middle of the view; highlight all octaves.
   const labelOctaveC = Math.floor((props.min + props.max) / 2 / 12) * 12;
   // Every other shortcut label sits a row higher when keys are too narrow for them side by side.
@@ -85,8 +79,7 @@ export const PianoKeyboard = memo(function PianoKeyboard(props: PianoKeyboardPro
 
   return (
     <div
-      className="piano"
-      style={{ ['--white-count' as string]: whiteCount }}
+      className="keys"
       onPointerUp={(e) => release(e.pointerId)}
       onPointerCancel={(e) => release(e.pointerId)}
       onPointerLeave={(e) => release(e.pointerId)}
@@ -113,8 +106,7 @@ export const PianoKeyboard = memo(function PianoKeyboard(props: PianoKeyboardPro
           isExpected ? 'is-expected' : '',
           isWrong ? 'is-wrong' : '',
           isHeld && isExpected ? 'is-correct' : '',
-          action ? 'is-action' : '',
-          marker ? 'is-marked' : '',
+          action || marker ? 'is-flagged' : '',
         ]
           .filter(Boolean)
           .join(' ');
@@ -135,21 +127,21 @@ export const PianoKeyboard = memo(function PianoKeyboard(props: PianoKeyboardPro
             }}
             aria-label={pitchLabel(spelled, true)}
           >
-            {heat && heat.attempts > 0 ? <span className="key-heat" style={{ background: heatColor(heat.accuracy) }} /> : null}
+            {heat && heat.attempts > 0 ? <span className={`key-heat heat-${heatBand(heat.accuracy)}`} /> : null}
             {action && k.midi >= labelOctaveC && k.midi < labelOctaveC + 12 ? (
-              <span className={`key-action ${actionOrder.indexOf(k.midi % 12) % 2 ? 'is-alt' : ''}`}>{action}</span>
+              <span className={`key-flag ${actionOrder.indexOf(k.midi % 12) % 2 ? 'is-alt' : ''}`}>{action}</span>
             ) : null}
             {marker ? (
-              <span className="key-marker">
+              <span className="key-flag">
                 {marker.split(' · ')[0]}
                 {marker.includes(' · ') ? <small> · {marker.split(' · ')[1]}</small> : null}
               </span>
             ) : null}
-            {qwerty ? <span className="key-qwerty">{qwerty}</span> : null}
+            {qwerty ? <span className="key-hint">{qwerty}</span> : null}
             {!k.black && (props.showLabels || isC) ? (
               <span className={`key-label ${isC ? 'is-c' : ''}`}>{props.showLabels ? pitchLabel(spelled, isC) : `C${spelled.octave}`}</span>
             ) : null}
-            {k.black && props.showLabels && (isExpected || isHeld) ? <span className="key-label key-label-black">{pitchLabel(spelled)}</span> : null}
+            {k.black && props.showLabels && (isExpected || isHeld) ? <span className="key-label">{pitchLabel(spelled)}</span> : null}
           </div>
         );
       })}

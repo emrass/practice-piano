@@ -41,17 +41,17 @@ export function KeyboardDock(props: {
   const actions = props.settings.pianoShortcuts && state.status === 'finished' ? actionLabels : undefined;
   const spelling = props.spelling?.(state);
   return (
-    <div className="keyboard-dock">
+    <div className="keyboard">
       <div className="keyboard-head">
         <InputMonitor preferFlats={props.preferFlats} spelling={spelling} />
-        <div className="kb-right">
-          <span className="muted kb-range">
+        <div className="keyboard-group">
+          <span className="keyboard-range num">
             {midiLabel(props.min)}–{midiLabel(props.max)}
           </span>
           <KeyboardControls settings={props.settings} update={props.update} availability={props.availability} />
           <button
             type="button"
-            className={`kb-icon kb-sound ${soundOn ? 'is-on' : ''}`}
+            className="icon-btn"
             aria-pressed={soundOn}
             aria-label="Key sound for on-screen and computer keys"
             title={soundOn ? 'Key sound on — on-screen and computer keys play a piano sound' : 'Key sound off — turn on to hear on-screen and computer keys'}

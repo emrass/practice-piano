@@ -1,4 +1,4 @@
-/* Progress panel: the layout of its tiles, lists and bars, and the note heatmap. */
+/* Progress panel: the layout of its tiles, lists and bars. */
 
 .stat-tiles {
   display: grid;
@@ -29,48 +29,4 @@
 
 .tier-ladder {
   --cols: 54px 1fr 40px;
-}
-
-.note-heatmap {
-  display: grid;
-  gap: var(--space-4);
-}
-
-.heatmap-label {
-  font: var(--type-label-sm);
-  color: var(--text-muted);
-}
-
-.heatmap-keys {
-  display: flex;
-  height: 38px;
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-  border: var(--stroke-thin) solid var(--border);
-}
-
-.heat-key {
-  flex: 1;
-  position: relative;
-  background: var(--surface-card);
-  border-right: var(--stroke-thin) solid var(--border-subtle);
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  font: var(--type-micro);
-  color: var(--text-subtle);
-}
-
-.heat-key span {
-  padding-bottom: var(--space-2);
-}
-
-.heat-sharp {
-  position: absolute;
-  right: -30%;
-  top: 0;
-  width: 60%;
-  height: 55%;
-  z-index: var(--z-raised);
-  border-radius: 0 0 var(--radius-xs) var(--radius-xs);
 }
