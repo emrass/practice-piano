@@ -64,7 +64,7 @@ export function ChordStats(props: ProgressSectionProps) {
           </span>
         </div>
         {entries.length ? (
-          <ul className="data-list repertoire-list">
+          <ul className="data-list repertoire-list" style={{ ['--cols' as string]: '1fr auto 34px' }}>
             {entries.map(({ id, it, item }) => {
               const days = Math.ceil((it.dueAt - props.now) / DAY);
               return (

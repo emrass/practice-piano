@@ -31,7 +31,7 @@ export function RepertoireStats(props: ProgressSectionProps) {
           · {mastered}/{entries.length} mastered
         </span>
       </div>
-      <ul className="data-list repertoire-list">
+      <ul className="data-list repertoire-list" style={{ ['--cols' as string]: '1fr auto 34px' }}>
         {entries.map(({ id, it, item }) => {
           const days = Math.ceil((it.dueAt - props.now) / DAY);
           return (
