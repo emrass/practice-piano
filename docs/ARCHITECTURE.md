@@ -200,7 +200,7 @@ gets plain objects back.
   iPad/iPhone browser tab it explains WebKit's 7-day deletion and how to move to a Home Screen app,
   which is exempt but has its own, empty storage (Export → Import).
 - `pwa/vitePwa.ts` (website build only — not `vite dev`, not `--mode native`) adds the web app
-  manifest, icons (`pwa/icons/`, rendered from the native app icon by `scripts/pwa-icons.ts`), the
+  manifest, icons (`pwa/icons/`, rendered from the keys logo by `scripts/pwa-icons.ts` with the native app icon), the
   iOS home-screen tags and `sw.js` from `pwa/sw.js`. The worker precaches every file of the build
   under a content hash, so the app opens offline after one visit. The page itself is loaded
   network-first (revalidated past the HTTP cache, cached copy after 3 s or offline), so a launch
