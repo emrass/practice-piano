@@ -201,3 +201,27 @@ test.describe('Hidden notes', () => {
     await expect(placeholders).toHaveCount(0);
   });
 });
+
+test.describe('Stat tiles', () => {
+  test('Figures in a row share a line; a one-line note is centered against a two-line neighbor', async ({ app, page }) => {
+    await app.open({ settings: { lesson: 'sight' } });
+    await app.openTab('Progress');
+    const row = await page.evaluate(() =>
+      [...document.querySelectorAll('.stat-tiles .stat-tile')].slice(0, 3).map((tile) => {
+        const box = (el: Element) => el.getBoundingClientRect();
+        const value = box(tile.querySelector('.stat-value')!);
+        const note = tile.querySelector('.stat-note')!;
+        // The text itself, not the box the grid gives it.
+        const range = document.createRange();
+        range.selectNodeContents(note);
+        const text = range.getBoundingClientRect();
+        return { tile: box(tile).height, valueTop: value.top, noteHeight: text.height, noteMiddle: text.top + text.height / 2 };
+      }),
+    );
+    expect(new Set(row.map((t) => t.tile)).size, 'tiles in a row share a height').toBe(1);
+    expect(new Set(row.map((t) => t.valueTop)).size, 'figures share a line').toBe(1);
+    // "XP" is one line, "Day streak · best 0" two.
+    expect(row[1].noteHeight).toBeGreaterThan(row[0].noteHeight * 1.5);
+    for (const t of row) expect(Math.abs(t.noteMiddle - row[1].noteMiddle)).toBeLessThan(1);
+  });
+});
