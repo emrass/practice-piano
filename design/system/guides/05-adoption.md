@@ -103,4 +103,4 @@ Most of the move is renaming variables and classes. Four parts change behavior o
 - **One drawing.** The top bar keeps its outlined keys, now a file (`practice-piano-keys.svg`) instead of a CSS drawing. The favicon and the installed-app icon (web and native) are drawn from the same keys; the filled mark that was the favicon is gone.
 - **Copy.** Messages, hints and results text are rewritten to the Writing guide: no em dashes, units on every number, a verdict of one or two words. `npm run lint` fails on an em dash in a UI string.
 
-The landing page already matches closely (same paper, ink and oxblood, Newsreader). It needs the token names and the keys as logo and favicon, not a redesign; it takes copies of the built `tokens.css` and `site-fonts.css` because it has no build step.
+The landing page is on the system too: the same paper, ink and oxblood from the tokens, Newsreader in the `site-*` styles, and the keys as logo and favicon. It has no build step, so it takes copies of the built `tokens.css` and `site-fonts.css` (`scripts/sync-design.sh` in practice-piano-site).
