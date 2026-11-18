@@ -43,7 +43,7 @@ test.describe('Marks under notes', () => {
     await app.tap(steps[1]);
     await expect(page.locator(marksOf(0))).toHaveText('');
     await expect(page.locator(marksOf(1))).toHaveText('~');
-    await page.keyboard.press('KeyR');
+    await page.keyboard.press('Backspace');
     await expect(page.locator(marksOf(1))).toHaveText('');
   });
 });

@@ -123,7 +123,9 @@ starts Flow mode from the ready state.
 What "repeat" and "next" mean comes from the exercise's `continuation` (`ui/lessons/types.ts`):
 a label for each, `next: null` when there is nothing to move on to, and which of the two is
 suggested (`primary`). The practice bar, the results card (main button and focus, so Enter), R /
-N and piano C / D all read it. `ui/lessons/continuation.ts` builds it: generated material (sight
+N and piano C / D all read it. On the computer keyboard R sits among the black keys, so it only
+restarts after a run, with the same 600 ms delay; Backspace restarts at any time
+(`ui/hooks/useComputerKeyboard.ts`). `ui/lessons/continuation.ts` builds it: generated material (sight
 reading, ear, rhythm, chord drills) suggests something new; fixed repertoire (scales,
 progressions) suggests "Again", has no next for a specific key, and suggests the next due item in
 review. Restart in Wait is off while the run is untouched (`isUntouched`, `ui/practice/session.ts`).

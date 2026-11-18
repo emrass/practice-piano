@@ -2,6 +2,7 @@
 import { act, cleanup, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { generateExercise } from '../../core/generator/generator';
+import { SHORTCUT_ARM_MS } from '../../core/input/pianoShortcuts';
 import { inputBus } from '../../input/inputBus';
 import type { AudioEngine } from '../../platform/audio/audioEngine';
 import { PracticeController } from '../practice/PracticeController';
@@ -24,11 +25,11 @@ function session(seed: number): Session {
 
 function renderKeyboard(controller: Session) {
   const actions = { startStop: vi.fn(), nextExercise: vi.fn(), retry: vi.fn(), continueRun: vi.fn(), hint: vi.fn(), hideResults: vi.fn() };
-  return renderHook(
+  return Object.assign(renderHook(
     (p: { controller: Session; dialogOpen: boolean }) =>
       useComputerKeyboard({ controller: p.controller, exercise: p.controller.exercise, dialogOpen: p.dialogOpen, ...actions }),
     { initialProps: { controller, dialogOpen: false } },
-  );
+  ), { actions });
 }
 
 function press(type: 'keydown' | 'keyup', code: string) {
@@ -39,7 +40,19 @@ function press(type: 'keydown' | 'keyup', code: string) {
 
 const held = () => inputBus.held.get().held;
 
-afterEach(cleanup);
+/** Ends the run as the session would: status finished, then the finished event, at `time`. */
+function finish(controller: Session, time: number) {
+  vi.spyOn(performance, 'now').mockReturnValue(time);
+  act(() => {
+    controller.state.set((s) => ({ ...s, status: 'finished' }));
+    controller.finished.emit(null as never);
+  });
+}
+
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 describe('useComputerKeyboard', () => {
   it('attaches its listeners once, not per exercise, octave shift or calibration', () => {
@@ -77,5 +90,61 @@ describe('useComputerKeyboard', () => {
     expect(held()).toEqual([base]);
     press('keyup', 'KeyA');
     expect(held()).toEqual([]);
+  });
+
+  describe('Restart', () => {
+    it('R does nothing during a run: it sits among the black keys, so it is a missed note', () => {
+      for (const mode of ['wait', 'flow'] as const) {
+        const controller = session(1);
+        controller.state.set((s) => ({ ...s, mode, status: 'running' }));
+        const start = vi.spyOn(controller, 'start');
+        const { actions, unmount } = renderKeyboard(controller);
+        press('keydown', 'KeyA'); // a note played, so a Wait run is no longer untouched
+        press('keyup', 'KeyA');
+        press('keydown', 'KeyR');
+        expect(actions.retry).not.toHaveBeenCalled();
+        expect(start).not.toHaveBeenCalled();
+        unmount();
+      }
+    });
+
+    it('R restarts after a run, once the shortcut delay has passed', () => {
+      const controller = session(1);
+      const { actions } = renderKeyboard(controller);
+      finish(controller, 1000);
+      vi.spyOn(performance, 'now').mockReturnValue(1000 + SHORTCUT_ARM_MS - 1);
+      press('keydown', 'KeyR');
+      press('keyup', 'KeyR');
+      expect(actions.retry).not.toHaveBeenCalled();
+      vi.spyOn(performance, 'now').mockReturnValue(1000 + SHORTCUT_ARM_MS);
+      press('keydown', 'KeyR');
+      expect(actions.retry).toHaveBeenCalledTimes(1);
+    });
+
+    it('Backspace restarts at any time: Flow mid-run, a touched Wait run in place, and after a run', () => {
+      const flow = session(1);
+      flow.state.set((s) => ({ ...s, mode: 'flow', status: 'running' }));
+      const a = renderKeyboard(flow);
+      press('keydown', 'Backspace');
+      expect(a.actions.retry).toHaveBeenCalledTimes(1);
+      a.unmount();
+
+      const wait = session(2);
+      wait.state.set((s) => ({ ...s, mode: 'wait', status: 'running' }));
+      const start = vi.spyOn(wait, 'start');
+      const b = renderKeyboard(wait);
+      press('keydown', 'Backspace'); // untouched: nothing to restart
+      press('keyup', 'Backspace');
+      expect(start).not.toHaveBeenCalled();
+      wait.state.set((s) => ({ ...s, live: { ...s.live, wrong: 1 } }));
+      press('keydown', 'Backspace');
+      press('keyup', 'Backspace');
+      expect(start).toHaveBeenCalledTimes(1);
+      expect(b.actions.retry).not.toHaveBeenCalled();
+
+      finish(wait, 1000);
+      press('keydown', 'Backspace'); // no delay: Backspace is never a note
+      expect(b.actions.retry).toHaveBeenCalledTimes(1);
+    });
   });
 });
