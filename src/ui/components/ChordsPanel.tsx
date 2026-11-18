@@ -93,9 +93,9 @@ export function ChordsPanel(props: {
               value={s.chords.inversions}
               onChange={(chordsInversions) => update({ chords: { inversions: chordsInversions, source: 'pick' } })}
               options={[
-                { value: 'root', label: 'Root position — root in the bass' },
-                { value: 'inversions', label: 'Inversions — the bass note asked for' },
-                { value: 'any', label: 'Any voicing — just the right notes' },
+                { value: 'root', label: 'Root position (root in the bass)' },
+                { value: 'inversions', label: 'Inversions (the bass note asked for)' },
+                { value: 'any', label: 'Any voicing (just the right notes)' },
               ]}
             />
           </>
@@ -157,12 +157,14 @@ export function ChordsPanel(props: {
             <ProgressBar label="Tempo ladder" value={bpm} max={goal} complete={!!item?.mastered} />
           </div>
           <p className="field-hint">
-            {bpm} bpm · goal {goal}
-            {item ? ` · best clean ${item.bestCleanTempo || '—'} · ${item.cleanRuns} clean run${item.cleanRuns === 1 ? '' : 's'} · ${dueText(item.dueAt, now)}` : ' · new item'}
+            {bpm} bpm · goal {goal} bpm
+            {item
+              ? ` · best clean ${item.bestCleanTempo ? `${item.bestCleanTempo} bpm` : '–'} · ${item.cleanRuns} clean run${item.cleanRuns === 1 ? '' : 's'} · ${dueText(item.dueAt, now)}`
+              : ' · new item'}
           </p>
         </div>
         <p className="field-hint">
-          In <b>Flow</b>, play each chord on the downbeat. A clean run (≥ 90 % chords, ≥ 75 % timing) adds 4 bpm; a messy one takes 4 off. <b>Wait</b> times how quickly you find
+          In <b>Flow</b>, play each chord on the downbeat. A clean run (90% of chords, 75% timing) adds 4 bpm; a messy one takes 4 bpm off. <b>Wait</b> times how quickly you find
           each chord.
         </p>
       </section>
@@ -172,10 +174,10 @@ export function ChordsPanel(props: {
           label="Review due items"
           hint={
             props.dueCount
-              ? `${props.dueCount} item${props.dueCount === 1 ? '' : 's'} due — weak and long-unplayed items come back first`
+              ? `${props.dueCount} item${props.dueCount === 1 ? '' : 's'} due, weakest and longest-unplayed first`
               : review
-                ? 'Nothing due right now — you are playing your current pick'
-                : 'Drills and progressions you have played come back on a spaced schedule'
+                ? 'Nothing is due, so you play your current pick.'
+                : 'Drills and progressions you have played come back on a spaced schedule.'
           }
           checked={review}
           onChange={(on) => update({ chords: { source: on ? 'review' : 'pick' } })}
@@ -183,7 +185,7 @@ export function ChordsPanel(props: {
         {drill ? (
           <Toggle
             label="Weak-spot focus"
-            hint={props.weak.length ? `More of: ${props.weak.slice(0, 3).map(weakChordLabel).join(', ')}` : 'Draws more of the chords you miss or find slowly, once there is data'}
+            hint={props.weak.length ? `More of: ${props.weak.slice(0, 3).map(weakChordLabel).join(', ')}` : 'Draws more of the chords you miss or find slowly, once there is data.'}
             checked={s.weakSpotFocus}
             onChange={(weakSpotFocus) => update({ weakSpotFocus })}
           />
@@ -195,7 +197,7 @@ export function ChordsPanel(props: {
         {drill ? null : (
           <Toggle
             label="Play from the chord chart"
-            hint="Hide the notation — chord symbols and numerals only, voice it yourself"
+            hint="Chord symbols and numerals only, so you choose the voicing."
             checked={!s.chords.notation}
             onChange={(chart) => update({ chords: { notation: !chart } })}
           />

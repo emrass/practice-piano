@@ -336,7 +336,7 @@ export function Callout(props: {
 /** Over the Next button while a due item is on screen: which runs count as reviewing it. */
 export function ReviewNote(props: { mode: 'wait' | 'flow' }) {
   return props.mode === 'flow' ? (
-    <Callout className="review-note">Reviewing a due item — this run sets when it comes back.</Callout>
+    <Callout className="review-note">Reviewing a due item. This run sets when it comes back.</Callout>
   ) : (
     <Callout className="review-note" tone="warning" title="Wait runs don’t count as a review">
       Reviewing a due item: it stays due until you play it in <b>Flow</b>.

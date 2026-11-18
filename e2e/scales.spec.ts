@@ -18,11 +18,12 @@ test.describe('Scales & arpeggios', () => {
     expect(item.cleanRuns).toBe(1);
   });
 
-  test('Wait: notes in place, fingering printed, nothing on the ladder changes', async ({ app, page }) => {
+  test('Wait: notes learned, fingering printed, nothing on the ladder changes', async ({ app, page }) => {
     await app.open({ settings: scale({ mode: 'wait' }) });
     await expect(page.locator('.score svg .pp-finger').first()).toBeVisible();
     await app.playSteps();
-    await expect(app.results()).toContainText('Notes in place');
+    await expect(app.results().locator('.results-ribbon')).toHaveText('Notes learned. Try it in Flow.');
+    await expect(app.results().locator('.results-verdict')).toHaveText('Passed');
   });
 
   test('A specific key has nothing to move on to: only "Again", and N does nothing', async ({ app, page }) => {
@@ -41,7 +42,7 @@ test.describe('Scales & arpeggios', () => {
     await expect(actions).toHaveText([/Close/, /Again/]);
     await expect(actions.last()).toBeFocused();
     await expect(app.results().locator('.results-shortcuts .kbd-piano')).toHaveText(['C', 'E', 'F', 'G']);
-    await expect(page.locator('.practice-message')).toHaveText('Finished — on the piano: C again');
+    await expect(page.locator('.practice-message')).toHaveText('Finished. On the piano: C again');
     await page.keyboard.press('KeyN');
     await expect(app.results()).toBeVisible();
     // Enter takes the suggested action: the same scale again.

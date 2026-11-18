@@ -31,7 +31,7 @@ test.describe('Sight reading', () => {
     const actions = app.results().locator('.results-actions .btn');
     await expect(actions).toHaveText([/Close/, /Restart/, /New exercise/]);
     await expect(actions.last()).toBeFocused();
-    await expect(page.locator('.practice-message')).toHaveText('Finished — on the piano: C restart · D new exercise');
+    await expect(page.locator('.practice-message')).toHaveText('Finished. On the piano: C restart · D new exercise');
   });
 
   test('Wait: with the results closed, the bar offers them and the next exercise; a restarted run shows its own', async ({ app, page }) => {
@@ -59,7 +59,7 @@ test.describe('Sight reading', () => {
     await expect(page.locator('.key.is-expected')).toHaveCount(steps[0].length);
     await app.playSteps();
     await expect(app.results()).toBeVisible();
-    await expect(app.results()).toContainText('Wrong notes · 1 hint');
+    await expect(app.results()).toContainText('Wrong · 1 hint');
     await expect(app.results()).toContainText(`${steps.length - 1}/${steps.length}`);
   });
 

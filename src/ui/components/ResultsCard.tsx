@@ -56,15 +56,15 @@ export function ResultsCard(props: {
                 {Math.min(award.tierPasses, award.tierRequired)}/{award.tierRequired} passes
               </span>
             </div>
-            {award.newlyMastered ? <div>Tier mastered! Try the next band when you feel ready.</div> : null}
+            {award.newlyMastered ? <div>Tier mastered. Try the next tier when you feel ready.</div> : null}
           </Callout>
         ) : null}
         {award ? (
           <div className="stat">
             <span className="stat-value results-xp">+{award.xp} XP</span>
-            {award.firstSightBonus > 0 ? <span className="stat-note">incl. first-sight bonus +{award.firstSightBonus}</span> : null}
+            {award.firstSightBonus > 0 ? <span className="stat-note">First-sight bonus +{award.firstSightBonus} XP</span> : null}
             {!award.firstAttempt && !view.repertoire && view.trains !== null ? (
-              <span className="stat-note">Repeat passage — reduced XP. New passages train {view.trains} best.</span>
+              <span className="stat-note">A repeat passage earns less XP. New passages train {view.trains} best.</span>
             ) : null}
             {view.xpNotes?.(result).map((note) => (
               <span key={note} className="stat-note">

@@ -57,7 +57,7 @@ export function useEarLesson(ctx: LessonContext, active: boolean): LessonRuntime
     // The keyboard must not give the phrase away, so its window is fixed (C3–C6).
     keyboard: {
       span: { min: 48, max: 84 },
-      unavailable: { guide: 'Ear training never shows the answer on the keys — press ? for a hint' },
+      unavailable: { guide: 'Off in ear training: find the notes by ear. Press ? for a hint.' },
       fitLabel: 'Compact (C3–C6)',
     },
     practiceWeakSpots: () => {

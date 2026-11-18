@@ -39,7 +39,7 @@ export function MetaStrip(props: { exercise: Exercise; firstSight: boolean; focu
         ]
     : scale
     ? [
-        ['Key', ex.key.label === 'C major' && scale.item.type === 'chromatic' ? '—' : ex.key.label],
+        ['Key', ex.key.label === 'C major' && scale.item.type === 'chromatic' ? '–' : ex.key.label],
         ['Hands', SCALE_HANDS[scale.item.hands]],
         ['Range', `${scale.octaves} octave${scale.octaves > 1 ? 's' : ''}`],
         ['Rhythm', NOTE_VALUE_LABEL[scale.noteValue]],
@@ -53,7 +53,7 @@ export function MetaStrip(props: { exercise: Exercise; firstSight: boolean; focu
         ['Tempo', `${ex.bpm} bpm${ex.timeSignature.id === '6/8' ? ' (♩.)' : ''}`],
         ['Length', `${ex.bars} bars`],
         ['Hands', HANDS_LABEL[ex.hands]],
-        ['Texture', rhythm.texture ? TEXTURE_INFO[rhythm.texture].name : '—'],
+        ['Texture', rhythm.texture ? TEXTURE_INFO[rhythm.texture].name : '–'],
       ]
     : ear
     ? [
@@ -70,7 +70,7 @@ export function MetaStrip(props: { exercise: Exercise; firstSight: boolean; focu
         ['Tempo', `${ex.bpm} bpm${ex.timeSignature.id === '6/8' ? ' (♩.)' : ''}`],
         ['Length', `${ex.bars} bars`],
         ['Hands', HANDS_LABEL[ex.hands]],
-        ['Rhythm', RHYTHM_COMPLEXITY_LABELS[ex.meta.rhythmComplexity] ?? '—'],
+        ['Rhythm', RHYTHM_COMPLEXITY_LABELS[ex.meta.rhythmComplexity] ?? '–'],
       ];
   return (
     <div className="card meta-strip">

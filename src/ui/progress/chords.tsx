@@ -47,7 +47,7 @@ export function ChordStats(props: ProgressSectionProps) {
               <li key={`${w.dimension}${w.key}`}>
                 <span className="data-key">{weakChordLabel(w)}</span>
                 <span className="data-num">{pct(w.accuracy)}</span>
-                <span className="data-num data-meta">{w.medianReactionMs ? `${(w.medianReactionMs / 1000).toFixed(1)}s` : ''}</span>
+                <span className="data-num data-meta">{w.medianReactionMs ? `${(w.medianReactionMs / 1000).toFixed(1)} s` : ''}</span>
               </li>
             ))}
           </ul>

@@ -42,7 +42,7 @@ export function ExercisePanel(props: { settings: Settings; progress: ProgressSta
           <span className="tier-name">{tier.name}</span>
           <span className="tier-summary">{tier.summary}</span>
         </div>
-        <div className="progress-row" title="Pass distinct passages with ≥ 90% pitch accuracy to master this tier">
+        <div className="progress-row" title="Pass distinct passages with 90% pitch accuracy to master this tier.">
           <ProgressBar label="Tier progress" value={Math.min(tierState?.passes ?? 0, tier.passesRequired)} max={tier.passesRequired} complete={!!tierState?.mastered} />
           <span className="num">{tierState?.mastered ? 'Mastered' : `${Math.min(tierState?.passes ?? 0, tier.passesRequired)}/${tier.passesRequired}`}</span>
         </div>
@@ -55,10 +55,10 @@ export function ExercisePanel(props: { settings: Settings; progress: ProgressSta
             value={s.sight.hands}
             onChange={(hands) => update({ sight: { hands } })}
             options={[
-              { value: 'rh', label: 'RH', title: 'Right hand — treble clef' },
-              { value: 'lh', label: 'LH', title: 'Left hand — bass clef' },
-              { value: 'alternating', label: 'Alt', title: 'Hands take turns — grand staff' },
-              { value: 'both', label: 'Both', title: 'Both hands together — grand staff' },
+              { value: 'rh', label: 'RH', title: 'Right hand, treble clef' },
+              { value: 'lh', label: 'LH', title: 'Left hand, bass clef' },
+              { value: 'alternating', label: 'Alt', title: 'Hands take turns, grand staff' },
+              { value: 'both', label: 'Both', title: 'Both hands together, grand staff' },
             ]}
           />
         </Field>
@@ -75,7 +75,7 @@ export function ExercisePanel(props: { settings: Settings; progress: ProgressSta
       <section className="section">
         <Toggle
           label="Weak-spot practice"
-          hint={props.weakNotesLabel ? `Featuring ${props.weakNotesLabel}` : 'Play a few exercises first so we can find your weak notes'}
+          hint={props.weakNotesLabel ? `Featuring ${props.weakNotesLabel}` : 'Play a few exercises first to find your weak notes.'}
           checked={s.weakSpotFocus}
           onChange={(weakSpotFocus) => update({ weakSpotFocus })}
         />
@@ -106,7 +106,7 @@ export function ExercisePanel(props: { settings: Settings; progress: ProgressSta
               options={[{ value: 'auto', label: 'Auto' }, ...RHYTHM_COMPLEXITY_LABELS.map((l, i) => ({ value: String(i), label: l }))]}
             />
             <Select<string>
-              label="Max notes / hand"
+              label="Max notes per hand"
               value={String(s.sight.maxPolyphony)}
               onChange={(v) => update({ sight: { maxPolyphony: v === 'auto' ? 'auto' : Number(v) } })}
               options={[{ value: 'auto', label: 'Auto' }, ...[1, 2, 3, 4].map((n) => ({ value: String(n), label: n === 1 ? 'Single notes' : `Up to ${n}` }))]}

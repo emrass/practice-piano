@@ -18,7 +18,7 @@ const judged = (h: Heat | undefined): h is Heat => !!h && h.attempts >= MIN_NOTE
 
 function keyTitle(midi: number, h: Heat | undefined): string {
   if (!h) return `${midiLabel(midi)}: no data`;
-  return `${midiLabel(midi)}: ${pct(h.accuracy)} of ${h.attempts}${judged(h) ? '' : ' (too few to judge)'}`;
+  return `${midiLabel(midi)}: ${pct(h.accuracy)} of ${h.attempts} notes${judged(h) ? '' : ' (too few to judge)'}`;
 }
 
 /** Heatmap: one clef's range as a strip of piano keys, each in the band of its accuracy. */
@@ -78,7 +78,7 @@ export function SightSection(props: ProgressSectionProps) {
       <section className="section">
         <div className="section-title">Weak spots</div>
         {weak.notes.length === 0 ? (
-          <p className="field-hint">No consistent weak notes yet — keep reading! Notes need a few attempts before they’re judged.</p>
+          <p className="field-hint">No consistent weak notes yet. Notes need a few tries before they are judged.</p>
         ) : (
           <ul className="data-list data-list-cards weak-list">
             {weak.notes.map((n) => (
@@ -86,7 +86,7 @@ export function SightSection(props: ProgressSectionProps) {
                 <span className="data-key">{midiLabel(n.midi)}</span>
                 <span className="data-meta">{n.clef}</span>
                 <span className="data-num">{pct(n.accuracy)}</span>
-                <span className="data-num data-meta">{n.medianReactionMs ? `${(n.medianReactionMs / 1000).toFixed(1)}s` : ''}</span>
+                <span className="data-num data-meta">{n.medianReactionMs ? `${(n.medianReactionMs / 1000).toFixed(1)} s` : ''}</span>
               </li>
             ))}
           </ul>

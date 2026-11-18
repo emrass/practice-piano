@@ -70,8 +70,8 @@ export function RhythmSection(props: ProgressSectionProps) {
           <TimeBars rows={[...hands, ...textures]} empty="" />
           {hands.length === 2 ? (
             <p className="field-hint">
-              Tendency — right: {tendencyText(hands.find((h) => h.stat.key === 'rh')!.stat.tendencyMs) || '—'}, left:{' '}
-              {tendencyText(hands.find((h) => h.stat.key === 'lh')!.stat.tendencyMs) || '—'}
+              Tendency: RH {tendencyText(hands.find((h) => h.stat.key === 'rh')!.stat.tendencyMs) || '–'}, LH{' '}
+              {tendencyText(hands.find((h) => h.stat.key === 'lh')!.stat.tendencyMs) || '–'}
             </p>
           ) : null}
         </section>
