@@ -1,7 +1,7 @@
 # Logos
 
-- `practice-piano-mark.svg`: the mark. Three black keys over four white keys on a rounded oxblood field. Full color only; it is also the favicon. Its field is `#7a2e23`, a shade deeper than the `accent` token, and its keys are `#fbf6ec` and `#2b2622`. Use the file as it is; do not rebuild it from tokens.
-- `practice-piano-keys.svg`: the keys, the drawing beside the name inside the app. Two black keys on paper in an oxblood outline, 28px. The file carries the light theme's colors; inlined, its four parts (`logo-keys-field`, `-lines`, `-black`, `-edge`) take `surface-sheet`, `border`, `text` and `accent`, so it follows the theme. See the Logo component.
-- The mark is the favicon. The installed-app icon (`pwa/icons` and the native asset catalog) is still an older, different drawing: the black keys sit two and one, on a brighter field. It is to be redrawn from the keys, not from the mark; until then do not show it beside either.
+- `practice-piano-keys.svg`: the keys, the one drawing of the brand. Two black keys on paper in an oxblood outline, 28px. The file carries the light theme's colors; inlined, its four parts (`logo-keys-field`, `-lines`, `-black`, `-edge`) take `surface-sheet`, `border`, `text` and `accent`, so it follows the theme. See the Logo component.
+- Everything is drawn from it: the logo in the top bar and on the splash screen, the favicon (`public/favicon.svg`, redrawn on a 16px grid with the same parts and colors) and the installed-app icon (`pwa/icons` and the native asset catalog, rendered by `scripts/pwa-icons.ts`).
+- `practice-piano-mark.svg`: retired. The filled mark (three black keys over four white keys on oxblood) was the favicon until the keys took its place. Do not use it.
 - There is no wordmark file. The name is set live in Newsreader; see the Logo component.
-- Smallest size 20px. Clear space on every side: a quarter of the mark's width.
+- Smallest size 20px, except the favicon, which is drawn for 16px. Clear space on every side: a quarter of the logo's width.

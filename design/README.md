@@ -9,8 +9,9 @@ dialogs, panels, the top bar and the stage (meta strip, score, keyboard, practic
 chord chart, beat dots, heatmap) use the components; the React side is in `src/ui/components`
 (`controls.tsx`, `Dialog.tsx`, `Icon.tsx` and the stage components themselves). What is left in
 `src/styles` for the stage is arrangement: the stage grid, the score's scrolling frame, how the
-cursor and playhead are placed, and what the shell changes by window size. `system/guides/05-adoption.md` maps the old classes to their replacements;
-still open there are the copy and the installed-app icon.
+cursor and playhead are placed, and what the shell changes by window size. `system/guides/05-adoption.md` maps the old classes to their replacements.
+The copy follows the Writing guide, and the favicon and the installed-app icon are drawn from the
+keys, like the logo.
 
 ## What is here
 
@@ -24,7 +25,7 @@ design/
       bundle.css          the styles of all components, built on the tokens
       <Name>/README.md    when to use the component, what you provide, how it behaves
       <Name>/preview.html a bare page showing its variants and states
-    assets/               the mark, the icon set, font licenses
+    assets/               the logo (the keys), the icon set, font licenses
     fonts/                Newsreader (voice), Figtree (interface), Caveat (landing page only)
   scripts/                build, check and preview (plain Node, no dependencies)
   dist/                   built on demand, not committed:
@@ -51,8 +52,8 @@ npm run design:check     # validate the system; part of `npm run check`, so CI r
 - the text styles restated at the top of `bundle.css` differ from `tokens.json`;
 - a component lacks its README or preview, a font lacks its license, or `tokens.json` no
   longer compiles;
-- the mark differs from `public/favicon.svg`, or the Score preview loads a VexFlow version
-  other than the app's.
+- `public/favicon.svg` is not the keys: the four parts of `assets/Logos/practice-piano-keys.svg`
+  in their colors; or the Score preview loads a VexFlow version other than the app's.
 
 ## Changing it
 
@@ -80,7 +81,7 @@ is no generated file to keep in step and nothing to commit after a token change.
   follows it in `src/main.tsx`, before the app's own stylesheets.
 - **The landing page** has no build step. Whatever copies files into it runs
   `npm run design:build` here first, then takes `tokens.css` and `site-fonts.css` with the font
-  paths adjusted, plus the font files and the mark.
+  paths adjusted, plus the font files and the favicon (`public/favicon.svg`).
 - **In CSS**, tokens are custom properties: `var(--surface-card)`, `var(--space-12)`,
   `font: var(--type-body)`. Text styles with tracking also have `var(--tracking-overline)`.
 
@@ -91,4 +92,4 @@ A browsable copy of `system/`, with live component previews and token swatches, 
 folder is the source: change it here, then republish the copy. Two things differ there by
 design: the page compiles its own stylesheet from `tokens.json` (text styles become classes
 such as `.title` instead of `--type-*` variables, which is why `bundle.css` restates them), and
-the icons and the mark are stored as uploads.
+the icons and the logos are stored as uploads.
