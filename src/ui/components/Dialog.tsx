@@ -20,6 +20,8 @@ export function Dialog(props: {
   sheet?: boolean;
   /** Tabs between head and body: 560px wide, fixed height. */
   tabbed?: boolean;
+  /** Steps (a guide): fixed height, so it never resizes between steps. */
+  stepped?: boolean;
   /** Buttons beside the close button. */
   headActions?: ReactNode;
   className?: string;
@@ -50,7 +52,7 @@ export function Dialog(props: {
     <div className={`scrim ${props.sheet ? 'is-sheet' : ''}`} onClick={props.dismissible ? (e) => e.target === e.currentTarget && props.onClose() : undefined}>
       <div
         ref={ref}
-        className={['dialog', props.tabbed ? 'dialog-tabbed' : '', props.className ?? ''].filter(Boolean).join(' ')}
+        className={['dialog', props.tabbed ? 'dialog-tabbed' : '', props.stepped ? 'dialog-stepped' : '', props.className ?? ''].filter(Boolean).join(' ')}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}

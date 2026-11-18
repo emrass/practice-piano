@@ -48,9 +48,9 @@ npm run dev          # http://localhost:5173 — open in Chrome, allow MIDI
 
 The app is made to be played on a **real piano or keyboard over MIDI** (USB or Bluetooth). The
 first time it opens, a short **setup guide** walks through connecting the piano (and confirms it
-when you play a key), asks how well you play to set a starting point for every lesson, and offers
-to line up the metronome with your audio setup. Every step can be skipped, and the guide can be
-run again from *Piano & audio → Setup guide…*. *Piano & audio* (the piano button in the
+when you play a key), offers to line up the metronome with your audio setup, and asks how well
+you play to set a starting point for every lesson. Every step can be skipped. The piano and
+metronome steps can be run again from *Piano & audio → Setup guide*. *Piano & audio* (the piano button in the
 top bar: *Connect a piano*, or your piano's name) holds the settings every lesson shares: the
 piano connection, latency and metronome, and how playing is scored.
 
@@ -130,9 +130,9 @@ contains the current web code.
   remain, and the setup guide offers two presets (*device speakers* ~15 ms, *headphones on the
   piano* ~180 ms).
 - **First-run setup** — connect a piano with instructions for the platform at hand (Web MIDI,
-  the native app's Bluetooth pairing, or a browser that cannot use MIDI), pick one of five
-  stages that sets all five lessons, adjust reading / ear / scales & chords separately if you
-  want, then calibrate latency or pick a preset.
+  the native app's Bluetooth pairing, or a browser that cannot use MIDI), calibrate latency or
+  pick a preset, then pick one of five stages that sets all five lessons and adjust reading /
+  ear / scales & chords separately if you want.
 - **Piano shortcuts** — after an exercise, play C to repeat it, D to move on (a new exercise,
   the next key, the next due item — nothing for one scale in one key), E to close the results, F
   for one level easier, G for one level harder (any octave; ignored until all keys are released,

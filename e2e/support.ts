@@ -43,9 +43,9 @@ export function fakeMidi() {
   window.__schedule = (data, at) => setTimeout(() => window.__midi(data, at), Math.max(0, at - performance.now()));
 }
 
-/** A new profile opens on the first-run setup guide; tests of other things skip it. */
+/** A new profile opens on the first-run setup guide; tests of other things close it. */
 export async function skipSetup(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Skip setup' }).click();
+  await page.getByRole('button', { name: 'Close setup' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 
