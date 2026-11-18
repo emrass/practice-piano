@@ -1,6 +1,8 @@
 import type { Page } from '@playwright/test';
 import { type App, expect, test } from '../../e2e/support';
-import { clipTo, type MidiNote, progressFixture, rng, saveShot, scheduleNotes, seedPageRandom } from './shots';
+import { mkdirSync } from 'node:fs';
+import path from 'node:path';
+import { clipTo, type MidiNote, OUT_DIR, progressFixture, rng, saveShot, scheduleNotes, seedPageRandom } from './shots';
 
 /**
  * Landing-page screenshots (practice-piano-site/img). Each test stages one shot (or a group
@@ -259,5 +261,19 @@ test.describe('iPad landscape 1180×820 @2x', () => {
     await open(app, page, { lesson: 'scales', scales: { mode: 'wait', type: 'harmonic-minor', tonic: 'A', hands: 'together', octaves: 1 } }, { seed: 10 });
     await playSteps(app, page, 6, 100);
     await saveShot(page, 'ipad-scales', await clipTo(stage(page), size(1664, 1524)), size(1664, 1524));
+  });
+});
+
+// A 1600×840 window at 0.75: the stage has room for a whole system, and the image is 1200×630.
+test.describe('Open Graph 1200×630', () => {
+  test.use({ viewport: { width: 1600, height: 840 }, deviceScaleFactor: 0.75 });
+
+  test('og.png', async ({ app, page }) => {
+    // The whole window, as the sight-flow shot: the image a link to the site shows (og:image).
+    await open(app, page, { lesson: 'sight', sight: { mode: 'flow', level: 44, hands: 'both', bars: 8 } }, { seed: 2 });
+    const run = await playFlow(app, page, { seed: 5, jitterMs: 22, miss: 0.03 });
+    await app.waitUntil(run.t0 + (run.endMs - run.t0) * 0.45);
+    mkdirSync(OUT_DIR, { recursive: true });
+    await page.screenshot({ path: path.join(OUT_DIR, 'og.png'), animations: 'disabled', caret: 'hide' });
   });
 });
