@@ -163,13 +163,13 @@ export const LATENCY_PRESETS: Readonly<Record<'speakers' | 'headphones', { laten
     latencyMs: 15,
     playheadDelayMs: 0,
     label: 'Device speakers',
-    help: 'Piano plays through its own speakers; metronome from this device. Bluetooth MIDI adds ~15 ms.',
+    help: 'Piano plays through its own speakers; metronome from this device. Bluetooth MIDI adds about 15 ms.',
   },
   headphones: {
     latencyMs: 180,
     playheadDelayMs: 165,
     label: 'Headphones on piano',
-    help: 'Metronome is streamed to the piano over Bluetooth audio (~180 ms), so you hear it late.',
+    help: 'Metronome is streamed to the piano over Bluetooth audio (about 180 ms), so you hear it late.',
   },
 };
 

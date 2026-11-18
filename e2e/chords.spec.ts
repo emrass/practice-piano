@@ -40,7 +40,7 @@ test.describe('Chords & progressions', () => {
     // The chord is the question: a wrong key does not give it away, it points at the hint.
     await expect(page.locator('.key.is-expected')).toHaveCount(0);
     await expect(hintButton).toHaveClass(/is-nudge/);
-    await expect(page.locator('.practice-message')).toContainText('Stuck? Press ? for a hint');
+    await expect(page.locator('.practice-message')).toHaveText('Stuck? Press ? for a hint.');
     await page.keyboard.press('Slash');
     await expect(page.locator('.key.is-expected')).toHaveCount(ts[0].voicing.length);
     await expect(hintButton).toBeDisabled();

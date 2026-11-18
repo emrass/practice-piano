@@ -76,7 +76,7 @@ export function ScalesPanel(props: {
               { value: 'rh', label: 'RH' },
               { value: 'lh', label: 'LH' },
               { value: 'together', label: 'Together', title: HANDS_LABEL.together },
-              ...(def.contrary ? [{ value: 'contrary' as const, label: 'Contrary', title: 'Contrary motion — both hands start on the same note' }] : []),
+              ...(def.contrary ? [{ value: 'contrary' as const, label: 'Contrary', title: 'Contrary motion: both hands start on the same note' }] : []),
             ]}
           />
         </Field>
@@ -130,12 +130,12 @@ export function ScalesPanel(props: {
           <p className="field-hint">
             {nps(ex.scale.npm)} · goal {nps(goalNpm)}
             {item
-              ? ` · best clean ${item.bestCleanTempo ? nps(item.bestCleanTempo) : '—'} · ${item.cleanRuns} clean run${item.cleanRuns === 1 ? '' : 's'} · ${dueText(item.dueAt, now)}`
+              ? ` · best clean ${item.bestCleanTempo ? nps(item.bestCleanTempo) : '–'} · ${item.cleanRuns} clean run${item.cleanRuns === 1 ? '' : 's'} · ${dueText(item.dueAt, now)}`
               : ' · new item'}
           </p>
         </div>
         <p className="field-hint">
-          In <b>Flow</b>, a clean run (≥ 95 % notes, ≥ 80 % timing) adds 4 bpm; a messy one (&lt; 90 %) takes 4 off. <b>Wait</b> is for learning the notes and fingering at your own
+          In <b>Flow</b>, a clean run (95% notes, 80% timing) adds 4 bpm; a messy one (under 90%) takes 4 bpm off. <b>Wait</b> is for learning the notes and fingering at your own
           pace.
         </p>
       </section>
@@ -145,10 +145,10 @@ export function ScalesPanel(props: {
           label="Review due items"
           hint={
             props.dueCount
-              ? `${props.dueCount} item${props.dueCount === 1 ? '' : 's'} due — weak and long-unplayed items come back first`
+              ? `${props.dueCount} item${props.dueCount === 1 ? '' : 's'} due, weakest and longest-unplayed first`
               : review
-                ? 'Nothing due right now — you are playing your current pick'
-                : 'Items you have played come back for review on a spaced schedule'
+                ? 'Nothing is due, so you play your current pick.'
+                : 'Items you have played come back for review on a spaced schedule.'
           }
           checked={review}
           onChange={(on) => update({ scales: { source: on ? 'review' : 'pick' } })}
@@ -159,13 +159,13 @@ export function ScalesPanel(props: {
         <div className="section-title">Display</div>
         <Toggle
           label="Fingering"
-          hint="Standard fingering above / below the notes"
+          hint="Standard fingering above or below the notes"
           checked={s.scales.showFingering}
           onChange={(showFingering) => update({ scales: { showFingering } })}
         />
         <Toggle
           label="Play from memory"
-          hint="Hide the notation — just the name of the scale"
+          hint="Only the name of the scale, no notation"
           checked={!s.scales.notation}
           onChange={(memory) => update({ scales: { notation: !memory } })}
         />

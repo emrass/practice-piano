@@ -4,7 +4,7 @@ export const DAY = 24 * 60 * 60 * 1000;
 
 /** A 0–1 ratio as a whole percentage, or a dash when there is no data. */
 export function pct(v: number | null): string {
-  return v === null ? '—' : `${Math.round(v * 100)}%`;
+  return v === null ? '–' : `${Math.round(v * 100)}%`;
 }
 
 export type HeatBand = 1 | 2 | 3 | 4 | 5;

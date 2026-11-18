@@ -117,7 +117,7 @@ export function useChordsLesson(ctx: LessonContext, active: boolean): LessonRunt
       span: exercise.range,
       spelling: (st) => spellings[st.chords?.index ?? 0],
       unavailable: {
-        guide: item.task === 'drill' ? `In a drill the chord is the question${c.mode === 'wait' ? ' — press ? for a hint' : ''}` : undefined,
+        guide: item.task === 'drill' ? `Off in chord drills: the chord is the question.${c.mode === 'wait' ? ' Press ? for a hint.' : ''}` : undefined,
       },
     },
     review: () => {

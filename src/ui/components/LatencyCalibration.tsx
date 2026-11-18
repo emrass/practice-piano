@@ -28,7 +28,7 @@ export interface CalibrationOutcome {
 const QUALITY_TEXT = {
   good: 'Very consistent',
   fair: 'Reasonably consistent',
-  poor: 'Inconsistent — consider retrying',
+  poor: 'Inconsistent, worth a retry',
   insufficient: 'Not enough taps',
 } as const;
 
@@ -170,11 +170,11 @@ export function LatencyCalibration(props: { volume: number; midiConnected: boole
         <>
           <div className="dialog-body">
             <p>
-              Set up exactly as you practice — same piano connection, same speakers or headphones. You’ll hear {CALIBRATION_WARMUP} lead-in clicks, then {CALIBRATION_COUNTED} more
-              at {CALIBRATION_BPM} bpm.
+              Set up exactly as you practice: the same piano connection, the same speakers or headphones. You’ll hear {CALIBRATION_WARMUP} lead-in clicks, then{' '}
+              {CALIBRATION_COUNTED} more at {CALIBRATION_BPM} bpm.
             </p>
             <p>
-              <b>Play any key on your piano together with each click</b> — as if it were a rhythm exercise. Don’t try to compensate; just play with what you hear.
+              <b>Play any key on your piano together with each click</b>, as in a rhythm exercise. Don’t try to compensate. Just play with what you hear.
             </p>
             {!props.midiConnected ? (
               <Callout tone="warning" title="No MIDI piano is connected">
@@ -223,7 +223,7 @@ export function LatencyCalibration(props: { volume: number; midiConnected: boole
             </p>
             <p>
               Optional second pass: tap along to a <b>silent flashing circle</b>. The difference tells us how late you <i>hear</i> the click, so the Flow-mode playhead can be
-              delayed to match — most useful with Bluetooth headphones or audio streamed to the piano.
+              delayed to match. It helps most with Bluetooth headphones or audio streamed to the piano.
             </p>
           </div>
           <div className="dialog-actions">
@@ -272,7 +272,7 @@ export function LatencyCalibration(props: { volume: number; midiConnected: boole
                 <dd className="stat-value">{estimate.playheadDelayMs === null ? '–' : `${estimate.playheadDelayMs} ms`}</dd>
                 <dd className="stat-note calib-quality">
                   {estimate.playheadDelayMs === null
-                    ? 'Not measured — current setting kept'
+                    ? 'Not measured, setting kept'
                     : visual
                       ? `Visual pass ${Math.round(visual.offsetMs)} ms · ±${Math.round(visual.spreadMs)} ms`
                       : ''}

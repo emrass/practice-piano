@@ -70,7 +70,7 @@ const MANIFEST = {
   id: './',
   name: 'Practice Piano',
   short_name: 'Practice Piano',
-  description: 'Sight reading, ear training, rhythm and scales practice for your MIDI piano.',
+  description: 'Sight reading, ear training, rhythm, scales and chords practice for your MIDI piano.',
   start_url: './',
   scope: './',
   display: 'standalone',

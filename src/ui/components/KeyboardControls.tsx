@@ -21,7 +21,7 @@ export function KeyboardControls(props: { settings: Settings; update: (patch: Se
         aria-pressed={guideOn}
         aria-label="Keyboard guide"
         aria-disabled={guideReason ? true : undefined}
-        title={guideReason ?? (guideOn ? 'Keyboard guide on — the keys to play light up' : 'Keyboard guide off — turn on to light up the keys to play')}
+        title={guideReason ?? (guideOn ? 'Keyboard guide on: the keys to play light up.' : 'Keyboard guide off: turn it on to light up the keys to play.')}
         onClick={() => {
           if (!guideReason) update({ showKeyboardGuide: !s.showKeyboardGuide });
         }}
@@ -79,7 +79,7 @@ function DisplayMenu(props: { settings: Settings; update: (patch: SettingsPatch)
           <Toggle label="Note names on the keys" checked={s.showKeyNames} onChange={(showKeyNames) => update({ showKeyNames })} />
           <Toggle
             label="Computer-key hints"
-            hint={qwertyReason ?? 'Show A S D F… on the keys'}
+            hint={qwertyReason ?? 'Show A, S, D, F and the rest on the keys'}
             checked={s.showQwertyHints && !qwertyReason}
             disabled={!!qwertyReason}
             onChange={(showQwertyHints) => update({ showQwertyHints })}

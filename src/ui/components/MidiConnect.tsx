@@ -14,7 +14,7 @@ export function MidiButtons(props: { midi: MidiService; canPairBluetooth: boolea
       </button>
       {props.canPairBluetooth ? (
         <button type="button" className="btn btn-primary" onClick={() => props.midi.pairBluetooth()}>
-          Pair Bluetooth MIDI…
+          Pair Bluetooth MIDI
         </button>
       ) : null}
     </>
@@ -26,7 +26,7 @@ export function BrowserBluetoothHelp() {
   return (
     <>
       On macOS, pair the piano once in <b>Audio MIDI Setup → Window → Show MIDI Studio → Bluetooth</b> (the “Bluetooth” toolbar button), then press Rescan here. On iPad, browsers
-      can’t use MIDI — install the practice-piano app, which has a built-in pairing button.
+      can’t use MIDI. Install the practice-piano app, which has a built-in pairing button.
     </>
   );
 }

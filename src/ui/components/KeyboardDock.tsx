@@ -54,7 +54,7 @@ export function KeyboardDock(props: {
             className="icon-btn"
             aria-pressed={soundOn}
             aria-label="Key sound for on-screen and computer keys"
-            title={soundOn ? 'Key sound on — on-screen and computer keys play a piano sound' : 'Key sound off — turn on to hear on-screen and computer keys'}
+            title={soundOn ? 'Key sound on: on-screen and computer keys play a piano sound.' : 'Key sound off: turn it on to hear on-screen and computer keys.'}
             onClick={() => props.update({ keySound: !soundOn })}
           >
             <Icon name={soundOn ? 'sound-on' : 'sound-off'} />

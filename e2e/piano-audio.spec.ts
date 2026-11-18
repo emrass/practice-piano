@@ -20,7 +20,7 @@ test('With a piano connected, the chip opens Piano & audio; a key played there i
   // One tab per section, opened on Piano; the setup guide is a button in the header.
   await expect(dialog.getByRole('tab')).toHaveText(['Piano', 'Audio & timing', 'Playing']);
   await expect(dialog.getByRole('tab', { selected: true })).toHaveText('Piano');
-  await expect(dialog.getByRole('button', { name: 'Setup guide…' })).toBeVisible();
+  await expect(dialog.getByRole('button', { name: 'Setup guide' })).toBeVisible();
 
   await app.tap([60]);
   await expect(dialog).toContainText('We hear you: C4');
@@ -47,7 +47,7 @@ test('Calibration opens over Piano & audio and comes back to it', async ({ app, 
   const dialog = await app.openPianoAudio();
   await dialog.getByRole('tab', { name: 'Audio & timing' }).click();
   await expect(dialog.locator('.calib-row')).toContainText('Not calibrated');
-  await dialog.getByRole('button', { name: 'Calibrate…' }).click();
+  await dialog.getByRole('button', { name: 'Calibrate', exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(1);
   await expect(page.getByRole('dialog')).toContainText('Latency calibration');
   await page.getByRole('dialog').getByRole('button', { name: 'Cancel' }).click();
@@ -63,7 +63,7 @@ test('A calibrated setup shows its result next to the button; arrow keys move be
   await page.keyboard.press('ArrowRight');
   await expect(dialog.getByRole('tab', { name: 'Audio & timing' })).toBeFocused();
   await expect(dialog.locator('.calib-row')).toContainText('Calibrated · 42 ms ± 6 ms');
-  await expect(dialog.getByRole('button', { name: 'Calibrate again…' })).toBeVisible();
+  await expect(dialog.getByRole('button', { name: 'Calibrate again' })).toBeVisible();
   // No presets here any more: calibrate, or set the sliders by hand.
   await expect(dialog).not.toContainText('Quick presets');
   await page.keyboard.press('End');
@@ -84,6 +84,6 @@ for (const theme of ['light', 'dark'] as const) {
     await dialog.getByRole('tab', { name: 'Audio & timing' }).click();
     await dialog.getByRole('radio', { name: '2 bars' }).scrollIntoViewIfNeeded();
     await expect(dialog.getByRole('button', { name: 'Close Piano & audio' })).toBeInViewport();
-    await expect(dialog.getByRole('button', { name: 'Setup guide…' })).toBeInViewport();
+    await expect(dialog.getByRole('button', { name: 'Setup guide' })).toBeInViewport();
   });
 }

@@ -37,7 +37,7 @@ export function EarPanel(props: { settings: Settings; progress: ProgressState; u
           <span className="tier-name">{tier.name}</span>
           <span className="tier-summary">{tier.summary}</span>
         </div>
-        <div className="progress-row" title="Find distinct phrases with ≥ 90% accuracy (hints count as misses) to master this tier">
+        <div className="progress-row" title="Pass distinct phrases with 90% accuracy to master this tier. Hints count as misses.">
           <ProgressBar label="Tier progress" value={Math.min(tierState?.passes ?? 0, tier.passesRequired)} max={tier.passesRequired} complete={!!tierState?.mastered} />
           <span className="num">{tierState?.mastered ? 'Mastered' : `${Math.min(tierState?.passes ?? 0, tier.passesRequired)}/${tier.passesRequired}`}</span>
         </div>
@@ -58,7 +58,7 @@ export function EarPanel(props: { settings: Settings; progress: ProgressState; u
           hint={
             props.weakIntervals.length
               ? `Featuring ${props.weakIntervals.map((i) => INTERVAL_NAMES[i]).join(', ')}`
-              : 'After a few phrases, intervals you miss most are featured more often'
+              : 'After a few phrases, intervals you miss most are featured more often.'
           }
           checked={s.weakSpotFocus}
           onChange={(weakSpotFocus) => update({ weakSpotFocus })}

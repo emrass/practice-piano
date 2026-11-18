@@ -229,12 +229,12 @@ function MetronomeStep(props: { settings: Settings; update: (patch: SettingsPatc
   return (
     <div className="dialog-body">
       <p>
-        In <b>Flow</b> mode you play in time with a metronome. Sound takes a moment to travel — longer over Bluetooth — so the app needs to know how late the click reaches your
-        ears to judge your timing fairly.
+        In <b>Flow</b> mode you play in time with a metronome. Sound takes a moment to travel, longer over Bluetooth. To judge your timing fairly, the app needs to know how late
+        the click reaches your ears.
       </p>
       {calibrated ? <Callout tone="success" title={`Calibrated · ${s.calibration!.latencyMs} ms ± ${s.calibration!.spreadMs} ms`} /> : null}
       <button type="button" className={`btn btn-block ${calibrated ? '' : 'btn-primary'}`} onClick={props.onCalibrate}>
-        {calibrated ? 'Calibrate again…' : 'Calibrate now (about 30 seconds)…'}
+        {calibrated ? 'Calibrate again' : 'Calibrate now (about 30 s)'}
       </button>
       <p className="field-hint">You play a key along with a few clicks, and the app measures your exact setup. This is the most accurate option.</p>
 
