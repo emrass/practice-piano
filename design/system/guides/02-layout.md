@@ -52,4 +52,10 @@ Use these four for the shell, written as numbers in media queries. Everything el
 
 ## The landing page
 
-practice-piano.com is a reading page, not an app: one column, `site-body` in a 34em measure, `site-h1` to `site-h3` in Newsreader, screenshots of the real app on `surface-sheet` with `border` and `radius-lg`. It uses the same color tokens and the Logo; of the components it needs only Button. The pencil notes in `site-hand` are its one flourish.
+practice-piano.com is a reading page, not an app: one column, `site-body` in a 34em measure, `site-h1` to `site-h3` in Newsreader, screenshots of the real app on `surface-sheet` with `border`, `radius-lg` and `shadow-1`. It uses the same color tokens and the Logo; of the components it needs only Button. The pencil notes in `site-hand` are its one flourish.
+
+- **It sits on `surface-panel`.** The page is running text, which `surface-canvas` never holds. Text is `text`, supporting copy `text-muted`, captions, fine print and the footer `text-subtle`.
+- **Everything is Newsreader**, buttons and navigation too: `site-lede` under the headline, `site-small` for lists, definitions and the navigation, `site-caption` for captions and the footer. The headings scale between their phone and desktop sizes with the window.
+- **Buttons** are Button's colors, radius and heights (`size-control-lg`, `size-control-md` for the one in the header), with the label in Newsreader 600.
+- **One theme.** The page stays light; the dark theme is for evening practice in the app.
+- **The pencil** is timed by hand: the strokes are written in one after another after the page loads, and they stay still under `prefers-reduced-motion`.

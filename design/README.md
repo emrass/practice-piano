@@ -79,9 +79,10 @@ is no generated file to keep in step and nothing to commit after a token change.
   (`surface-sheet`); the web app manifest takes its colors from the tokens too. `tokens.css`
   leaves out Caveat, so the app never downloads it. `design/system/components/bundle.css`
   follows it in `src/main.tsx`, before the app's own stylesheets.
-- **The landing page** has no build step. Whatever copies files into it runs
-  `npm run design:build` here first, then takes `tokens.css` and `site-fonts.css` with the font
-  paths adjusted, plus the font files and the favicon (`public/favicon.svg`).
+- **The landing page** has no build step. Its `scripts/sync-design.sh` runs
+  `npm run design:build` here, then copies `tokens.css` and `site-fonts.css` with the font
+  paths adjusted, the font files it uses, and the favicon (`public/favicon.svg`). Its own
+  stylesheet uses the tokens; `system/guides/02-layout.md` has the page's rules.
 - **In CSS**, tokens are custom properties: `var(--surface-card)`, `var(--space-12)`,
   `font: var(--type-body)`. Text styles with tracking also have `var(--tracking-overline)`.
 
