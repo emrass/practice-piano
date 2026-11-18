@@ -207,10 +207,10 @@ kbd { display: inline-block; padding: 1px var(--space-4); border: var(--stroke-t
 .stat-lg .stat-value { font: var(--type-numeral-lg); font-variant-numeric: tabular-nums lining-nums; }
 .stat-sm .stat-value { font: var(--type-numeral-sm); font-variant-numeric: tabular-nums lining-nums; }
 .stat.is-key .stat-value { color: var(--accent); }
-/* The figure and its note stay together, centered in the tile: tiles in a row share a height, and one whose
-   note is shorter than its neighbor's has the spare room split above and below. */
-.stat-tile { align-content: center; justify-items: center; padding: var(--space-12) var(--space-6); border-radius: var(--radius-md); background: var(--surface-well); text-align: center; }
-.stat-tile .stat-note { white-space: normal; }
+/* Tiles in a row share a height. The figure keeps the first row, so figures share a line across the tiles;
+   the note is centered in the room below, so a one-line note sits level with the middle of a two-line one. */
+.stat-tile { grid-template-rows: auto 1fr; justify-items: center; padding: var(--space-12) var(--space-6); border-radius: var(--radius-md); background: var(--surface-well); text-align: center; }
+.stat-tile .stat-note { align-self: center; white-space: normal; }
 .stat-tile-card { background: var(--surface-card); }
 
 /* ---------- Meta strip ---------- */
@@ -442,7 +442,7 @@ kbd { display: inline-block; padding: 1px var(--space-4); border: var(--stroke-t
 .results-ribbon.is-pass { background: var(--success-soft); color: var(--success); }
 .results-verdict { margin: 0; font: var(--type-headline); }
 .results-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-8); }
-.results-grid > .stat-tile-wide { grid-column: 1 / -1; padding: var(--space-8) var(--space-12); }
+.results-grid > .stat-tile-wide { grid-column: 1 / -1; grid-template-rows: auto; padding: var(--space-8) var(--space-12); }
 .results-notes { display: grid; gap: var(--space-4); margin: 0; padding-left: var(--space-20); color: var(--text-muted); }
 .results-xp { font: var(--type-numeral); color: var(--reward-text); }
 /* The same actions as keys of the piano: a label, then one piano keycap with its word per action. */
