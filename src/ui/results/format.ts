@@ -28,11 +28,12 @@ export function pct(v: number | null): string {
 /**
  * The verdict (design/system/guides/01-writing.md): a clean run earns 'Clean!', the only exclamation
  * mark in the app; any other pass is 'Passed'; a run that did not pass is 'Nearly' (≥ 75% pitch
- * accuracy) or 'Slow it down'. `clean` is the lesson's own bar for a passed run.
+ * accuracy) or else `retry`: 'Slow it down', or in ear training, which has no tempo to slow,
+ * 'Listen again'. `clean` is the lesson's own bar for a passed run.
  */
-export function verdict(result: ExerciseResult, passed: boolean, clean: boolean): string {
+export function verdict(result: ExerciseResult, passed: boolean, clean: boolean, retry = 'Slow it down'): string {
   if (passed) return clean ? 'Clean!' : 'Passed';
-  return result.pitchAccuracy >= 0.75 ? 'Nearly' : 'Slow it down';
+  return result.pitchAccuracy >= 0.75 ? 'Nearly' : retry;
 }
 
 /** Sight reading and ear training: a pass with ≥ 98% pitch accuracy is clean. */

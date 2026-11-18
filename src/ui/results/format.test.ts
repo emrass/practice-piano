@@ -10,6 +10,7 @@ describe('results wording (design/system/guides/01-writing.md)', () => {
     expect(verdict(result(0.92), true, false)).toBe('Passed');
     expect(verdict(result(0.8), false, false)).toBe('Nearly');
     expect(verdict(result(0.5), false, false)).toBe('Slow it down');
+    expect(verdict(result(0.5), false, false, 'Listen again')).toBe('Listen again');
   });
 
   it('the wrong-note tile note stays short enough for one line', () => {
