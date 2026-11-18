@@ -207,8 +207,9 @@ kbd { display: inline-block; padding: 1px var(--space-4); border: var(--stroke-t
 .stat-lg .stat-value { font: var(--type-numeral-lg); font-variant-numeric: tabular-nums lining-nums; }
 .stat-sm .stat-value { font: var(--type-numeral-sm); font-variant-numeric: tabular-nums lining-nums; }
 .stat.is-key .stat-value { color: var(--accent); }
-/* The figure and its note stay together at the top of the tile, so figures in a row share a line however a note wraps. */
-.stat-tile { align-content: start; justify-items: center; padding: var(--space-12) var(--space-6); border-radius: var(--radius-md); background: var(--surface-well); text-align: center; }
+/* The figure and its note stay together, centered in the tile: tiles in a row share a height, and one whose
+   note is shorter than its neighbor's has the spare room split above and below. */
+.stat-tile { align-content: center; justify-items: center; padding: var(--space-12) var(--space-6); border-radius: var(--radius-md); background: var(--surface-well); text-align: center; }
 .stat-tile .stat-note { white-space: normal; }
 .stat-tile-card { background: var(--surface-card); }
 
