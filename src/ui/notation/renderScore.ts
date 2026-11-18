@@ -269,6 +269,7 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
         if (!events.length) return;
         const measureGroup = ctx.openGroup('pp-measure', `pp-m-${hand}-${measure.index}`) as SVGGElement | undefined;
         measureGroup?.setAttribute('data-measure', String(measure.index));
+        measureGroup?.classList.add('bar');
         const groups = beamGroups(events, ex.timeSignature.beatTicks);
         const stemFor = new Map<NoteEvent, number>();
         for (const g of groups) {
@@ -421,7 +422,7 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
       const clef = step.notes[0].hand === 'lh' ? 'bass' : 'treble';
       const y = (system.staveY[clef] ?? system.staveY[ex.staves[0]]!) + 60; // middle staff line
       const g = document.createElementNS(SVG_NS, 'g');
-      g.setAttribute('class', 'pp-placeholder');
+      g.setAttribute('class', 'score-placeholder');
       g.setAttribute('data-step', String(step.index));
       const r = document.createElementNS(SVG_NS, 'rect');
       r.setAttribute('x', String(x - 4));
@@ -430,7 +431,7 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
       r.setAttribute('height', '26');
       r.setAttribute('rx', '6');
       g.appendChild(r);
-      addText(svg, g, x + 6, y + 5, '?', 'pp-placeholder-mark');
+      addText(svg, g, x + 6, y + 5, '?', 'score-placeholder-mark');
       layer.appendChild(g);
     }
     svg.appendChild(layer);

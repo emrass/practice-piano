@@ -62,10 +62,14 @@ The system was drawn from the app as it stood in November 2026, then tightened. 
 | `.chip`, `.chip-midi .dot` | `.chip`, `.status-dot` |
 | `.status-line`, `.review-note`, `.setup-note`, `.setup-listen`, `.scale-ladder`, `.item-status` | `.callout` with a tone class |
 | `.progress-track`, `.progress-fill` | `.progress` with a child `span` |
-| `.meta-item`, `.pb-stats div`, `.rg-item`, `.tile`, `.calib-results div` | `.stat` (with `.stat-tile`, `.stat-strip`) |
+| `.meta-item`, `.pb-stats div`, `.rg-item`, `.tile`, `.calib-results div` | `.stat` (with `.stat-tile`; in a MetaStrip) |
 | `.weak-list`, `.tier-ladder`, `.repertoire-list` | `.data-list` |
 | `.heatmap-keys`, `.heat-key` | `.heatmap`, `.heat-key.heat-1` to `.heat-5` |
-| `.meta-strip`, `.practice-bar`, `.score-card` | `.card` plus `.stat-strip`, `.practice-bar`, `.score` |
+| `.meta-strip`, `.practice-bar`, `.score-card` | `.card` plus `.meta-strip`, `.practice-bar`, `.score` |
+| `.meta-tier`, `.meta-level`, `.meta-tier-name`, `.meta-item` | `.meta-lead`, `.meta-level`, `.meta-title`, `.stat` |
+| `.piano-legend`, `.legend-key` | `.results-shortcuts`, `kbd.kbd-piano` |
+| `.chord-hint` | `.badge.badge-accent` |
+| `.pp-placeholder`, `.vf-pp-measure` | `.score-placeholder`; add `.bar` beside it |
 | `.modal-backdrop`, `.modal-card`, `.modal-head`, `.modal-actions` | `.scrim`, `.dialog`, `.dialog-head`, `.dialog-actions` |
 | `.kb-popover` | `.popover` |
 | `.results-backdrop`, `.results-card`, `.results-grid` | `.veil`, `.results`, `.results-grid` |
@@ -96,7 +100,7 @@ Most of the move is renaming variables and classes. Four parts change behavior o
 
 - **Fonts.** The app loads three files: Newsreader roman (132 KB) and italic (147 KB, used only for bar numbers) and Figtree (19 KB). Import them through the stylesheet so the build hashes them: the service worker then caches them with the rest of the build, and the native app bundles them. Preload the Newsreader roman and Figtree files so the first paint does not reflow. Caveat is for the landing page only and is left out of the app's stylesheet.
 - **Second cues in the score.** The tilde and cross under the staff are drawn by the score renderer, next to the note-name labels, from the same note states that set the colors. The dot and cross on keys are CSS.
-- **Two drawings, one each side of the door.** Inside the app the top bar keeps its outlined keys, now a file (`practice-piano-keys.svg`) instead of a CSS drawing. The favicon is the mark; redraw the installed-app icon (web and native) from it.
+- **Two drawings, one each side of the door.** Inside the app the top bar keeps its outlined keys, now a file (`practice-piano-keys.svg`) instead of a CSS drawing. The favicon is the mark. Redraw the installed-app icon (web and native) from the keys.
 - **Copy.** Messages, hints and results text are rewritten to the Writing guide: no em dashes, units on every number.
 
 The landing page already matches closely (same paper, ink and oxblood, Newsreader). It needs the token names and the shared mark, not a redesign; it takes copies of the built `tokens.css` and `site-fonts.css` because it has no build step.

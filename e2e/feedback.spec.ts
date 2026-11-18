@@ -131,3 +131,73 @@ test.describe('Heatmap', () => {
     expect(Math.abs(label.x + label.width / 2 - (c4.x + c4.width / 2))).toBeLessThan(1.5);
   });
 });
+
+test.describe('Meta strip', () => {
+  const cells = () =>
+    document.querySelector('.meta-strip')!.getBoundingClientRect().height +
+    '|' +
+    [...document.querySelectorAll('.meta-strip > *')].map((el) => Math.round(el.getBoundingClientRect().width * 10) / 10).join(',');
+  const shownStats = () => [...document.querySelectorAll('.meta-strip > .stat')].filter((el) => el.getBoundingClientRect().width > 0).length;
+
+  test('Its cells keep their width when the exercise changes', async ({ app, page }) => {
+    await app.open({ settings: { lesson: 'sight', sight: { mode: 'wait', level: 60, bars: 8, hands: 'both' } } });
+    const before = await page.evaluate(cells);
+    for (let i = 0; i < 4; i++) {
+      const id = await app.exercise((ex) => ex.id);
+      await page.keyboard.press('KeyN');
+      await expect.poll(() => app.exercise((ex) => ex.id)).not.toBe(id);
+      expect(await page.evaluate(cells)).toBe(before);
+    }
+    // Another lesson has other values and no level: the same tracks.
+    await app.switchLesson(/Scales/);
+    await expect(page.locator('.meta-strip .meta-level')).toHaveCount(0);
+    expect(await page.evaluate(cells)).toBe(before);
+  });
+
+  // The strip's own width decides, not the window's: a 1079px window has no sidebar beside the stage.
+  for (const [width, stats, badges] of [
+    [1440, 6, true],
+    [1180, 4, true],
+    [1079, 6, true],
+    [768, 2, true],
+    [600, 2, false],
+    [390, 1, false],
+  ] as const) {
+    test(`At ${width}px it shows ${stats} stats${badges ? ' and the badges' : ''}, none cut by the card`, async ({ app, page }) => {
+      await page.setViewportSize({ width, height: 820 });
+      await app.open({ settings: { lesson: 'sight', sight: { mode: 'wait', level: 8, bars: 4, hands: 'rh' } } });
+      const strip = page.locator('.meta-strip');
+      await expect.poll(() => page.evaluate(shownStats)).toBe(stats);
+      if (badges) await expect(strip.locator('.meta-badges')).toBeVisible();
+      else await expect(strip.locator('.meta-badges')).toBeHidden();
+      expect((await strip.boundingBox())!.height).toBe(56);
+      expect(await strip.evaluate((el) => el.scrollWidth <= el.clientWidth + 1), 'the strip overflows').toBe(true);
+      // Every stat shown has the hairline on its left, the first one too.
+      const edges = await page.evaluate(() =>
+        [...document.querySelectorAll('.meta-strip > .stat')].filter((el) => el.getBoundingClientRect().width > 0).map((el) => getComputedStyle(el).borderLeftWidth),
+      );
+      expect(edges.every((w) => w === '1px')).toBe(true);
+    });
+  }
+});
+
+test.describe('Hidden notes', () => {
+  test('Ear: a note not found yet is hidden and a placeholder holds its place', async ({ app, page }) => {
+    await app.open({ settings: { lesson: 'ear', ear: { level: 15 } } });
+    const hidden = page.locator('.score-svg .note.is-hidden');
+    const placeholders = page.locator('.score-svg .score-placeholder.is-shown');
+    await expect(hidden).not.toHaveCount(0);
+    const steps = await app.steps();
+    expect(await placeholders.count()).toBeGreaterThan(0);
+    expect(await placeholders.count()).toBeLessThanOrEqual(steps.length);
+    expect(await hidden.first().evaluate((el) => getComputedStyle(el).opacity)).toBe('0');
+    expect(await placeholders.first().evaluate((el) => getComputedStyle(el).display)).not.toBe('none');
+    // Listen, then play it back: every note appears and its placeholder goes.
+    await page.keyboard.press('Space');
+    await expect(page.locator('.practice-message')).toContainText('Play it back', { timeout: 30_000 });
+    await app.playSteps();
+    await expect(app.results()).toBeVisible();
+    await expect(hidden).toHaveCount(0);
+    await expect(placeholders).toHaveCount(0);
+  });
+});

@@ -1,6 +1,6 @@
 /* The score inside its card. Notes, labels, marks, the cursor and the playhead are the design
-   system's Score (bundle.css); here is the scrolling frame around the engraving, how the cursor
-   and playhead are moved, and the lesson states the system has no word for yet. */
+   system's Score (bundle.css); here is the scrolling frame around the engraving and how the
+   cursor and playhead are moved. */
 
 .score-scroll {
   flex: 1;
@@ -35,49 +35,4 @@
   place-items: center;
   color: var(--danger);
   font-weight: 600;
-}
-
-/* Ear training: notes stay hidden until found. Rhythm Echo: bars stay hidden until answered. */
-.score-svg .note.is-hidden,
-.score-svg .score-label.is-hidden,
-.score-svg .score-mark.is-hidden,
-.score-svg .vf-pp-measure.is-hidden {
-  opacity: 0;
-}
-
-.score-svg .vf-pp-measure {
-  transition: opacity var(--duration-base) var(--ease-out);
-}
-
-/* Rhythm Echo: the bars the app played. */
-.score-svg .note.is-call,
-.score-svg .note.is-call [fill]:not([fill='none']) {
-  fill: var(--text-subtle);
-}
-
-.score-svg .note.is-call,
-.score-svg .note.is-call [stroke]:not([stroke='none']) {
-  stroke: var(--text-subtle);
-}
-
-/* Ear training: a "?" holds the place of a note not found yet. */
-.score-svg .pp-placeholder {
-  display: none;
-}
-
-.score-svg .pp-placeholder.is-shown {
-  display: inline;
-}
-
-.score-svg .pp-placeholder rect {
-  fill: var(--accent-soft);
-  stroke: var(--score-cursor-edge);
-  stroke-width: 1.2;
-  stroke-dasharray: 3 2;
-}
-
-.score-svg .pp-placeholder-mark {
-  font: var(--type-title-sm);
-  fill: var(--accent);
-  stroke: none;
 }

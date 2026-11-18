@@ -10,7 +10,7 @@ import { isChordExercise } from '../../core/chords/generator';
 
 const HANDS_LABEL = { rh: 'Right hand', lh: 'Left hand', alternating: 'Alternating', both: 'Both hands' } as const;
 
-/** Fixed-geometry facts about the current exercise (cells never change width). */
+/** MetaStrip: fixed-geometry facts about the current exercise (cells never change width). */
 export function MetaStrip(props: { exercise: Exercise; firstSight: boolean; focus: boolean }) {
   const ex = props.exercise;
   const tier = findTier(ex.meta.tierId);
@@ -74,22 +74,22 @@ export function MetaStrip(props: { exercise: Exercise; firstSight: boolean; focu
       ];
   return (
     <div className="card meta-strip">
-      <div className="meta-tier">
+      <div className="meta-lead">
         {scale || chords ? (
-          <span className="meta-tier-name meta-item-title" title={(scale ?? chords)!.title}>
+          <span className="meta-title" title={(scale ?? chords)!.title}>
             {ci?.task === 'drill' ? CHORD_SETS[ci.set].name : ci?.task === 'progression' ? (findProgression(ci.progression)?.name ?? chords!.title) : scale!.title}
           </span>
         ) : (
           <>
             <span className="meta-level">L{ex.meta.level}</span>
-            <span className="meta-tier-name" title={tier?.summary}>
+            <span className="meta-title" title={tier?.summary}>
               {tier?.name}
             </span>
           </>
         )}
       </div>
       {items.map(([k, v]) => (
-        <div className="meta-item stat" key={k}>
+        <div className="stat" key={k}>
           <span className="stat-label">{k}</span>
           <span className="stat-value is-text">{v}</span>
         </div>

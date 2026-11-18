@@ -13,7 +13,11 @@ The sheet of music and everything drawn on it: notes, their feedback colors, the
 | Nearly: right pitch off the beat (Flow), or found after a wrong key (Wait) | `.is-ok` | `score-ok` | a tilde under the note; in Flow also "Early" or "Late" in the practice bar |
 | Wrong | `.is-bad` | `score-bad` | a cross under the note; the cursor shakes |
 | Missed | `.is-missed` | `score-bad` at `opacity-missed` | a cross under the note |
+| Not shown yet | `.is-hidden` on a `.note` with its labels and mark, or on a whole `.bar` | invisible | a placeholder in the note's place (ear training); the bar's empty staff (Rhythm Echo) |
+| Played by the app | `.is-call` | `text-subtle` | its place: the call bars come first, the bars to answer after them |
 
+- **Hidden notes** are for the lessons that ask the player to find or answer something: ear training shows a note once it is found, Rhythm Echo shows a bar once it is answered (the bar fades in over `duration-base`). The engraver groups each bar's notes, rests and beams as `.bar`.
+- **The placeholder** (`.score-placeholder`, shown with `.is-shown`) holds the place of a note not found yet: a dashed box in `accent-soft` with a question mark in `accent`, on the middle line of the staff. It goes when the note appears.
 - **Feedback is never color alone.** Nearly, wrong and missed notes get a mark under the staff, so the result reads in grayscale and for red-green color blindness. The mark is a `.score-mark` text one row under the note's name label (in the label's row when names are off), drawn by the engraver from the same state that sets the color; `.is-ok` on it makes it the tilde's color.
 - **Musical time is horizontal distance.** Bars in a system have equal width and beats are spaced evenly; notes sounding together in both hands line up exactly. Do not let the engraver pack notes by glyph width.
 - **Wait cursor** (`.score-cursor`): a 30px box with `score-cursor` fill and a `score-cursor-edge` outline. Moves over `duration-base` with `ease-out`. On a wrong note it turns `danger` and shakes once; `.is-wrong` comes off again when the practice bar's message clears.
