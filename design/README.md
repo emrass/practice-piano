@@ -5,11 +5,11 @@ guidelines, icons and fonts. It covers the app in this repository and the landin
 [practice-piano-site](https://github.com/emrass/practice-piano-site).
 
 **Status:** the app builds and imports the tokens and the component stylesheet. Its controls,
-dialogs, panels, the top bar and the stage (score, keyboard, practice bar, results, chord chart,
-beat dots, heatmap) use the components; the React side is in `src/ui/components` (`controls.tsx`,
-`Dialog.tsx`, `Icon.tsx` and the stage components themselves). What is left in `src/styles` is
-the shell's layout, what the shell changes by window size, and a few lesson pieces the system
-has no component for. `system/guides/05-adoption.md` maps the old classes to their replacements;
+dialogs, panels, the top bar and the stage (meta strip, score, keyboard, practice bar, results,
+chord chart, beat dots, heatmap) use the components; the React side is in `src/ui/components`
+(`controls.tsx`, `Dialog.tsx`, `Icon.tsx` and the stage components themselves). What is left in
+`src/styles` for the stage is arrangement: the stage grid, the score's scrolling frame, how the
+cursor and playhead are placed, and what the shell changes by window size. `system/guides/05-adoption.md` maps the old classes to their replacements;
 still open there are the copy and the installed-app icon.
 
 ## What is here

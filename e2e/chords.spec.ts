@@ -61,7 +61,7 @@ test.describe('Chords & progressions', () => {
     const other = Math.min(...t.voicing.filter((k) => k % 12 !== t.bassPc));
     const keys = [other - 12, ...t.voicing];
     await app.noteOn(keys);
-    await expect(page.locator('.chord-hint')).toContainText('in the bass');
+    await expect(page.locator('.chord-chart .badge')).toContainText('in the bass');
     await app.noteOff(keys);
     expect(await app.status()).toBe('running');
   });

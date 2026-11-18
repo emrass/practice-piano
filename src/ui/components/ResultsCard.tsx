@@ -74,11 +74,11 @@ export function ResultsCard(props: {
           </div>
         ) : null}
         {props.pianoShortcuts ? (
-          <div className="piano-legend" aria-label="Piano shortcuts">
+          <div className="results-shortcuts" role="group" aria-label="Piano shortcuts">
             <span>Piano:</span>
             {pianoLegend(props.continuation).map((a) => (
-              <span key={a.key} className="legend-item">
-                <span className="legend-key">{a.key}</span>
+              <span key={a.key}>
+                <kbd className="kbd-piano">{a.key}</kbd>
                 {a.label}
               </span>
             ))}

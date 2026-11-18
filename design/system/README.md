@@ -63,7 +63,7 @@ Use the semantic tokens. The palette steps (`sepia-*`, `oxblood-*`, `gold-*`, `v
 - Use the icons in `assets/Icons`, inlined so they take the text color, at 16px in controls and 20px alone.
 - No Unicode symbols as icons and no emoji. Their shapes change between systems.
 - An icon never stands alone as a status. Pair it with a word, or put the word in the label.
-- Inside the app the logo is the keys (`assets/Logos/practice-piano-keys.svg`), drawn in the theme's tokens, with the name beside it as live text (see Logo). The mark (`assets/Logos/practice-piano-mark.svg`) is for outside the app: favicon and installed-app icon, used whole and unaltered.
+- Inside the app the logo is the keys (`assets/Logos/practice-piano-keys.svg`), drawn in the theme's tokens, with the name beside it as live text (see Logo). The installed-app icon is drawn from the keys as well. The mark (`assets/Logos/practice-piano-mark.svg`) is the favicon, used whole and unaltered.
 
 ## Building with it
 

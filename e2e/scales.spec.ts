@@ -40,7 +40,7 @@ test.describe('Scales & arpeggios', () => {
     const actions = app.results().locator('.results-actions .btn');
     await expect(actions).toHaveText([/Close/, /Again/]);
     await expect(actions.last()).toBeFocused();
-    await expect(app.results().locator('.piano-legend .legend-key')).toHaveText(['C', 'E', 'F', 'G']);
+    await expect(app.results().locator('.results-shortcuts .kbd-piano')).toHaveText(['C', 'E', 'F', 'G']);
     await expect(page.locator('.practice-message')).toHaveText('Finished — on the piano: C again');
     await page.keyboard.press('KeyN');
     await expect(app.results()).toBeVisible();

@@ -21,7 +21,6 @@ import './styles/modal.css';
 import './styles/setup.css';
 import './styles/lessons/rhythm.css';
 import './styles/lessons/scales.css';
-import './styles/lessons/chords.css';
 import './styles/score.css';
 import './styles/keyboard.css';
 

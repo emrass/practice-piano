@@ -1,4 +1,4 @@
-/* Stage: the four cards in their rows (design/system/guides/02-layout.md), and the meta strip. */
+/* Stage: the four cards in their rows (design/system/guides/02-layout.md). */
 
 .stage {
   display: grid;
@@ -12,82 +12,15 @@
   min-width: 0;
 }
 
-.meta-strip {
-  display: grid;
-  grid-template-columns: minmax(170px, 1.3fr) repeat(6, minmax(0, 1fr)) auto;
-  align-items: center;
-  gap: var(--space-4);
-  padding: 0 var(--space-6) 0 var(--space-16);
-  overflow: hidden;
-}
-
-.meta-tier {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-8);
-  min-width: 0;
-}
-
-.meta-level {
-  font: var(--type-numeral);
-  color: var(--accent);
-  font-variant-numeric: tabular-nums;
-  min-width: 2.6em;
-}
-
-.meta-tier-name {
-  font: var(--type-title-sm);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.meta-item {
-  padding-left: var(--space-12);
-  border-left: var(--stroke-thin) solid var(--border-subtle);
-}
-
-.meta-badges {
-  display: flex;
-  gap: var(--space-6);
-  width: 190px;
-  justify-content: flex-end;
-}
-
 /* The score card holds one child that fills it: the scrolling score, a chord chart or a memory card. */
 .stage > .score {
   display: flex;
   min-height: 0;
 }
 
-@media (max-width: 1240px) {
-  .meta-strip {
-    grid-template-columns: minmax(150px, 1.3fr) repeat(4, minmax(0, 1fr)) auto;
-  }
-  .meta-item:nth-of-type(n + 6) {
-    display: none;
-  }
-}
-
 @media (max-width: 760px) {
   .stage {
     padding: var(--space-8);
     gap: var(--space-8);
-  }
-  .meta-strip {
-    grid-template-columns: minmax(120px, 1fr) repeat(2, minmax(0, 1fr));
-  }
-  .meta-item:nth-of-type(n + 4),
-  .meta-badges {
-    display: none;
-  }
-}
-
-@media (max-width: 480px) {
-  .meta-strip {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  }
-  .meta-item:nth-of-type(n + 3) {
-    display: none;
   }
 }

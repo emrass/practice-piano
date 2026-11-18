@@ -95,7 +95,7 @@ export function ScoreView(props: { exercise: Exercise; showNoteNames: boolean; c
     });
     r.svg?.querySelectorAll<SVGElement>('[data-step]').forEach((el) => {
       const hidden = Number(el.dataset.step) >= hiddenFrom;
-      if (el.classList.contains('pp-placeholder')) el.classList.toggle('is-shown', hidden);
+      if (el.classList.contains('score-placeholder')) el.classList.toggle('is-shown', hidden);
       else el.classList.toggle('is-hidden', hidden);
     });
     const cursor = cursorRef.current;

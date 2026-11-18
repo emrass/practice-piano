@@ -12,7 +12,7 @@ One screen, no scrolling page. The app is a fixed frame around a score.
 
 The stage, in order, with `space-12` between cards and `space-16` around them:
 
-1. **Meta strip** (56px): level and tier name, then the facts of this exercise as a stat strip, then badges.
+1. **Meta strip** (56px, the MetaStrip component): level and tier name, then the facts of this exercise as stats, then badges. It drops stats and badges by its own width.
 2. **Score** (fills what is left; scrolls inside itself).
 3. **Practice bar** (64px on one row; grows by rows when narrow).
 4. **Keyboard** (196px; 160px when the window is under 780px tall; 148px below `bp-md`).
@@ -34,7 +34,7 @@ Use these four for the shell, written as numbers in media queries. Everything el
 
 | Token | Width | What changes |
 |---|---|---|
-| `bp-xl` | 1440px and up | Long lesson names, all meta items. |
+| `bp-xl` | 1440px and up | Long lesson names. |
 | `bp-lg` | below 1080px | Sidebar becomes a drawer over the stage, opened from the top bar, with `scrim` behind it. Wordmark and reward chips drop out. |
 | `bp-md` | below 760px | Stage padding and gaps go to `space-8`. Short labels in the switchers. Keyboard at 148px. |
 | `bp-sm` | below 480px | Shortcut caps and the middle stat hide. Dialogs are full-screen sheets below 600px. |
