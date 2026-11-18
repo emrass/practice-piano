@@ -6,7 +6,7 @@ The app speaks like a good piano teacher sitting beside you: calm, specific, bri
 
 - **Say what to do next.** "Play along with the playhead." "Start on the shown note." Not what the system is doing.
 - **Name the thing.** The bar, the note, the chord, the number. "B♭: keys not together (165 ms)" beats "Some chords were uneven."
-- **Stay level.** A clean run earns one word and one exclamation mark ("Clean!"). Nothing else gets one: any other pass is "Passed", and mastering an item or a tier is said as a fact ("Tier mastered."). A run that did not pass is "Nearly" or "Slow it down", never "Failed".
+- **Stay level.** A clean run earns one word and one exclamation mark ("Clean!"). Nothing else gets one: any other pass is "Passed", and mastering an item or a tier is said as a fact ("Tier mastered."). A run that did not pass is "Nearly" or "Slow it down" ("Listen again" in ear training, which has no tempo to slow), never "Failed".
 - **Speak to "you", about "your".** The app is "we" only when it listens: "We hear you."
 - **No blame, no cheerleading.** "Not that one. Try again." Not "Oops!" and not "Amazing job!!"
 
