@@ -5,7 +5,7 @@ import { isUntouched, type Session } from '../practice/session';
 import { Stat } from './controls';
 
 function pct(v: number | null | undefined): string {
-  return v === null || v === undefined ? '—' : `${Math.round(v * 100)}%`;
+  return v === null || v === undefined ? '–' : `${Math.round(v * 100)}%`;
 }
 
 const GRADE_TEXT = { perfect: 'Perfect', good: 'Good', early: 'Early', late: 'Late' } as const;
@@ -43,22 +43,22 @@ export function PracticeBar(props: {
 
   let message: string;
   if (ear && s.status !== 'finished') {
-    if (!ear.listened) message = props.pianoShortcuts ? 'Press Space or tap the pedal to listen' : 'Press Space to listen';
-    else if (ear.playing) message = 'Listening…';
-    else if (s.live.correct === 0 && s.live.wrong === 0) message = s.revealed.length ? 'Play it back — start on the shown note' : 'Play it back — find the first note from the key';
-    else message = 'Keep going — notes appear as you find them';
-  } else if (s.status === 'finished') message = props.pianoShortcuts ? `Finished — on the piano: ${onPiano}` : 'Finished — see your results';
-  else if (flow && s.status === 'ready') message = props.pianoShortcuts ? 'Press Space or tap the sustain pedal to start' : 'Press Start or Space to start';
-  else if (flow && s.status === 'countin') message = s.rhythm ? 'Count-in… listen to the tempo' : 'Count-in… get ready';
-  else if (phase === 'call') message = 'Listen…';
-  else if (phase === 'response') message = 'Your turn — play it back';
-  else if (phase === 'silent') message = 'Silent — keep the beat going';
-  else if (phase === 'click') message = 'Feel the pulse…';
-  else if (s.chords && flow) message = 'Play each chord on beat 1';
-  else if (s.chords) message = s.chords.bassHint ?? (nudge ? 'Stuck? Press ? for a hint' : s.chords.index === 0 ? 'Play the chord — any octave' : 'Take your time');
-  else if (flow) message = 'Play along with the playhead';
-  else if (s.live.correct === 0 && s.live.wrong === 0) message = guideShowing || s.revealed.length ? 'Play the highlighted note' : 'Play the first note';
-  else message = 'Take your time — the cursor waits for you';
+    if (!ear.listened) message = props.pianoShortcuts ? 'Press Space or tap the pedal to listen.' : 'Press Space to listen.';
+    else if (ear.playing) message = 'Listen.';
+    else if (s.live.correct === 0 && s.live.wrong === 0) message = s.revealed.length ? 'Play it back. Start on the shown note.' : 'Play it back. Find the first note from the key.';
+    else message = 'Keep going. Notes appear as you find them.';
+  } else if (s.status === 'finished') message = props.pianoShortcuts ? `Finished. On the piano: ${onPiano}` : 'Finished. See your results.';
+  else if (flow && s.status === 'ready') message = props.pianoShortcuts ? 'Press Space or tap the sustain pedal to start.' : 'Press Start or Space to start.';
+  else if (flow && s.status === 'countin') message = s.rhythm ? 'Count-in. Listen to the tempo.' : 'Count-in. Get ready.';
+  else if (phase === 'call') message = 'Listen.';
+  else if (phase === 'response') message = 'Your turn. Play it back.';
+  else if (phase === 'silent') message = 'The click stops. Keep the beat going.';
+  else if (phase === 'click') message = 'Feel the pulse.';
+  else if (s.chords && flow) message = 'Play each chord on beat 1.';
+  else if (s.chords) message = s.chords.bassHint ?? (nudge ? 'Stuck? Press ? for a hint.' : s.chords.index === 0 ? 'Play the chord in any octave.' : 'Take your time.');
+  else if (flow) message = 'Play along with the playhead.';
+  else if (s.live.correct === 0 && s.live.wrong === 0) message = guideShowing || s.revealed.length ? 'Play the highlighted note.' : 'Play the first note.';
+  else message = 'Take your time. The cursor waits for you.';
 
   const dots = s.countIn
     ? Array.from({ length: s.countIn.total }, (_, i) => (i < s.countIn!.beat ? 'is-on' : ''))
@@ -102,7 +102,7 @@ export function PracticeBar(props: {
             className={`btn ${nudge ? 'is-nudge' : ''}`}
             onClick={props.onHint}
             disabled={s.status !== 'running' || guideShowing || s.revealed.length > 0}
-            title={guideShowing ? 'The keyboard guide already shows the keys' : 'Show the keys to play — this step then no longer counts as first try'}
+            title={guideShowing ? 'Off: the keyboard guide already shows the keys.' : 'Show the keys to play. The step then no longer counts as first try.'}
           >
             Hint <kbd>?</kbd>
           </button>
@@ -128,7 +128,7 @@ export function PracticeBar(props: {
           ))}
         </div>
         <p className="practice-message" role="status">
-          {wrongFlash ? (s.rhythm ? 'Use your rhythm keys' : 'Not that one — try again') : message}
+          {wrongFlash ? (s.rhythm ? 'Use your rhythm keys.' : 'Not that one. Try again.') : message}
         </p>
         {/* Timing grades only come in Flow (and rhythm); elsewhere the badge would just hold space the message needs. */}
         {flow ? (

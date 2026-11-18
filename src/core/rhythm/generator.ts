@@ -31,7 +31,7 @@ export const TEXTURE_INFO: Readonly<Record<RhythmTexture, { name: string; help: 
 export const TASK_INFO: Readonly<Record<RhythmTask, { name: string; help: string }>> = {
   read: { name: 'Read', help: 'Read the rhythm and play it with the metronome.' },
   echo: { name: 'Echo', help: 'Listen to a bar, then play it back in the next bar.' },
-  pulse: { name: 'Pulse', help: 'The metronome falls silent — keep the tempo yourself.' },
+  pulse: { name: 'Pulse', help: 'The metronome falls silent. Keep the tempo yourself.' },
 };
 
 export interface RhythmSettings {

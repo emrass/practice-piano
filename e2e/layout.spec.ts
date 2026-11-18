@@ -21,7 +21,7 @@ for (const width of [390, 768, 1100, 1440, 1800]) {
 
 // The longest status messages (ear's prompt, Flow's start hint) must show in full: the bar
 // wraps the message, then gives it a row of its own, rather than cutting it off.
-const LONGEST = 'Play it back — find the first note from the key';
+const LONGEST = 'Play it back. Find the first note from the key.';
 for (const width of [390, 820, 1024, 1180, 1280, 1440]) {
   for (const mode of ['wait', 'flow'] as const) {
     test(`Practice bar message is never clipped at ${width}px (${mode})`, async ({ app, page }) => {
@@ -83,7 +83,7 @@ test('The keyboard guide is grayed out, with the reason, where it would give the
   const guide = page.getByRole('button', { name: 'Keyboard guide' });
   await expect(guide).toHaveAttribute('aria-disabled', 'true');
   await expect(guide).toHaveAttribute('aria-pressed', 'false');
-  await expect(guide).toHaveAttribute('title', /never shows the answer/);
+  await expect(guide).toHaveAttribute('title', 'Off in ear training: find the notes by ear. Press ? for a hint.');
   await guide.click({ force: true }); // aria-disabled: a click does nothing
   await expect(guide).toHaveAttribute('aria-pressed', 'false');
   expect((await app.savedSettings()).showKeyboardGuide).toBe(true); // the preference is kept for the other lessons
@@ -129,7 +129,7 @@ test('Rhythm grays out computer-key hints (it uses J and F)', async ({ app, page
   await page.getByRole('button', { name: 'Keyboard display' }).click();
   const menu = page.getByRole('dialog', { name: 'Keyboard display' });
   await expect(menu.getByRole('switch').nth(1)).toBeDisabled();
-  await expect(menu).toContainText('Rhythm uses J and F');
+  await expect(menu).toContainText('Off in Rhythm: its two keys show J and F.');
   await expect(page.locator('.key-hint')).toHaveCount(0);
 });
 

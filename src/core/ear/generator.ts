@@ -27,7 +27,7 @@ export interface EarProfile {
   chromaticProbability: number;
   firstNoteGiven: boolean;
   startOnTonic: boolean;
-  /** Finish on the tonic so the phrase sounds complete (from Five-Finger Tunes on). */
+  /** Finish on the tonic so the phrase sounds complete (from Five-finger tunes on). */
   endOnTonic: boolean;
   cadence: boolean;
   bpm: number;

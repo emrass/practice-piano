@@ -66,8 +66,8 @@ export function useRhythmLesson(ctx: LessonContext, active: boolean): LessonRunt
       qwerty: keys.qwerty,
       markers: keys.markers,
       unavailable: {
-        guide: exercise.rhythm.task === 'echo' ? 'Echo: you play back what you heard, so the keys stay dark' : undefined,
-        qwertyHints: 'Rhythm uses J and F, marked on its two keys',
+        guide: exercise.rhythm.task === 'echo' ? 'Off in Echo: play back what you heard.' : undefined,
+        qwertyHints: 'Off in Rhythm: its two keys show J and F.',
       },
     },
     practiceWeakSpots: () => {

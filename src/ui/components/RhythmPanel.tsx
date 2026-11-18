@@ -55,7 +55,7 @@ export function RhythmPanel(props: { settings: Settings; progress: ProgressState
     return (
       <div className={`key-assign ${active ? 'is-learning' : ''}`}>
         <span className="key-assign-hand">{hand === 'rh' ? 'Right hand' : 'Left hand'}</span>
-        <span className="key-assign-note">{active ? 'Press a key…' : midiLabel(midi)}</span>
+        <span className="key-assign-note">{active ? 'Press a key' : midiLabel(midi)}</span>
         <kbd title="Computer keyboard">{hand === 'rh' ? 'J' : 'F'}</kbd>
         <button type="button" className="btn btn-sm" onClick={() => setLearning(active ? null : hand)}>
           {active ? 'Cancel' : 'Change'}
@@ -84,12 +84,12 @@ export function RhythmPanel(props: { settings: Settings; progress: ProgressState
           <span className="tier-name">{tier.name}</span>
           <span className="tier-summary">{tier.summary}</span>
         </div>
-        <div className="progress-row" title="Pass distinct exercises with ≥ 90% hits and ≥ 70% timing to master this tier">
+        <div className="progress-row" title="Pass distinct exercises with 90% hits and 70% timing to master this tier.">
           <ProgressBar label="Tier progress" value={Math.min(tierState?.passes ?? 0, tier.passesRequired)} max={tier.passesRequired} complete={!!tierState?.mastered} />
           <span className="num">{tierState?.mastered ? 'Mastered' : `${Math.min(tierState?.passes ?? 0, tier.passesRequired)}/${tier.passesRequired}`}</span>
         </div>
         <p className="field-hint ear-profile">
-          {meters} · ~{tempo} bpm · Echo {profile.echoBars === 1 ? '1 bar' : '2 bars'} · Pulse {profile.pulse.on} on / {profile.pulse.off} off
+          {meters} · about {tempo} bpm · Echo {profile.echoBars === 1 ? '1 bar' : '2 bars'} · Pulse {profile.pulse.on} on / {profile.pulse.off} off
         </p>
       </section>
 
@@ -152,7 +152,7 @@ export function RhythmPanel(props: { settings: Settings; progress: ProgressState
           hint={
             props.weakFigures.length
               ? `Featuring ${props.weakFigures.map((f) => figureName(f.key).toLowerCase()).join(', ')}`
-              : 'After a few exercises, the figures you miss or rush are featured more often'
+              : 'After a few exercises, the figures you miss or rush are featured more often.'
           }
           checked={s.weakSpotFocus}
           onChange={(weakSpotFocus) => update({ weakSpotFocus })}

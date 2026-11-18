@@ -221,10 +221,15 @@ for (const family of new Set(tokens.type.fonts.map((font) => font.family))) {
   if (!existsSync(join(SYSTEM, 'assets/Licenses', `OFL-${family}.txt`))) fail(`assets/Licenses: no license text for ${family}`);
 }
 
-// The mark is also the favicon; the two files must stay the same picture.
-if (read(SYSTEM, 'assets/Logos/practice-piano-mark.svg') !== read(REPO, 'public/favicon.svg')) {
-  fail('assets/Logos/practice-piano-mark.svg and public/favicon.svg differ');
+// The favicon is the keys redrawn on a 16px grid: the same four parts, in the same colors.
+const keyParts = (svg) => new Map([...svg.matchAll(/class="(logo-keys-[a-z]+)"[^>]*?(?:fill|stroke)="(#[0-9a-f]{6})"/gi)].map((m) => [m[1], m[2].toLowerCase()]));
+const keysParts = keyParts(read(SYSTEM, 'assets/Logos/practice-piano-keys.svg'));
+const faviconParts = keyParts(read(REPO, 'public/favicon.svg'));
+if (keysParts.size !== 4) fail('assets/Logos/practice-piano-keys.svg: expected the four parts logo-keys-field, -lines, -black and -edge');
+for (const [part, color] of keysParts) {
+  if (faviconParts.get(part) !== color) fail(`public/favicon.svg: ${part} must be ${color}, as in assets/Logos/practice-piano-keys.svg`);
 }
+for (const part of faviconParts.keys()) if (!keysParts.has(part)) fail(`public/favicon.svg: ${part} is not a part of the keys`);
 
 // The Score preview engraves with the app's own VexFlow version.
 const vexflow = JSON.parse(read(REPO, 'package.json')).dependencies.vexflow;

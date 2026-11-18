@@ -14,5 +14,5 @@ export function midiStatusText(midi: MidiState): string {
   }
   if (midi.status === 'error') return 'MIDI could not be started.';
   if (connected.length) return `${connected.length} input${connected.length > 1 ? 's' : ''} connected`;
-  return 'No MIDI inputs found — connect your piano (USB or Bluetooth) and Rescan.';
+  return 'No MIDI inputs found. Connect your piano over USB or Bluetooth, then press Rescan.';
 }

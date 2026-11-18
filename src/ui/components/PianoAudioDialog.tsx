@@ -75,7 +75,7 @@ export function PianoAudioDialog(props: {
       className="settings"
       headActions={
         <button type="button" className="btn btn-sm" title="Run the first-run setup guide again" onClick={props.onSetup}>
-          Setup guide…
+          Setup guide
         </button>
       }
     >
@@ -94,7 +94,7 @@ export function PianoAudioDialog(props: {
                   update({ midiInputId: id });
                 }}
                 options={[
-                  { value: 'auto', label: 'Auto — all connected inputs' },
+                  { value: 'auto', label: 'Auto (all connected inputs)' },
                   ...midi.inputs.map((i) => ({ value: i.id, label: `${i.name}${i.connected ? '' : ' (offline)'}` })),
                 ]}
               />
@@ -131,7 +131,7 @@ export function PianoAudioDialog(props: {
         {tab === 'audio' ? (
           <>
             <CalibrationRow settings={s} onCalibrate={props.onCalibrate} />
-            <p className="field-hint">Tap along with a click on your piano; we measure the delay of your exact setup (Bluetooth MIDI, Bluetooth audio, speakers…).</p>
+            <p className="field-hint">Tap along with a click on your piano to measure the delay of your exact setup (Bluetooth MIDI, Bluetooth audio or speakers).</p>
             <CommitSlider
               label="Latency compensation"
               min={0}
@@ -217,13 +217,13 @@ export function PianoAudioDialog(props: {
             />
             <Toggle
               label="Key sound"
-              hint="Play a piano sound for the on-screen and computer keys. Off by default so it doesn't double a MIDI piano."
+              hint="Play a piano sound for the on-screen and computer keys. Off by default so it doesn’t double a MIDI piano."
               checked={s.keySound}
               onChange={(keySound) => update({ keySound })}
             />
             <p className="field-hint">
               Play with <kbd>A</kbd>–<kbd>'</kbd> (white keys) and <kbd>W</kbd> <kbd>E</kbd> <kbd>T</kbd> <kbd>Y</kbd> <kbd>U</kbd> <kbd>O</kbd> <kbd>P</kbd> (black keys).
-              <kbd>Z</kbd>/<kbd>X</kbd> shift octave — <kbd>A</kbd> is currently <b>{midiLabel(props.qwertyBase)}</b>. <kbd>Shift</kbd> works as a sustain pedal.
+              <kbd>Z</kbd>/<kbd>X</kbd> shift the octave. <kbd>A</kbd> is now <b>{midiLabel(props.qwertyBase)}</b>. <kbd>Shift</kbd> works as a sustain pedal.
             </p>
           </>
         ) : null}
@@ -248,7 +248,7 @@ function CalibrationRow(props: { settings: Settings; onCalibrate: () => void }) 
       title={title}
       action={
         <button type="button" className={`btn btn-sm ${calibrated ? '' : 'btn-primary'}`} onClick={props.onCalibrate}>
-          {calibrated ? 'Calibrate again…' : 'Calibrate…'}
+          {calibrated ? 'Calibrate again' : 'Calibrate'}
         </button>
       }
     >

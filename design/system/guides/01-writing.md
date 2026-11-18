@@ -6,7 +6,7 @@ The app speaks like a good piano teacher sitting beside you: calm, specific, bri
 
 - **Say what to do next.** "Play along with the playhead." "Start on the shown note." Not what the system is doing.
 - **Name the thing.** The bar, the note, the chord, the number. "B♭: keys not together (165 ms)" beats "Some chords were uneven."
-- **Stay level.** A clean run earns one word and one exclamation mark ("Clean!"). Nothing else gets one. A run that did not pass is "Nearly" or "Slow it down", never "Failed".
+- **Stay level.** A clean run earns one word and one exclamation mark ("Clean!"). Nothing else gets one: any other pass is "Passed", and mastering an item or a tier is said as a fact ("Tier mastered."). A run that did not pass is "Nearly" or "Slow it down" ("Listen again" in ear training, which has no tempo to slow), never "Failed".
 - **Speak to "you", about "your".** The app is "we" only when it listens: "We hear you."
 - **No blame, no cheerleading.** "Not that one. Try again." Not "Oops!" and not "Amazing job!!"
 
@@ -19,8 +19,8 @@ The app speaks like a good piano teacher sitting beside you: calm, specific, bri
 - **Periods** end sentences in messages and hints. Labels, buttons, titles and stats take none.
 - **Length:** a practice-bar message fits two lines at 16px (about 60 characters). A hint is one sentence. A callout is two.
 - **Errors** say what happened and what to do, in that order: "The browser blocked audio. Press Start once to allow it."
-- **Disabled things say why**: "Off in ear training: find the notes by ear."
-- American English. No emoji. No ellipsis except while something loads.
+- **Disabled things say why**: "Off in ear training: find the notes by ear." Tooltips follow the same rules as hints: a sentence takes a period.
+- American English. No emoji. No ellipsis except while something loads; a button that opens a dialog takes none ("Calibrate", "Import").
 
 ## Music in text
 

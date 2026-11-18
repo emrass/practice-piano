@@ -2,12 +2,12 @@
 
 The keys and the wordmark: two black keys on paper inside an oxblood outline, and the site's own address set in Newsreader with the top-level domain in `accent`.
 
-- **Use** the full lockup in the top bar and the site header. Drop to the mark alone below `bp-lg` or wherever the name would crowd the lesson switcher.
+- **Use** the full lockup in the top bar and the site header. Drop to the keys alone below `bp-lg` or wherever the name would crowd the lesson switcher.
 - **You provide** nothing: the name is always `practice-piano.com`, lowercase, hyphenated, never "Practice Piano" in the lockup.
 - **Inside the app** (top bar, splash screen) the drawing is the keys, `assets/Logos/practice-piano-keys.svg`, inlined so it follows the theme: `surface-sheet` field, `text` keys, `border` lines, a 2px `accent` outline. Keep it at 28px, never under 20px, with 8px of clear space.
-- **The installed-app icon** (web and native) is drawn from the keys too. Today it is still an older drawing; redrawing it is the next step.
-- **The favicon** is the mark, `assets/Logos/practice-piano-mark.svg`: the filled one, which holds up at 16px on a browser tab of any color. Do not recolor it. Do not show the two side by side.
-- Do not rebuild either drawing in CSS; use the files.
+- **The favicon** (`public/favicon.svg`) is the keys redrawn on a 16px grid: the outline a little heavier, the keys and edges on whole pixels, so it reads at 16px. It keeps the light theme's colors on every tab: the paper stands out on a dark tab, the outline on a light one. Same four parts, same colors; `design:check` holds it to them.
+- **The installed-app icon** (web and native) is the keys on paper that runs to the edge, because the platform cuts the corners: the outlined keys sit inside as a frame, 82% of the width, in the logo's proportions. On the maskable icon the frame shrinks to fit the safe zone. `scripts/pwa-icons.ts` renders every size from the file.
+- Do not rebuild the keys in CSS; use the file.
 - Wordmark: Newsreader 600, 1.25rem, 0.01em tracking, `text`; `.com` in `accent`.
 - As a link it carries `aria-label="practice-piano.com home"`; the image itself is decorative.
 

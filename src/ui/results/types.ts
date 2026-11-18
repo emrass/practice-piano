@@ -15,7 +15,7 @@ export interface ResultsView {
   Body: (props: { result: ExerciseResult; award: Award | null }) => ReactNode;
   /** Repertoire lessons (scales, chords) have no tier block and no repeat-passage XP note. */
   repertoire: boolean;
-  /** What new passages train, for the "Repeat passage — reduced XP. New passages train … best." note; null for repertoire. */
+  /** What new passages train, for the "New passages train … best." note; null for repertoire. */
   trains: string | null;
   /** Extra lesson-specific notes under the XP total (shown after the repeat-passage note). */
   xpNotes?(result: ExerciseResult): string[];

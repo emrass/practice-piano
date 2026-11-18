@@ -13,7 +13,7 @@ The first card of the stage: which exercise this is, and its facts, read in one 
 
 ```html
 <div class="card meta-strip">
-  <div class="meta-lead"><span class="meta-level">L44</span><span class="meta-title">Key Signatures</span></div>
+  <div class="meta-lead"><span class="meta-level">L44</span><span class="meta-title">Key signatures</span></div>
   <div class="stat"><span class="stat-label">Key</span><span class="stat-value is-text">A minor</span></div>
   <div class="meta-badges"><span class="badge badge-reward">First sight</span></div>
 </div>

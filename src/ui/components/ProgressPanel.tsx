@@ -45,7 +45,7 @@ export function ProgressPanel(props: {
         await navigator.clipboard.writeText(json);
         setMessage('Backup copied to the clipboard.');
       } catch {
-        setMessage('Copy was blocked — use Download instead.');
+        setMessage('Copy was blocked. Use Export JSON instead.');
       }
       return;
     }
@@ -96,15 +96,13 @@ export function ProgressPanel(props: {
             <span className="stat-note">{view.summary.secondLabel}</span>
           </div>
           {view.summary.third === 'tendency' ? (
-            <div className="stat stat-tile stat-tile-card stat-sm" title="Average offset of your hits: early = rushing, late = dragging">
-              <span className="stat-value">
-                {overallTendency === null ? '–' : Math.abs(overallTendency) < 8 ? '±0' : `${overallTendency > 0 ? '+' : '−'}${Math.abs(overallTendency)}`}
-              </span>
-              <span className="stat-note">Tendency ms{overallTendency !== null && Math.abs(overallTendency) >= 8 ? (overallTendency < 0 ? ' · rushes' : ' · drags') : ''}</span>
+            <div className="stat stat-tile stat-tile-card stat-sm" title="Average offset of your hits. Early is rushing, late is dragging.">
+              <span className="stat-value">{overallTendency === null ? '–' : Math.abs(overallTendency) < 8 ? '0 ms' : `${Math.abs(overallTendency)} ms`}</span>
+              <span className="stat-note">Tendency{overallTendency !== null && Math.abs(overallTendency) >= 8 ? (overallTendency < 0 ? ' · rushes' : ' · drags') : ''}</span>
             </div>
           ) : (
             <div className="stat stat-tile stat-tile-card stat-sm">
-              <span className="stat-value">{summary.medianReactionMs === null ? '–' : `${(summary.medianReactionMs / 1000).toFixed(2)}s`}</span>
+              <span className="stat-value">{summary.medianReactionMs === null ? '–' : `${(summary.medianReactionMs / 1000).toFixed(2)} s`}</span>
               <span className="stat-note">Median reaction</span>
             </div>
           )}
@@ -124,7 +122,7 @@ export function ProgressPanel(props: {
             Copy
           </button>
           <button type="button" className="btn" onClick={() => fileRef.current?.click()}>
-            Import…
+            Import
           </button>
           <input
             ref={fileRef}
@@ -158,7 +156,7 @@ export function ProgressPanel(props: {
           </div>
         ) : (
           <button type="button" className="btn btn-ghost btn-danger-text" onClick={() => setConfirmReset(true)}>
-            Reset progress…
+            Reset progress
           </button>
         )}
         {message ? <Callout>{message}</Callout> : null}
@@ -185,7 +183,7 @@ function StorageStatus({ storageKind }: { storageKind: string }) {
   if (!web) {
     return (
       <p className="field-hint">
-        Saved on this device only ({storageKind === 'memory' ? 'temporary — storage unavailable here' : 'browser storage'}). Export a backup to move it to another device.
+        Saved on this device only ({storageKind === 'memory' ? 'temporary: storage is unavailable here' : 'browser storage'}). Export a backup to move it to another device.
       </p>
     );
   }
@@ -193,7 +191,7 @@ function StorageStatus({ storageKind }: { storageKind: string }) {
     return (
       <p className="field-hint storage-status">
         Saved in this browser on this device. On iPad and iPhone, a browser can delete it after 7 days without a visit. To keep it, add the app to your Home Screen (Share → Add to
-        Home Screen). The Home Screen app starts empty: use Export JSON here, then Import… there.
+        Home Screen). The Home Screen app starts empty: use Export JSON here, then Import there.
       </p>
     );
   }
@@ -202,8 +200,8 @@ function StorageStatus({ storageKind }: { storageKind: string }) {
       {persisted === null
         ? 'Saved on this device.'
         : persisted
-          ? 'Saved on this device · protected from automatic clean-up.'
-          : 'Saved on this device · the browser may clear it if the device runs low on space.'}{' '}
+          ? 'Saved on this device and protected from automatic cleanup.'
+          : 'Saved on this device. The browser may clear it if the device runs low on space.'}{' '}
       Export a backup to move it to another device.
     </p>
   );

@@ -94,7 +94,7 @@ echoes → five-finger tunes → leaps → new keys (set by an I–IV–V–I ca
 intervals → triads → key-only → inversions, sevenths, chromatic notes. Notes appear as they are
 found; replays cost a little XP, hints count as misses. Weak spots: melodic intervals and chord
 types. The first tiers start anywhere in their small range (C–E, then C–G); phrases end on the
-tonic from Five-Finger Tunes on, when there are enough notes for that to leave variety.
+tonic from Five-finger tunes on, when there are enough notes for that to leave variety.
 
 ### 4.3 Rhythm ✓ (v1)
 
@@ -129,16 +129,16 @@ nameable independence skill:
 
 | Levels | Tier | New material |
 |---|---|---|
-| 1–8 | Steady Beat | quarters, halves, wholes in 4/4 |
-| 9–16 | Rests & Meters | quarter/half rests, 3/4, 2/4 |
-| 17–26 | Eighth Notes | eighth pairs, runs of eighths |
+| 1–8 | Steady beat | quarters, halves, wholes in 4/4 |
+| 9–16 | Rests & meters | quarter/half rests, 3/4, 2/4 |
+| 17–26 | Eighth notes | eighth pairs, runs of eighths |
 | 27–36 | Off-beats | eighth rests, notes on "and" |
-| 37–46 | Dotted Rhythms | dotted quarter + eighth |
+| 37–46 | Dotted rhythms | dotted quarter + eighth |
 | 47–56 | Syncopation | eighth–quarter–eighth across the beat |
 | 57–66 | Sixteenths | four sixteenths, eighth + two sixteenths |
-| 67–74 | Compound Time | 6/8 |
-| 75–82 | Dotted Sixteenths | dotted eighth + sixteenth, mixed figures |
-| 83–91 | Hand Independence | interlocking textures, faster tempos |
+| 67–74 | Compound time | 6/8 |
+| 75–82 | Dotted sixteenths | dotted eighth + sixteenth, mixed figures |
+| 83–91 | Hand independence | interlocking textures, faster tempos |
 | 92–100 | Polyrhythms | 3:2 and 4:3 |
 
 Hands, task, length (4/8 bars), meter and tempo can be overridden; the level never changes

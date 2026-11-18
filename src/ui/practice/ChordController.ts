@@ -217,7 +217,7 @@ export class ChordController extends SessionBase {
     }
     if (r.type === 'bass') {
       const t = this.opts.exercise.chords.targets[w.index];
-      s = this.nudged({ ...s, chords: { index: w.index, bassHint: `Right notes — put ${pitchLabel(bassOf(t.spec))} in the bass` } });
+      s = this.nudged({ ...s, chords: { index: w.index, bassHint: `Right notes. Put ${pitchLabel(bassOf(t.spec))} in the bass.` } });
     }
     if (r.type === 'match' && r.judgment) {
       const j = r.judgment;
