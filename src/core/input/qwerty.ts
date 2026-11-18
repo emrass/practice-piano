@@ -5,6 +5,10 @@
  *   W E   T Y U   O P        ← black keys
  *  A S D F G H J K L ; '     ← white keys (A = C of the current octave)
  *  Z / X shift the octave down / up.
+ *
+ * During a run the two note rows (Q to P, A to ') carry no shortcuts, not even the gaps between
+ * the black keys (R, I) or the unused Q: a missed note must cost at most a wrong note, never end
+ * the run. R restarts only once the run is over (useComputerKeyboard).
  */
 export const QWERTY_OFFSETS: Readonly<Record<string, number>> = {
   KeyA: 0,
@@ -31,6 +35,9 @@ export const QWERTY_SPAN = 18;
 
 export const OCTAVE_DOWN_CODE = 'KeyZ';
 export const OCTAVE_UP_CODE = 'KeyX';
+
+/** Restarts the run at any time, also mid-run. Far from the note rows (R only works after a run). */
+export const RESTART_CODE = 'Backspace';
 
 export function qwertyToMidi(code: string, baseMidi: number): number | null {
   const offset = QWERTY_OFFSETS[code];

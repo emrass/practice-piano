@@ -30,7 +30,8 @@ Success leans blue and danger is carmine so the pair stays apart for the common 
 - Focus is always visible: 2px `focus-ring`, 2px offset; `keyboard-accent` on the piano case. Never remove an outline without replacing it.
 - Use the native element first (`button`, `select`, `input type="range"`, `details`), then ARIA patterns: `radiogroup`, `tablist`, `switch`, `dialog`.
 - Dialogs trap focus, close on Esc, and return focus to their opener. Popovers close on Esc and on focus leaving.
-- Shortcuts are single keys because the hands are on a piano: Space, N, R, ?. They are off while a text field or select has focus, and every one is shown as a keycap on its button.
+- Shortcuts are single keys because the hands are on a piano: Space, N, R, Backspace, ?. They are off while a text field or select has focus, and every one is shown as a keycap on its button.
+- No shortcut acts mid-run from the note rows of the computer-keyboard piano (Q to P, A to '): a missed note must never end a run. R restarts only after a run; Backspace (Delete on Apple keyboards) restarts at any time.
 - The same actions can be played on marked piano keys after a run.
 
 ## Touch

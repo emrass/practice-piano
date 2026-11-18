@@ -1,4 +1,5 @@
 import { useStore } from '../../lib/store';
+import { backspaceLabel } from '../../platform/keyLabels';
 import type { Continuation } from '../lessons/types';
 import { isUntouched, type Session } from '../practice/session';
 import { Stat } from './controls';
@@ -92,7 +93,7 @@ export function PracticeBar(props: {
         ) : (
           <button type="button" className="btn btn-primary" onClick={props.onRestart} disabled={isUntouched(s)}>
             Restart
-            <kbd>R</kbd>
+            <kbd>{backspaceLabel()}</kbd>
           </button>
         )}
         {hint ? (

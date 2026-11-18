@@ -138,7 +138,8 @@ contains the current web code.
   for one level easier, G for one level harder (any octave; ignored until all keys are released,
   so final notes never trigger them). R and N do the same from the computer keyboard, and Enter
   takes the suggested one: something new after generated exercises and in review, the same again
-  for scales and progressions.
+  for scales and progressions. Backspace (Delete on a Mac) restarts at any time; R only works
+  after a run, because it sits among the black keys of the computer-keyboard piano.
 - **Sustain pedal** — CC 64 indicator, and an option to count pedaled notes as held.
 - **Ear training (levels 1–100)** — two-note echoes from middle C, stepwise tunes, five-finger
   melodies, octave-wide leaps, new keys introduced by an I–IV–V–I cadence, minor keys, harmonic

@@ -25,7 +25,7 @@ test.describe('Sight reading', () => {
     await app.tap([wrongKey(steps[0])]);
     await expect(restart).toBeEnabled();
     // Restarting clears the run, so there is again nothing to restart.
-    await page.keyboard.press('KeyR');
+    await page.keyboard.press('Backspace');
     await expect(restart).toBeDisabled();
     await app.playSteps();
     const actions = app.results().locator('.results-actions .btn');
