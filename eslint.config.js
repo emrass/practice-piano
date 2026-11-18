@@ -26,6 +26,23 @@ export default defineConfig([
     },
   },
   {
+    // UI text follows design/system/guides/01-writing.md: two short sentences, never an em dash.
+    // Everything the app can show is a string literal, a template literal or JSX text in these
+    // files (titles, labels, messages, names in src/core, the web app manifest); comments are
+    // not checked, and neither are tests.
+    files: ['src/**/*.{ts,tsx}', 'pwa/**/*.ts'],
+    ignores: ['**/*.test.{ts,tsx}'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        ...['Literal[value=/—/]', 'TemplateElement[value.raw=/—/]', 'JSXText[value=/—/]'].map((selector) => ({
+          selector,
+          message: 'No em dash in UI text: write two short sentences, or use a colon (design/system/guides/01-writing.md).',
+        })),
+      ],
+    },
+  },
+  {
     // Browser tests and screenshot scripts: Playwright fixtures call `use()`, which is not a React hook.
     files: ['e2e/**/*.ts', 'scripts/**/*.ts', 'playwright.config.ts'],
     languageOptions: { globals: { ...globals.browser, ...globals.node } },
