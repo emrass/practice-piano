@@ -13,7 +13,7 @@ A labeled action. Quiet (card fill, hairline border) is the default; everything 
 | Pressed | `aria-pressed="true"` | A toggle that is on. |
 | Nudge | `.is-nudge` | Points a new player at the next setup step. Remove once used. |
 
-Sizes: `.btn-sm` 32px in dense panels, default 36px, `.btn-lg` 44px for the stage, where buttons are hit from the piano bench. `.btn-block` fills its container.
+Sizes: `.btn-sm` 32px in dense panels, default 36px everywhere else, the stage included. `.btn-lg` 44px is for one button that has to be found without looking; the app uses none today. `.btn-block` fills its container.
 
 - **You provide** the label, an optional shortcut `<kbd>` after it, and the handler.
 - Label: a verb or verb plus object, sentence case, no period: "New exercise", not "OK" or "Submit".
@@ -23,5 +23,5 @@ Sizes: `.btn-sm` 32px in dense panels, default 36px, `.btn-lg` 44px for the stag
 - On touch screens every size reaches 44px through an invisible hit area; do not enlarge the button.
 
 ```html
-<button class="btn btn-primary btn-lg">Start <kbd>Space</kbd></button>
+<button class="btn btn-primary">Start <kbd>Space</kbd></button>
 ```

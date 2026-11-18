@@ -4,7 +4,7 @@ The look is a sheet of music on a wooden desk. Warm paper, near-black ink, one o
 
 ## Principles
 
-1. **Read from the bench.** The player sits 60 to 90 cm away with their eyes on the music. Anything read while playing (the score, the practice-bar message, live stats) is set at `body-lg` or larger; anything tapped while playing is `size-control-lg`. Small type and dense controls belong in the sidebar and dialogs, where the player leans in.
+1. **Read from the bench.** The player sits 60 to 90 cm away with their eyes on the music. Anything read while playing (the score, the practice-bar message, live stats) is set at `body-lg` or larger; anything tapped while playing keeps the default control size and reaches `size-target-min` on a touch screen through its hit area. Small type and dense controls belong in the sidebar and dialogs, where the player leans in.
 2. **Nothing moves but the music.** Controls, cards and the keyboard hold their size and place while values change, sliders drag and exercises swap. Reserve space for the longest value; hide with `visibility`, not `display`; give dialogs with tabs or steps a fixed height.
 3. **The sheet is for music.** `surface-sheet` carries notation and the frame around it, nothing else. Notes are `text`; everything around them is quieter.
 4. **One accent, said once.** Oxblood (`accent`) means "you are here" and "this is the next step". One primary button per region. If two things on screen are oxblood for different reasons, one of them is wrong.
@@ -45,7 +45,7 @@ Use the semantic tokens. The palette steps (`sepia-*`, `oxblood-*`, `gold-*`, `v
 - **Spacing** is a 4px grid with 2 and 6 for dense rows; the token name is the pixel value (`space-12`). Lay out with `gap`, not margins. Typical steps: 6 from label to control, 8 between buttons, 12 between fields and between stage cards, 16 inside a card, 24 inside a dialog.
 - **Radius** nests by subtraction: `radius-xl` dialogs, `radius-lg` cards, `radius-md` controls and wells, `radius-sm` parts inside a control, `radius-xs` keycaps and piano keys, `radius-full` pills and dots.
 - **Borders carry structure; shadows only say "this floats."** `shadow-1` rests cards on the canvas, `shadow-2` lifts popovers and the drawer, `shadow-3` lifts dialogs and results. `shadow-knob` is for the moving part of a control. No other shadows, no glows, no gradients except the piano case and the shading on a key.
-- **Controls** are 36px (`size-control-md`), 32px in dense panels, 44px on the stage. On touch screens every control reaches `size-target-min` through an invisible hit area, without changing size.
+- **Controls** are 36px (`size-control-md`), on the stage too, and 32px in dense panels. `size-control-lg` (44px) is the height of the practice bar's status row; `.btn-lg` is there for a button that has to be found without looking. On touch screens every control reaches `size-target-min` through an invisible hit area, without changing size.
 - **Focus** is a 2px solid `focus-ring`, 2px off the control, on every focusable element. On the keyboard case it is `keyboard-accent`.
 - **Disabled** is `opacity-disabled`, stays in place, and says why.
 - **Layers** come from the `z-*` scale: drawer 20, popover 30, dialog 40, toast 50.
@@ -63,7 +63,7 @@ Use the semantic tokens. The palette steps (`sepia-*`, `oxblood-*`, `gold-*`, `v
 - Use the icons in `assets/Icons`, inlined so they take the text color, at 16px in controls and 20px alone.
 - No Unicode symbols as icons and no emoji. Their shapes change between systems.
 - An icon never stands alone as a status. Pair it with a word, or put the word in the label.
-- The mark is `assets/Logos/practice-piano-mark.svg`, used whole and unaltered; the name beside it is live text (see Logo).
+- Inside the app the logo is the keys (`assets/Logos/practice-piano-keys.svg`), drawn in the theme's tokens, with the name beside it as live text (see Logo). The mark (`assets/Logos/practice-piano-mark.svg`) is for outside the app: favicon and installed-app icon, used whole and unaltered.
 
 ## Building with it
 
