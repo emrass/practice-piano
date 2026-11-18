@@ -81,7 +81,7 @@ The system was drawn from the app as it stood in November 2026, then tightened. 
 3. **Right notes lean teal.**
 4. **Small gray text gets darker** in the light theme: field labels, hints, stat keys, key names.
 5. **Type is the same on every platform.** Headings, figures and the wordmark are Newsreader, not Iowan on Apple devices, Palatino on Windows and Times elsewhere. Interface text is Figtree, not San Francisco, Segoe or Roboto.
-6. **Stage buttons grow to 44px** and the practice-bar message to 16px.
+6. **The practice-bar message grows to 16px.** Stage buttons stay 36px; `.btn-lg` (44px) was tried there and taken back.
 7. **Symbols become drawn icons**: ☰ ✕ ☀ ☾ ◆ ★ ♪ and the disclosure triangles.
 8. **Inputs get a visible edge**; the off switch is gray rather than paper-colored.
 9. **Gold badges take dark text**: "Mastered" was cream on gold at 3.4:1 (2.1:1 in the dark theme).
@@ -96,7 +96,7 @@ Most of the move is renaming variables and classes. Four parts change behavior o
 
 - **Fonts.** The app loads three files: Newsreader roman (132 KB) and italic (147 KB, used only for bar numbers) and Figtree (19 KB). Import them through the stylesheet so the build hashes them: the service worker then caches them with the rest of the build, and the native app bundles them. Preload the Newsreader roman and Figtree files so the first paint does not reflow. Caveat is for the landing page only and is left out of the app's stylesheet.
 - **Second cues in the score.** The tilde and cross under the staff are drawn by the score renderer, next to the note-name labels, from the same note states that set the colors. The dot and cross on keys are CSS.
-- **One mark.** The favicon is the mark. Replace the top bar's CSS drawing with it, and redraw the installed-app icon (web and native) from it.
+- **Two drawings, one each side of the door.** Inside the app the top bar keeps its outlined keys, now a file (`practice-piano-keys.svg`) instead of a CSS drawing. The favicon is the mark; redraw the installed-app icon (web and native) from it.
 - **Copy.** Messages, hints and results text are rewritten to the Writing guide: no em dashes, units on every number.
 
 The landing page already matches closely (same paper, ink and oxblood, Newsreader). It needs the token names and the shared mark, not a redesign; it takes copies of the built `tokens.css` and `site-fonts.css` because it has no build step.

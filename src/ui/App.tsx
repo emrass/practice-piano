@@ -22,7 +22,7 @@ import { PracticeBar } from './components/PracticeBar';
 import { ProgressPanel } from './components/ProgressPanel';
 import { ResultsCard } from './components/ResultsCard';
 import { Tabs } from './components/controls';
-import { LogoMark } from './components/Icon';
+import { LogoKeys } from './components/Icon';
 import { ScoreView } from './components/ScoreView';
 import { SetupGuide, type SetupStep } from './components/SetupGuide';
 import { TopBar } from './components/TopBar';
@@ -46,7 +46,7 @@ export function App() {
   if (!profile.ready) {
     return (
       <div className="splash">
-        <LogoMark />
+        <LogoKeys />
         Loading your studio…
       </div>
     );

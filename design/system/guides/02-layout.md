@@ -47,7 +47,7 @@ Use these four for the shell, written as numbers in media queries. Everything el
 
 | Zone | Distance | Type floor | Target size |
 |---|---|---|---|
-| Stage (score, practice bar, keyboard) | 60–90 cm, hands on the keys | `body-lg` for sentences, `numeral` for figures, `overline` for their labels | `size-control-lg` |
+| Stage (score, practice bar, keyboard) | 60–90 cm, hands on the keys | `body-lg` for sentences, `numeral` for figures, `overline` for their labels | `size-control-md`; `size-target-min` on touch, through the hit area |
 | Sidebar, dialogs, popovers | leaning in, one hand free | `body-sm`, `caption` for hints | `size-control-md`, `size-control-sm` in dense rows |
 
 ## The landing page

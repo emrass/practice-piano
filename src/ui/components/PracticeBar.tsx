@@ -71,26 +71,26 @@ export function PracticeBar(props: {
     <div className="card practice-bar">
       <div className="practice-actions">
         {ear && s.status === 'finished' ? (
-          <button type="button" className="btn btn-primary btn-lg" onClick={props.onRetry}>
+          <button type="button" className="btn btn-primary" onClick={props.onRetry}>
             {repeat.label} <kbd>R</kbd>
           </button>
         ) : ear ? (
           <>
-            <button type="button" className="btn btn-primary btn-lg" onClick={() => props.controller.start()}>
+            <button type="button" className="btn btn-primary" onClick={() => props.controller.start()}>
               {ear.listened ? 'Replay' : 'Listen'}
               <kbd>Space</kbd>
             </button>
-            <button type="button" className="btn btn-lg" onClick={props.onHint} disabled={s.status !== 'running' || ear.playing}>
+            <button type="button" className="btn" onClick={props.onHint} disabled={s.status !== 'running' || ear.playing}>
               Hint <kbd>?</kbd>
             </button>
           </>
         ) : flow ? (
-          <button type="button" className={`btn btn-lg ${active ? 'btn-inverse' : 'btn-primary'}`} onClick={props.onStartStop}>
+          <button type="button" className={`btn ${active ? 'btn-inverse' : 'btn-primary'}`} onClick={props.onStartStop}>
             {active ? 'Stop' : 'Start'}
             <kbd>Space</kbd>
           </button>
         ) : (
-          <button type="button" className="btn btn-primary btn-lg" onClick={props.onRestart} disabled={isUntouched(s)}>
+          <button type="button" className="btn btn-primary" onClick={props.onRestart} disabled={isUntouched(s)}>
             Restart
             <kbd>R</kbd>
           </button>
@@ -98,7 +98,7 @@ export function PracticeBar(props: {
         {hint ? (
           <button
             type="button"
-            className={`btn btn-lg ${nudge ? 'is-nudge' : ''}`}
+            className={`btn ${nudge ? 'is-nudge' : ''}`}
             onClick={props.onHint}
             disabled={s.status !== 'running' || guideShowing || s.revealed.length > 0}
             title={guideShowing ? 'The keyboard guide already shows the keys' : 'Show the keys to play — this step then no longer counts as first try'}
@@ -108,12 +108,12 @@ export function PracticeBar(props: {
         ) : null}
         {/* Closed results stay one press away, next to the way on. */}
         {s.status === 'finished' && props.resultsHidden ? (
-          <button type="button" className="btn btn-lg" onClick={props.onShowResults}>
+          <button type="button" className="btn" onClick={props.onShowResults}>
             Results
           </button>
         ) : null}
         {next ? (
-          <button type="button" className="btn btn-lg" onClick={props.onNext}>
+          <button type="button" className="btn" onClick={props.onNext}>
             {next.label} <kbd>N</kbd>
           </button>
         ) : null}

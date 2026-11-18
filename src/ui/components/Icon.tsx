@@ -1,4 +1,4 @@
-import markUrl from '../../../design/system/assets/Logos/practice-piano-mark.svg';
+import keysSvg from '../../../design/system/assets/Logos/practice-piano-keys.svg?raw';
 
 /**
  * The icon set of the design system (design/system/assets/Icons), inlined so each icon takes
@@ -50,16 +50,22 @@ export function Icon(props: { name: IconName; large?: boolean; className?: strin
   );
 }
 
-/** The mark alone, decorative (the splash screen). */
-export function LogoMark() {
-  return <img className="logo-mark" src={markUrl} alt="" width={28} height={28} />;
+/** The drawing's own shapes, without the file's outer <svg>. */
+const KEYS = keysSvg.replace(/^[\s\S]*?<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '');
+
+/**
+ * The keys alone, decorative (the splash screen): the outlined drawing of the top bar, inlined
+ * so its paper, ink and oxblood come from the theme's tokens (see design/system/components/Logo).
+ */
+export function LogoKeys() {
+  return <svg className="logo-mark" viewBox="0 0 28 28" width={28} height={28} aria-hidden="true" focusable="false" dangerouslySetInnerHTML={{ __html: KEYS }} />;
 }
 
-/** The mark and the live wordmark (see design/system/components/Logo). */
+/** The keys and the live wordmark (see design/system/components/Logo). */
 export function Logo() {
   return (
     <div className="logo">
-      <LogoMark />
+      <LogoKeys />
       <span className="logo-name">
         practice-piano<span className="logo-tld">.com</span>
       </span>
