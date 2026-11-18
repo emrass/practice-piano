@@ -161,17 +161,29 @@ review. Restart in Wait is off while the run is untouched (`isUntouched`, `ui/pr
 
 ## First-run setup
 
-- `Settings.setupGuideSeen` (default `false`) decides whether `SetupGuide` opens with the app;
+- Two guides share one dialog. `GuideDialog` (`ui/components/GuideDialog.tsx`) is the design
+  system's Dialog with `.dialog-stepped`: "Setup · step x of y", the step's title and body, one
+  action row (Skip, Back, the step's own way on, the way forward) and a fixed height. It knows
+  nothing about pianos or levels. The parts supply their steps (`ui/components/guideSteps.tsx`):
+  `useAudioSetupSteps()` (connect, or "playing without a piano", then the metronome, which is
+  left out without a piano) and `useLevelSteps()` (how well you play). The step contents are in
+  `AudioSetupSteps.tsx` and `LevelStep.tsx`.
+- `FirstRunGuide` strings both parts into one guide: connect, metronome, level, "Start
+  practicing". Skip in the piano & audio steps moves on to the level step; Skip there, Esc or ✕
+  close it. `Settings.setupGuideSeen` (default `false`) decides whether it opens with the app;
   closing it by any route sets the flag. Because it is a setting, a reset or an imported backup
-  without the flag shows the guide again. `App.tsx` also opens it on request (*Setup guide…* in
-  the Piano & audio header).
-- While open, the guide takes all input with `inputBus.capture()`, like latency calibration, so
+  without the flag shows the guide again.
+- `AudioSetupGuide` is the piano & audio part alone, opened from *Setup guide* in the Piano &
+  audio header. It has no Skip (✕ closes it), ends with "Done", and never shows the level step.
+  The level step cannot be run again for now.
+- While open, a guide takes all input with `inputBus.capture()`, like latency calibration, so
   the key played to check the connection is not scored by the exercise underneath. It steps
   aside (state kept) while the calibration dialog is open.
 - `core/experience.ts` holds the five stages and, per skill (reading, ear, scales & chords), a
   list of statements with a `SettingsPatch` each. A stage is only a preset: it names one
   statement per skill. `experiencePatch()` merges the three patches; the chosen statements are
-  saved as `Settings.experience` so the reopened guide can show them. Tests check that every
+  saved as `Settings.experience` (only when the player picked something), for a future profile
+  view. Tests check that every
   level is the first level of a tier and that every combination is a valid `Settings`.
 - Connection texts and buttons are shared with Piano & audio (`ConnectionStatus` in
   `ui/components/MidiConnect.tsx`, `midiStatus.ts`); both dialogs take input with

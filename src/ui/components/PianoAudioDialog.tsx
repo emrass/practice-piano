@@ -38,7 +38,7 @@ export function PianoAudioDialog(props: {
   /** The calibration dialog is on top; this one waits underneath with its state kept. */
   hidden: boolean;
   onCalibrate: () => void;
-  /** Runs the first-run setup guide again (this dialog closes). */
+  /** Opens the piano & audio guide: connect, then line up the metronome (this dialog closes). */
   onSetup: () => void;
   onClose: () => void;
 }) {
@@ -74,7 +74,7 @@ export function PianoAudioDialog(props: {
       tabbed
       className="settings"
       headActions={
-        <button type="button" className="btn btn-sm" title="Run the first-run setup guide again" onClick={props.onSetup}>
+        <button type="button" className="btn btn-sm" title="Connect your piano and line up the metronome, step by step." onClick={props.onSetup}>
           Setup guide
         </button>
       }

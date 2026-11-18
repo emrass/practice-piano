@@ -24,7 +24,7 @@ import { ResultsCard } from './components/ResultsCard';
 import { Tabs } from './components/controls';
 import { LogoKeys } from './components/Icon';
 import { ScoreView } from './components/ScoreView';
-import { SetupGuide, type SetupStep } from './components/SetupGuide';
+import { AudioSetupGuide, FirstRunGuide } from './components/SetupGuides';
 import { TopBar } from './components/TopBar';
 import { useComputerKeyboard } from './hooks/useComputerKeyboard';
 import { type AutoStartFrom, useEarAutoStart } from './hooks/useEarAutoStart';
@@ -63,9 +63,9 @@ function Studio({ profile }: { profile: Profile }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [award, setAward] = useState<{ exerciseId: string; award: Award } | null>(null);
   const [calibrating, setCalibrating] = useState(false);
-  /** The setup guide, opened again by the player (it opens by itself until it was seen once). */
-  const [reopenedSetup, setReopenedSetup] = useState<SetupStep | null>(null);
-  const setupOpen = !s.setupGuideSeen || reopenedSetup !== null;
+  /** The piano & audio guide, opened from Piano & audio. The first-run guide opens by itself until it was seen once. */
+  const [audioGuideOpen, setAudioGuideOpen] = useState(false);
+  const setupOpen = !s.setupGuideSeen || audioGuideOpen;
   /** Piano & audio: the settings every lesson shares, opened from the piano chip. */
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [hiddenResultsFor, setHiddenResultsFor] = useState<object | null>(null);
@@ -185,27 +185,21 @@ function Studio({ profile }: { profile: Profile }) {
     setDrawerOpen(false);
     setCalibrating(true);
   }, [controller]);
-  const openSetup = useCallback(
-    (step: SetupStep) => {
-      if (controller.isActive) controller.stop();
-      setDrawerOpen(false);
-      setReopenedSetup(step);
-    },
-    [controller],
-  );
   const openSettings = useCallback(() => {
     if (controller.isActive) controller.stop();
     setDrawerOpen(false);
     setSettingsOpen(true);
   }, [controller]);
   const closeSettings = useCallback(() => setSettingsOpen(false), []);
-  const runSetupAgain = useCallback(() => {
+  const openAudioGuide = useCallback(() => {
+    if (controller.isActive) controller.stop();
     setSettingsOpen(false);
-    openSetup('connect');
-  }, [openSetup]);
+    setDrawerOpen(false);
+    setAudioGuideOpen(true);
+  }, [controller]);
   const closeSetup = useCallback(() => {
     updateSettings({ setupGuideSeen: true });
-    setReopenedSetup(null);
+    setAudioGuideOpen(false);
   }, [updateSettings]);
 
   // ---- MIDI -------------------------------------------------------------------------
@@ -355,18 +349,18 @@ function Studio({ profile }: { profile: Profile }) {
           />
         </main>
       </div>
-      {setupOpen ? (
-        <SetupGuide
+      {!s.setupGuideSeen ? (
+        <FirstRunGuide
           settings={s}
           update={update}
           midi={midiService}
-          initialStep={reopenedSetup ?? 'connect'}
-          reopened={s.setupGuideSeen}
           hidden={calibrating}
           onCalibrate={openCalibration}
           onLevelsChanged={reseed}
           onClose={closeSetup}
         />
+      ) : audioGuideOpen ? (
+        <AudioSetupGuide settings={s} update={update} midi={midiService} hidden={calibrating} onCalibrate={openCalibration} onClose={closeSetup} />
       ) : null}
       {settingsOpen ? (
         <PianoAudioDialog
@@ -376,7 +370,7 @@ function Studio({ profile }: { profile: Profile }) {
           qwertyBase={qwertyBase}
           hidden={calibrating}
           onCalibrate={openCalibration}
-          onSetup={runSetupAgain}
+          onSetup={openAudioGuide}
           onClose={closeSettings}
         />
       ) : null}

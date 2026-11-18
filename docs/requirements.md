@@ -25,7 +25,8 @@ Build **`practice-piano.com`**, an interactive piano practice application focuse
   - The player can continue without a piano (on-screen or computer keys), which is presented as the fallback and turns the key sound on.
   - One choice of playing stage sets a starting point for all lessons; the result is shown per skill (reading, ear, scales & chords) and can be adjusted before continuing.
   - Latency calibration is offered, with the presets as a fallback; skipped when no piano is connected.
-  - Every step can be skipped; the guide is shown once and can be run again from *Piano & audio*. The top-bar piano button opens *Piano & audio*, not the guide.
+  - Order: connect the piano, line up the metronome, then the playing stage. Skipping the piano and audio steps moves on to the playing stage; skipping that closes the guide. The guide is shown once.
+  - *Piano & audio* can run the piano and audio steps again on their own; they never change the levels. The playing stage cannot be run again for now. The top-bar piano button opens *Piano & audio*, not the guide.
 - **Fallback Inputs:**
   - Interactive on-screen piano keyboard (mouse/touch) and computer QWERTY keyboard mapping so every lesson can be practiced or tested without a physical MIDI instrument.
 - **Audio & Wireless Latency Workflows:**

@@ -2,8 +2,9 @@ import type { Page } from '@playwright/test';
 import { expect, fakeMidi, test } from './support';
 
 /**
- * The first-run setup guide: connect a piano, say how well you play, line up the metronome.
- * These tests start from an empty profile (the other specs seed one that has seen the guide).
+ * The setup guides. On first launch: connect a piano, line up the metronome, say how well you
+ * play. From Piano & audio: only the piano and the metronome. These tests start from an empty
+ * profile (the other specs seed one that has seen the guide).
  */
 
 type Json = Record<string, unknown>;
@@ -54,18 +55,23 @@ test('First run: a connected piano is offered at once, confirmed by a key, and t
   await expect(guide(page)).toContainText('On Test Piano');
   expect(await page.evaluate(() => JSON.stringify(window.__ppDebug!.controller.state.get()))).toBe(before);
 
+  // Piano and audio first, then the level: the choice that decides the first exercise comes last.
+  await button(page, 'Next').click();
+  await expect(guide(page)).toContainText('Line up the metronome');
+  await expect(guide(page)).toContainText('step 2 of 3');
+  await guide(page).getByRole('radio', { name: /Headphones on piano/ }).click();
+
   await button(page, 'Next').click();
   await expect(guide(page)).toContainText('How well do you play?');
+  await expect(guide(page)).toContainText('step 3 of 3');
   await expect(guide(page).getByRole('combobox')).toHaveCount(0);
   await guide(page).getByRole('radio', { name: /Elementary/ }).click();
   await expect(guide(page).getByLabel('Reading music')).toHaveValue('3');
   await expect(guide(page).getByLabel('Reading music').locator('option:checked')).toHaveText('I read both hands in easy keys');
   await expect(guide(page).getByLabel('Playing by ear').locator('option:checked')).toHaveText('I can play back short tunes within five notes');
   await expect(guide(page).getByLabel('Scales & chords').locator('option:checked')).toHaveText('I know a few major scales and basic chords');
-
-  await button(page, 'Next').click();
-  await expect(guide(page)).toContainText('Line up the metronome');
-  await guide(page).getByRole('radio', { name: /Headphones on piano/ }).click();
+  // The skills appear below the choices, scrolled into view.
+  await expect(guide(page).getByLabel('Scales & chords')).toBeInViewport();
   await button(page, 'Start practicing').click();
   await expect(guide(page)).toHaveCount(0);
 
@@ -115,8 +121,11 @@ test('A piano plugged in while the guide is open is found; later, the top-bar ch
   await expect(guide(page)).toContainText('USB');
   await expect(guide(page)).toContainText('Audio MIDI Setup');
   await expect(button(page, 'Next')).toBeDisabled();
+  await expect(button(page, 'Next')).toHaveAttribute('title', 'Connect a piano first, or go on without one.');
 
-  await button(page, 'Skip setup').click();
+  await button(page, 'Skip').click();
+  await expect(guide(page)).toContainText('How well do you play?');
+  await button(page, 'Skip').click();
   await expect(guide(page)).toHaveCount(0);
   const chip = page.locator('.chip-midi');
   await expect(chip).toHaveText('Connect a piano');
@@ -143,13 +152,13 @@ test('A piano plugged in during the first step enables Next', async ({ page }) =
 test('Changing one skill changes only the lessons it covers', async ({ page }) => {
   await openNew(page);
   await button(page, 'Next').click();
+  await button(page, 'Next').click();
   const beginner = guide(page).getByRole('radio', { name: /Beginner/ });
   await beginner.click();
   await expect(beginner).toHaveAttribute('aria-checked', 'true');
   await guide(page).getByLabel('Playing by ear').selectOption({ label: 'I can pick out intervals and chords' });
   // No longer the preset of any stage.
   await expect(guide(page).getByRole('radio', { checked: true })).toHaveCount(0);
-  await button(page, 'Next').click();
   await button(page, 'Start practicing').click();
   await expect.poll(() => saved(page)).toMatchObject({
     experience: { reading: 1, ear: 5, technique: 0 },
@@ -160,11 +169,17 @@ test('Changing one skill changes only the lessons it covers', async ({ page }) =
   });
 });
 
-test('Skip setup leaves the defaults and does not come back', async ({ page }) => {
+test('Skip in the piano steps moves on to the level; Skip there leaves the defaults and does not come back', async ({ page }) => {
   await openNew(page);
-  await button(page, 'Next').click();
+  await button(page, 'Skip').click();
+  await expect(guide(page)).toContainText('How well do you play?');
+  await expect(guide(page)).toContainText('step 3 of 3');
   await guide(page).getByRole('radio', { name: /Advanced/ }).click();
-  await button(page, 'Skip setup').click();
+  // Back returns to the step the player came from.
+  await button(page, 'Back').click();
+  await expect(guide(page)).toContainText('Connect your piano');
+  await button(page, 'Skip').click();
+  await button(page, 'Skip').click();
   await expect(guide(page)).toHaveCount(0);
   await expect.poll(() => saved(page)).toMatchObject({ setupGuideSeen: true, experience: null, keySound: false, audioSetup: 'speakers', sight: { level: 1, hands: 'rh' } });
   await page.reload();
@@ -176,16 +191,31 @@ test('Skip setup leaves the defaults and does not come back', async ({ page }) =
 test('Calibrate now opens the calibration and comes back to the metronome step', async ({ page }) => {
   await openNew(page);
   await button(page, 'Next').click();
-  await button(page, 'Next').click();
   await button(page, /Calibrate now/).click();
   await expect(guide(page)).toHaveCount(1);
   await expect(guide(page)).toContainText('Latency calibration');
   await button(page, 'Cancel').click();
   await expect(guide(page)).toContainText('Line up the metronome');
-  await expect(guide(page)).toContainText('step 3 of 3');
+  await expect(guide(page)).toContainText('step 2 of 3');
 });
 
-test('Reopened from Piano & audio, the guide changes nothing unless something is picked', async ({ app, page }) => {
+test('The guide keeps its height from step to step', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await openNew(page, unpluggedMidi);
+  const height = async () => (await guide(page).boundingBox())!.height;
+  const first = await height();
+  await button(page, 'I don’t have a piano here').click();
+  expect(await height()).toBe(first);
+  await button(page, 'Back').click();
+  await page.evaluate(() => (window as unknown as { __plug(): void }).__plug());
+  await button(page, 'Next').click();
+  expect(await height()).toBe(first);
+  await button(page, 'Next').click();
+  await guide(page).getByRole('radio', { name: /Intermediate/ }).click();
+  expect(await height()).toBe(first);
+});
+
+test('From Piano & audio, the guide covers the piano and the metronome only, and leaves the levels alone', async ({ app, page }) => {
   await app.open({ settings: { lesson: 'sight', sight: { level: 30, hands: 'lh' }, audioSetup: 'headphones', latencyMs: 180 } });
   await expect(guide(page)).toHaveCount(0);
   const settings = await app.openPianoAudio();
@@ -193,11 +223,15 @@ test('Reopened from Piano & audio, the guide changes nothing unless something is
   // The settings close: only the guide is left.
   await expect(guide(page)).toHaveCount(1);
   await expect(guide(page)).toContainText('Connect your piano');
+  await expect(guide(page)).toContainText('step 1 of 2');
+  // Nothing to skip here: the close button leaves it.
+  await expect(button(page, 'Skip')).toHaveCount(0);
+  await expect(button(page, 'Close setup')).toBeVisible();
   await button(page, 'Next').click();
-  await expect(guide(page).getByRole('radio', { checked: true })).toHaveCount(0);
-  await button(page, 'Next').click();
+  await expect(guide(page)).toContainText('Line up the metronome');
+  await expect(guide(page)).toContainText('step 2 of 2');
   await expect(guide(page).getByRole('radio', { name: /Headphones on piano/ })).toHaveAttribute('aria-checked', 'true');
-  await button(page, 'Start practicing').click();
+  await button(page, 'Done').click();
   await expect(guide(page)).toHaveCount(0);
   await page.waitForTimeout(500); // past the debounced save
   expect(await app.savedSettings()).toMatchObject({ sight: { level: 30, hands: 'lh' }, experience: null, audioSetup: 'headphones', latencyMs: 180 });
@@ -230,9 +264,9 @@ for (const theme of ['light', 'dark'] as const) {
     await expect(guide(page)).toContainText('Found Test Piano');
     await fits('connect, piano found');
     await button(page, 'Next').click();
+    await fits('metronome');
+    await button(page, 'Next').click();
     await guide(page).getByRole('radio', { name: /Intermediate/ }).click();
     await fits('level');
-    await button(page, 'Next').click();
-    await fits('metronome');
   });
 }

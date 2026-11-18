@@ -1,6 +1,6 @@
-/* First-run setup guide (SetupGuide.tsx), on the design system's Dialog. */
+/* The setup guides (GuideDialog.tsx, SetupGuides.tsx; the steps in AudioSetupSteps.tsx and LevelStep.tsx), on the design system's Dialog. */
 
-.dialog.setup:focus,
+.dialog.guide:focus,
 .dialog.settings:focus {
   outline: none;
 }
