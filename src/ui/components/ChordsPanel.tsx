@@ -8,7 +8,9 @@ import {
   type DrillHands,
   findProgression,
   type InversionRule,
+  inversionsOf,
   keysFor,
+  progressionHandsOf,
   PROGRESSIONS,
 } from '../../core/chords/catalog';
 import { weakChordLabel } from '../../core/chords/analysis';
@@ -103,14 +105,15 @@ export function ChordsPanel(props: {
                 ]}
               />
             </Field>
+            {/* Notes show one voicing, so "any voicing" is for symbols only. */}
             <Select<InversionRule>
               label="Voicing"
-              value={s.chords.inversions}
+              value={inversionsOf(s.chords.prompt, s.chords.inversions)}
               onChange={(chordsInversions) => update({ chords: { inversions: chordsInversions, source: 'pick' } })}
               options={[
                 { value: 'root', label: 'Root position (root in the bass)' },
                 { value: 'inversions', label: 'Inversions (the bass note asked for)' },
-                { value: 'any', label: 'Any voicing (just the right notes)' },
+                ...(s.chords.prompt === 'symbol' ? [{ value: 'any' as const, label: 'Any voicing (just the right notes)' }] : []),
               ]}
             />
           </>
@@ -129,10 +132,12 @@ export function ChordsPanel(props: {
                 onChange={(chordsKey) => update({ chords: { key: chordsKey, source: 'pick' } })}
                 options={[{ value: 'shuffle', label: 'Shuffle keys' }, ...keysFor(def.mode).map((k) => ({ value: k, label: `${tonicLabel(k)} ${def.mode}` }))]}
               />
-              <Field label="Hands">
+              {/* Only the staff says which hand plays what. From the chart the choice stays in place, disabled. */}
+              <Field label="Hands" hint={s.chords.notation ? undefined : 'Off for the chart: any hand plays the chord.'}>
                 <Segmented<ChordHands>
                   label="Hands"
-                  value={s.chords.hands}
+                  value={progressionHandsOf(s.chords.notation, s.chords.hands)}
+                  disabled={!s.chords.notation}
                   onChange={(chordsHands) => update({ chords: { hands: chordsHands, source: 'pick' } })}
                   options={[
                     { value: 'rh', label: 'RH', title: 'Right hand plays the chords' },
@@ -212,9 +217,9 @@ export function ChordsPanel(props: {
         {drill ? null : (
           <Toggle
             label="Play from the chord chart"
-            hint="Chord symbols and numerals only, so you choose the voicing."
+            hint="Chord symbols and numerals only, so you choose the voicing and the hands."
             checked={!s.chords.notation}
-            onChange={(chart) => update({ chords: { notation: !chart } })}
+            onChange={(chart) => update({ chords: { notation: !chart, source: 'pick' } })}
           />
         )}
         <Select<number>

@@ -220,33 +220,35 @@ patterns, modes, exam-style stages, LH fingering for black-key arpeggios.
   random (no immediate repeats), the vocabulary is fixed. Prompt: the **symbol** (Cm7, shown as a
   lead-sheet chart, since the staff would give the answer) or the **notation** (a close voicing on
   the staff, no symbol — reading it is the task). Voicing rule: *root position* (root lowest),
-  *inversions* (the bass note asked for, written as a slash chord C/E), or *any voicing*.
+  *inversions* (the bass note asked for, written as a slash chord C/E), or *any voicing* (symbols
+  only: the staff always shows one voicing, so under notation the rule picks what is written).
   Hands (notation only, since a symbol can be played with any hand): **RH** writes the chord on
   the treble staff around middle C; **LH** writes it on the bass staff (from F2, within a ledger
   line or two); **RH + LH bass** (as *+ LH root* in progressions) writes the bass note on the bass
   staff (the root, or the inversion's bass) and the other chord tones in close position on the
-  treble staff, none doubled, so the chord is complete only with its last note. Reading the clef
+  treble staff, none doubled. Reading the clef
   is part of the task, so each hand is its own item; right-hand drills keep their earlier id and
   progress.
-- **Progression** — *progression × key × hands*. Library: I–IV–V–I, I–V–vi–IV, I–vi–IV–V,
+- **Progression** — *progression × key × hands*, or *progression × key* from the chart. Library: I–IV–V–I, I–V–vi–IV, I–vi–IV–V,
   ii7–V7–Imaj7, i–iv–V–i, iiø7–V7–i, Andalusian i–VII–VI–V, Pachelbel's canon, circle of fifths,
   12-bar blues (dominant sevenths). All 12 major or minor keys (minor dominants from harmonic
   minor); four-chord progressions go around twice so the turnaround is practiced. Hands: right
   hand alone, or **+ LH root** (left hand plays the root in the bass staff, which becomes the
   required bass note). Symbols *and* Roman numerals are printed above the staff; *Play from the
-  chord chart* hides the notation (voice it yourself).
+  chord chart* hides the notation (voice it yourself, with any hand, so Hands is off there). The
+  chart is judged differently from the staff, so it is its own item.
 
-**Judging.** A chord is right when the keys down together have exactly its pitch classes — any
-octave, any doubling, nothing extra — and, where the rule asks, the right note lowest. With
-**+ LH root**, each hand is judged on its part: the root below, the whole chord above (split
-between the written bass and the right hand). So a right hand landing a moment before the left
-is not complete yet rather than over the wrong bass, and the left-hand root completes its own
-chord instead of spilling onto the next one. Only what is written counts: a chord tone other
-than the root in the left hand is a wrong bass ("play only C in the left hand" when the root is
-already lowest). Wait: the
-chord counts the moment it is complete (or when a stray key is let go); wrong keys first make it
-"not first time"; right notes over the wrong bass get a hint ("put E in the bass"). A repeated
-chord must be struck again. Flow: one chord per 4/4 bar on beat 1; keys pressed around the bar
+**Judging.** Only what is shown counts. **Read from the staff** (notation drills, progressions
+with the notation), a chord is right when exactly the written keys are down: octave and all,
+nothing extra. Which hand plays which key does not matter (MIDI cannot tell), so a right hand
+landing before the left is simply not complete yet. A key that is not written is a wrong key the
+moment it is pressed; a chord tone below the written bass is a wrong bass ("put C in the bass").
+**Read from a symbol** (symbol drills, progressions from the chart), a chord is right when the
+keys down together have exactly its pitch classes — any octave, any doubling, any hand, nothing
+extra — and, where the drill's rule asks, the right note lowest; right notes over the wrong bass
+get a hint ("right notes, put E in the bass"). Wait: the chord counts the moment it is complete
+(or when a stray key is let go); wrong keys first make it "not first time". A repeated chord
+must be struck again. Flow: one chord per 4/4 bar on beat 1; keys pressed around the bar
 line (−0.3 / +0.4 of a bar, at most 300 / 450 ms) plus keys held over from before (common tones)
 make the chord; holding the previous chord through the bar line does not count.
 
@@ -264,9 +266,10 @@ mastered at the goal tempo (default ♩ = 80, a chord every 3 s).
 
 **Measurements.** Wait: right first time, median time to find a chord, slow chords (> 2× your
 median). Flow: chords on the beat, timing tendency, **keys together** (median time from the first
-to the last key of a chord; > 120 ms reads as rolled). Progressions: a **voice-leading score** —
-average semitones the right hand moved per change against the smallest move possible (1 = as
-smooth as the shown voicings). Results list the chords to look at (missed, wrong bass, slow,
+to the last key of a chord; > 120 ms reads as rolled). Progressions from the chart: a
+**voice-leading score** — average semitones moved per change against the smallest move possible
+(1 = as smooth as the suggested voicings). From the staff the voicing is written, so there is
+nothing to score. Results list the chords to look at (missed, wrong bass, slow,
 early / late, rolled).
 
 **Weak spots.** Shared tags `chordQuality`, `chordRoot` (pitch class) and `chordInversion`

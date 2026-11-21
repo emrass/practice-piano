@@ -1,8 +1,8 @@
 import type { ChordOutcome, ChordsResult, ChordSummary } from '../eval/types';
 import { median } from '../eval/types';
-import { type ChordJudgment, splitHands } from './engine';
+import type { ChordJudgment } from './engine';
 import { drillHandsOf, QUALITIES, type ChordQuality } from './catalog';
-import { type ChordExercise, type ChordTarget, PC_NAMES } from './generator';
+import { type ChordExercise, PC_NAMES } from './generator';
 import { minimalMovement, movement } from './voicing';
 
 /** Clean run (moves up the tempo ladder): nearly every chord right, and on the beat. */
@@ -23,12 +23,6 @@ function sd(xs: readonly number[]): number | null {
 }
 
 const pc = (m: number) => ((m % 12) + 12) % 12;
-
-/** The right hand's part of what was played: the keys from the target's split up, when it has hands. */
-function rightHand(played: readonly number[], target: ChordTarget): number[] {
-  const sorted = [...played].sort((a, b) => a - b);
-  return target.hands ? splitHands(target.hands.split, sorted).rh : sorted;
-}
 
 export function summarizeChords(ex: ChordExercise, judgments: readonly ChordJudgment[], mode: string, goalBpm: number): ChordSummary {
   const { targets, item } = ex.chords;
@@ -58,18 +52,19 @@ export function summarizeChords(ex: ChordExercise, judgments: readonly ChordJudg
   const spreads = hits.map((j) => j.spreadMs ?? 0);
   const timing = mean(judgments.filter((j) => j.correct).map((j) => j.timingScore ?? 0));
 
-  // Voice leading: only for progressions, between neighboring chords both played right.
+  // Voice leading: only for progressions from the chart (from the staff the voicing is written,
+  // so a right chord always moves as shown), between neighboring chords both played right.
   let voiceLeading: number | null = null;
   let moves: ChordSummary['movement'] = null;
-  if (item.task === 'progression') {
+  if (item.task === 'progression' && !item.notation) {
     const played: number[] = [];
     const minimal: number[] = [];
     for (let i = 1; i < targets.length; i++) {
       const a = byIndex.get(i - 1);
       const b = byIndex.get(i);
       if (!a?.correct || !b?.correct) continue;
-      const from = rightHand(a.played, targets[i - 1]);
-      const to = rightHand(b.played, targets[i]);
+      const from = a.played;
+      const to = b.played;
       played.push(movement(from, to));
       minimal.push(minimalMovement(from, targets[i].pcs));
     }
