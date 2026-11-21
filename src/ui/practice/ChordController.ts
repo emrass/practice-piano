@@ -217,7 +217,12 @@ export class ChordController extends SessionBase {
     }
     if (r.type === 'bass') {
       const t = this.opts.exercise.chords.targets[w.index];
-      s = this.nudged({ ...s, chords: { index: w.index, bassHint: `Right notes. Put ${pitchLabel(bassOf(t.spec))} in the bass.` } });
+      const bass = pitchLabel(bassOf(t.spec));
+      // The root is already lowest but the left hand adds other notes: only the root is written there.
+      const bassHint = r.extraInLeftHand
+        ? { text: `Right notes. Play only ${bass} in the left hand.`, short: `Only ${bass} in the left hand` }
+        : { text: `Right notes. Put ${bass} in the bass.`, short: `${bass} in the bass` };
+      s = this.nudged({ ...s, chords: { index: w.index, bassHint } });
     }
     if (r.type === 'match' && r.judgment) {
       const j = r.judgment;

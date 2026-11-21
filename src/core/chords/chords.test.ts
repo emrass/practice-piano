@@ -263,10 +263,30 @@ describe('chord engines', () => {
     w.start(0);
     ts[0].voicing.forEach((k) => w.noteOn(k, 100)); // C E G in the right hand: not complete yet
     expect(w.index).toBe(0);
-    expect(w.noteOn(43, 120).type).toBe('bass'); // G in the left hand
+    expect(w.noteOn(43, 120)).toMatchObject({ type: 'bass', extraInLeftHand: false }); // G in the left hand
     w.noteOff(43, 200);
     expect(w.noteOn(ts[0].bassMidi!, 300).type).toBe('match');
     expect(w.results[0]).toMatchObject({ correct: false, wrongBass: true });
+  });
+
+  it('Wait, + LH root: only the root counts in the left hand; extra notes there say so', () => {
+    const ts = generateChordExercise(prog('I-V-vi-IV', 'C', 'lh-bass'), opts, 1).chords.targets;
+    const w = new ChordWaitEngine(ts);
+    w.start(0);
+    ts[0].voicing.forEach((k) => w.noteOn(k, 100));
+    w.noteOn(ts[0].bassMidi!, 120);
+    expect(w.index).toBe(1); // C under C E G
+    [ts[0].bassMidi!, ...ts[0].voicing].forEach((k) => w.noteOff(k, 300));
+    // G: a fifth above the root in the left hand is not what is written.
+    expect(ts[1].bassMidi! + 7).toBeLessThan(ts[1].hands!.split);
+    w.noteOn(ts[1].bassMidi!, 400);
+    w.noteOn(ts[1].bassMidi! + 7, 400);
+    const r = ts[1].voicing.map((k) => w.noteOn(k, 420)).pop();
+    expect(r).toMatchObject({ type: 'bass', extraInLeftHand: true });
+    expect(w.index).toBe(1);
+    w.noteOff(ts[1].bassMidi! + 7, 500);
+    expect(w.index).toBe(2); // letting go of the fifth leaves the chord as written
+    expect(w.results[1]).toMatchObject({ correct: false, wrongBass: true });
   });
 
   it('Wait: advances on the chord, counts wrong keys and wrong bass, needs a re-strike for repeats', () => {
