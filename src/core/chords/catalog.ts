@@ -254,6 +254,6 @@ export function chordItemTitle(item: ChordItem): string {
   }
   const def = findProgression(item.progression)!;
   const key = `${item.key.replace('#', '♯').replace(/b$/, '♭')} ${def.mode}`;
-  const how = !item.notation ? ' · from the chart' : item.hands === 'lh-bass' ? ' · LH bass' : '';
+  const how = !item.notation ? ' · from symbols' : item.hands === 'lh-bass' ? ' · LH bass' : '';
   return `${def.name} in ${key}${how}`;
 }

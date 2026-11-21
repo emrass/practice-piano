@@ -132,20 +132,32 @@ export function ChordsPanel(props: {
                 onChange={(chordsKey) => update({ chords: { key: chordsKey, source: 'pick' } })}
                 options={[{ value: 'shuffle', label: 'Shuffle keys' }, ...keysFor(def.mode).map((k) => ({ value: k, label: `${tonicLabel(k)} ${def.mode}` }))]}
               />
-              {/* Only the staff says which hand plays what. From the chart the choice stays in place, disabled. */}
-              <Field label="Hands" hint={s.chords.notation ? undefined : 'Off for the chart: any hand plays the chord.'}>
-                <Segmented<ChordHands>
-                  label="Hands"
-                  value={progressionHandsOf(s.chords.notation, s.chords.hands)}
-                  disabled={!s.chords.notation}
-                  onChange={(chordsHands) => update({ chords: { hands: chordsHands, source: 'pick' } })}
+              {/* As in drills: from the chart (symbols) you choose the voicing, from the staff (notes) you read it. */}
+              <Field label="Shown as">
+                <Segmented<'symbol' | 'notation'>
+                  label="Shown as"
+                  value={s.chords.notation ? 'notation' : 'symbol'}
+                  onChange={(shown) => update({ chords: { notation: shown === 'notation', source: 'pick' } })}
                   options={[
-                    { value: 'rh', label: 'RH', title: 'Right hand plays the chords' },
-                    { value: 'lh-bass', label: '+ LH root', title: 'Left hand plays the root, right hand the chord' },
+                    { value: 'symbol', label: 'Symbol', title: 'Play from the chord chart: symbols and numerals, your own voicing' },
+                    { value: 'notation', label: 'Notes', title: 'Read the voicings on the staff and play them' },
                   ]}
                 />
               </Field>
             </div>
+            {/* Only the staff says which hand plays what. Under symbols the choice stays in place, disabled, and the hint says why. */}
+            <Field label="Hands" hint={s.chords.notation ? 'What each hand plays is written on the staff.' : 'Off for symbols: any hand plays the chord.'}>
+              <Segmented<ChordHands>
+                label="Hands"
+                value={progressionHandsOf(s.chords.notation, s.chords.hands)}
+                disabled={!s.chords.notation}
+                onChange={(chordsHands) => update({ chords: { hands: chordsHands, source: 'pick' } })}
+                options={[
+                  { value: 'rh', label: 'RH', title: 'Right hand plays the chords' },
+                  { value: 'lh-bass', label: '+ LH root', title: 'Left hand plays the root, right hand the chord' },
+                ]}
+              />
+            </Field>
           </>
         )}
         {props.reviewing ? <ReviewNote mode={s.chords.mode} /> : null}
@@ -214,14 +226,6 @@ export function ChordsPanel(props: {
 
       <section className="section">
         <div className="section-title">Display</div>
-        {drill ? null : (
-          <Toggle
-            label="Play from the chord chart"
-            hint="Chord symbols and numerals only, so you choose the voicing and the hands."
-            checked={!s.chords.notation}
-            onChange={(chart) => update({ chords: { notation: !chart, source: 'pick' } })}
-          />
-        )}
         <Select<number>
           label="Mastery goal"
           value={goal}

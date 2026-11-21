@@ -80,7 +80,7 @@ export interface ChordSettings {
   source: 'pick' | 'review';
   /** Mastery goal in bpm (one chord per bar). */
   goalBpm: number;
-  /** Progressions: show the suggested voicing on the staff (off = play from the chord chart). */
+  /** Progressions: shown as notes on the staff (judged as written), or as symbols on the chord chart. */
   notation: boolean;
 }
 
