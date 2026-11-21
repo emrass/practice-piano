@@ -1,7 +1,7 @@
 import type { ChordOutcome, ChordsResult, ChordSummary } from '../eval/types';
 import { median } from '../eval/types';
 import type { ChordJudgment } from './engine';
-import { QUALITIES, type ChordQuality } from './catalog';
+import { drillHandsOf, QUALITIES, type ChordQuality } from './catalog';
 import { type ChordExercise, PC_NAMES } from './generator';
 import { minimalMovement, movement } from './voicing';
 
@@ -34,6 +34,8 @@ export function summarizeChords(ex: ChordExercise, judgments: readonly ChordJudg
   const { targets, item } = ex.chords;
   const flow = mode === 'flow';
   const byIndex = new Map(judgments.map((j) => [j.index, j]));
+  // Only notation drills read the chord in a clef; symbols and progressions say nothing about it.
+  const readHands = item.task === 'drill' && item.prompt === 'notation' ? drillHandsOf(item.prompt, item.drillHands) : undefined;
   const outcomes: ChordOutcome[] = targets.map((t) => {
     const j = byIndex.get(t.index);
     return {
@@ -41,6 +43,7 @@ export function summarizeChords(ex: ChordExercise, judgments: readonly ChordJudg
       quality: t.spec.quality,
       rootPc: pc(t.spec.root.midi),
       inversion: t.spec.inversion,
+      ...(readHands ? { readHands } : {}),
       correct: !!j?.correct,
       wrongBass: !!j?.wrongBass,
       reactionMs: j?.reactionMs,
@@ -137,7 +140,7 @@ export function chordResult(
   ctx: { mode: 'wait' | 'flow'; goalBpm: number; durationMs: number; wrongPresses: number; completedAt: number },
 ): ChordsResult {
   const chords = summarizeChords(ex, judgments, ctx.mode, ctx.goalBpm);
-  const size = (i: number) => ex.chords.targets[i].pcs.length + (ex.chords.targets[i].bassMidi !== null ? 1 : 0);
+  const size = (i: number) => ex.chords.targets[i].voicing.length + (ex.chords.targets[i].bassMidi !== null ? 1 : 0);
   const totalNotes = ex.chords.targets.reduce((a, _t, i) => a + size(i), 0);
   const correctNotes = chords.outcomes.reduce((a, o, i) => a + (o.correct ? size(i) : 0), 0);
   const hits = judgments.filter((j) => j.correct);
@@ -166,9 +169,12 @@ export function chordResult(
   };
 }
 
-/** "Diminished", "E♭ chords", "1st inversion" — a weak chord statistic in words. */
+const READ_HANDS_LABEL: Record<string, string> = { rh: 'Right-hand chords', lh: 'Left-hand chords', both: 'Chords on both staves' };
+
+/** "Diminished", "E♭ chords", "1st inversion", "Left-hand chords": a weak chord statistic in words. */
 export function weakChordLabel(w: { dimension: string; key: string }): string {
   if (w.dimension === 'chordQuality') return QUALITIES[w.key as ChordQuality]?.name ?? w.key;
   if (w.dimension === 'chordRoot') return `${PC_NAMES[Number(w.key)]} chords`;
+  if (w.dimension === 'chordHands') return READ_HANDS_LABEL[w.key] ?? w.key;
   return ['Root position', '1st inversion', '2nd inversion', '3rd inversion'][Number(w.key)] ?? w.key;
 }

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { chordItemId, type ChordItem, type ChordQuality, chordSpelling, findProgression, keysFor, parseChordItemId, PROGRESSIONS } from '../../core/chords/catalog';
+import { chordItemId, type ChordItem, type ChordQuality, chordSpelling, drillHandsOf, findProgression, keysFor, parseChordItemId, PROGRESSIONS } from '../../core/chords/catalog';
 import { type ChordFocus, generateChordExercise, initialChordBpm } from '../../core/chords/generator';
 import { findWeakChords } from '../../core/progress/chords';
 import type { ProgressState } from '../../core/progress/progress';
@@ -39,12 +39,12 @@ export function useChordsLesson(ctx: LessonContext, active: boolean): LessonRunt
     if (!active) return null;
     const picked = c.source === 'review' && rep.reviewPick ? parseChordItemId(rep.reviewPick) : null;
     if (picked) return picked;
-    if (c.task === 'drill') return { task: 'drill', set: c.set, prompt: c.prompt, inversions: c.inversions };
+    if (c.task === 'drill') return { task: 'drill', set: c.set, prompt: c.prompt, inversions: c.inversions, drillHands: drillHandsOf(c.prompt, c.drillHands) };
     const def = findProgression(c.progression) ?? PROGRESSIONS[0];
     const keys = keysFor(def.mode);
     const key = c.key === 'shuffle' ? (shuffleKey && keys.includes(shuffleKey) ? shuffleKey : keys[0]) : c.key;
     return { task: 'progression', progression: def.id, key, hands: c.hands };
-  }, [active, c.source, c.task, c.set, c.prompt, c.inversions, c.progression, c.key, c.hands, rep.reviewPick, shuffleKey]);
+  }, [active, c.source, c.task, c.set, c.prompt, c.inversions, c.drillHands, c.progression, c.key, c.hands, rep.reviewPick, shuffleKey]);
 
   const drillFocus = s.weakSpotFocus && item?.task === 'drill' ? focus : undefined;
   const exercise = useBuiltFor(

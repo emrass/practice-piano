@@ -22,10 +22,12 @@ function moveIndex(key: string, index: number, count: number): number {
 }
 
 /** SegmentedControl: a radiogroup; arrow keys move the selection, Tab leaves the group. */
-export function Segmented<T extends string | number>(props: { label: string; value: T; options: SegmentedOption<T>[]; onChange: (value: T) => void }) {
+/** `disabled`: the choice does not apply right now; it stays in place and the field's hint says why. */
+export function Segmented<T extends string | number>(props: { label: string; value: T; options: SegmentedOption<T>[]; onChange: (value: T) => void; disabled?: boolean }) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   const selected = props.options.findIndex((o) => o.value === props.value);
   const onKeyDown = (e: KeyboardEvent) => {
+    if (props.disabled) return;
     const next = moveIndex(e.key, Math.max(0, selected), props.options.length);
     if (next < 0) return;
     e.preventDefault();
@@ -45,6 +47,7 @@ export function Segmented<T extends string | number>(props: { label: string; val
           aria-checked={o.value === props.value}
           tabIndex={i === selected || (selected < 0 && i === 0) ? 0 : -1}
           title={o.title}
+          disabled={props.disabled}
           onClick={() => props.onChange(o.value)}
         >
           {o.label}

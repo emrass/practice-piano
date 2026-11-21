@@ -5,6 +5,7 @@ import {
   type ChordHands,
   type ChordPrompt,
   type ChordSetId,
+  type DrillHands,
   findProgression,
   type InversionRule,
   keysFor,
@@ -88,6 +89,20 @@ export function ChordsPanel(props: {
                 options={[8, 12, 16].map((n) => ({ value: n, label: `${n} chords` }))}
               />
             </div>
+            {/* Only notes are read in a clef. Under symbols the choice stays in place, disabled, and the hint says why. */}
+            <Field label="Hands" hint={s.chords.prompt === 'notation' ? 'The staff the chord is written on.' : 'Off for symbols: any hand plays the chord.'}>
+              <Segmented<DrillHands>
+                label="Hands"
+                value={s.chords.prompt === 'notation' ? s.chords.drillHands : 'rh'}
+                disabled={s.chords.prompt !== 'notation'}
+                onChange={(chordsHands) => update({ chords: { drillHands: chordsHands, source: 'pick' } })}
+                options={[
+                  { value: 'rh', label: 'RH', title: 'Right hand: the chord on the treble staff' },
+                  { value: 'lh', label: 'LH', title: 'Left hand: the chord on the bass staff' },
+                  { value: 'both', label: 'Both', title: 'Both hands: the bass note on the bass staff, the chord on the treble staff' },
+                ]}
+              />
+            </Field>
             <Select<InversionRule>
               label="Voicing"
               value={s.chords.inversions}
