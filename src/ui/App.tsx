@@ -12,7 +12,7 @@ import { inputBus } from '../input/inputBus';
 import { KeySound } from '../input/keySound';
 import { audioEngine } from '../platform/audio/audioEngine';
 import { MidiService } from '../platform/midi/midiService';
-import { isNativeApp } from '../platform/native';
+import { isNativeApp, reportTheme } from '../platform/native';
 import { setReloadGuard } from '../platform/serviceWorker';
 import { requestPersistentStorageOnce } from '../platform/storageProtection';
 import { KeyboardDock } from './components/KeyboardDock';
@@ -273,6 +273,8 @@ function Studio({ profile }: { profile: Profile }) {
     // The browser and status bar take the top bar's surface (see design/vitePlugin.ts).
     const surface = getComputedStyle(root).getPropertyValue('--surface-sheet').trim();
     if (surface) document.querySelector('meta[name="theme-color"]')?.setAttribute('content', surface);
+    // The Android app has no theme-color meta to read: it is told.
+    if (surface) reportTheme(s.theme === 'dark', surface);
   }, [s.theme]);
 
   const span = runtime.keyboard.span;

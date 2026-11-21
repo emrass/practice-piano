@@ -235,7 +235,7 @@ describe('chord engines', () => {
     expect(bassOnlyWrong(c, [43, 60, 64, 67])).toBe(true);
   });
 
-  it('Wait, + LH root: the right hand landing first does not count against a right chord (#74)', () => {
+  it('Wait, RH + LH bass: the right hand landing first does not count against a right chord (#74)', () => {
     const ts = generateChordExercise(prog('I-V-vi-IV', 'C', 'lh-bass'), opts, 1).chords.targets;
     expect(ts).toHaveLength(8);
     for (const gap of [15, 100, 2000, -15]) {

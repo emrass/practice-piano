@@ -5,6 +5,7 @@ import { LATENCY_PRESETS, type Settings, type SettingsPatch } from '../../core/s
 import { useStore } from '../../lib/store';
 import { audioEngine } from '../../platform/audio/audioEngine';
 import type { MidiService } from '../../platform/midi/midiService';
+import { nativePlatform } from '../../platform/native';
 import { useHeardNote } from '../hooks/useHeardNote';
 import { BrowserBluetoothHelp, ConnectionStatus, MidiButtons } from './MidiConnect';
 import { connectedInputs } from './midiStatus';
@@ -13,7 +14,7 @@ import { Dialog } from './Dialog';
 
 const BACKEND_TEXT = {
   webmidi: 'Web MIDI',
-  native: 'CoreMIDI (native app)',
+  native: nativePlatform() === 'android' ? 'Android MIDI (native app)' : 'CoreMIDI (native app)',
   none: 'No MIDI support',
 } as const;
 

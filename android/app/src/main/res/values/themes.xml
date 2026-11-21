@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.PracticePiano" parent="android:Theme.DeviceDefault.Light.NoActionBar">
+        <item name="android:windowBackground">@color/surface_sheet</item>
+        <item name="android:colorBackground">@color/surface_sheet</item>
+        <item name="android:colorAccent">@color/icon_edge</item>
+    </style>
+</resources>

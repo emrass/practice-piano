@@ -1,12 +1,13 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import type { NoteInput } from '../../core/input/events';
 import { InputBus } from '../../input/inputBus';
-import type { NativeMessage } from '../native';
+import { nativePlatform, reportTheme, saveFileNatively, type NativeMessage } from '../native';
 import { createMidiBackend, NativeMidiBackend, type MidiBackend, type MidiMessage } from './backends';
 import { MidiService } from './midiService';
 
 type G = typeof globalThis & {
   webkit?: unknown;
+  practicePianoAndroid?: unknown;
   __practicePianoNative?: { receive(msg: NativeMessage): void };
 };
 const g = globalThis as G;
@@ -18,8 +19,16 @@ function installFakeNative() {
   return { sent, receive: (msg: NativeMessage) => g.__practicePianoNative!.receive(msg) };
 }
 
+/** Fake of the WebMessageListener object the Android app injects: commands arrive as JSON text. */
+function installFakeAndroid() {
+  const sent: unknown[] = [];
+  g.practicePianoAndroid = { postMessage: (m: string) => sent.push(JSON.parse(m)) };
+  return { sent, receive: (msg: NativeMessage) => g.__practicePianoNative!.receive(msg) };
+}
+
 afterEach(() => {
   delete g.webkit;
+  delete g.practicePianoAndroid;
   delete g.__practicePianoNative;
 });
 
@@ -107,6 +116,47 @@ describe('NativeMidiBackend (CoreMIDI bridge)', () => {
     expect(native.sent).toContainEqual({ cmd: 'showBluetoothPairing' });
     await service.rescan();
     expect(native.sent).toContainEqual({ cmd: 'rescan' });
+  });
+});
+
+describe('NativeMidiBackend (Android MIDI bridge)', () => {
+  it('speaks the same protocol through the Android message listener', async () => {
+    const android = installFakeAndroid();
+    expect(nativePlatform()).toBe('android');
+    const backend = createMidiBackend();
+    expect(backend).toBeInstanceOf(NativeMidiBackend);
+    const bus = new InputBus();
+    const service = new MidiService(bus);
+    await service.init('auto', backend);
+    expect(android.sent).toContainEqual({ cmd: 'hello' });
+
+    android.receive({ type: 'inputs', inputs: [{ id: 'bt:AA:BB:CC:DD:EE:FF:0', name: 'FP-30X', manufacturer: 'Roland', online: true }] });
+    expect(service.state.get().inputs).toEqual([{ id: 'bt:AA:BB:CC:DD:EE:FF:0', name: 'FP-30X', manufacturer: 'Roland', connected: true }]);
+    android.receive({ type: 'midi', source: 'bt:AA:BB:CC:DD:EE:FF:0', data: [0x90, 60, 80] });
+    expect(bus.held.get().held).toEqual([60]);
+
+    service.pairBluetooth();
+    expect(android.sent).toContainEqual({ cmd: 'showBluetoothPairing' });
+  });
+
+  it('saves a file through the system picker and resolves with the outcome', async () => {
+    const android = installFakeAndroid();
+    const saving = saveFileNatively('backup.json', 'application/json', '{}');
+    const cmd = android.sent.at(-1) as { cmd: string; id: string };
+    expect(cmd).toMatchObject({ cmd: 'saveFile', name: 'backup.json', mimeType: 'application/json', text: '{}' });
+    android.receive({ type: 'fileSaved', id: 'other', status: 'failed' });
+    android.receive({ type: 'fileSaved', id: cmd.id, status: 'saved' });
+    await expect(saving).resolves.toBe('saved');
+  });
+
+  it('reports the theme only to the Android app', () => {
+    const apple = installFakeNative();
+    reportTheme(true, '#221e1a');
+    expect(apple.sent).toEqual([]);
+    delete g.webkit;
+    const android = installFakeAndroid();
+    reportTheme(true, '#221e1a');
+    expect(android.sent).toEqual([{ cmd: 'theme', dark: true, color: '#221e1a' }]);
   });
 });
 

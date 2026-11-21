@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Text follows design/system/guides/01-writing.md: sentence case, short sentences, no em dashes. -->
+<resources>
+    <string name="app_name">Practice Piano</string>
+
+    <string name="pairing_title">Bluetooth MIDI</string>
+    <string name="pairing_searching">Looking for Bluetooth MIDI pianos…</string>
+    <string name="pairing_hint">Switch on your piano and its Bluetooth. Tap it in the list to connect.</string>
+    <string name="pairing_none">No piano found yet. Check that its Bluetooth is on, then press Search again.</string>
+    <string name="pairing_search_again">Search again</string>
+    <string name="pairing_done">Done</string>
+    <string name="pairing_unnamed">Bluetooth MIDI device</string>
+    <string name="pairing_connecting">Connecting…</string>
+    <string name="pairing_connected">Connected</string>
+    <string name="pairing_failed">Could not connect. Tap to try again.</string>
+    <string name="pairing_tap">Tap to connect</string>
+
+    <string name="bluetooth_missing_title">No Bluetooth</string>
+    <string name="bluetooth_missing">This device has no Bluetooth. Connect your piano over USB instead.</string>
+    <string name="bluetooth_off">Bluetooth is off. Turn it on to pair your piano.</string>
+    <string name="permission_title">Allow nearby devices</string>
+    <string name="permission_nearby">To find your piano, Practice Piano needs the Nearby devices permission. Allow it in Settings, then pair again.</string>
+    <string name="permission_location">To find Bluetooth pianos, Android 10 and 11 need the Location permission. Allow it in Settings, then pair again.</string>
+    <string name="location_off_title">Turn on Location</string>
+    <string name="location_off">Android 10 and 11 only find Bluetooth devices while Location is on. Turn it on, then pair again.</string>
+    <string name="open_settings">Open settings</string>
+    <string name="close">Close</string>
+</resources>
