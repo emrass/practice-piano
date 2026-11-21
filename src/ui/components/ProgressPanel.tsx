@@ -4,7 +4,7 @@ import { dayKey, displayStreak, recentSummary, type ProgressState } from '../../
 import { timeStats } from '../../core/progress/rhythm';
 import type { Settings } from '../../core/settings';
 import { BackupError } from '../../persistence/profileRepository';
-import { isNativeApp } from '../../platform/native';
+import { isNativeApp, nativePlatform, saveFileNatively } from '../../platform/native';
 import { isAppleMobileBrowserTab, isStoragePersisted } from '../../platform/storageProtection';
 import { PROGRESS_VIEWS, pct } from '../progress';
 import { profileRepository } from '../state/useProfile';
@@ -49,11 +49,18 @@ export function ProgressPanel(props: {
       }
       return;
     }
+    const name = `practice-piano-backup-${dayKey(new Date())}.json`;
+    if (nativePlatform() === 'android') {
+      // A WebView has no downloads: the app saves the file where the person picks.
+      const status = await saveFileNatively(name, 'application/json', json);
+      if (status !== 'canceled') setMessage(status === 'saved' ? 'Backup saved.' : 'The backup could not be saved. Try Copy instead.');
+      return;
+    }
     const blob = new Blob([json], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `practice-piano-backup-${dayKey(new Date())}.json`;
+    a.download = name;
     document.body.appendChild(a);
     a.click();
     a.remove();

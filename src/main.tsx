@@ -1,5 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { installNativeHooks } from './platform/native';
 import { registerServiceWorker } from './platform/serviceWorker';
 import { App } from './ui/App';
 // Styles, one file per feature, each with its own media and container queries. They load in
@@ -23,6 +24,8 @@ import './styles/lessons/rhythm.css';
 import './styles/lessons/scales.css';
 import './styles/score.css';
 import './styles/keyboard.css';
+
+installNativeHooks();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
