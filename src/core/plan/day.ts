@@ -74,22 +74,49 @@ export function recordRun(day: PlanDay, run: { durationMs: number }, award: Pick
 
 export type BlockState = 'done' | 'skipped' | 'current' | 'next';
 
+/** A block that still has runs to play: not skipped, and short of its runs. */
+function isOpen(day: PlanDay, index: number): boolean {
+  return !day.runs[index].skipped && day.runs[index].done < day.blocks[index].exercises;
+}
+
+/** The first block in order that still has runs to play, or `blocks.length` when none has. */
+function firstOpen(day: PlanDay): number {
+  const index = day.blocks.findIndex((_, i) => isOpen(day, i));
+  return index < 0 ? day.blocks.length : index;
+}
+
 /** Where a block stands: played, left out, under way (or next to start), or still to come. */
 export function blockState(day: PlanDay, index: number): BlockState {
   if (index === day.at) return 'current';
-  if (index > day.at) return 'next';
-  return day.runs[index].skipped && day.runs[index].done === 0 ? 'skipped' : 'done';
+  const run = day.runs[index];
+  if (run.skipped) return run.done === 0 ? 'skipped' : 'done';
+  return run.done >= day.blocks[index].exercises ? 'done' : 'next';
 }
 
-/** On to the next block (or to the end). */
+/**
+ * On to the next block: the first one in order that still has runs to play (or the end). In
+ * order, not simply the one after: a block brought back after a skip comes before later ones.
+ */
 export function advance(day: PlanDay): PlanDay {
-  return isFinished(day) ? day : { ...day, at: day.at + 1 };
+  return isFinished(day) ? day : { ...day, at: firstOpen(day) };
 }
 
 /** Leave the block under way out of today's plan. Runs already played in it stay counted. */
 export function skipBlock(day: PlanDay): PlanDay {
   if (isFinished(day)) return day;
-  return { ...day, runs: day.runs.map((r, i) => (i === day.at ? { ...r, skipped: true } : r)), at: day.at + 1 };
+  const skipped = { ...day, runs: day.runs.map((r, i) => (i === day.at ? { ...r, skipped: true } : r)) };
+  return { ...skipped, at: firstOpen(skipped) };
+}
+
+/**
+ * Bring a skipped block back into today's plan, with the runs it already has. It takes its
+ * place in the order again, so it is the next block if nothing before it is still to play.
+ * A plan that was finished is under way again.
+ */
+export function restoreBlock(day: PlanDay, index: number): PlanDay {
+  if (!day.runs[index]?.skipped) return day;
+  const restored = { ...day, runs: day.runs.map((r, i) => (i === index ? { ...r, skipped: false } : r)) };
+  return { ...restored, at: firstOpen(restored) };
 }
 
 /** Minutes of the plan that are played, by the blocks' estimates (a skipped block leaves the plan). */

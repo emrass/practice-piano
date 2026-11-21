@@ -382,6 +382,7 @@ function Studio({ profile }: { profile: Profile }) {
               inert={calibrating || setupOpen || settingsOpen}
               onStart={startPlanBlock}
               onSkip={skipPlanBlock}
+              onRestore={plan.restore}
               onFreePractice={() => plan.setOpen(false)}
             />
           ) : (

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { advance, blockOutcome, dayTotals, isBlockDone, isFinished, isStarted, newDay, normalizePlanDay, planMinutes, recordRun, skipBlock } from './day';
+import { advance, blockOutcome, blockState, dayTotals, isBlockDone, isFinished, isStarted, newDay, normalizePlanDay, planMinutes, recordRun, restoreBlock, skipBlock } from './day';
 import type { PlanBlock } from './planner';
 
 const blocks: PlanBlock[] = [
@@ -48,6 +48,54 @@ describe('today’s plan', () => {
     expect(isFinished(day)).toBe(true);
     expect(blockOutcome(blocks[1], day.runs[1])).toBe('1 of 1 passed. Rest skipped.');
     expect(planMinutes(day)).toEqual({ done: 2, planned: 2 });
+  });
+});
+
+describe('a skipped block', () => {
+  const three: PlanBlock[] = [...blocks, { lesson: 'ear', start: 'plain', level: 13, exercises: 1, minutes: 2, reason: 'Level 13.' }];
+
+  it('comes back as the next block when nothing before it is still to play', () => {
+    let day = skipBlock(newDay('2026-11-21', 10, three));
+    expect(day.at).toBe(1);
+    day = restoreBlock(day, 0);
+    expect(day.at).toBe(0);
+    expect(blockState(day, 0)).toBe('current');
+    expect(day.runs[0].skipped).toBe(false);
+    expect(planMinutes(day).planned).toBe(9);
+  });
+
+  it('keeps its place in the order, and the runs it already has', () => {
+    // Block 1 played, block 2 skipped after one run, block 3 under way.
+    let day = recordRun(recordRun(newDay('2026-11-21', 10, three), run, pass), run, pass);
+    day = skipBlock(recordRun(advance(day), run, pass));
+    expect(day.at).toBe(2);
+    expect(blockState(day, 1)).toBe('done');
+    day = restoreBlock(day, 1);
+    // Back before block 3, one run short.
+    expect(day.at).toBe(1);
+    expect(day.runs[1]).toMatchObject({ done: 1, skipped: false });
+    expect(blockState(day, 2)).toBe('next');
+    // Played out, the plan goes on to block 3.
+    day = advance(recordRun(day, run, pass));
+    expect(day.at).toBe(2);
+  });
+
+  it('brought back after the end puts the plan under way again', () => {
+    let day = skipBlock(skipBlock(skipBlock(newDay('2026-11-21', 10, three))));
+    expect(isFinished(day)).toBe(true);
+    day = restoreBlock(day, 1);
+    expect(isFinished(day)).toBe(false);
+    expect(day.at).toBe(1);
+    expect(blockState(day, 0)).toBe('skipped');
+    // Played, the plan is finished again: the other two stay skipped.
+    day = advance(recordRun(recordRun(day, run, pass), run, pass));
+    expect(isFinished(day)).toBe(true);
+  });
+
+  it('leaves a block alone that was not skipped', () => {
+    const day = newDay('2026-11-21', 10, three);
+    expect(restoreBlock(day, 1)).toBe(day);
+    expect(restoreBlock(day, 9)).toBe(day);
   });
 });
 

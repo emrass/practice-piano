@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import type { ExerciseResult } from '../../core/eval/types';
 import { LESSONS, type LessonId } from '../../core/lessons';
-import { advance, isBlockDone, isFinished, isStarted, newDay, normalizePlanDay, recordRun, skipBlock, type PlanDay } from '../../core/plan/day';
+import { advance, isBlockDone, isFinished, isStarted, newDay, normalizePlanDay, recordRun, restoreBlock, skipBlock, type PlanDay } from '../../core/plan/day';
 import { blockPatch, buildPlan, type PlanBlock, type PlanPrefs } from '../../core/plan/planner';
 import { dayKey, type Award, type ProgressState } from '../../core/progress/progress';
 import type { LessonSettings, Settings, SettingsPatch } from '../../core/settings';
@@ -83,6 +83,8 @@ export interface Plan {
   /** Back to the plan page. */
   toPage: () => void;
   skip: () => void;
+  /** Bring a skipped block back into today's plan. */
+  restore: (index: number) => void;
   setPrefs: (prefs: PlanPrefs) => void;
   /** A finished run and what it earned. */
   record: (result: ExerciseResult, award: Award) => void;
@@ -192,6 +194,7 @@ export function usePlan(opts: { settings: Settings; progressRef: RefObject<Progr
       return { ...prev, day, playing: prev.playing && !isFinished(day) };
     });
   }, [commit]);
+  const restore = useCallback((index: number) => commit((prev) => (prev.day ? { ...prev, day: restoreBlock(prev.day, index) } : prev)), [commit]);
   const setPrefs = useCallback(
     (prefs: PlanPrefs) => {
       updateSettings({ plan: prefs });
@@ -240,5 +243,5 @@ export function usePlan(opts: { settings: Settings; progressRef: RefObject<Progr
     [block, blockDone, upNext],
   );
 
-  return { open, day, playing, block, blockNow, settings, update, setOpen, start, toPage, skip, setPrefs, record, continuation, canMoveOn, next, replaced };
+  return { open, day, playing, block, blockNow, settings, update, setOpen, start, toPage, skip, restore, setPrefs, record, continuation, canMoveOn, next, replaced };
 }

@@ -25,6 +25,8 @@ export function PlanPage(props: {
   inert: boolean;
   onStart: () => void;
   onSkip: () => void;
+  /** Bring a skipped block back. */
+  onRestore: (index: number) => void;
   onFreePractice: () => void;
 }) {
   const { day, progress, onStart } = props;
@@ -93,7 +95,15 @@ export function PlanPage(props: {
                   <span className="visually-hidden">{state === 'done' ? ', done' : state === 'skipped' ? ', skipped' : current ? ', next' : ''}</span>
                 </span>
                 <span className="plan-block-side num">
-                  {state === 'done' || (current && run.done > 0) ? <Pips done={run.done} total={Math.max(block.exercises, run.done)} /> : state === 'skipped' ? null : `${block.minutes} min`}
+                  {run.skipped ? (
+                    <button type="button" className="btn btn-sm" onClick={() => props.onRestore(i)} title="Put this block back in today's plan.">
+                      Bring back<span className="visually-hidden"> {LESSON_WORDS[block.lesson]}</span>
+                    </button>
+                  ) : run.done > 0 ? (
+                    <Pips done={run.done} total={Math.max(block.exercises, run.done)} />
+                  ) : (
+                    `${block.minutes} min`
+                  )}
                 </span>
                 <span className="plan-block-why">{state === 'done' || state === 'skipped' ? blockOutcome(block, run) : block.reason}</span>
                 {current ? (

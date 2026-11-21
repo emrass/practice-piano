@@ -114,6 +114,11 @@ test.describe("Today's practice", () => {
     const blocks = page.locator('.plan-list > li');
     await expect(blocks.nth(0)).toHaveClass(/is-skipped/);
     await expect(blocks.nth(0)).toContainText('Skipped.');
+    // A skip can be taken back: the block is in the plan again, in its place, and next.
+    await page.getByRole('button', { name: 'Bring back scales' }).click();
+    await expect(blocks.nth(0)).toHaveAttribute('aria-current', 'step');
+    await expect(page.getByRole('button', { name: /Start scales/ })).toBeFocused();
+    await page.getByRole('button', { name: 'Skip block' }).click();
     await page.getByRole('button', { name: /Start sight reading/ }).click();
     await app.playSteps();
     await expect(app.results()).toBeVisible();
@@ -126,6 +131,22 @@ test.describe("Today's practice", () => {
       await expect(page.locator('.plan-steps')).toBeVisible({ timeout: 300 });
     }).toPass({ timeout: 5000 });
     await expect(page.locator('.plan-steps > li').nth(1).locator('.pips > i.is-done')).toHaveCount(1);
+  });
+
+  test('A block brought back after the plan is finished puts it under way again', async ({ app, page }) => {
+    await app.open({ settings: today() });
+    await page.getByRole('button', { name: 'Skip block' }).click();
+    await page.getByRole('button', { name: 'Skip block' }).click();
+    await expect(page.locator('.plan-title')).toHaveText('Done for today');
+    await page.getByRole('button', { name: 'Bring back sight reading' }).click();
+    await expect(page.locator('.plan-title')).toHaveText("Today's practice");
+    const blocks = page.locator('.plan-list > li');
+    await expect(blocks.nth(0)).toHaveClass(/is-skipped/);
+    await expect(blocks.nth(1)).toHaveAttribute('aria-current', 'step');
+    // It is kept: a reload shows the same plan.
+    await page.reload();
+    await expect(page.getByRole('button', { name: /Start sight reading/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Bring back scales' })).toBeVisible();
   });
 
   test('The length and the lessons make the plan until it is under way', async ({ app, page }) => {

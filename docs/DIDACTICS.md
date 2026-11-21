@@ -394,7 +394,8 @@ the time that frees goes to the other blocks, sight reading first. Minutes are e
 **Playing it.** Every finished run counts, a repeat of the same exercise too: repeating is
 practice. Until a block has its runs the lesson's own way on leads ("New exercise", "Again",
 "Next due item"); then the way on is the next block, on the button, on Enter and on the piano's
-D. A block can be skipped, and the plan can be left and picked up again the same day.
+D. A block can be skipped and brought back later the same day, and the plan can be left and
+picked up again. A block that is brought back takes its place in the order again.
 
 **Today only.** What the player changes during a block (a level harder, the other hand, Wait
 instead of Flow) stays in that block. The lesson's own settings in free practice are as they
