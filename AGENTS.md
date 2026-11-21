@@ -6,6 +6,7 @@
 
 The design system in `design/` is the source of truth for how the app looks, behaves and reads.
 Read `design/README.md` and `design/system/README.md` before changing UI.
+Call areas and parts of the screen by their names in `docs/ui-map.md`.
 
 - Use tokens (`var(--…)`) for every color, type size, spacing step, radius, shadow and duration.
   Do not add literal values; if no token fits, add one in `design/system/tokens.json` with a

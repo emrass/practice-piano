@@ -21,6 +21,11 @@ Lessons:
 The didactic concept behind the lessons (and the planned ones) is in
 [docs/DIDACTICS.md](docs/DIDACTICS.md).
 
+![The app's screen with its areas labeled: top bar, sidebar, meta strip, score, practice bar and keyboard](docs/ui-map/ui-map-areas.png)
+
+The areas of the screen, and the names of the parts inside them, are in
+[docs/ui-map.md](docs/ui-map.md). Use those names in issues and pull requests.
+
 It runs in two ways:
 
 | | Desktop browser | iPadOS / macOS app |
@@ -70,6 +75,7 @@ keyboard guide and a menu for note names on the keys, computer-key hints and the
 | `npm run build:native` | production build into `native/PracticePiano/Web` |
 | `npm run check` | all of the above, in order |
 | `npm run e2e` | browser tests (Playwright): each lesson played end to end through a fake MIDI piano |
+| `npm run ui-map` | retake the labeled screenshots in `docs/ui-map/` ([docs/ui-map.md](docs/ui-map.md)) |
 
 The browser tests need Chromium once: `npx playwright install chromium`. Where that download
 is not possible, point `PLAYWRIGHT_CHROMIUM_PATH` at an installed Chromium. CI (`checks.yml`)
@@ -201,7 +207,7 @@ src/
 design/          design system: tokens, component styles and guidelines (see design/README.md)
 e2e/             browser tests: fake Web MIDI piano, seeded profile, one spec per lesson + layout
 native/          Xcode project (SwiftUI + WKWebView + CoreMIDI + CoreAudioKit)
-docs/            architecture, native build guide, requirements, didactic concept
+docs/            architecture, native build guide, requirements, didactic concept, UI map
 ```
 
 More detail: **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
