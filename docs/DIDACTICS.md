@@ -225,8 +225,11 @@ patterns, modes, exam-style stages, LH fingering for black-key arpeggios.
   Hands (notation only, since a symbol can be played with any hand): **RH** writes the chord on
   the treble staff around middle C; **LH** writes it on the bass staff (from F2, within a ledger
   line or two); **RH + LH bass** (as *+ LH root* in progressions) writes the bass note on the bass
-  staff (the root, or the inversion's bass) and the other chord tones in close position on the
-  treble staff, none doubled. Reading the clef
+  staff (the root, or the inversion's bass) and the whole chord in close root position on the
+  treble staff (C/G: G under C–E–G); **Both** (hands together, as in technique exams) writes the
+  same close voicing and inversion in each hand, an octave apart, the left hand from G2 and the
+  right hand from G3. Both hands' keys are written, so the chord is complete only when both hands
+  are down. Reading the clef
   is part of the task, so each hand is its own item; right-hand drills keep their earlier id and
   progress.
 - **Progression** — *progression × key × hands*, or *progression × key* from the chart. Library: I–IV–V–I, I–V–vi–IV, I–vi–IV–V,
@@ -274,7 +277,7 @@ nothing to score. Results list the chords to look at (missed, wrong bass, slow,
 early / late, rolled).
 
 **Weak spots.** Shared tags `chordQuality`, `chordRoot` (pitch class) and `chordInversion`
-(accuracy, reaction, timing), and `chordHands` (rh / lh / lh-bass) for chords read from notation only:
+(accuracy, reaction, timing), and `chordHands` (rh / lh / lh-bass / both) for chords read from notation only:
 symbols and progressions say nothing about reading in a clef. Weak-spot focus draws more of the
 weak qualities and roots in drills; a weak reading hand is shown, not drawn, as the hand is fixed
 per drill.

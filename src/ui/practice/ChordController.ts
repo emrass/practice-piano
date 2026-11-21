@@ -280,7 +280,7 @@ export class ChordController extends SessionBase {
 function targetKeys(ex: ChordExercise, i: number): number[] {
   const t = ex.chords.targets[i];
   if (!t) return [];
-  return t.bassMidi !== null ? [t.bassMidi, ...t.voicing] : [...t.voicing];
+  return [...(t.lhChord ?? []), ...(t.bassMidi !== null ? [t.bassMidi] : []), ...t.voicing];
 }
 
 /**
