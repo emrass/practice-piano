@@ -28,7 +28,7 @@ export interface Aggregate {
  * 'beatPosition' (downbeat / beat / offbeat / sixteenth); Rhythm also 'rhythmHand' and
  * 'rhythmTexture'. Scales record 'scaleKey'; chords 'chordQuality' (maj, m7…), 'chordRoot'
  * (pitch class "0"–"11"), 'chordInversion' ("0"–"3") and, for chords read from notation,
- * 'chordHands' ("rh", "lh", "lh-bass").
+ * 'chordHands' ("rh", "lh", "lh-bass", "both").
  */
 export type StatDimension =
   | 'note'

@@ -134,7 +134,10 @@ export function chordResult(
   ctx: { mode: 'wait' | 'flow'; goalBpm: number; durationMs: number; wrongPresses: number; completedAt: number },
 ): ChordsResult {
   const chords = summarizeChords(ex, judgments, ctx.mode, ctx.goalBpm);
-  const size = (i: number) => ex.chords.targets[i].voicing.length + (ex.chords.targets[i].bassMidi !== null ? 1 : 0);
+  const size = (i: number) => {
+    const t = ex.chords.targets[i];
+    return t.voicing.length + (t.bassMidi !== null ? 1 : 0) + (t.lhChord?.length ?? 0);
+  };
   const totalNotes = ex.chords.targets.reduce((a, _t, i) => a + size(i), 0);
   const correctNotes = chords.outcomes.reduce((a, o, i) => a + (o.correct ? size(i) : 0), 0);
   const hits = judgments.filter((j) => j.correct);
@@ -163,7 +166,7 @@ export function chordResult(
   };
 }
 
-const READ_HANDS_LABEL: Record<string, string> = { rh: 'Right-hand chords', lh: 'Left-hand chords', 'lh-bass': 'Chords over a left-hand bass' };
+const READ_HANDS_LABEL: Record<string, string> = { rh: 'Right-hand chords', lh: 'Left-hand chords', 'lh-bass': 'Chords over a left-hand bass', both: 'Chords hands together' };
 
 /** "Diminished", "E♭ chords", "1st inversion", "Left-hand chords": a weak chord statistic in words. */
 export function weakChordLabel(w: { dimension: string; key: string }): string {

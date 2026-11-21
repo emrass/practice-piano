@@ -4,12 +4,13 @@ interface Target {
   symbol: string;
   voicing: number[];
   bassMidi: number | null;
+  lhChord: number[] | null;
   pcs: number[];
   bassPc: number | null;
 }
 
 const targets = (ex: Record<string, unknown>) =>
-  (ex.chords as { targets: Target[] }).targets.map((t) => ({ symbol: t.symbol, voicing: t.voicing, bassMidi: t.bassMidi, pcs: t.pcs, bassPc: t.bassPc }));
+  (ex.chords as { targets: Target[] }).targets.map((t) => ({ symbol: t.symbol, voicing: t.voicing, bassMidi: t.bassMidi, lhChord: t.lhChord, pcs: t.pcs, bassPc: t.bassPc }));
 
 test.describe('Chords & progressions', () => {
   test('Drill (Wait): any octave counts, a wrong key first is noted, the chart shows symbols', async ({ app, page }) => {
@@ -71,10 +72,31 @@ test.describe('Chords & progressions', () => {
     const hands = page.getByRole('radiogroup', { name: 'Hands' });
     await expect(hands.getByRole('radio', { name: 'RH + LH bass' })).toHaveAttribute('aria-checked', 'true');
     expect(await app.exercise((ex) => ex.staves)).toEqual(['treble', 'bass']);
-    await expect(page.locator('.meta-strip')).toContainText('Both staves');
-    // The left hand plays the bass the slash chord asks for, the right hand the chord above it.
+    await expect(page.locator('.meta-strip')).toContainText('Bass + chord');
+    // The left hand plays the bass the slash chord asks for, the right hand the whole chord above it.
     const ts = await app.exercise(targets);
     for (const t of ts) await app.tap([t.bassMidi!, ...t.voicing]);
+    await expect(app.results()).toBeVisible();
+    await expect(app.results()).toContainText('8/8');
+  });
+
+  test('Drill hands together: one hand alone does not advance; both hands, in either order, end 8/8', async ({ app, page }) => {
+    await app.open({ settings: { lesson: 'chords', chords: { task: 'drill', set: 'triads', prompt: 'notation', inversions: 'inversions', drillHands: 'both', mode: 'wait' } } });
+    await expect(page.getByRole('radiogroup', { name: 'Hands' }).getByRole('radio', { name: 'Both' })).toHaveAttribute('aria-checked', 'true');
+    expect(await app.exercise((ex) => ex.staves)).toEqual(['treble', 'bass']);
+    await expect(page.locator('.meta-strip')).toContainText('Both hands');
+    const ts = await app.exercise(targets);
+    // The right hand alone has every note name, but the left hand's chord is written too: one hand
+    // at a time is not the chord, and not a wrong key either (the run below still ends 8/8).
+    await app.tap(ts[0].voicing);
+    await app.tap(ts[0].lhChord!);
+    await expect(page.locator('.practice-message')).not.toContainText('bass');
+    for (const [i, t] of ts.entries()) {
+      const [first, second] = i % 2 ? [t.lhChord!, t.voicing] : [t.voicing, t.lhChord!];
+      await app.noteOn(first);
+      await app.noteOn(second);
+      await app.noteOff([...first, ...second]);
+    }
     await expect(app.results()).toBeVisible();
     await expect(app.results()).toContainText('8/8');
   });
@@ -87,7 +109,7 @@ test.describe('Chords & progressions', () => {
     const voicing = page.getByLabel('Voicing');
     const before = await voicing.boundingBox();
     await page.getByRole('radiogroup', { name: 'Shown as' }).getByRole('radio', { name: 'Symbol' }).click();
-    await expect(hands.getByRole('radio')).toHaveCount(3);
+    await expect(hands.getByRole('radio')).toHaveCount(4);
     for (const radio of await hands.getByRole('radio').all()) await expect(radio).toBeDisabled();
     await expect(hands.getByRole('radio', { name: 'RH', exact: true })).toHaveAttribute('aria-checked', 'true');
     await expect(page.getByText('Off for symbols: any hand plays the chord.')).toBeVisible();

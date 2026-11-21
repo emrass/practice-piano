@@ -43,7 +43,7 @@ describe('chord catalog', () => {
   it('item ids round-trip', () => {
     const items: ChordItem[] = [
       ...CHORD_SET_IDS.map((set) => drill({ set, prompt: 'notation', inversions: 'inversions' })),
-      ...(['rh', 'lh', 'lh-bass'] as const).map((drillHands) => drill({ prompt: 'notation', drillHands })),
+      ...(['rh', 'lh', 'lh-bass', 'both'] as const).flatMap((drillHands) => [drill({ prompt: 'notation', drillHands }), drill({ prompt: 'notation', inversions: 'inversions', drillHands })]),
       ...PROGRESSIONS.flatMap((p) => keysFor(p.mode).flatMap((k) => [prog(p.id, k, 'lh-bass'), prog(p.id, k, 'rh', false)])),
     ];
     for (const item of items) expect(parseChordItemId(chordItemId(item))).toEqual(item);
@@ -64,6 +64,8 @@ describe('chord catalog', () => {
     expect(parseChordItemId('chords/drill/triads/notation/root')).toEqual(drill({ prompt: 'notation' }));
     expect(chordItemId(drill({ prompt: 'notation', drillHands: 'lh' }))).toBe('chords/drill/triads/notation/root/lh');
     expect(chordItemId(drill({ prompt: 'notation', drillHands: 'lh-bass' }))).toBe('chords/drill/triads/notation/root/lh-bass');
+    expect(chordItemId(drill({ prompt: 'notation', inversions: 'inversions', drillHands: 'both' }))).toBe('chords/drill/triads/notation/inversions/both');
+    expect(chordItemId(drill({ drillHands: 'both' }))).toBe('chords/drill/triads/symbol/root');
     // Symbols are played with any hand: one item, whatever the setting says.
     expect(chordItemId(drill({ drillHands: 'lh' }))).toBe('chords/drill/triads/symbol/root');
     expect(parseChordItemId('chords/drill/triads/symbol/root/lh')).toBeNull();
@@ -157,7 +159,7 @@ describe('chord exercises', () => {
     }
   });
 
-  it('writes LH-bass drill chords as a bass note under the other chord tones', () => {
+  it('writes LH-bass drill chords as a bass note under the whole chord in the right hand', () => {
     for (const inversions of ['root', 'inversions'] as const) {
       const ex = generateChordExercise(drill({ set: 'all-triads', prompt: 'notation', inversions, drillHands: 'lh-bass' }), { bpm: 60, count: 16 }, 9);
       expect(ex.staves).toEqual(['treble', 'bass']);
@@ -167,16 +169,43 @@ describe('chord exercises', () => {
         expect(m.rh[0].pitches.map((p) => p.midi)).toEqual(t.voicing);
         expect(m.lh[0].pitches.map((p) => p.midi)).toEqual([t.bassMidi]);
         // The left hand plays the bass the rule asks for (the root under root position); the right
-        // hand the other tones, none doubled.
+        // hand the whole chord in close root position (C/G: G under C–E–G).
         const bassPc = t.bassMidi! % 12;
         expect(bassPc).toBe(inversions === 'inversions' ? t.bassPc : t.spec.root.midi % 12);
-        expect(t.voicing).toHaveLength(t.pcs.length - 1);
-        expect(t.voicing.map((k) => k % 12)).not.toContain(bassPc);
-        expect(new Set(t.voicing.map((k) => k % 12)).size).toBe(t.voicing.length);
+        expect(t.voicing).toEqual(closeVoicing(t.pcs, t.spec.root.midi % 12, 57));
+        expect(t.lhChord).toBeNull();
         expect(t.bassMidi!).toBeLessThan(52);
         expect(t.bassMidi!).toBeLessThan(t.voicing[0]);
         expect(matches(t, [t.bassMidi!, ...t.voicing])).toBe(true);
       });
+    }
+  });
+
+  it('writes hands-together drill chords in both hands, an octave apart', () => {
+    for (const inversions of ['root', 'inversions'] as const) {
+      const ex = generateChordExercise(drill({ set: 'all-sevenths', prompt: 'notation', inversions, drillHands: 'both' }), { bpm: 60, count: 16 }, 5);
+      expect(ex.staves).toEqual(['treble', 'bass']);
+      expect(ex.hands).toBe('both');
+      ex.measures.forEach((m) => {
+        const t = ex.chords.targets[m.index];
+        expect(m.rh[0].pitches.map((p) => p.midi)).toEqual(t.voicing);
+        expect(m.lh[0].pitches.map((p) => p.midi)).toEqual(t.lhChord);
+        expect(m.rh[0].symbol).toBeUndefined();
+        expect(t.bassMidi).toBeNull();
+        // The same close voicing (and inversion) in each hand, the right hand an octave higher.
+        expect(t.voicing).toEqual(t.lhChord!.map((k) => k + 12));
+        expect(t.lhChord![0] % 12).toBe(inversions === 'inversions' ? t.bassPc : t.spec.root.midi % 12);
+        expect(t.lhChord).toEqual(closeVoicing(t.pcs, t.lhChord![0] % 12, 43));
+        expect(t.written).toEqual([...t.lhChord!, ...t.voicing]);
+        // Left hand from G2, right hand from G3.
+        expect(t.lhChord![0]).toBeGreaterThanOrEqual(43);
+        expect(t.lhChord![0]).toBeLessThan(55);
+        // Either hand alone is not the chord.
+        expect(matches(t, t.voicing)).toBe(false);
+        expect(matches(t, t.lhChord!)).toBe(false);
+        expect(matches(t, [...t.lhChord!, ...t.voicing])).toBe(true);
+      });
+      expect(ex.range.min).toBeGreaterThanOrEqual(43);
     }
   });
 
@@ -227,6 +256,44 @@ describe('chord engines', () => {
       expect(w.wrongPresses).toBe(0);
       expect(types.filter((t) => t === 'bass' || t === 'wrong')).toEqual([]);
     }
+  });
+
+  it('Wait, hands together: the chord counts once both hands are down, in either order', () => {
+    const ts = generateChordExercise(drill({ set: 'all-triads', prompt: 'notation', inversions: 'inversions', drillHands: 'both' }), opts, 2).chords.targets;
+    for (const gap of [15, 400, -15, -400]) {
+      const w = new ChordWaitEngine(ts);
+      w.start(0);
+      const types: string[] = [];
+      ts.forEach((t, i) => {
+        const at = 10000 * (i + 1);
+        // gap > 0: the right hand lands first; < 0: the left hand does.
+        const [first, second] = gap > 0 ? [t.voicing, t.lhChord!] : [t.lhChord!, t.voicing];
+        for (const k of first) types.push(w.noteOn(k, at).type);
+        expect(w.index).toBe(i); // one hand alone is not complete yet
+        for (const k of second) types.push(w.noteOn(k, at + Math.abs(gap)).type);
+        expect(w.index).toBe(i + 1);
+        for (const k of t.written!) w.noteOff(k, at + 5000);
+      });
+      expect(w.finished).toBe(true);
+      expect(w.results.filter((j) => j.correct)).toHaveLength(8);
+      expect(types.filter((t) => t === 'bass' || t === 'wrong')).toEqual([]);
+    }
+  });
+
+  it('Wait, RH + LH bass drill: the full right-hand chord landing first is still right first time', () => {
+    const ts = generateChordExercise(drill({ set: 'triads', prompt: 'notation', inversions: 'root', drillHands: 'lh-bass' }), opts, 3).chords.targets;
+    const w = new ChordWaitEngine(ts);
+    w.start(0);
+    ts.forEach((t, i) => {
+      const at = 10000 * (i + 1);
+      // The right hand doubles the bass note's name: it must not complete the chord alone.
+      t.voicing.forEach((k) => w.noteOn(k, at));
+      expect(w.index).toBe(i);
+      expect(w.noteOn(t.bassMidi!, at + 100).type).toBe('match');
+      [t.bassMidi!, ...t.voicing].forEach((k) => w.noteOff(k, at + 5000));
+    });
+    expect(w.results.filter((j) => j.correct)).toHaveLength(8);
+    expect(w.wrongPresses).toBe(0);
   });
 
   it('Wait, from the staff: a chord tone under the written bass is a wrong bass, other keys are wrong', () => {
@@ -433,7 +500,8 @@ describe('chord analysis and progress', () => {
     expect(normalizeSettings({}).chords.drillHands).toBe('rh');
     expect(normalizeSettings({ chords: { drillHands: 'lh' } }).chords.drillHands).toBe('lh');
     expect(normalizeSettings({ chords: { drillHands: 'lh-bass' } }).chords.drillHands).toBe('lh-bass');
-    expect(normalizeSettings({ chords: { drillHands: 'both' } }).chords.drillHands).toBe('rh');
+    expect(normalizeSettings({ chords: { drillHands: 'all' } }).chords.drillHands).toBe('rh');
+    expect(normalizeSettings({ chords: { drillHands: 'both' } }).chords.drillHands).toBe('both');
   });
 });
 

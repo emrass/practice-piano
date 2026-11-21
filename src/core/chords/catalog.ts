@@ -105,11 +105,11 @@ export type InversionRule = 'any' | 'root' | 'inversions';
 /**
  * Notation drills: which hand the chord is written for. Right hand on the treble staff, left
  * hand on the bass staff, or the right hand over a left-hand bass note: the bass on the bass staff
- * (the root, or the inversion's bass), the other chord tones on the treble staff.
- * Symbol drills are always 'rh' (any hand may play a chord read from its name).
+ * (the root, or the inversion's bass), the whole chord on the treble staff; or both hands playing
+ * the whole chord, an octave apart (hands together). Symbol drills are always 'rh' (any hand may play a chord read from its name).
  */
-export type DrillHands = 'rh' | 'lh' | 'lh-bass';
-export const DRILL_HANDS: readonly DrillHands[] = ['rh', 'lh', 'lh-bass'];
+export type DrillHands = 'rh' | 'lh' | 'lh-bass' | 'both';
+export const DRILL_HANDS: readonly DrillHands[] = ['rh', 'lh', 'lh-bass', 'both'];
 
 // ---------------------------------------------------------------------------------------
 // Progressions
@@ -228,7 +228,7 @@ export function parseChordItemId(id: string): ChordItem | null {
     const [, , set, prompt, inversions, hands, ...rest] = parts;
     if (!(set in CHORD_SETS) || !['symbol', 'notation'].includes(prompt) || !['any', 'root', 'inversions'].includes(inversions) || rest.length) return null;
     // Only notation drills have a hands segment, and only when it is not the right hand.
-    if (hands !== undefined && (prompt !== 'notation' || !['lh', 'lh-bass'].includes(hands))) return null;
+    if (hands !== undefined && (prompt !== 'notation' || !['lh', 'lh-bass', 'both'].includes(hands))) return null;
     // Notation shows one voicing: "any voicing" is for symbols only.
     if (prompt === 'notation' && inversions === 'any') return null;
     return { task: 'drill', set: set as ChordSetId, prompt: prompt as ChordPrompt, inversions: inversions as InversionRule, drillHands: (hands ?? 'rh') as DrillHands };
@@ -245,7 +245,7 @@ export function parseChordItemId(id: string): ChordItem | null {
 }
 
 const INVERSION_TEXT: Record<InversionRule, string> = { any: 'any voicing', root: 'root position', inversions: 'inversions' };
-const DRILL_HANDS_TEXT: Record<DrillHands, string> = { rh: 'right hand', lh: 'left hand', 'lh-bass': 'LH bass' };
+const DRILL_HANDS_TEXT: Record<DrillHands, string> = { rh: 'right hand', lh: 'left hand', 'lh-bass': 'LH bass', both: 'hands together' };
 
 export function chordItemTitle(item: ChordItem): string {
   if (item.task === 'drill') {

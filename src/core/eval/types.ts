@@ -128,7 +128,7 @@ export interface ChordOutcome {
   rootPc: number;
   inversion: number;
   /** Notation drills: the hand the chord was written for (reading it in that clef is the task). */
-  readHands?: 'rh' | 'lh' | 'lh-bass';
+  readHands?: 'rh' | 'lh' | 'lh-bass' | 'both';
   correct: boolean;
   /** Right notes but the wrong one in the bass. */
   wrongBass: boolean;
