@@ -99,7 +99,7 @@ export function ChordsPanel(props: {
                 options={[
                   { value: 'rh', label: 'RH', title: 'Right hand: the chord on the treble staff' },
                   { value: 'lh', label: 'LH', title: 'Left hand: the chord on the bass staff' },
-                  { value: 'both', label: 'Both', title: 'Both hands: the bass note on the bass staff, the chord on the treble staff' },
+                  { value: 'lh-bass', label: '+ LH bass', title: 'Left hand plays the bass note, right hand the rest of the chord' },
                 ]}
               />
             </Field>

@@ -169,7 +169,7 @@ export function chordResult(
   };
 }
 
-const READ_HANDS_LABEL: Record<string, string> = { rh: 'Right-hand chords', lh: 'Left-hand chords', both: 'Chords on both staves' };
+const READ_HANDS_LABEL: Record<string, string> = { rh: 'Right-hand chords', lh: 'Left-hand chords', 'lh-bass': 'Chords over a left-hand bass' };
 
 /** "Diminished", "E♭ chords", "1st inversion", "Left-hand chords": a weak chord statistic in words. */
 export function weakChordLabel(w: { dimension: string; key: string }): string {

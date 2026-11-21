@@ -43,7 +43,7 @@ describe('chord catalog', () => {
   it('item ids round-trip', () => {
     const items: ChordItem[] = [
       ...CHORD_SET_IDS.map((set) => drill({ set, prompt: 'notation', inversions: 'inversions' })),
-      ...(['rh', 'lh', 'both'] as const).map((drillHands) => drill({ prompt: 'notation', drillHands })),
+      ...(['rh', 'lh', 'lh-bass'] as const).map((drillHands) => drill({ prompt: 'notation', drillHands })),
       ...PROGRESSIONS.flatMap((p) => keysFor(p.mode).map((k) => prog(p.id, k, 'lh-bass'))),
     ];
     for (const item of items) expect(parseChordItemId(chordItemId(item))).toEqual(item);
@@ -56,12 +56,12 @@ describe('chord catalog', () => {
     expect(chordItemId(drill({ prompt: 'notation' }))).toBe('chords/drill/triads/notation/root');
     expect(parseChordItemId('chords/drill/triads/notation/root')).toEqual(drill({ prompt: 'notation' }));
     expect(chordItemId(drill({ prompt: 'notation', drillHands: 'lh' }))).toBe('chords/drill/triads/notation/root/lh');
-    expect(chordItemId(drill({ prompt: 'notation', drillHands: 'both' }))).toBe('chords/drill/triads/notation/root/both');
+    expect(chordItemId(drill({ prompt: 'notation', drillHands: 'lh-bass' }))).toBe('chords/drill/triads/notation/root/lh-bass');
     // Symbols are played with any hand: one item, whatever the setting says.
     expect(chordItemId(drill({ drillHands: 'lh' }))).toBe('chords/drill/triads/symbol/root');
     expect(parseChordItemId('chords/drill/triads/symbol/root/lh')).toBeNull();
     expect(parseChordItemId('chords/drill/triads/notation/root/rh')).toBeNull();
-    expect(parseChordItemId('chords/drill/triads/notation/root/both/x')).toBeNull();
+    expect(parseChordItemId('chords/drill/triads/notation/root/lh-bass/x')).toBeNull();
   });
 });
 
@@ -150,9 +150,9 @@ describe('chord exercises', () => {
     }
   });
 
-  it('writes both-hands drill chords as a bass note under the other chord tones', () => {
+  it('writes LH-bass drill chords as a bass note under the other chord tones', () => {
     for (const inversions of ['any', 'root', 'inversions'] as const) {
-      const ex = generateChordExercise(drill({ set: 'all-triads', prompt: 'notation', inversions, drillHands: 'both' }), { bpm: 60, count: 16 }, 9);
+      const ex = generateChordExercise(drill({ set: 'all-triads', prompt: 'notation', inversions, drillHands: 'lh-bass' }), { bpm: 60, count: 16 }, 9);
       expect(ex.staves).toEqual(['treble', 'bass']);
       expect(ex.hands).toBe('both');
       ex.measures.forEach((m) => {
@@ -358,7 +358,8 @@ describe('chord analysis and progress', () => {
   it('defaults drill hands to the right hand', () => {
     expect(normalizeSettings({}).chords.drillHands).toBe('rh');
     expect(normalizeSettings({ chords: { drillHands: 'lh' } }).chords.drillHands).toBe('lh');
-    expect(normalizeSettings({ chords: { drillHands: 'lh-bass' } }).chords.drillHands).toBe('rh');
+    expect(normalizeSettings({ chords: { drillHands: 'lh-bass' } }).chords.drillHands).toBe('lh-bass');
+    expect(normalizeSettings({ chords: { drillHands: 'both' } }).chords.drillHands).toBe('rh');
   });
 });
 

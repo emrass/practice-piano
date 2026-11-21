@@ -38,10 +38,10 @@ export interface ChordTarget {
   bassPc: number | null;
   /**
    * Suggested voicing (shown in notation and by the keyboard guide): the right hand's, or in a
-   * left-hand drill the left hand's. In a both-hands drill, the chord tones above the bass.
+   * left-hand drill the left hand's. In an LH-bass drill, the chord tones above the bass.
    */
   voicing: number[];
-  /** Suggested left-hand bass note under the right hand (progressions with the LH root, both-hands drills). */
+  /** Suggested left-hand bass note under the right hand (progressions with the LH root, LH-bass drills). */
   bassMidi: number | null;
 }
 
@@ -118,7 +118,7 @@ function drillTargets(item: Extract<ChordItem, { task: 'drill' }>, opts: ChordOp
     prevKey = key;
     const pcs = pcsOf(spec);
     const bass = pc(bassOf(spec).midi);
-    // Both hands: the bass note (the root, or the inversion's bass) on the bass staff, the other
+    // LH bass: the bass note (the root, or the inversion's bass) on the bass staff, the other
     // chord tones in close position above it in the right hand. No tone is doubled, so the chord
     // is complete only with the last of its notes (Wait judges the moment it is complete). Any
     // voicing still counts.
@@ -130,8 +130,8 @@ function drillTargets(item: Extract<ChordItem, { task: 'drill' }>, opts: ChordOp
       symbol: chordSymbol(spec),
       pcs,
       bassPc: item.inversions === 'any' ? null : bass,
-      voicing: hands === 'both' ? closeVoicing(upper, upper[0], RH_START) : closeVoicing(pcs, bass, hands === 'lh' ? LH_CHORD_LOW : RH_START),
-      bassMidi: hands === 'both' ? bassNote(bass) : null,
+      voicing: hands === 'lh-bass' ? closeVoicing(upper, upper[0], RH_START) : closeVoicing(pcs, bass, hands === 'lh' ? LH_CHORD_LOW : RH_START),
+      bassMidi: hands === 'lh-bass' ? bassNote(bass) : null,
     });
   }
   return out;

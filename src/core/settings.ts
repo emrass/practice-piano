@@ -68,7 +68,7 @@ export interface ChordSettings {
   /** Drill: chords named by symbol, or written on the staff. */
   prompt: ChordPrompt;
   inversions: InversionRule;
-  /** Drill shown as notation: the hand the chord is written for (treble, bass or both staves). */
+  /** Drill shown as notation: the hand the chord is written for (treble staff, bass staff, or right hand over a left-hand bass). */
   drillHands: DrillHands;
   /** Drill length in chords. */
   count: 8 | 12 | 16;

@@ -9,7 +9,7 @@ import { CHORD_SETS, chordSetExamples, findProgression } from '../../core/chords
 import { isChordExercise } from '../../core/chords/generator';
 
 /** A notation drill is read on the staff its hand plays from. */
-const DRILL_STAFF_LABEL = { rh: 'Treble clef', lh: 'Bass clef', both: 'Both staves' } as const;
+const DRILL_STAFF_LABEL = { rh: 'Treble clef', lh: 'Bass clef', 'lh-bass': 'Both staves' } as const;
 const HANDS_LABEL = { rh: 'Right hand', lh: 'Left hand', alternating: 'Alternating', both: 'Both hands' } as const;
 
 /** MetaStrip: fixed-geometry facts about the current exercise (cells never change width). */
