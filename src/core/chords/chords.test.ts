@@ -126,7 +126,13 @@ describe('chord exercises', () => {
       expect(t.bassMidi!).toBeLessThan(52);
       expect(t.bassPc).toBe(t.spec.root.midi % 12);
       expect(matches(t, [t.bassMidi!, ...t.voicing])).toBe(true);
+      // Each hand is judged on its part, split between the bass and the right hand.
+      expect(t.hands).toEqual({ lh: { pcs: [t.bassPc], bassPc: t.bassPc }, rh: { pcs: t.pcs, bassPc: null }, split: expect.any(Number) });
+      expect(t.bassMidi!).toBeLessThan(t.hands!.split);
+      expect(Math.min(...t.voicing)).toBeGreaterThanOrEqual(t.hands!.split);
     }
+    // Right hand alone: judged as a whole, as before.
+    expect(generateChordExercise(prog('I-V-vi-IV', 'G'), opts, 1).chords.targets.every((t) => t.hands === undefined)).toBe(true);
   });
 
   it('writes left-hand drill chords on the bass staff', () => {
@@ -190,6 +196,77 @@ describe('chord engines', () => {
     expect(bassOnlyWrong(target([0, 4, 7], 0), [52, 60, 67])).toBe(true);
     expect(matches(target([0, 4, 7], null), [60, 64])).toBe(false);
     expect(matches(target([0, 4, 7], null), [60, 64, 67, 69])).toBe(false);
+  });
+
+  it('judges each hand on its part when the target has hands', () => {
+    // G with the LH root: G below the split, the whole chord above it.
+    const g = { pcs: [7, 11, 2], bassPc: 7, hands: { lh: { pcs: [7], bassPc: 7 }, rh: { pcs: [7, 11, 2], bassPc: null }, split: 53 } };
+    // Right hand alone: not complete, and not a wrong bass, whatever its lowest note.
+    expect(matches(g, [59, 62, 67])).toBe(false);
+    expect(bassOnlyWrong(g, [59, 62, 67])).toBe(false);
+    expect(matches(g, [55, 59, 62])).toBe(false);
+    // Both hands: complete, in any right-hand voicing, with the root doubled or not.
+    expect(matches(g, [43, 59, 62, 67])).toBe(true);
+    expect(matches(g, [31, 43, 59, 62, 67])).toBe(true);
+    // Left hand first: not complete until the right hand has the whole chord.
+    expect(matches(g, [43])).toBe(false);
+    expect(matches(g, [43, 59, 62])).toBe(false);
+    expect(bassOnlyWrong(g, [43, 59, 62])).toBe(false);
+    // A chord tone other than the root in the left hand: wrong bass.
+    expect(matches(g, [47, 59, 62, 67])).toBe(false);
+    expect(bassOnlyWrong(g, [47, 59, 62, 67])).toBe(true);
+    expect(bassOnlyWrong(g, [43, 50, 59, 62, 67])).toBe(true);
+    // A key that is not in the chord is a wrong key, not a wrong bass.
+    expect(bassOnlyWrong(g, [45, 59, 62, 67])).toBe(false);
+    // Keys either side of the split: G3 below a split at 56 is the left hand's, at 55 the right hand's.
+    expect(matches({ ...g, hands: { ...g.hands, split: 56 } }, [55, 59, 62, 67])).toBe(true);
+    expect(matches({ ...g, hands: { ...g.hands, split: 55 } }, [55, 59, 62, 67])).toBe(false);
+    // The right hand must have every chord tone itself: the left-hand root does not complete it.
+    expect(matches(g, [43, 59, 62])).toBe(false);
+  });
+
+  it('Wait, + LH root: the right hand landing first does not count against a right chord (#74)', () => {
+    const ts = generateChordExercise(prog('I-V-vi-IV', 'C', 'lh-bass'), opts, 1).chords.targets;
+    expect(ts).toHaveLength(8);
+    const run = (gapMs: number) => {
+      const w = new ChordWaitEngine(ts);
+      w.start(0);
+      const types: string[] = [];
+      ts.forEach((t, i) => {
+        const at = 1000 * (i + 1);
+        // gapMs > 0: the right hand lands first; < 0: the left hand does.
+        const rh = gapMs > 0 ? at : at - gapMs;
+        const lh = gapMs > 0 ? at + gapMs : at;
+        const presses = [...t.voicing.map((k) => [k, rh] as const), [t.bassMidi!, lh] as const].sort((a, b) => a[1] - b[1]);
+        for (const [k, time] of presses) types.push(w.noteOn(k, time).type);
+        for (const k of [t.bassMidi!, ...t.voicing]) w.noteOff(k, at + 500);
+      });
+      return { w, types };
+    };
+    for (const gap of [15, 100, -15]) {
+      const { w, types } = run(gap);
+      expect(w.finished).toBe(true);
+      expect(w.results.filter((j) => j.correct)).toHaveLength(8);
+      expect(w.wrongPresses).toBe(0);
+      expect(types.filter((t) => t === 'bass' || t === 'wrong')).toEqual([]);
+      // Each chord is complete with both hands' keys, and the left hand's root is in its answer.
+      w.results.forEach((j, i) => expect(j.played).toEqual([ts[i].bassMidi!, ...ts[i].voicing].sort((a, b) => a - b)));
+    }
+    // Voice leading reads the right hand from the split: the smooth voicings score full marks.
+    const ex = generateChordExercise(prog('I-V-vi-IV', 'C', 'lh-bass'), opts, 1);
+    expect(summarizeChords(ex, run(15).w.results, 'wait', 80).voiceLeading).toBe(1);
+  });
+
+  it('Wait, + LH root: a wrong left-hand note under a right right hand is a wrong bass', () => {
+    const ts = generateChordExercise(prog('I-V-vi-IV', 'C', 'lh-bass'), opts, 1).chords.targets;
+    const w = new ChordWaitEngine(ts);
+    w.start(0);
+    ts[0].voicing.forEach((k) => w.noteOn(k, 100)); // C E G in the right hand: not complete yet
+    expect(w.index).toBe(0);
+    expect(w.noteOn(43, 120).type).toBe('bass'); // G in the left hand
+    w.noteOff(43, 200);
+    expect(w.noteOn(ts[0].bassMidi!, 300).type).toBe('match');
+    expect(w.results[0]).toMatchObject({ correct: false, wrongBass: true });
   });
 
   it('Wait: advances on the chord, counts wrong keys and wrong bass, needs a re-strike for repeats', () => {

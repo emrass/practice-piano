@@ -25,6 +25,24 @@ import { closeVoicing, smoothestVoicing } from './voicing';
 
 const pc = (m: number) => ((m % 12) + 12) % 12;
 
+/** One hand's part of a chord: its pitch classes (no more, no fewer) and its lowest note, if asked. */
+export interface HandPart {
+  pcs: number[];
+  bassPc: number | null;
+}
+
+/**
+ * A chord judged hand by hand: keys below `split` are the left hand's, the rest the right hand's,
+ * and each hand must play its own part. Doubled tones (the root in both hands) then cannot let one
+ * hand complete the chord alone.
+ */
+export interface ChordHands {
+  lh: HandPart;
+  rh: HandPart;
+  /** Lowest MIDI note of the right hand: between the written bass and the right hand's voicing. */
+  split: number;
+}
+
 /** One chord to play. */
 export interface ChordTarget {
   index: number;
@@ -43,6 +61,8 @@ export interface ChordTarget {
   voicing: number[];
   /** Suggested left-hand bass note under the right hand (progressions with the LH root, LH-bass drills). */
   bassMidi: number | null;
+  /** Judge each hand on its own part (progressions with the LH root); otherwise the keys as a whole. */
+  hands?: ChordHands;
 }
 
 export interface ChordInfo {
@@ -86,6 +106,11 @@ const RH_START = 57; // A3
 
 /** The bass note below the right hand, in the bass staff (E2 to E♭3). */
 const bassNote = (bassPc: number) => LH_LOW + ((bassPc - pc(LH_LOW) + 12) % 12);
+
+/** The middle of the gap between a left-hand bass note and the right hand's voicing. */
+function handSplit(bassMidi: number, voicing: readonly number[]): number {
+  return Math.ceil((bassMidi + Math.min(...voicing)) / 2);
+}
 
 function withOctave(spelled: SpelledPitch, midi: number): SpelledPitch {
   const octave = Math.round((midi - spelled.alter - LETTER_PC[spelled.letter]) / 12) - 1;
@@ -153,16 +178,28 @@ function progressionTargets(item: Extract<ChordItem, { task: 'progression' }>): 
     // First chord in root position near middle C; then the smoothest move each time.
     const voicing = prev ? smoothestVoicing(prev, pcs, RH_LOW, RH_HIGH) : closeVoicing(pcs, rootPc, RH_START);
     prev = voicing;
-    out.push({
+    const target: ChordTarget = {
       index: i,
       spec,
       symbol: chordSymbol(spec),
       numeral: ch.numeral,
       pcs,
-      bassPc: item.hands === 'lh-bass' ? rootPc : null,
+      bassPc: null,
       voicing,
-      bassMidi: item.hands === 'lh-bass' ? bassNote(rootPc) : null,
-    });
+      bassMidi: null,
+    };
+    if (item.hands === 'lh-bass') {
+      // The left hand plays the root below, the right hand the whole chord above (any voicing).
+      const bassMidi = bassNote(rootPc);
+      target.bassPc = rootPc;
+      target.bassMidi = bassMidi;
+      target.hands = {
+        lh: { pcs: [rootPc], bassPc: rootPc },
+        rh: { pcs, bassPc: null },
+        split: handSplit(bassMidi, voicing),
+      };
+    }
+    out.push(target);
   });
   return out;
 }
