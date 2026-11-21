@@ -1,10 +1,10 @@
-import type { ChordTarget, HandPart } from './generator';
+import type { ChordTarget } from './generator';
 
 /**
- * Chord judging. A chord is right when the keys sounding together have exactly its pitch
- * classes (any octave, any doubling) and, where asked, the right note in the bass. Other
- * voicing choices are the player's. A target with hands is judged hand by hand: each hand's
- * keys must make its own part.
+ * Chord judging. Read from the staff, a chord is right when exactly the written keys are down:
+ * which hand plays which key does not matter (MIDI cannot tell). Read from a symbol, it is right
+ * when the keys sounding together have exactly its pitch classes (any octave, any doubling) and,
+ * where asked, the right note in the bass; other voicing choices are the player's.
  */
 const pc = (m: number) => ((m % 12) + 12) % 12;
 
@@ -28,52 +28,44 @@ export interface ChordJudgment {
   hinted?: boolean;
 }
 
-type Judged = Pick<ChordTarget, 'pcs' | 'bassPc' | 'hands'>;
+type Judged = Pick<ChordTarget, 'pcs' | 'bassPc'> & { written?: readonly number[] | null };
 
-/** Keys below the split are the left hand's, the rest the right hand's. */
-export function splitHands(split: number, keys: readonly number[]): { lh: number[]; rh: number[] } {
-  return { lh: keys.filter((k) => k < split), rh: keys.filter((k) => k >= split) };
-}
-
-function partMatches(part: HandPart, keys: readonly number[]): boolean {
-  if (!keys.length) return false;
-  const have = new Set(keys.map(pc));
-  if (have.size !== part.pcs.length || part.pcs.some((p) => !have.has(p))) return false;
-  if (part.bassPc !== null && pc(Math.min(...keys)) !== part.bassPc) return false;
-  return true;
+/**
+ * Read from the staff: a key that is not written, but a chord tone below the written bass (G2
+ * under C–E–G when C3 is written). Only a key that cannot be part of the written chord counts,
+ * so keys on their way to it (the right hand landing before the left) never do.
+ */
+export function wrongBassKey(target: Judged, midi: number): boolean {
+  const w = target.written;
+  return !!w?.length && !w.includes(midi) && midi < w[0] && target.pcs.includes(pc(midi));
 }
 
 /**
- * All the chord's notes (and nothing else) are down, but the wrong note is in the bass. Judged by
- * hand: the right hand has its whole part and the left hand has played a chord tone that is not
- * its part (a right hand alone is simply not complete yet).
+ * The right notes over the wrong bass. Read from the staff: a chord tone that is not written sits
+ * below the written bass. From a symbol: all the chord's notes (and nothing else) are down, but
+ * another chord tone is lowest.
  */
 export function bassOnlyWrong(target: Judged, keys: readonly number[]): boolean {
-  if (target.hands) {
-    const { lh, rh } = splitHands(target.hands.split, keys);
-    if (!lh.length || !partMatches({ pcs: target.hands.rh.pcs, bassPc: null }, rh)) return false;
-    return lh.every((k) => target.pcs.includes(pc(k))) && !partMatches(target.hands.lh, lh);
-  }
+  if (target.written) return keys.some((k) => wrongBassKey(target, k));
   if (target.bassPc === null || !keys.length) return false;
-  return partMatches({ pcs: target.pcs, bassPc: null }, keys) && !partMatches(target, keys);
+  return matches({ pcs: target.pcs, bassPc: null }, keys) && !matches(target, keys);
 }
 
-/**
- * The left hand has the root lowest but adds other chord tones: only the root is written there,
- * so the hint is to play the root alone rather than to change the bass.
- */
-export function extraInLeftHand(target: Judged, keys: readonly number[]): boolean {
-  if (!target.hands || !bassOnlyWrong(target, keys)) return false;
-  const { lh } = splitHands(target.hands.split, keys);
-  return pc(Math.min(...lh)) === target.hands.lh.bassPc;
+/** A key that does not belong to the chord: not written (staff), or not one of its notes (symbol). */
+export function wrongKey(target: Judged, midi: number): boolean {
+  return target.written ? !target.written.includes(midi) : !target.pcs.includes(pc(midi));
 }
 
 export function matches(target: Judged, keys: readonly number[]): boolean {
-  if (target.hands) {
-    const { lh, rh } = splitHands(target.hands.split, keys);
-    return partMatches(target.hands.lh, lh) && partMatches(target.hands.rh, rh);
+  if (!keys.length) return false;
+  if (target.written) {
+    const have = [...new Set(keys)].sort((a, b) => a - b);
+    return have.length === target.written.length && have.every((k, i) => k === target.written![i]);
   }
-  return partMatches(target, keys);
+  const have = new Set(keys.map(pc));
+  if (have.size !== target.pcs.length || target.pcs.some((p) => !have.has(p))) return false;
+  if (target.bassPc !== null && pc(Math.min(...keys)) !== target.bassPc) return false;
+  return true;
 }
 
 /** Self-paced: each chord waits until it is played. */
@@ -119,23 +111,24 @@ export class ChordWaitEngine {
     this.hints++;
   }
 
-  noteOn(
-    midi: number,
-    time: number,
-  ): { type: 'wrong' | 'bass' | 'match' | 'none'; judgment?: ChordJudgment; extraInLeftHand?: boolean } {
+  noteOn(midi: number, time: number): { type: 'wrong' | 'bass' | 'match' | 'none'; judgment?: ChordJudgment } {
     this.held.add(midi);
     this.fresh = true;
     const target = this.targets[this.current];
     if (!target) return { type: 'none' };
-    if (!target.pcs.includes(pc(midi))) {
+    if (wrongBassKey(target, midi)) {
+      this.bassWrong = true;
+      return { type: 'bass' };
+    }
+    if (wrongKey(target, midi)) {
       this.wrong++;
       this.wrongTotal++;
       return { type: 'wrong' };
     }
     const r = this.check(time);
-    if (r.type === 'none' && bassOnlyWrong(target, [...this.held])) {
+    if (r.type === 'none' && !target.written && bassOnlyWrong(target, [...this.held])) {
       this.bassWrong = true;
-      return { type: 'bass', extraInLeftHand: extraInLeftHand(target, [...this.held]) };
+      return { type: 'bass' };
     }
     return r;
   }
@@ -272,7 +265,7 @@ export class ChordFlowEngine {
     // A chord must be struck: holding the previous one through the bar line does not count.
     const correct = fresh.length > 0 && matches(target, keys);
     const onsets = fresh.map((n) => n.on).sort((a, b) => a - b);
-    const judgment: ChordJudgment = { index: i, correct, played: keys, wrongPresses: 0, wrongBass: bassOnlyWrong(target, keys) };
+    const judgment: ChordJudgment = { index: i, correct, played: keys, wrongPresses: 0, wrongBass: !correct && bassOnlyWrong(target, keys) };
     if (onsets.length) {
       const mid = onsets[Math.floor(onsets.length / 2)];
       judgment.deltaMs = Math.round(mid - e);

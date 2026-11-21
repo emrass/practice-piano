@@ -97,7 +97,10 @@ export function chordSetExamples(id: ChordSetId): string {
 
 /** How a drill chord is shown: as a symbol, or written on the staff. */
 export type ChordPrompt = 'symbol' | 'notation';
-/** Which voicings count: any, root position only, or the inversion asked for. */
+/**
+ * Which voicings count: any, root position only, or the inversion asked for. Under notation the
+ * staff shows one voicing, so only 'root' and 'inversions' (what is written) apply there.
+ */
 export type InversionRule = 'any' | 'root' | 'inversions';
 /**
  * Notation drills: which hand the chord is written for. Right hand on the treble staff, left
@@ -183,20 +186,39 @@ export type ChordHands = 'rh' | 'lh-bass';
 // ---------------------------------------------------------------------------------------
 // Items (repertoire entries)
 
+/**
+ * A progression is played from the staff (`notation`, judged note for note) or from the chord
+ * chart (symbols only, any voicing and any hand, so `hands` is 'rh').
+ */
 export type ChordItem =
   | { task: 'drill'; set: ChordSetId; prompt: ChordPrompt; inversions: InversionRule; drillHands: DrillHands }
-  | { task: 'progression'; progression: string; key: string; hands: ChordHands };
+  | { task: 'progression'; progression: string; key: string; hands: ChordHands; notation: boolean };
 
 /** A drill's hands, as it is practiced: symbol drills are played with any hand ('rh'). */
 export function drillHandsOf(prompt: ChordPrompt, hands: DrillHands): DrillHands {
   return prompt === 'notation' ? hands : 'rh';
 }
 
+/** A drill's voicing rule, as it is practiced: notation shows one voicing, so "any" reads as root position. */
+export function inversionsOf(prompt: ChordPrompt, inversions: InversionRule): InversionRule {
+  return prompt === 'notation' && inversions === 'any' ? 'root' : inversions;
+}
+
+/** A progression's hands, as it is practiced: from the chart any hand plays the chord ('rh'). */
+export function progressionHandsOf(notation: boolean, hands: ChordHands): ChordHands {
+  return notation ? hands : 'rh';
+}
+
+/** The item judged exactly as written: notation drills, and progressions played from the staff. */
+export function readsNotation(item: ChordItem): boolean {
+  return item.task === 'drill' ? item.prompt === 'notation' : item.notation;
+}
+
 /** Right-hand drills keep the id they had before drills had hands, so their progress carries on. */
 export function chordItemId(item: ChordItem): string {
-  if (item.task === 'progression') return `chords/prog/${item.progression}/${item.key}/${item.hands}`;
+  if (item.task === 'progression') return `chords/prog/${item.progression}/${item.key}/${item.notation ? item.hands : 'chart'}`;
   const hands = drillHandsOf(item.prompt, item.drillHands);
-  return `chords/drill/${item.set}/${item.prompt}/${item.inversions}${hands === 'rh' ? '' : `/${hands}`}`;
+  return `chords/drill/${item.set}/${item.prompt}/${inversionsOf(item.prompt, item.inversions)}${hands === 'rh' ? '' : `/${hands}`}`;
 }
 
 export function parseChordItemId(id: string): ChordItem | null {
@@ -207,13 +229,17 @@ export function parseChordItemId(id: string): ChordItem | null {
     if (!(set in CHORD_SETS) || !['symbol', 'notation'].includes(prompt) || !['any', 'root', 'inversions'].includes(inversions) || rest.length) return null;
     // Only notation drills have a hands segment, and only when it is not the right hand.
     if (hands !== undefined && (prompt !== 'notation' || !['lh', 'lh-bass'].includes(hands))) return null;
+    // Notation shows one voicing: "any voicing" is for symbols only.
+    if (prompt === 'notation' && inversions === 'any') return null;
     return { task: 'drill', set: set as ChordSetId, prompt: prompt as ChordPrompt, inversions: inversions as InversionRule, drillHands: (hands ?? 'rh') as DrillHands };
   }
   if (parts[1] === 'prog') {
     const [, , progression, key, hands] = parts;
     const def = findProgression(progression);
-    if (!def || !keysFor(def.mode).includes(key) || !['rh', 'lh-bass'].includes(hands)) return null;
-    return { task: 'progression', progression, key, hands: hands as ChordHands };
+    if (!def || !keysFor(def.mode).includes(key) || !['rh', 'lh-bass', 'chart'].includes(hands)) return null;
+    // From the chart: symbols only, any hand.
+    if (hands === 'chart') return { task: 'progression', progression, key, hands: 'rh', notation: false };
+    return { task: 'progression', progression, key, hands: hands as ChordHands, notation: true };
   }
   return null;
 }
@@ -228,5 +254,6 @@ export function chordItemTitle(item: ChordItem): string {
   }
   const def = findProgression(item.progression)!;
   const key = `${item.key.replace('#', '♯').replace(/b$/, '♭')} ${def.mode}`;
-  return `${def.name} in ${key}${item.hands === 'lh-bass' ? ' · LH bass' : ''}`;
+  const how = !item.notation ? ' · from the chart' : item.hands === 'lh-bass' ? ' · LH bass' : '';
+  return `${def.name} in ${key}${how}`;
 }

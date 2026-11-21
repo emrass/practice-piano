@@ -1,7 +1,7 @@
 import { chordResult } from '../../core/chords/analysis';
 import { pitchLabel } from '../../core/music/pitch';
-import { bassOf } from '../../core/chords/catalog';
-import { ChordFlowEngine, type ChordJudgment, ChordWaitEngine } from '../../core/chords/engine';
+import { bassOf, readsNotation } from '../../core/chords/catalog';
+import { ChordFlowEngine, type ChordJudgment, ChordWaitEngine, wrongKey } from '../../core/chords/engine';
 import type { ChordExercise } from '../../core/chords/generator';
 import type { TimingGrade } from '../../core/eval/flowEngine';
 import type { LiveStats } from '../../core/eval/types';
@@ -22,14 +22,14 @@ export interface ChordPracticeOptions {
   countInBars: 1 | 2;
 }
 
-const pc = (m: number) => ((m % 12) + 12) % 12;
 /** Wait: point at the Hint button when a chord has not been found after this long. */
 const NUDGE_AFTER_MS = 5000;
 
 /**
- * Chords & progressions: one chord per bar. Wait waits for each chord (any voicing that has
- * exactly its notes, and the right bass where asked); Flow wants it on the downbeat with the
- * metronome. Shares the practice state shape, so score, bar, keyboard and results just work.
+ * Chords & progressions: one chord per bar. Wait waits for each chord (from the staff exactly the
+ * written keys; from a symbol any voicing that has exactly its notes, and the right bass where
+ * asked); Flow wants it on the downbeat with the metronome. Shares the practice state shape, so
+ * score, bar, keyboard and results just work.
  */
 export class ChordController extends SessionBase {
   private wait: ChordWaitEngine | null = null;
@@ -181,7 +181,7 @@ export class ChordController extends SessionBase {
       const next: Partial<PracticeState> = {};
       if (s.status !== 'running') Object.assign(next, { status: 'running', countIn: null });
       if (s.beat?.index !== beatIndex) next.beat = { index: beatIndex, beatsPerBar: ts.beatsPerBar };
-      if (idx !== s.stepIndex) Object.assign(next, { stepIndex: idx, expected: guideFor(this.opts, idx), chords: { index: idx, bassHint: null } });
+      if (idx !== s.stepIndex) Object.assign(next, { stepIndex: idx, expected: guideFor(this.opts, idx), chords: chordsState(this.opts, idx) });
       if (judged.length) {
         const marks = { ...s.marks };
         for (const j of judged) {
@@ -216,13 +216,10 @@ export class ChordController extends SessionBase {
       s = this.nudged({ ...s, ...this.flash('wrong', { midi: ev.midi, at: performance.now() }, 500) });
     }
     if (r.type === 'bass') {
+      // From a symbol the right notes are all down; from the staff a chord tone went below the written bass.
       const t = this.opts.exercise.chords.targets[w.index];
-      const bass = pitchLabel(bassOf(t.spec));
-      // The root is already lowest but the left hand adds other notes: only the root is written there.
-      const bassHint = r.extraInLeftHand
-        ? { text: `Right notes. Play only ${bass} in the left hand.`, short: `Only ${bass} in the left hand` }
-        : { text: `Right notes. Put ${bass} in the bass.`, short: `${bass} in the bass` };
-      s = this.nudged({ ...s, chords: { index: w.index, bassHint } });
+      const put = `Put ${pitchLabel(bassOf(t.spec))} in the bass.`;
+      s = this.nudged({ ...s, chords: { ...chordsState(this.opts, w.index), bassHint: t.written ? put : `Right notes. ${put}` } });
     }
     if (r.type === 'match' && r.judgment) {
       const j = r.judgment;
@@ -234,7 +231,7 @@ export class ChordController extends SessionBase {
         revealed: [],
         hint: { count: w.hintCount, nudge: false },
         marks: { ...s.marks, [j.index]: mark },
-        chords: { index: w.index, bassHint: null },
+        chords: chordsState(this.opts, w.index),
       };
     }
     this.state.set({ ...s, live: this.live(w.results, w.wrongPresses) });
@@ -252,7 +249,7 @@ export class ChordController extends SessionBase {
     flow.noteOn(ev.midi, ev.time);
     const i = flow.windowAt(ev.time);
     const t = i === null ? null : this.opts.exercise.chords.targets[i];
-    if (t && !t.pcs.includes(pc(ev.midi))) {
+    if (t && wrongKey(t, ev.midi)) {
       this.wrongFlows++;
       this.state.set({ ...this.state.get(), ...this.flash('wrong', { midi: ev.midi, at: performance.now() }, 500) });
     }
@@ -310,6 +307,10 @@ function initialState(opts: ChordPracticeOptions): PracticeState {
     wrong: null,
     lastGrade: null,
     result: null,
-    chords: { index: 0, bassHint: null },
+    chords: chordsState(opts, 0),
   };
+}
+
+function chordsState(opts: ChordPracticeOptions, index: number): NonNullable<PracticeState['chords']> {
+  return { index, fromStaff: readsNotation(opts.exercise.chords.item), bassHint: null };
 }

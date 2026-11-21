@@ -1,4 +1,6 @@
+import { bassOf } from '../../core/chords/catalog';
 import type { ChordExercise } from '../../core/chords/generator';
+import { pitchLabel } from '../../core/music/pitch';
 import { useStore } from '../../lib/store';
 import type { Session, StepMark } from '../practice/session';
 import { Icon } from './Icon';
@@ -45,7 +47,7 @@ export function ChordChart(props: { exercise: ChordExercise; controller: Session
         })}
       </ol>
       {/* The short form of the hint; the practice bar says it as a sentence. */}
-      {state.chords?.bassHint && !finished && targets[current] ? <span className="badge badge-accent">{state.chords.bassHint.short}</span> : null}
+      {state.chords?.bassHint && !finished && targets[current] ? <span className="badge badge-accent">{pitchLabel(bassOf(targets[current].spec))} in the bass</span> : null}
     </div>
   );
 }

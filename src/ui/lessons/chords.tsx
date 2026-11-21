@@ -1,5 +1,18 @@
 import { useMemo, useState } from 'react';
-import { chordItemId, type ChordItem, type ChordQuality, chordSpelling, drillHandsOf, findProgression, keysFor, parseChordItemId, PROGRESSIONS } from '../../core/chords/catalog';
+import {
+  chordItemId,
+  type ChordItem,
+  type ChordQuality,
+  chordSpelling,
+  drillHandsOf,
+  findProgression,
+  inversionsOf,
+  keysFor,
+  parseChordItemId,
+  progressionHandsOf,
+  PROGRESSIONS,
+  readsNotation,
+} from '../../core/chords/catalog';
 import { type ChordFocus, generateChordExercise, initialChordBpm } from '../../core/chords/generator';
 import { findWeakChords } from '../../core/progress/chords';
 import type { ProgressState } from '../../core/progress/progress';
@@ -39,12 +52,13 @@ export function useChordsLesson(ctx: LessonContext, active: boolean): LessonRunt
     if (!active) return null;
     const picked = c.source === 'review' && rep.reviewPick ? parseChordItemId(rep.reviewPick) : null;
     if (picked) return picked;
-    if (c.task === 'drill') return { task: 'drill', set: c.set, prompt: c.prompt, inversions: c.inversions, drillHands: drillHandsOf(c.prompt, c.drillHands) };
+    if (c.task === 'drill')
+      return { task: 'drill', set: c.set, prompt: c.prompt, inversions: inversionsOf(c.prompt, c.inversions), drillHands: drillHandsOf(c.prompt, c.drillHands) };
     const def = findProgression(c.progression) ?? PROGRESSIONS[0];
     const keys = keysFor(def.mode);
     const key = c.key === 'shuffle' ? (shuffleKey && keys.includes(shuffleKey) ? shuffleKey : keys[0]) : c.key;
-    return { task: 'progression', progression: def.id, key, hands: c.hands };
-  }, [active, c.source, c.task, c.set, c.prompt, c.inversions, c.drillHands, c.progression, c.key, c.hands, rep.reviewPick, shuffleKey]);
+    return { task: 'progression', progression: def.id, key, hands: progressionHandsOf(c.notation, c.hands), notation: c.notation };
+  }, [active, c.source, c.task, c.set, c.prompt, c.inversions, c.drillHands, c.progression, c.key, c.hands, c.notation, rep.reviewPick, shuffleKey]);
 
   const drillFocus = s.weakSpotFocus && item?.task === 'drill' ? focus : undefined;
   const exercise = useBuiltFor(
@@ -83,7 +97,7 @@ export function useChordsLesson(ctx: LessonContext, active: boolean): LessonRunt
       : repertoireContinuation({ review, shuffle: c.key === 'shuffle', movedToBpm: ladderBpm === exercise.chords.bpm ? undefined : ladderBpm });
   const tempo = (deltaBpm: number) => rep.changeTempo({ itemId: exercise.chords.itemId, tempo: exercise.chords.bpm, notesPerBeat: 1 }, deltaBpm);
   // Drills by symbol (the staff would give the answer away) and progressions from the chart.
-  const chart = item.task === 'drill' ? item.prompt === 'symbol' : !c.notation;
+  const chart = !readsNotation(item);
   return {
     exercise,
     session,
