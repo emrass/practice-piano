@@ -58,6 +58,16 @@ export function bassOnlyWrong(target: Judged, keys: readonly number[]): boolean 
   return partMatches({ pcs: target.pcs, bassPc: null }, keys) && !partMatches(target, keys);
 }
 
+/**
+ * The left hand has the root lowest but adds other chord tones: only the root is written there,
+ * so the hint is to play the root alone rather than to change the bass.
+ */
+export function extraInLeftHand(target: Judged, keys: readonly number[]): boolean {
+  if (!target.hands || !bassOnlyWrong(target, keys)) return false;
+  const { lh } = splitHands(target.hands.split, keys);
+  return pc(Math.min(...lh)) === target.hands.lh.bassPc;
+}
+
 export function matches(target: Judged, keys: readonly number[]): boolean {
   if (target.hands) {
     const { lh, rh } = splitHands(target.hands.split, keys);
@@ -109,7 +119,10 @@ export class ChordWaitEngine {
     this.hints++;
   }
 
-  noteOn(midi: number, time: number): { type: 'wrong' | 'bass' | 'match' | 'none'; judgment?: ChordJudgment } {
+  noteOn(
+    midi: number,
+    time: number,
+  ): { type: 'wrong' | 'bass' | 'match' | 'none'; judgment?: ChordJudgment; extraInLeftHand?: boolean } {
     this.held.add(midi);
     this.fresh = true;
     const target = this.targets[this.current];
@@ -122,7 +135,7 @@ export class ChordWaitEngine {
     const r = this.check(time);
     if (r.type === 'none' && bassOnlyWrong(target, [...this.held])) {
       this.bassWrong = true;
-      return { type: 'bass' };
+      return { type: 'bass', extraInLeftHand: extraInLeftHand(target, [...this.held]) };
     }
     return r;
   }

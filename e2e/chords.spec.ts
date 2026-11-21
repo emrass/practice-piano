@@ -143,6 +143,19 @@ test.describe('Chords & progressions', () => {
     await expect(app.results()).not.toContainText('wrong key');
   });
 
+  test('Progression (Wait), + LH root: a fifth in the left hand asks for the root alone', async ({ app, page }) => {
+    await app.open({
+      settings: { lesson: 'chords', chords: { task: 'progression', progression: 'I-V-vi-IV', key: 'C', hands: 'lh-bass', mode: 'wait' } },
+    });
+    const ts = await app.exercise(targets);
+    // C2 and G2 under C E G: the root is lowest, but the fifth is not written.
+    const keys = [ts[0].bassMidi! - 12, ts[0].bassMidi! - 5, ...ts[0].voicing];
+    await app.noteOn(keys);
+    await expect(page.locator('.practice-message')).toHaveText('Right notes. Play only C in the left hand.');
+    await app.noteOff(keys);
+    expect(await app.status()).toBe('running');
+  });
+
   test('Review plays due items first', async ({ app }) => {
     await app.open({
       settings: { lesson: 'chords', chords: { source: 'review' } },

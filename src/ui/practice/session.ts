@@ -30,8 +30,8 @@ export interface PracticeState {
   ear?: { playing: boolean; listened: boolean; replays: number; hints: number };
   /** Wait runs that offer a hint: how many were asked for, and whether to point at it (stuck). */
   hint?: { count: number; nudge: boolean };
-  /** Chords: the chord asked for, and a nudge when the right notes have the wrong bass. */
-  chords?: { index: number; bassHint: string | null };
+  /** Chords: the chord asked for, and a nudge (as a sentence and in short) when the right notes have the wrong bass. */
+  chords?: { index: number; bassHint: { text: string; short: string } | null };
 }
 
 /**

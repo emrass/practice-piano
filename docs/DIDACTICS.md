@@ -241,8 +241,9 @@ octave, any doubling, nothing extra — and, where the rule asks, the right note
 **+ LH root**, each hand is judged on its part: the root below, the whole chord above (split
 between the written bass and the right hand). So a right hand landing a moment before the left
 is not complete yet rather than over the wrong bass, and the left-hand root completes its own
-chord instead of spilling onto the next one; a chord tone other than the root in the left hand
-is a wrong bass. Wait: the
+chord instead of spilling onto the next one. Only what is written counts: a chord tone other
+than the root in the left hand is a wrong bass ("play only C in the left hand" when the root is
+already lowest). Wait: the
 chord counts the moment it is complete (or when a stray key is let go); wrong keys first make it
 "not first time"; right notes over the wrong bass get a hint ("put E in the bass"). A repeated
 chord must be struck again. Flow: one chord per 4/4 bar on beat 1; keys pressed around the bar
