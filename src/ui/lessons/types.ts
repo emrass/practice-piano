@@ -39,8 +39,11 @@ export interface KeyboardAvailability {
 export interface Continuation {
   /** The same exercise again (R, piano C). */
   repeat: { label: string };
-  /** Move on (N, piano D); null when there is nothing to move on to (one scale in one key). */
-  next: { label: string } | null;
+  /**
+   * Move on (N, piano D); null when there is nothing to move on to (one scale in one key).
+   * `detail` is a sentence for the results card when moving on means more than a new exercise.
+   */
+  next: { label: string; detail?: string } | null;
   /** The suggested one: Enter, and the main button of the results card. */
   primary: 'repeat' | 'next';
 }

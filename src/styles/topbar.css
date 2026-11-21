@@ -27,6 +27,20 @@
   width: 760px;
 }
 
+/* Today or Free practice. */
+.topbar-way .segmented {
+  width: 196px;
+}
+
+.topbar-way .segmented > button {
+  white-space: nowrap;
+}
+
+/* Phones only: the way to Today, before the lessons (see below). */
+.way-today {
+  display: none;
+}
+
 .topbar-mode .segmented {
   width: 140px;
 }
@@ -52,15 +66,56 @@
   }
 }
 
-/* Five lessons: the top bar drops the wordmark and chip labels before it runs out of room. */
-@media (max-width: 900px) {
-  .logo-name,
+/* Laptops: "Free practice" is "Free" on the switch. "practice" is still read out. */
+@media (max-width: 1439px) {
+  .topbar-way .segmented {
+    width: 124px;
+  }
+  .topbar-way .way-rest {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+}
+
+/* Two switches and five lessons: the wordmark makes room first, then the reward chips, then
+   the piano's name (decoration, then secondary numbers, then a label that has a mark). */
+@media (max-width: 1279px) {
+  .logo-name {
+    display: none;
+  }
+}
+
+@media (max-width: 1080px) {
   .chip-xp,
   .chip-streak {
     display: none;
   }
+}
+
+@media (max-width: 940px) {
   .chip-midi .chip-text {
     display: none;
+  }
+  .topbar-lesson .segmented {
+    width: 300px;
+  }
+  .topbar-lesson .segmented > button {
+    padding: 0 var(--space-6);
+  }
+  .topbar-way .segmented {
+    width: 104px;
+  }
+  .topbar-way .segmented > button {
+    padding: 0 var(--space-4);
+  }
+  .topbar-mode .segmented {
+    width: 112px;
+  }
+  .topbar-mode .segmented > button {
+    padding: 0 var(--space-6);
   }
 }
 
@@ -91,7 +146,7 @@
 }
 
 /* Phones: lessons get a row of their own under the brand, mode and menu. */
-@media (max-width: 600px) {
+@media (max-width: 650px) {
   .topbar {
     flex-wrap: wrap;
     align-content: center;
@@ -101,8 +156,21 @@
   .topbar-lesson {
     order: 3;
     flex: 1 0 100%;
+    display: flex;
+    gap: var(--space-6);
   }
   .topbar .topbar-lesson .segmented {
-    width: 100%;
+    flex: 1;
+    width: auto;
+    min-width: 0;
+  }
+  /* The first row has no room for a second switch: in free practice, Today is a button before
+     the lessons. On the plan page the switch has the row to itself. */
+  .topbar-way.is-free {
+    display: none;
+  }
+  .way-today {
+    display: inline-flex;
+    padding: 0 var(--space-8);
   }
 }

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import type { ExerciseResult } from '../core/eval/types';
 import type { LessonId } from '../core/lessons';
 import { randomSeed } from '../core/generator/rng';
@@ -31,6 +32,10 @@ import { type AutoStartFrom, useEarAutoStart } from './hooks/useEarAutoStart';
 import { usePianoShortcuts } from './hooks/usePianoShortcuts';
 import { type LessonRuntime, useLesson } from './lessons';
 import type { Continuation } from './lessons/types';
+import { PlanPage } from './plan/PlanPage';
+import { PlanPanel } from './plan/PlanPanel';
+import { PlanSteps } from './plan/PlanSteps';
+import { usePlan } from './plan/usePlan';
 import { isIdle, type Session } from './practice/session';
 import { type Profile, useProfile } from './state/useProfile';
 
@@ -55,7 +60,7 @@ export function App() {
 }
 
 function Studio({ profile }: { profile: Profile }) {
-  const { settings: s, progress, updateSettings, setProgress } = profile;
+  const { progress, updateSettings, setProgress } = profile;
   const [seed, setSeed] = useState(randomSeed);
   const reseed = useCallback(() => setSeed(randomSeed()), []);
   const [retryToken, setRetryToken] = useState(0);
@@ -65,7 +70,7 @@ function Studio({ profile }: { profile: Profile }) {
   const [calibrating, setCalibrating] = useState(false);
   /** The piano & audio guide, opened from Piano & audio. The first-run guide opens by itself until it was seen once. */
   const [audioGuideOpen, setAudioGuideOpen] = useState(false);
-  const setupOpen = !s.setupGuideSeen || audioGuideOpen;
+  const setupOpen = !profile.settings.setupGuideSeen || audioGuideOpen;
   /** Piano & audio: the settings every lesson shares, opened from the piano chip. */
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [hiddenResultsFor, setHiddenResultsFor] = useState<object | null>(null);
@@ -73,17 +78,26 @@ function Studio({ profile }: { profile: Profile }) {
   useEffect(() => {
     progressRef.current = progress;
   }, [progress]);
+  // ---- Today's practice ------------------------------------------------------------
+  // The plan meets the lessons in four places, all in this file: the settings they are given
+  // (a block's are laid over the player's own), settings changes on their way back, each
+  // finished run, and the way on from an exercise. Everything else about it is in ui/plan.
+  const plan = usePlan({ settings: profile.settings, progressRef, updateSettings });
+  const s = plan.settings;
+  /** Today's plan page is showing: no lesson is on the stage. */
+  const onPlanPage = plan.open && !plan.playing;
   const lesson: LessonId = s.lesson;
 
   // ---- Lesson -------------------------------------------------------------------------
   // Settings changes go through the active lesson first (review queue, shuffled key, focus).
   const runtimeRef = useRef<LessonRuntime | null>(null);
+  const planUpdate = plan.update;
   const update = useCallback(
     (patch: SettingsPatch) => {
       runtimeRef.current?.onPatch?.(patch);
-      updateSettings(patch);
+      planUpdate(patch);
     },
-    [updateSettings],
+    [planUpdate],
   );
   // Ear training plays a phrase by itself only after the player asked for a new one (or a retry):
   // remembers the session that was on screen then, so the next session plays once it arrives.
@@ -93,35 +107,62 @@ function Studio({ profile }: { profile: Profile }) {
   }, []);
   const nowMs = new Date().getTime();
   const runtime = useLesson(lesson, { settings: s, progress, progressRef, setProgress, update, seed, reseed, retryToken, armAutoStart, now: nowMs });
+  // The way on from this exercise: the lesson's own, or the plan's once a block has its runs.
+  const continuation = plan.continuation(runtime.continuation);
+  const continuationRef = useRef(continuation);
   useLayoutEffect(() => {
     runtimeRef.current = runtime;
+    continuationRef.current = continuation;
   });
   const { exercise } = runtime;
   const firstSight = (progress.attempts[exercise.id] ?? 0) === 0;
   // Stable callbacks (the runtime is rebuilt every render; effects keyed on these must not re-run).
   // N, piano D and the next buttons all come through here: without a `next` there is nothing to move on to.
+  // A block has just come onto the stage: set its lesson up the way the Progress tab does (the
+  // due items, the weak spots), with a new exercise. `move` changes the plan; it is rendered at
+  // once so the block's lesson is the active one when it is set up.
+  const { blockNow, canMoveOn, next: planNext, start: planStart, skip: planSkip } = plan;
+  const moveToBlock = useCallback(
+    (move: () => void) => {
+      flushSync(move);
+      const block = blockNow();
+      const active = runtimeRef.current;
+      if (!block || !active) return;
+      armAutoStart();
+      if (block.start === 'review' && active.review) active.review();
+      else if (block.start === 'weak-spots') active.practiceWeakSpots();
+      else reseed();
+    },
+    [blockNow, armAutoStart, reseed],
+  );
+  const startPlanBlock = useCallback(() => moveToBlock(planStart), [moveToBlock, planStart]);
+  const skipPlanBlock = useCallback(() => moveToBlock(planSkip), [moveToBlock, planSkip]);
   const nextExercise = useCallback(() => {
-    if (runtimeRef.current?.continuation.next) runtimeRef.current.next();
-  }, []);
+    if (canMoveOn()) moveToBlock(planNext);
+    else if (runtimeRef.current?.continuation.next) runtimeRef.current.next();
+  }, [canMoveOn, moveToBlock, planNext]);
 
   // ---- Practice session -------------------------------------------------------------
+  const planRecord = plan.record;
   const onFinished = useCallback(
     (result: ExerciseResult) => {
       const { progress: next, award: earned } = applyResult(progressRef.current, result, new Date());
       progressRef.current = next;
       setProgress(next);
+      planRecord(result, earned);
       setAward({ exerciseId: result.exerciseId, award: earned });
       // Restart replays on the same session: results closed after an earlier run must not hide this one's.
       setHiddenResultsFor(null);
       // A pause in practice: the one moment the app asks the browser to keep its data.
       requestPersistentStorageOnce();
     },
-    [setProgress],
+    [setProgress, planRecord],
   );
 
   // The lesson makes a new session per exercise, mode or retry; the metronome volume is applied live below.
   const controller: Session = runtime.session;
-  useEffect(() => controller.attach(), [controller]);
+  // On the plan page the lesson underneath does not listen: the piano starts the next block there.
+  useEffect(() => (onPlanPage ? undefined : controller.attach()), [controller, onPlanPage]);
   useEffect(() => inputBus.subscribe((ev) => keySound.handle(ev)), []);
   useEffect(() => {
     keySound.setEnabled(s.keySound);
@@ -170,7 +211,7 @@ function Studio({ profile }: { profile: Profile }) {
   }, [armAutoStart]);
   /** Enter after a run: what the lesson suggests. */
   const continueRun = useCallback(() => {
-    if (runtimeRef.current?.continuation.primary === 'repeat') retry();
+    if (continuationRef.current.primary === 'repeat') retry();
     else nextExercise();
   }, [retry, nextExercise]);
   const resultsHidden = hiddenResultsFor === controller;
@@ -178,7 +219,7 @@ function Studio({ profile }: { profile: Profile }) {
 
   // ---- Piano shortcuts ----------------------------------------------------------
   const step = useCallback((direction: 1 | -1) => runtimeRef.current?.step(direction), []);
-  usePianoShortcuts({ controller, enabled: s.pianoShortcuts, resultsHidden, retry, nextExercise, hideResults, step });
+  usePianoShortcuts({ controller, enabled: s.pianoShortcuts && !onPlanPage, resultsHidden, retry, nextExercise, hideResults, step });
 
   const openCalibration = useCallback(() => {
     if (controller.isActive) controller.stop();
@@ -215,7 +256,8 @@ function Studio({ profile }: { profile: Profile }) {
     controller,
     exercise,
     rhythmQwerty: runtime.keyboard.qwerty,
-    dialogOpen: calibrating || setupOpen || settingsOpen,
+    // The plan page handles its own keys (Enter on the way on), like a dialog.
+    dialogOpen: calibrating || setupOpen || settingsOpen || onPlanPage,
     startStop,
     nextExercise,
     retry,
@@ -236,6 +278,16 @@ function Studio({ profile }: { profile: Profile }) {
   const span = runtime.keyboard.span;
   const kbRange = s.keyboardView === 'full' ? KEYBOARD_RANGES[s.keyboardSize] : fitKeyboardRange(span.min, span.max, s.keyboardSize);
 
+  /** The Progress tab's actions set a lesson up by hand: that is free practice, in the lesson shown. */
+  const leaveToday = () => {
+    if (plan.open) plan.setOpen(false, { lesson });
+  };
+  const toPlanPage = () => {
+    if (controller.isActive) controller.stop();
+    setDrawerOpen(false);
+    plan.toPage();
+  };
+
   const panels = (
     <>
       <Tabs<Tab>
@@ -243,14 +295,14 @@ function Studio({ profile }: { profile: Profile }) {
         idBase="sidebar"
         fill
         tabs={[
-          { id: 'exercise', label: 'Exercise' },
+          { id: 'exercise', label: onPlanPage ? 'Plan' : plan.playing ? 'This block' : 'Exercise' },
           { id: 'progress', label: 'Progress' },
         ]}
         value={tab}
         onChange={setTab}
       />
       <div className="sidebar-scroll" role="tabpanel" id="sidebar-panel" aria-labelledby={`sidebar-tab-${tab}`}>
-        {tab === 'exercise' ? runtime.panel : null}
+        {tab === 'exercise' ? onPlanPage ? <PlanPanel prefs={s.plan} day={plan.day} onChange={plan.setPrefs} /> : runtime.panel : null}
         {tab === 'progress' ? (
           <ProgressPanel
             lesson={lesson}
@@ -261,18 +313,21 @@ function Studio({ profile }: { profile: Profile }) {
             onReview={
               runtime.review
                 ? () => {
+                    leaveToday();
                     runtime.review?.();
                     setTab('exercise');
                   }
                 : undefined
             }
             onPracticeWeakSpots={() => {
+              leaveToday();
               runtime.practiceWeakSpots();
               setTab('exercise');
             }}
             onDataReplaced={(settings, p) => {
               progressRef.current = p;
               profile.replaceAll(settings, p);
+              plan.replaced(settings, p);
             }}
           />
         ) : null}
@@ -281,7 +336,7 @@ function Studio({ profile }: { profile: Profile }) {
   );
 
   return (
-    <div className={`app ${isNativeApp() ? 'is-native' : ''}`}>
+    <div className={['app', isNativeApp() ? 'is-native' : '', plan.playing ? 'is-plan-block' : ''].filter(Boolean).join(' ')}>
       <TopBar
         settings={s}
         update={update}
@@ -290,7 +345,23 @@ function Studio({ profile }: { profile: Profile }) {
           update({ lesson: next });
           setSeed(randomSeed());
         }}
-        mode={runtime.mode}
+        onWayChange={(way) => {
+          if (controller.isActive) controller.stop();
+          setDrawerOpen(false);
+          setTab('exercise');
+          plan.setOpen(way === 'today');
+        }}
+        steps={
+          plan.playing && plan.day ? (
+            <>
+              <button type="button" className="btn" onClick={toPlanPage} title="Back to today's plan.">
+                Plan
+              </button>
+              <PlanSteps day={plan.day} />
+            </>
+          ) : undefined
+        }
+        mode={onPlanPage ? undefined : runtime.mode}
         progress={progress}
         midi={midiState}
         onOpenMidi={openSettings}
@@ -302,52 +373,68 @@ function Studio({ profile }: { profile: Profile }) {
         {drawerOpen ? <div className="drawer-backdrop" onClick={() => setDrawerOpen(false)} /> : null}
         <aside className={`sidebar ${drawerOpen ? 'is-open' : ''}`}>{panels}</aside>
 
-        <main className="stage">
-          <MetaStrip exercise={exercise} firstSight={firstSight} focus={runtime.focusActive} />
-          <div className="score">
-            {runtime.stage ? (
-              runtime.stage(controller)
-            ) : (
-              <ScoreView exercise={exercise} showNoteNames={s.showStaffNames} controller={controller} showFingering={!!runtime.score?.showFingering} />
-            )}
-            <ResultsLayer
-              controller={controller}
-              award={award?.exerciseId === exercise.id ? award.award : null}
-              hidden={resultsHidden}
-              continuation={runtime.continuation}
+        {onPlanPage ? (
+          plan.day ? (
+            <PlanPage
+              day={plan.day}
+              progress={progress}
               pianoShortcuts={s.pianoShortcuts}
-              onNext={nextExercise}
-              onRetry={retry}
-              onClose={hideResults}
+              inert={calibrating || setupOpen || settingsOpen}
+              onStart={startPlanBlock}
+              onSkip={skipPlanBlock}
+              onFreePractice={() => plan.setOpen(false)}
             />
-          </div>
-          <PracticeBar
-            controller={controller}
-            continuation={runtime.continuation}
-            onHint={hint}
-            onRetry={retry}
-            onStartStop={startStop}
-            onRestart={() => controller.start()}
-            onNext={nextExercise}
-            resultsHidden={resultsHidden}
-            onShowResults={() => setHiddenResultsFor(null)}
-            pianoShortcuts={s.pianoShortcuts}
-            keyboardGuide={guideOn}
-          />
-          <KeyboardDock
-            controller={controller}
-            min={kbRange.min}
-            max={kbRange.max}
-            settings={s}
-            update={update}
-            availability={runtime.keyboard}
-            hasNext={runtime.continuation.next !== null}
-            preferFlats={prefersFlats(exercise.key)}
-            qwertyBase={s.showQwertyHints && !runtime.keyboard.unavailable?.qwertyHints ? qwertyBase : null}
-            markers={runtime.keyboard.markers}
-            spelling={runtime.keyboard.spelling}
-          />
-        </main>
+          ) : (
+            <main className="plan-page" />
+          )
+        ) : (
+          <main className="stage">
+            <MetaStrip exercise={exercise} firstSight={firstSight} focus={runtime.focusActive} />
+            <div className="score">
+              {runtime.stage ? (
+                runtime.stage(controller)
+              ) : (
+                <ScoreView exercise={exercise} showNoteNames={s.showStaffNames} controller={controller} showFingering={!!runtime.score?.showFingering} />
+              )}
+              <ResultsLayer
+                controller={controller}
+                award={award?.exerciseId === exercise.id ? award.award : null}
+                hidden={resultsHidden}
+                continuation={continuation}
+                pianoShortcuts={s.pianoShortcuts}
+                onNext={nextExercise}
+                onRetry={retry}
+                onClose={hideResults}
+              />
+            </div>
+            <PracticeBar
+              controller={controller}
+              continuation={continuation}
+              onHint={hint}
+              onRetry={retry}
+              onStartStop={startStop}
+              onRestart={() => controller.start()}
+              onNext={nextExercise}
+              resultsHidden={resultsHidden}
+              onShowResults={() => setHiddenResultsFor(null)}
+              pianoShortcuts={s.pianoShortcuts}
+              keyboardGuide={guideOn}
+            />
+            <KeyboardDock
+              controller={controller}
+              min={kbRange.min}
+              max={kbRange.max}
+              settings={s}
+              update={update}
+              availability={runtime.keyboard}
+              hasNext={continuation.next !== null}
+              preferFlats={prefersFlats(exercise.key)}
+              qwertyBase={s.showQwertyHints && !runtime.keyboard.unavailable?.qwertyHints ? qwertyBase : null}
+              markers={runtime.keyboard.markers}
+              spelling={runtime.keyboard.spelling}
+            />
+          </main>
+        )}
       </div>
       {!s.setupGuideSeen ? (
         <FirstRunGuide

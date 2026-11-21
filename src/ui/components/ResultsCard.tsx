@@ -73,6 +73,7 @@ export function ResultsCard(props: {
             ))}
           </div>
         ) : null}
+        {next?.detail ? <Callout>{next.detail}</Callout> : null}
         {props.pianoShortcuts ? (
           <div className="results-shortcuts" role="group" aria-label="Piano shortcuts">
             <span>Piano:</span>

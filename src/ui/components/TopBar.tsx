@@ -1,9 +1,10 @@
 import type { LessonId } from '../../core/lessons';
 import { LESSONS } from '../../core/lessons';
 import { dayKey, displayStreak, type ProgressState } from '../../core/progress/progress';
-import type { Settings, SettingsPatch } from '../../core/settings';
+import type { PracticeWay, Settings, SettingsPatch } from '../../core/settings';
 import type { MidiState } from '../../platform/midi/midiService';
 import type { LessonRuntime } from '../lessons';
+import type { ReactNode } from 'react';
 import { Segmented } from './controls';
 import { Icon, Logo } from './Icon';
 
@@ -19,11 +20,18 @@ function midiLabelText(midi: MidiState): string {
     : 'Connect a piano';
 }
 
-/** Brand, lesson and Wait / Flow switches, streak and XP chips, the piano chip (Piano & audio), theme and drawer toggles. */
+/**
+ * Brand, the way to practice (Today or Free practice), lesson and Wait / Flow switches, streak
+ * and XP chips, the piano chip (Piano & audio), theme and drawer toggles. In Today the lesson
+ * switcher makes room: for nothing on the plan page, for the plan's steps while a block is played.
+ */
 export function TopBar(props: {
   settings: Settings;
   update: (patch: SettingsPatch) => void;
   onLessonChange: (lesson: LessonId) => void;
+  onWayChange: (way: PracticeWay) => void;
+  /** Today, while a block is played: the way back to the plan and its steps, in place of both switchers. */
+  steps?: ReactNode;
   /** The Wait / Flow switch, for lessons that have both. */
   mode: LessonRuntime['mode'];
   progress: ProgressState;
@@ -38,22 +46,54 @@ export function TopBar(props: {
   return (
     <header className="topbar">
       <Logo />
-      <div className="topbar-lesson">
-        <Segmented<LessonId>
-          label="Lesson"
-          value={s.lesson}
-          onChange={props.onLessonChange}
-          options={(Object.keys(LESSONS) as LessonId[]).map((id) => ({
-            value: id,
-            label: (
-              <>
-                <span className="label-long">{LESSONS[id].name}</span>
-                <span className="label-short">{LESSONS[id].short}</span>
-              </>
-            ),
-          }))}
-        />
-      </div>
+      {props.steps ? (
+        <div className="topbar-lesson topbar-plan">{props.steps}</div>
+      ) : (
+        <>
+          <div className={`topbar-way ${s.way === 'free' ? 'is-free' : ''}`}>
+            <Segmented<PracticeWay>
+              label="Way to practice"
+              value={s.way}
+              onChange={props.onWayChange}
+              options={[
+                { value: 'today', label: 'Today', title: "Today's practice: a plan made from what is due and what is weak." },
+                {
+                  value: 'free',
+                  // "practice" stays in the name where the top bar has no room to show it.
+                  label: (
+                    <>
+                      Free<span className="way-rest"> practice</span>
+                    </>
+                  ),
+                  title: 'Free practice: pick a lesson and set it up yourself.',
+                },
+              ]}
+            />
+          </div>
+          {s.way === 'free' ? (
+            <div className="topbar-lesson">
+              {/* Phones have no room for the switch above: Today is a button before the lessons. */}
+              <button type="button" className="btn way-today" onClick={() => props.onWayChange('today')} title="Today's practice: a plan made from what is due and what is weak.">
+                Today
+              </button>
+              <Segmented<LessonId>
+                label="Lesson"
+                value={s.lesson}
+                onChange={props.onLessonChange}
+                options={(Object.keys(LESSONS) as LessonId[]).map((id) => ({
+                  value: id,
+                  label: (
+                    <>
+                      <span className="label-long">{LESSONS[id].name}</span>
+                      <span className="label-short">{LESSONS[id].short}</span>
+                    </>
+                  ),
+                }))}
+              />
+            </div>
+          ) : null}
+        </>
+      )}
       <div className={`topbar-mode ${mode ? '' : 'is-hidden'}`} aria-hidden={!mode}>
         <Segmented<'wait' | 'flow'>
           label="Practice mode"

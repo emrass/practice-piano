@@ -1,0 +1,119 @@
+/* Today's practice: the plan page in the stage's place, and the top bar and sidebar while a
+   block is played. The look of the steps and the block list is the design system's
+   (PlanSteps, PlanList); this file arranges them. */
+
+/* The page scrolls inside itself, like the score; the sheet keeps a reading width. */
+.plan-page {
+  display: grid;
+  align-content: start;
+  justify-items: center;
+  min-width: 0;
+  min-height: 0;
+  padding: var(--space-12) var(--space-16) calc(var(--space-12) + env(safe-area-inset-bottom));
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+.plan-sheet {
+  display: grid;
+  gap: var(--space-16);
+  width: min(780px, 100%);
+  padding: var(--space-24);
+}
+
+.plan-head {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.plan-eyebrow {
+  margin: 0;
+  font: var(--type-overline);
+  letter-spacing: var(--tracking-overline);
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+.plan-title {
+  margin: 0;
+  font: var(--type-headline);
+}
+
+.plan-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-8);
+}
+
+/* A block on the stage: the plan's steps take the lesson switcher's place, with the way back
+   to the plan before them. */
+.topbar-plan {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-width: 0;
+}
+
+.topbar-plan .plan-steps {
+  width: 480px;
+}
+
+/* A block on the stage: the score takes the full width, and the sidebar is a drawer at every
+   width (the same drawer as below 1080px, see sidebar.css). */
+.is-plan-block .workspace {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.is-plan-block .sidebar {
+  position: fixed;
+  z-index: var(--z-drawer);
+  top: calc(var(--topbar-h) + env(safe-area-inset-top));
+  bottom: 0;
+  left: 0;
+  width: min(380px, 92vw);
+  transform: translateX(-102%);
+  transition: transform var(--duration-base) var(--ease-out);
+  box-shadow: var(--shadow-2);
+}
+
+.is-plan-block .sidebar.is-open {
+  transform: none;
+}
+
+.is-plan-block .drawer-backdrop {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-drawer);
+  background: var(--scrim);
+}
+
+.is-plan-block .drawer-toggle {
+  display: grid;
+}
+
+@media (max-width: 1439px) {
+  .topbar-plan .plan-steps {
+    width: 330px;
+  }
+}
+
+@media (max-width: 760px) {
+  .plan-page {
+    padding: var(--space-8);
+  }
+  .plan-sheet {
+    padding: var(--space-16);
+  }
+  .topbar-plan .plan-steps {
+    width: 236px;
+  }
+}
+
+/* Phones: the steps get the lesson switcher's row. */
+@media (max-width: 650px) {
+  .topbar .topbar-plan .plan-steps {
+    flex: 1;
+    width: auto;
+  }
+}

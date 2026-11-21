@@ -14,6 +14,7 @@ import './styles/shell.css';
 import './styles/topbar.css';
 import './styles/sidebar.css';
 import './styles/stage.css';
+import './styles/plan.css';
 import './styles/practice-bar.css';
 import './styles/results.css';
 import './styles/progress.css';

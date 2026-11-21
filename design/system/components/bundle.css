@@ -473,6 +473,42 @@ kbd { display: inline-block; padding: 1px var(--space-4); border: var(--stroke-t
   .chord-cell-symbol { font: var(--type-title); font-weight: 700; }
 }
 
+/* ---------- Plan steps ---------- */
+/* Today's blocks as a strip: the segmented control's box, read not pressed. */
+.plan-steps { container: plan-steps / inline-size; display: flex; gap: var(--space-2); min-width: 0; min-height: var(--size-control-md); margin: 0; padding: var(--space-2); border: var(--stroke-thin) solid var(--border); border-radius: var(--radius-md); background: var(--surface-well); list-style: none; }
+.plan-steps > li { display: flex; flex: 1 1 auto; align-items: center; justify-content: center; gap: var(--space-6); min-width: 0; padding: 0 var(--space-8); border-radius: var(--radius-sm); color: var(--text-muted); font: var(--type-label); white-space: nowrap; }
+.plan-steps > li[aria-current="step"] { background: var(--surface-card); color: var(--text); box-shadow: var(--shadow-knob), inset 0 calc(var(--stroke-thick) * -1) 0 var(--accent); }
+.plan-steps > li:is(.is-done, .is-skipped) { color: var(--text-subtle); }
+.plan-steps > li.is-skipped > .plan-step-name { text-decoration: line-through; }
+/* The mark of a block: its number in a ring, filled for the block under way, a check once done, struck and dashed if skipped. */
+.step-mark { display: inline-grid; place-items: center; flex: none; width: var(--size-icon); height: var(--size-icon); border: var(--stroke-thin) solid currentColor; border-radius: var(--radius-full); font: var(--type-micro); font-variant-numeric: tabular-nums lining-nums; }
+.step-mark.is-done { border: 0; border-radius: 0; color: var(--success); }
+[aria-current="step"] > .step-mark { border-color: var(--accent); background: var(--accent); color: var(--on-accent); }
+.is-skipped > .step-mark { border-style: dashed; text-decoration: line-through; }
+/* Runs of the block under way: a dot each, filled once played. */
+.pips { display: inline-flex; flex: none; align-items: center; gap: var(--space-4); }
+.pips > i { width: 8px; height: 8px; border: var(--stroke-thin) solid currentColor; border-radius: var(--radius-full); }
+.pips > i.is-done { background: currentColor; }
+.pips-count { flex: none; font: var(--type-label-sm); }
+/* Short of room, the other blocks keep their marks and give up their names (still read out). */
+@container plan-steps (max-width: 440px) {
+  .plan-steps > li:not([aria-current]) { flex: 0 1 auto; padding: 0 var(--space-6); }
+  .plan-steps > li:not([aria-current]) > .plan-step-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+}
+
+/* ---------- Plan list ---------- */
+/* Today's blocks as a page: one row each, set to be read from the bench. */
+.plan-list { display: grid; gap: var(--space-8); margin: 0; padding: 0; list-style: none; }
+.plan-list > li { display: grid; grid-template-columns: var(--size-icon) minmax(0, 1fr) auto; align-items: center; gap: var(--space-2) var(--space-12); padding: var(--space-12) var(--space-16); border: var(--stroke-thin) solid var(--border-subtle); border-radius: var(--radius-md); background: var(--surface-well); }
+/* The block that is next: outlined in the accent without changing its size, on a card fill. */
+.plan-list > li[aria-current="step"] { padding-block: var(--space-16); border-color: var(--accent); outline: var(--stroke-thin) solid var(--accent); outline-offset: calc(var(--stroke-thin) * -2); background: var(--surface-card); }
+.plan-block-name { font: var(--type-title); }
+.plan-block-side { grid-row: 1 / span 2; grid-column: 3; color: var(--text-muted); font: var(--type-label-lg); }
+.plan-block-why { grid-column: 2; color: var(--text-muted); font: var(--type-body-lg); }
+.plan-list > li.is-skipped > .plan-block-name { color: var(--text-subtle); text-decoration: line-through; }
+.plan-go { grid-column: 2 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-8) var(--space-12); padding-top: var(--space-12); }
+.plan-go > .results-shortcuts { padding: 0; background: none; }
+
 /* ---------- Logo ---------- */
 .logo { display: inline-flex; align-items: center; gap: var(--space-8); color: var(--text); text-decoration: none; }
 .logo-mark { flex: none; width: 28px; height: 28px; }

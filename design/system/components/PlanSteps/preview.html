@@ -1,0 +1,33 @@
+<!-- @dsCard group="Practice" height=192 -->
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>PlanSteps</title></head>
+<body>
+<div class="ds-stack ds-sheet">
+  <div style="display:flex;align-items:center;gap:var(--space-8)">
+    <button class="btn">Plan</button>
+    <ol class="plan-steps" aria-label="Today's practice" style="width:480px">
+      <li class="is-done"><svg class="icon step-mark is-done" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg><span class="plan-step-name">Scales</span><span class="visually-hidden">, done</span></li>
+      <li aria-current="step"><span class="step-mark" aria-hidden="true">2</span><span class="plan-step-name">Sight</span><span class="visually-hidden">, now</span><span class="pips" role="img" aria-label="1 of 3 exercises"><i class="is-done"></i><i></i><i></i></span></li>
+      <li class="is-next"><span class="step-mark" aria-hidden="true">3</span><span class="plan-step-name">Rhythm</span><span class="visually-hidden">, to come</span></li>
+      <li class="is-next"><span class="step-mark" aria-hidden="true">4</span><span class="plan-step-name">Ear</span><span class="visually-hidden">, to come</span></li>
+    </ol>
+  </div>
+  <ol class="plan-steps" aria-label="Today's practice, a skipped block and a long one" style="width:480px">
+    <li class="is-done"><svg class="icon step-mark is-done" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg><span class="plan-step-name">Scales</span><span class="visually-hidden">, done</span></li>
+    <li class="is-skipped"><span class="step-mark" aria-hidden="true">2</span><span class="plan-step-name">Sight</span><span class="visually-hidden">, skipped</span></li>
+    <li aria-current="step"><span class="step-mark" aria-hidden="true">3</span><span class="plan-step-name">Rhythm</span><span class="visually-hidden">, now</span><span class="pips-count num" aria-label="3 of 8 exercises">3/8</span></li>
+    <li class="is-next"><span class="step-mark" aria-hidden="true">4</span><span class="plan-step-name">Ear</span><span class="visually-hidden">, to come</span></li>
+    <li class="is-next"><span class="step-mark" aria-hidden="true">5</span><span class="plan-step-name">Chords</span><span class="visually-hidden">, to come</span></li>
+  </ol>
+  <p class="ds-note">Under 440px the other blocks keep their marks only:</p>
+  <ol class="plan-steps" aria-label="Today's practice, narrow" style="width:330px">
+    <li class="is-done"><svg class="icon step-mark is-done" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg><span class="plan-step-name">Scales</span><span class="visually-hidden">, done</span></li>
+    <li aria-current="step"><span class="step-mark" aria-hidden="true">2</span><span class="plan-step-name">Sight</span><span class="visually-hidden">, now</span><span class="pips" role="img" aria-label="2 of 4 exercises"><i class="is-done"></i><i class="is-done"></i><i></i><i></i></span></li>
+    <li class="is-next"><span class="step-mark" aria-hidden="true">3</span><span class="plan-step-name">Rhythm</span><span class="visually-hidden">, to come</span></li>
+    <li class="is-next"><span class="step-mark" aria-hidden="true">4</span><span class="plan-step-name">Ear</span><span class="visually-hidden">, to come</span></li>
+    <li class="is-next"><span class="step-mark" aria-hidden="true">5</span><span class="plan-step-name">Chords</span><span class="visually-hidden">, to come</span></li>
+  </ol>
+</div>
+</body>
+</html>
