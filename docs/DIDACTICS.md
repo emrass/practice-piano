@@ -224,7 +224,7 @@ patterns, modes, exam-style stages, LH fingering for black-key arpeggios.
   only: the staff always shows one voicing, so under notation the rule picks what is written).
   Hands (notation only, since a symbol can be played with any hand): **RH** writes the chord on
   the treble staff around middle C; **LH** writes it on the bass staff (from F2, within a ledger
-  line or two); **RH + LH bass** (as *+ LH root* in progressions) writes the bass note on the bass
+  line or two); **RH + LH bass** (the same name as in progressions) writes the bass note on the bass
   staff (the root, or the inversion's bass) and the whole chord in close root position on the
   treble staff (C/G: G under C–E–G); **Both** (hands together, as in technique exams) writes the
   same close voicing and inversion in each hand, an octave apart, the left hand from G2 and the
@@ -236,9 +236,9 @@ patterns, modes, exam-style stages, LH fingering for black-key arpeggios.
   ii7–V7–Imaj7, i–iv–V–i, iiø7–V7–i, Andalusian i–VII–VI–V, Pachelbel's canon, circle of fifths,
   12-bar blues (dominant sevenths). All 12 major or minor keys (minor dominants from harmonic
   minor); four-chord progressions go around twice so the turnaround is practiced. Hands: right
-  hand alone, or **+ LH root** (left hand plays the root in the bass staff, which becomes the
+  hand alone, or **RH + LH bass** (left hand plays the root in the bass staff, which becomes the
   required bass note). Shown as, as in drills: **Notes** prints symbols *and* Roman numerals above
-  the staff; **Symbol** plays from the chord chart, without notation (voice it yourself, with any
+  the staff; **Symbols** plays from the chord chart, without notation (voice it yourself, with any
   hand, so Hands is off there). The chart is judged differently from the staff, so it is its own
   item.
 
