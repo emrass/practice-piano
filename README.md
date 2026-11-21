@@ -21,13 +21,13 @@ Lessons:
 The didactic concept behind the lessons (and the planned ones) is in
 [docs/DIDACTICS.md](docs/DIDACTICS.md).
 
-It runs in two ways:
+It runs in three ways:
 
-| | Desktop browser | iPadOS / macOS app |
-|---|---|---|
-| MIDI | Web MIDI (Chrome / Edge) — USB and macOS-paired Bluetooth MIDI | CoreMIDI — USB, Bluetooth LE MIDI, network |
-| Bluetooth pairing | via macOS *Audio MIDI Setup* | **in-app** “Pair Bluetooth MIDI…” button |
-| Install | none — open the site; optionally install it (Chrome / Edge) or add it to the Home Screen (iPad) to use it offline | build with Xcode, free Apple ID |
+| | Desktop browser | iPadOS / macOS app | Android app |
+|---|---|---|---|
+| MIDI | Web MIDI (Chrome / Edge) — USB and macOS-paired Bluetooth MIDI | CoreMIDI — USB, Bluetooth LE MIDI, network | Android MIDI — USB, Bluetooth LE MIDI |
+| Bluetooth pairing | via macOS *Audio MIDI Setup* | **in-app** “Pair Bluetooth MIDI…” button | **in-app** “Pair Bluetooth MIDI” button |
+| Install | none — open the site; optionally install it (Chrome / Edge) or add it to the Home Screen (iPad) to use it offline | build with Xcode, free Apple ID | the APK from CI, or build with Android Studio / Gradle |
 
 No account, no backend: everything is stored locally, with JSON export / import / reset.
 
@@ -68,6 +68,8 @@ keyboard guide and a menu for note names on the keys, computer-key hints and the
 | `npm run lint` | ESLint (typescript-eslint, react-hooks) |
 | `npm run build` | type-check + production build → `dist/` |
 | `npm run build:native` | production build into `native/PracticePiano/Web` |
+| `npm run build:android` | production build for the Android app (Gradle runs it and passes `--outDir`) |
+| `npm run android:check` | Android unit tests, lint and debug APK (needs the Android SDK) |
 | `npm run check` | all of the above, in order |
 | `npm run e2e` | browser tests (Playwright): each lesson played end to end through a fake MIDI piano |
 
@@ -105,6 +107,18 @@ See **[docs/NATIVE.md](docs/NATIVE.md)**. In short:
 4. Choose your iPad, or **My Mac (Mac Catalyst)**, and press Run.
 
 The Xcode build runs `npm run build:native` itself and embeds the result, so the app always
+contains the current web code.
+
+## Android app
+
+See **[docs/ANDROID.md](docs/ANDROID.md)**. In short:
+
+- Ready to install: every CI run of `checks.yml` keeps a debug APK (*Artifacts* →
+  **practice-piano-android-debug**).
+- To build: `npm install`, then open `android/` in Android Studio and press Run, or
+  `cd android && ./gradlew installDebug`.
+
+Gradle runs `npm run build:android` itself and adds the result to the APK, so the app always
 contains the current web code.
 
 ## Features
@@ -193,15 +207,17 @@ src/
     progress/    XP, mastery, streaks, weak spots, extensible stats
     midi/ input/ keyboard/ settings.ts
   persistence/   storage + identity ports, local adapters, backup format
-  platform/      Web MIDI / CoreMIDI bridge backends, Web Audio metronome
+  platform/      Web MIDI / native (CoreMIDI, Android MIDI) bridge backends, Web Audio metronome
   input/         input bus (MIDI, on-screen keys and QWERTY all publish here), key sound
   ui/            React app: lessons/ (one module per lesson), practice/ (sessions), results/,
                  progress/ (per-lesson views), components/, VexFlow renderer
   styles/        vanilla CSS
 design/          design system: tokens, component styles and guidelines (see design/README.md)
-e2e/             browser tests: fake Web MIDI piano, seeded profile, one spec per lesson + layout
+e2e/             browser tests: fake Web MIDI piano, seeded profile, one spec per lesson + layout,
+                 and the Android bridge
 native/          Xcode project (SwiftUI + WKWebView + CoreMIDI + CoreAudioKit)
-docs/            architecture, native build guide, requirements, didactic concept
+android/         Gradle project (Kotlin + WebView + Android MIDI + Bluetooth LE pairing)
+docs/            architecture, native and Android build guides, requirements, didactic concept
 ```
 
 More detail: **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.

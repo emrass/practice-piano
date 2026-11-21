@@ -118,7 +118,7 @@ export class WebMidiBackend implements MidiBackend {
   }
 }
 
-/** CoreMIDI via the native wrapper's WKScriptMessageHandler bridge. */
+/** CoreMIDI or Android MIDI via the native wrapper's bridge (see ../native.ts). */
 export class NativeMidiBackend implements MidiBackend {
   readonly kind = 'native' as const;
   readonly canPairBluetooth = true;

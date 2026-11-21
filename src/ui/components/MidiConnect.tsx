@@ -26,7 +26,7 @@ export function BrowserBluetoothHelp() {
   return (
     <>
       On macOS, pair the piano once in <b>Audio MIDI Setup → Window → Show MIDI Studio → Bluetooth</b> (the “Bluetooth” toolbar button), then press Rescan here. On iPad, browsers
-      can’t use MIDI. Install the practice-piano app, which has a built-in pairing button.
+      can’t use MIDI. Install the practice-piano app, which has a built-in pairing button. On Android, Chrome can’t pair Bluetooth pianos. The Android app can.
     </>
   );
 }
