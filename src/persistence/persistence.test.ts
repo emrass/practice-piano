@@ -101,6 +101,17 @@ describe('ProfileRepository', () => {
     expect(await storage.getItem('users/someone-else/settings')).toBe('{}');
   });
 
+  it('keeps today’s plan beside the profile: out of backups, gone with a reset', async () => {
+    const { repo: r } = repo();
+    expect(await r.loadToday()).toBeNull();
+    const day = { day: '2026-11-21', minutes: 10, blocks: [], runs: [], at: 0 };
+    await r.saveToday(day);
+    expect(await r.loadToday()).toEqual(day);
+    expect(JSON.parse(await r.exportBackup())).not.toHaveProperty('today');
+    await r.reset();
+    expect(await r.loadToday()).toBeNull();
+  });
+
   it('survives corrupted stored JSON', async () => {
     const { storage, repo: r } = repo();
     const user = await r.currentUser();
@@ -146,6 +157,15 @@ describe('normalizeSettings', () => {
     expect(s.keyboardSize).toBe(88);
     expect(normalizeSettings({ sight: { rhythmComplexity: 0 } }).sight.rhythmComplexity).toBe(0);
     expect(normalizeSettings({ sight: { rhythmComplexity: 'auto' } }).sight.rhythmComplexity).toBe('auto');
+  });
+
+  it('keeps the way to practice and the plan’s preferences, and repairs them', () => {
+    const s = normalizeSettings({ way: 'today', plan: { minutes: 30, lessons: { chords: false } } });
+    expect(s.way).toBe('today');
+    expect(s.plan).toEqual({ minutes: 30, lessons: { sight: true, ear: true, rhythm: true, scales: true, chords: false } });
+    const bad = normalizeSettings({ way: 'guided', plan: { minutes: 45 } });
+    expect(bad.way).toBe('free');
+    expect(bad.plan).toEqual(DEFAULT_SETTINGS.plan);
   });
 
   it('keeps each lesson in its own group and does not carry over the old flat fields', () => {

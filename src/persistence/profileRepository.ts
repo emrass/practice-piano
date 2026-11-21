@@ -62,12 +62,12 @@ export class ProfileRepository {
     return this.user;
   }
 
-  private async key(name: 'settings' | 'progress'): Promise<string> {
+  private async key(name: 'settings' | 'progress' | 'today'): Promise<string> {
     const user = await this.currentUser();
     return `users/${user.id}/${name}`;
   }
 
-  private async readJson(name: 'settings' | 'progress'): Promise<unknown> {
+  private async readJson(name: 'settings' | 'progress' | 'today'): Promise<unknown> {
     const raw = await this.storage.getItem(await this.key(name));
     if (!raw) return null;
     try {
@@ -88,6 +88,18 @@ export class ProfileRepository {
 
   async saveProgress(progress: ProgressState): Promise<void> {
     await this.storage.setItem(await this.key('progress'), JSON.stringify(progress));
+  }
+
+  /**
+   * Today's plan as it was saved (core/plan/day.ts checks it). It is kept beside the profile and
+   * left out of backups: a plan lasts one day and is made again from settings and progress.
+   */
+  loadToday(): Promise<unknown> {
+    return this.readJson('today');
+  }
+
+  async saveToday(day: unknown): Promise<void> {
+    await this.storage.setItem(await this.key('today'), JSON.stringify(day));
   }
 
   async exportBackup(now = new Date()): Promise<string> {

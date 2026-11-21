@@ -18,6 +18,7 @@ import {
 } from './chords/catalog';
 import { SCALE_TYPE_IDS, SCALE_TYPES, type NoteValue, type ScaleHands, type ScaleTypeId } from './scales/catalog';
 import { type ExperienceSelection, normalizeExperience } from './experience';
+import { DEFAULT_PLAN_PREFS, normalizePlanPrefs, type PlanPrefs } from './plan/planner';
 import { RHYTHM_TEXTURES, type RhythmHands, type RhythmSettings, type RhythmTask, type RhythmTexture } from './rhythm/generator';
 
 export const SETTINGS_SCHEMA_VERSION = 2;
@@ -25,6 +26,8 @@ export const SETTINGS_SCHEMA_VERSION = 2;
 export type AudioSetup = 'speakers' | 'headphones' | 'calibrated' | 'custom';
 export type SustainScoring = 'ignore' | 'hold';
 export type Theme = 'light' | 'dark';
+/** The two ways to practice: today's plan, or lessons of the player's own choosing. */
+export type PracticeWay = 'today' | 'free';
 
 /** Sight reading: the generator's settings (keyboard size comes from Display) and the mode. */
 export interface SightSettings extends Omit<GeneratorSettings, 'keyboardSize' | 'focus' | 'focusFigures'> {
@@ -97,6 +100,10 @@ export interface LessonSettings {
 export interface Settings extends LessonSettings {
   schemaVersion: number;
   lesson: LessonId;
+  /** Which way to practice is open: Today (the plan) or Free practice (pick a lesson). */
+  way: PracticeWay;
+  /** Today's practice: its length and the lessons it draws from. */
+  plan: PlanPrefs;
   /** Volume of the built-in piano sound (ear training playback, key sound), 0–1. */
   synthVolume: number;
   /** Draw more of what you miss (weak notes, intervals, figures, chords). */
@@ -180,6 +187,8 @@ export const LATENCY_PRESETS: Readonly<Record<'speakers' | 'headphones', { laten
 export const DEFAULT_SETTINGS: Settings = {
   schemaVersion: SETTINGS_SCHEMA_VERSION,
   lesson: 'sight',
+  way: 'free',
+  plan: DEFAULT_PLAN_PREFS,
   sight: {
     level: 1,
     hands: 'rh',
@@ -282,6 +291,8 @@ export function normalizeSettings(raw: unknown): Settings {
   return {
     schemaVersion: SETTINGS_SCHEMA_VERSION,
     lesson: oneOf(r.lesson, LESSON_IDS, d.lesson),
+    way: oneOf(r.way, ['today', 'free'] as const, d.way),
+    plan: normalizePlanPrefs(r.plan),
     sight: normalizeSight(group(r.sight)),
     ear: normalizeEar(group(r.ear)),
     rhythm: normalizeRhythm(group(r.rhythm)),
