@@ -8,6 +8,8 @@ import {
   CHORD_SET_IDS,
   type ChordHands,
   type ChordPrompt,
+  DRILL_HANDS,
+  type DrillHands,
   type ChordSetId,
   findProgression,
   type InversionRule,
@@ -66,6 +68,8 @@ export interface ChordSettings {
   /** Drill: chords named by symbol, or written on the staff. */
   prompt: ChordPrompt;
   inversions: InversionRule;
+  /** Drill shown as notation: the hand the chord is written for (treble, bass or both staves). */
+  drillHands: DrillHands;
   /** Drill length in chords. */
   count: 8 | 12 | 16;
   progression: string;
@@ -216,6 +220,7 @@ export const DEFAULT_SETTINGS: Settings = {
     set: 'triads',
     prompt: 'symbol',
     inversions: 'root',
+    drillHands: 'rh',
     count: 8,
     progression: 'I-IV-V-I',
     key: 'C',
@@ -374,6 +379,7 @@ function normalizeChords(r: Record<string, unknown>): ChordSettings {
     set: oneOf(r.set, CHORD_SET_IDS, d.set),
     prompt: oneOf(r.prompt, ['symbol', 'notation'] as const, d.prompt),
     inversions: oneOf(r.inversions, ['any', 'root', 'inversions'] as const, d.inversions),
+    drillHands: oneOf(r.drillHands, DRILL_HANDS, d.drillHands),
     count: oneOf(r.count, [8, 12, 16] as const, d.count),
     ...progressionChoice(r.progression, r.key),
     hands: oneOf(r.hands, ['rh', 'lh-bass'] as const, d.hands),

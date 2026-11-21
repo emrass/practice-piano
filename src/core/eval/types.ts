@@ -127,6 +127,8 @@ export interface ChordOutcome {
   /** Root pitch class 0–11. */
   rootPc: number;
   inversion: number;
+  /** Notation drills: the hand the chord was written for (reading it in that clef is the task). */
+  readHands?: 'rh' | 'lh' | 'both';
   correct: boolean;
   /** Right notes but the wrong one in the bass. */
   wrongBass: boolean;

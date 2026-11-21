@@ -9,6 +9,7 @@ export const chordsRules: LessonProgressRules<ChordsResult> = {
       addObservation(stats, 'chordQuality', o.quality, o.correct, o.reactionMs, o.timingScore, o.deltaMs);
       addObservation(stats, 'chordRoot', String(o.rootPc), o.correct, o.reactionMs, o.timingScore, o.deltaMs);
       addObservation(stats, 'chordInversion', String(o.inversion), o.correct, o.reactionMs, o.timingScore, o.deltaMs);
+      if (o.readHands) addObservation(stats, 'chordHands', o.readHands, o.correct, o.reactionMs, o.timingScore, o.deltaMs);
     }
   },
   ladderRun: ({ chords: c }) => ({ itemId: c.itemId, tempo: c.bpm, notesPerBeat: 1, goalTempo: c.goalBpm, clean: c.clean }),
@@ -17,7 +18,7 @@ export const chordsRules: LessonProgressRules<ChordsResult> = {
 };
 
 export interface WeakChordStat {
-  dimension: 'chordQuality' | 'chordRoot' | 'chordInversion';
+  dimension: 'chordQuality' | 'chordRoot' | 'chordInversion' | 'chordHands';
   key: string;
   attempts: number;
   accuracy: number;
@@ -27,11 +28,12 @@ export interface WeakChordStat {
 }
 
 /**
- * Chord qualities, roots and inversions that are often wrong or slow to find. Slowness is
- * relative to the player's own typical reaction across all chords.
+ * Chord qualities, roots, inversions and reading hands (chords read in the treble, bass or both
+ * staves) that are often wrong or slow to find. Slowness is relative to the player's own typical
+ * reaction across all chords.
  */
 export function findWeakChords(progress: ProgressState, minAttempts = 8, limit = 6): WeakChordStat[] {
-  const dims = ['chordQuality', 'chordRoot', 'chordInversion'] as const;
+  const dims = ['chordQuality', 'chordRoot', 'chordInversion', 'chordHands'] as const;
   const all = dims.flatMap((dimension) =>
     Object.entries(progress.stats[dimension] ?? {}).map(([key, agg]) => ({ dimension, key, agg })),
   );
