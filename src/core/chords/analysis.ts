@@ -1,8 +1,8 @@
 import type { ChordOutcome, ChordsResult, ChordSummary } from '../eval/types';
 import { median } from '../eval/types';
-import type { ChordJudgment } from './engine';
+import { type ChordJudgment, splitHands } from './engine';
 import { drillHandsOf, QUALITIES, type ChordQuality } from './catalog';
-import { type ChordExercise, PC_NAMES } from './generator';
+import { type ChordExercise, type ChordTarget, PC_NAMES } from './generator';
 import { minimalMovement, movement } from './voicing';
 
 /** Clean run (moves up the tempo ladder): nearly every chord right, and on the beat. */
@@ -24,10 +24,10 @@ function sd(xs: readonly number[]): number | null {
 
 const pc = (m: number) => ((m % 12) + 12) % 12;
 
-/** The right hand's part of what was played: without the left-hand bass when there is one. */
-function rightHand(played: readonly number[], lhBass: boolean): number[] {
+/** The right hand's part of what was played: the keys from the target's split up, when it has hands. */
+function rightHand(played: readonly number[], target: ChordTarget): number[] {
   const sorted = [...played].sort((a, b) => a - b);
-  return lhBass && sorted.length > 1 ? sorted.slice(1) : sorted;
+  return target.hands ? splitHands(target.hands.split, sorted).rh : sorted;
 }
 
 export function summarizeChords(ex: ChordExercise, judgments: readonly ChordJudgment[], mode: string, goalBpm: number): ChordSummary {
@@ -62,15 +62,14 @@ export function summarizeChords(ex: ChordExercise, judgments: readonly ChordJudg
   let voiceLeading: number | null = null;
   let moves: ChordSummary['movement'] = null;
   if (item.task === 'progression') {
-    const lhBass = item.hands === 'lh-bass';
     const played: number[] = [];
     const minimal: number[] = [];
     for (let i = 1; i < targets.length; i++) {
       const a = byIndex.get(i - 1);
       const b = byIndex.get(i);
       if (!a?.correct || !b?.correct) continue;
-      const from = rightHand(a.played, lhBass);
-      const to = rightHand(b.played, lhBass);
+      const from = rightHand(a.played, targets[i - 1]);
+      const to = rightHand(b.played, targets[i]);
       played.push(movement(from, to));
       minimal.push(minimalMovement(from, targets[i].pcs));
     }

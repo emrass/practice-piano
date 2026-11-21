@@ -126,6 +126,23 @@ test.describe('Chords & progressions', () => {
     expect((progress.repertoire as Record<string, { ladderTempo: number }>)['chords/prog/I-IV-V-I/F/lh-bass'].ladderTempo).toBe(124);
   });
 
+  test('Progression (Wait), + LH root: the right hand landing first is still right first time', async ({ app }) => {
+    await app.open({
+      settings: { lesson: 'chords', chords: { task: 'progression', progression: 'I-V-vi-IV', key: 'C', hands: 'lh-bass', mode: 'wait' } },
+    });
+    const ts = await app.exercise(targets);
+    for (const t of ts) {
+      // The right hand a moment before the left: the chord waits for the left-hand root.
+      await app.noteOn(t.voicing);
+      await app.noteOn([t.bassMidi!]);
+      await app.noteOff([t.bassMidi!, ...t.voicing]);
+    }
+    await expect(app.results()).toBeVisible();
+    await expect(app.results()).toContainText('8/8');
+    await expect(app.results()).not.toContainText('in the bass');
+    await expect(app.results()).not.toContainText('wrong key');
+  });
+
   test('Review plays due items first', async ({ app }) => {
     await app.open({
       settings: { lesson: 'chords', chords: { source: 'review' } },

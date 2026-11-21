@@ -1,9 +1,10 @@
-import type { ChordTarget } from './generator';
+import type { ChordTarget, HandPart } from './generator';
 
 /**
  * Chord judging. A chord is right when the keys sounding together have exactly its pitch
  * classes (any octave, any doubling) and, where asked, the right note in the bass. Other
- * voicing choices are the player's.
+ * voicing choices are the player's. A target with hands is judged hand by hand: each hand's
+ * keys must make its own part.
  */
 const pc = (m: number) => ((m % 12) + 12) % 12;
 
@@ -27,18 +28,42 @@ export interface ChordJudgment {
   hinted?: boolean;
 }
 
-/** All the chord's notes (and nothing else) are down, but another chord tone is lowest. */
-export function bassOnlyWrong(target: Pick<ChordTarget, 'pcs' | 'bassPc'>, keys: readonly number[]): boolean {
-  if (target.bassPc === null || !keys.length) return false;
-  return matches({ pcs: target.pcs, bassPc: null }, keys) && !matches(target, keys);
+type Judged = Pick<ChordTarget, 'pcs' | 'bassPc' | 'hands'>;
+
+/** Keys below the split are the left hand's, the rest the right hand's. */
+export function splitHands(split: number, keys: readonly number[]): { lh: number[]; rh: number[] } {
+  return { lh: keys.filter((k) => k < split), rh: keys.filter((k) => k >= split) };
 }
 
-export function matches(target: Pick<ChordTarget, 'pcs' | 'bassPc'>, keys: readonly number[]): boolean {
+function partMatches(part: HandPart, keys: readonly number[]): boolean {
   if (!keys.length) return false;
   const have = new Set(keys.map(pc));
-  if (have.size !== target.pcs.length || target.pcs.some((p) => !have.has(p))) return false;
-  if (target.bassPc !== null && pc(Math.min(...keys)) !== target.bassPc) return false;
+  if (have.size !== part.pcs.length || part.pcs.some((p) => !have.has(p))) return false;
+  if (part.bassPc !== null && pc(Math.min(...keys)) !== part.bassPc) return false;
   return true;
+}
+
+/**
+ * All the chord's notes (and nothing else) are down, but the wrong note is in the bass. Judged by
+ * hand: the right hand has its whole part and the left hand has played a chord tone that is not
+ * its part (a right hand alone is simply not complete yet).
+ */
+export function bassOnlyWrong(target: Judged, keys: readonly number[]): boolean {
+  if (target.hands) {
+    const { lh, rh } = splitHands(target.hands.split, keys);
+    if (!lh.length || !partMatches({ pcs: target.hands.rh.pcs, bassPc: null }, rh)) return false;
+    return lh.every((k) => target.pcs.includes(pc(k))) && !partMatches(target.hands.lh, lh);
+  }
+  if (target.bassPc === null || !keys.length) return false;
+  return partMatches({ pcs: target.pcs, bassPc: null }, keys) && !partMatches(target, keys);
+}
+
+export function matches(target: Judged, keys: readonly number[]): boolean {
+  if (target.hands) {
+    const { lh, rh } = splitHands(target.hands.split, keys);
+    return partMatches(target.hands.lh, lh) && partMatches(target.hands.rh, rh);
+  }
+  return partMatches(target, keys);
 }
 
 /** Self-paced: each chord waits until it is played. */
