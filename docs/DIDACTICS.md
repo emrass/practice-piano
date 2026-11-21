@@ -223,10 +223,11 @@ patterns, modes, exam-style stages, LH fingering for black-key arpeggios.
   *inversions* (the bass note asked for, written as a slash chord C/E), or *any voicing*.
   Hands (notation only, since a symbol can be played with any hand): **RH** writes the chord on
   the treble staff around middle C; **LH** writes it on the bass staff (from F2, within a ledger
-  line or two); **+ LH bass** (as *+ LH root* in progressions) writes the bass note on the bass
+  line or two); **RH + LH bass** (as *+ LH root* in progressions) writes the bass note on the bass
   staff (the root, or the inversion's bass) and the other chord tones in close position on the
-  treble staff, none doubled, so the chord is complete only with its last note. Reading the clef is part of the task, so each hand is its own
-  item; right-hand drills keep their earlier id and progress.
+  treble staff, none doubled, so the chord is complete only with its last note. Reading the clef
+  is part of the task, so each hand is its own item; right-hand drills keep their earlier id and
+  progress.
 - **Progression** — *progression × key × hands*. Library: I–IV–V–I, I–V–vi–IV, I–vi–IV–V,
   ii7–V7–Imaj7, i–iv–V–i, iiø7–V7–i, Andalusian i–VII–VI–V, Pachelbel's canon, circle of fifths,
   12-bar blues (dominant sevenths). All 12 major or minor keys (minor dominants from harmonic
