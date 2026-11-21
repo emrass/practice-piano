@@ -23,7 +23,8 @@
     "design:check": "node design/scripts/check.mjs",
     "design:preview": "node design/scripts/preview.mjs",
     "e2e": "playwright test",
-    "screenshots": "playwright test -c scripts/screenshots/playwright.config.ts"
+    "screenshots": "playwright test -c scripts/screenshots/playwright.config.ts landing",
+    "ui-map": "playwright test -c scripts/screenshots/playwright.config.ts ui-map"
   },
   "dependencies": {
     "react": "^19.3.1",

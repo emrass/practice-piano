@@ -8,6 +8,8 @@ import { isScaleExercise, nps } from '../../core/scales/generator';
 import { CHORD_SETS, chordSetExamples, findProgression } from '../../core/chords/catalog';
 import { isChordExercise } from '../../core/chords/generator';
 
+/** A notation drill is read on the staff its hand plays from. */
+const DRILL_STAFF_LABEL = { rh: 'Treble clef', lh: 'Bass clef', 'lh-bass': 'Bass + chord', both: 'Both hands' } as const;
 const HANDS_LABEL = { rh: 'Right hand', lh: 'Left hand', alternating: 'Alternating', both: 'Both hands' } as const;
 
 /** MetaStrip: fixed-geometry facts about the current exercise (cells never change width). */
@@ -23,7 +25,7 @@ export function MetaStrip(props: { exercise: Exercise; firstSight: boolean; focu
     ? ci!.task === 'drill'
       ? [
           ['Chords', chordSetExamples(ci!.set)],
-          ['Shown as', ci!.prompt === 'symbol' ? 'Symbols' : 'Notation'],
+          ['Shown as', ci!.prompt === 'symbol' ? 'Symbols' : DRILL_STAFF_LABEL[ci!.drillHands]],
           ['Voicing', { any: 'Any', root: 'Root position', inversions: 'Inversions' }[ci!.inversions]],
           ['Length', `${chords.targets.length} chords`],
           ['Tempo', `${ex.bpm} bpm`],
@@ -32,7 +34,7 @@ export function MetaStrip(props: { exercise: Exercise; firstSight: boolean; focu
       : [
           ['Key', ex.key.label],
           ['Chords', `${findProgression(ci!.progression)?.chords.length ?? chords.targets.length}`],
-          ['Hands', ci!.hands === 'lh-bass' ? 'RH + LH root' : 'Right hand'],
+          ['Hands', !ci!.notation ? 'Any' : ci!.hands === 'lh-bass' ? 'RH + LH root' : 'Right hand'],
           ['Length', `${chords.targets.length} bars`],
           ['Tempo', `${ex.bpm} bpm`],
           ['Per chord', `${(240 / ex.bpm).toFixed(1)} s`],

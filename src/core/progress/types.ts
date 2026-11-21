@@ -27,7 +27,8 @@ export interface Aggregate {
  * Rhythm (and sight reading in Flow mode) records 'rhythmFigure' (key = figure, e.g. "6,2"),
  * 'beatPosition' (downbeat / beat / offbeat / sixteenth); Rhythm also 'rhythmHand' and
  * 'rhythmTexture'. Scales record 'scaleKey'; chords 'chordQuality' (maj, m7…), 'chordRoot'
- * (pitch class "0"–"11") and 'chordInversion' ("0"–"3").
+ * (pitch class "0"–"11"), 'chordInversion' ("0"–"3") and, for chords read from notation,
+ * 'chordHands' ("rh", "lh", "lh-bass", "both").
  */
 export type StatDimension =
   | 'note'
@@ -41,7 +42,8 @@ export type StatDimension =
   | 'scaleKey'
   | 'chordQuality'
   | 'chordRoot'
-  | 'chordInversion';
+  | 'chordInversion'
+  | 'chordHands';
 
 export interface TierProgress {
   attempts: number;

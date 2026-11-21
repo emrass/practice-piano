@@ -8,6 +8,7 @@ Two to five choices of the same kind, one always selected, all visible at once.
 - The selected option is a raised thumb, not just a color.
 - Give the control a fixed or full width so switching never shifts its neighbors. Size options from their own label (`flex: 1 1 auto`): equal slices cut the longest one.
 - When there is less room, shorten the labels ("Sight reading" to "Sight"); do not shrink the type.
+- A choice that does not apply right now stays in place: every option `disabled` (dimmed, no hover, out of the tab order) and the reason in the field's hint, which is there in both states so nothing below moves ("Off for symbols: any hand plays the chord.").
 
 ```html
 <div class="segmented" role="radiogroup" aria-label="Practice mode">

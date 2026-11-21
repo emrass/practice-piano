@@ -15,7 +15,10 @@ import {
   type ChordSpec,
   chordSymbol,
   chordTones,
+  drillHandsOf,
   findProgression,
+  inversionsOf,
+  progressionHandsOf,
   pcsOf,
   QUALITIES,
   rootPitch,
@@ -35,10 +38,20 @@ export interface ChordTarget {
   pcs: number[];
   /** Pitch class required as the lowest note, or null for any voicing. */
   bassPc: number | null;
-  /** Suggested right-hand voicing (shown in notation and by the keyboard guide). */
+  /**
+   * Suggested voicing (shown in notation and by the keyboard guide): the right hand's, or in a
+   * left-hand drill the left hand's.
+   */
   voicing: number[];
-  /** Suggested left-hand bass note, when the left hand plays the root. */
+  /** Suggested left-hand bass note under the right hand (progressions with the LH root, LH-bass drills). */
   bassMidi: number | null;
+  /** Hands-together drills: the left hand's chord on the bass staff, an octave below the right hand's. */
+  lhChord: number[] | null;
+  /**
+   * Read from the staff: the written keys, low to high, and exactly these count (octave and all).
+   * null = read from a symbol: the pitch classes in any octave, with any hand.
+   */
+  written: number[] | null;
 }
 
 export interface ChordInfo {
@@ -75,6 +88,22 @@ export interface ChordOptions {
 const RH_LOW = 55; // G3
 const RH_HIGH = 79; // G5
 const LH_LOW = 40; // E2
+/** Left-hand drill chords start from F2, so even a seventh stays within a ledger line of the bass staff. */
+const LH_CHORD_LOW = 41; // F2
+/**
+ * Hands together: the left hand's chord starts from G2 and the right hand plays it an octave
+ * higher, so neither hand goes far past the ledger lines of its single-hand drill.
+ */
+const BOTH_LH_LOW = 43; // G2
+/** Close voicings in the right hand start from A3, around middle C. */
+const RH_START = 57; // A3
+
+/** The bass note below the right hand, in the bass staff (E2 to E♭3). */
+const bassNote = (bassPc: number) => LH_LOW + ((bassPc - pc(LH_LOW) + 12) % 12);
+
+/** The keys written on the staff, low to high. */
+const writtenKeys = (voicing: readonly number[], bassMidi: number | null, lhChord: readonly number[] | null = null) =>
+  [...(lhChord ?? []), ...(bassMidi !== null ? [bassMidi] : []), ...voicing].sort((a, b) => a - b);
 
 function withOctave(spelled: SpelledPitch, midi: number): SpelledPitch {
   const octave = Math.round((midi - spelled.alter - LETTER_PC[spelled.letter]) / 12) - 1;
@@ -89,6 +118,8 @@ function spellVoicing(spec: ChordSpec, voicing: readonly number[]): SpelledPitch
 
 function drillTargets(item: Extract<ChordItem, { task: 'drill' }>, opts: ChordOptions, rng: Rng): ChordTarget[] {
   const qualities = CHORD_SETS[item.set].qualities;
+  const hands = drillHandsOf(item.prompt, item.drillHands);
+  const rule = inversionsOf(item.prompt, item.inversions);
   const out: ChordTarget[] = [];
   let prevKey = '';
   for (let i = 0; i < opts.count; i++) {
@@ -99,21 +130,34 @@ function drillTargets(item: Extract<ChordItem, { task: 'drill' }>, opts: ChordOp
       const quality = rng.weighted([...qualities], qualities.map((q) => 1 + (opts.focus?.qualities?.[q] ?? 0)));
       const roots = QUALITIES[quality].roots;
       const name = rng.weighted([...roots], roots.map((r) => 1 + (opts.focus?.roots?.[pc(rootPitch(r).midi)] ?? 0)));
-      const inversion = item.inversions === 'inversions' ? rng.int(0, QUALITIES[quality].tones.length - 1) : 0;
+      const inversion = rule === 'inversions' ? rng.int(0, QUALITIES[quality].tones.length - 1) : 0;
       spec = { root: rootPitch(name), quality, inversion };
       key = `${name}${quality}${inversion}`;
     } while (key === prevKey && ++tries < 10);
     prevKey = key;
     const pcs = pcsOf(spec);
     const bass = pc(bassOf(spec).midi);
+    // LH bass: the bass note (the root, or the inversion's bass) on the bass staff, the whole chord
+    // in close root position above it in the right hand (C/G: G under C–E–G). Both: the same
+    // voicing in each hand, an octave apart. Read from notation, exactly the written keys count.
+    const lhChord = hands === 'both' ? closeVoicing(pcs, bass, BOTH_LH_LOW) : null;
+    const voicing =
+      hands === 'lh-bass'
+        ? closeVoicing(pcs, pc(spec.root.midi), RH_START)
+        : lhChord
+          ? lhChord.map((k) => k + 12)
+          : closeVoicing(pcs, bass, hands === 'lh' ? LH_CHORD_LOW : RH_START);
+    const bassMidi = hands === 'lh-bass' ? bassNote(bass) : null;
     out.push({
       index: i,
       spec,
       symbol: chordSymbol(spec),
       pcs,
-      bassPc: item.inversions === 'any' ? null : bass,
-      voicing: closeVoicing(pcs, bass, 57),
-      bassMidi: null,
+      bassPc: rule === 'any' ? null : bass,
+      voicing,
+      bassMidi,
+      lhChord,
+      written: item.prompt === 'notation' ? writtenKeys(voicing, bassMidi, lhChord) : null,
     });
   }
   return out;
@@ -125,6 +169,7 @@ function progressionTargets(item: Extract<ChordItem, { task: 'progression' }>): 
   const tonic = makePitch(letter, alter, 4);
   // Short progressions go around twice, so the turnaround back to the start is practiced too.
   const chords = def.chords.length <= 4 ? [...def.chords, ...def.chords] : def.chords;
+  const hands = progressionHandsOf(item.notation, item.hands);
   const out: ChordTarget[] = [];
   let prev: number[] | null = null;
   chords.forEach((ch, i) => {
@@ -133,17 +178,20 @@ function progressionTargets(item: Extract<ChordItem, { task: 'progression' }>): 
     const pcs = pcsOf(spec);
     const rootPc = pc(root.midi);
     // First chord in root position near middle C; then the smoothest move each time.
-    const voicing = prev ? smoothestVoicing(prev, pcs, RH_LOW, RH_HIGH) : closeVoicing(pcs, rootPc, 57);
+    const voicing = prev ? smoothestVoicing(prev, pcs, RH_LOW, RH_HIGH) : closeVoicing(pcs, rootPc, RH_START);
     prev = voicing;
+    const bassMidi = hands === 'lh-bass' ? bassNote(rootPc) : null;
     out.push({
       index: i,
       spec,
       symbol: chordSymbol(spec),
       numeral: ch.numeral,
       pcs,
-      bassPc: item.hands === 'lh-bass' ? rootPc : null,
+      bassPc: hands === 'lh-bass' ? rootPc : null,
       voicing,
-      bassMidi: item.hands === 'lh-bass' ? LH_LOW + ((rootPc - pc(LH_LOW) + 12) % 12) : null,
+      bassMidi,
+      lhChord: null,
+      written: item.notation ? writtenKeys(voicing, bassMidi) : null,
     });
   });
   return out;
@@ -153,27 +201,31 @@ export function generateChordExercise(item: ChordItem, opts: ChordOptions, seed:
   const rng = new Rng(seed);
   const targets = item.task === 'drill' ? drillTargets(item, opts, rng) : progressionTargets(item);
   const ts = TIME_SIGNATURES['4/4'];
-  const lh = targets.some((t) => t.bassMidi !== null);
+  // A left-hand drill writes the whole chord on the bass staff; otherwise the voicing is the right hand's.
+  const lhOnly = item.task === 'drill' && drillHandsOf(item.prompt, item.drillHands) === 'lh';
+  const lh = targets.some((t) => t.bassMidi !== null || t.lhChord !== null);
   const measures: Measure[] = targets.map((t, i) => {
-    const rh: NoteEvent = {
-      id: `rh-${i}`,
-      hand: 'rh',
+    const hand = lhOnly ? 'lh' : 'rh';
+    const chord: NoteEvent = {
+      id: `${hand}-${i}`,
+      hand,
       startTick: i * ts.ticksPerBar,
       durationTicks: ts.ticksPerBar,
       measureIndex: i,
       pitches: spellVoicing(t.spec, t.voicing),
     };
-    // Symbols above the staff — except when reading the notation is the exercise.
-    if (!(item.task === 'drill' && item.prompt === 'notation')) rh.symbol = t.numeral ? `${t.symbol}  ${t.numeral}` : t.symbol;
-    const m: Measure = { index: i, startTick: i * ts.ticksPerBar, rh: [rh], lh: [] };
-    if (lh && t.bassMidi !== null) {
+    // Symbols above the staff, except when reading the notation is the exercise.
+    if (!(item.task === 'drill' && item.prompt === 'notation')) chord.symbol = t.numeral ? `${t.symbol}  ${t.numeral}` : t.symbol;
+    const m: Measure = { index: i, startTick: i * ts.ticksPerBar, rh: lhOnly ? [] : [chord], lh: lhOnly ? [chord] : [] };
+    const lhKeys = t.lhChord ?? (t.bassMidi !== null ? [t.bassMidi] : null);
+    if (lh && lhKeys) {
       m.lh.push({
         id: `lh-${i}`,
         hand: 'lh',
         startTick: i * ts.ticksPerBar,
         durationTicks: ts.ticksPerBar,
         measureIndex: i,
-        pitches: [withOctave(t.spec.root, t.bassMidi)],
+        pitches: spellVoicing(t.spec, lhKeys),
       });
     }
     return m;
@@ -185,13 +237,13 @@ export function generateChordExercise(item: ChordItem, opts: ChordOptions, seed:
           return makeKeySignature(letter, alter, findProgression(item.progression)!.mode);
         })()
       : makeKeySignature('C', 0, 'major');
-  const midis = targets.flatMap((t) => [...t.voicing, ...(t.bassMidi !== null ? [t.bassMidi] : [])]);
+  const midis = targets.flatMap((t) => [...t.voicing, ...(t.bassMidi !== null ? [t.bassMidi] : []), ...(t.lhChord ?? [])]);
   const id = chordItemId(item);
   return {
     id: item.task === 'drill' ? `ch-${id}-${seed}` : `ch-${id}`,
     seed,
-    hands: lh ? 'both' : 'rh',
-    staves: lh ? ['treble', 'bass'] : ['treble'],
+    hands: lhOnly ? 'lh' : lh ? 'both' : 'rh',
+    staves: lhOnly ? ['bass'] : lh ? ['treble', 'bass'] : ['treble'],
     key,
     timeSignature: ts,
     bpm: Math.round(opts.bpm),

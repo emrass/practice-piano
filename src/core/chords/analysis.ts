@@ -1,7 +1,7 @@
 import type { ChordOutcome, ChordsResult, ChordSummary } from '../eval/types';
 import { median } from '../eval/types';
 import type { ChordJudgment } from './engine';
-import { QUALITIES, type ChordQuality } from './catalog';
+import { drillHandsOf, QUALITIES, type ChordQuality } from './catalog';
 import { type ChordExercise, PC_NAMES } from './generator';
 import { minimalMovement, movement } from './voicing';
 
@@ -24,16 +24,12 @@ function sd(xs: readonly number[]): number | null {
 
 const pc = (m: number) => ((m % 12) + 12) % 12;
 
-/** The right hand's part of what was played: without the left-hand bass when there is one. */
-function rightHand(played: readonly number[], lhBass: boolean): number[] {
-  const sorted = [...played].sort((a, b) => a - b);
-  return lhBass && sorted.length > 1 ? sorted.slice(1) : sorted;
-}
-
 export function summarizeChords(ex: ChordExercise, judgments: readonly ChordJudgment[], mode: string, goalBpm: number): ChordSummary {
   const { targets, item } = ex.chords;
   const flow = mode === 'flow';
   const byIndex = new Map(judgments.map((j) => [j.index, j]));
+  // Only notation drills read the chord in a clef; symbols and progressions say nothing about it.
+  const readHands = item.task === 'drill' && item.prompt === 'notation' ? drillHandsOf(item.prompt, item.drillHands) : undefined;
   const outcomes: ChordOutcome[] = targets.map((t) => {
     const j = byIndex.get(t.index);
     return {
@@ -41,6 +37,7 @@ export function summarizeChords(ex: ChordExercise, judgments: readonly ChordJudg
       quality: t.spec.quality,
       rootPc: pc(t.spec.root.midi),
       inversion: t.spec.inversion,
+      ...(readHands ? { readHands } : {}),
       correct: !!j?.correct,
       wrongBass: !!j?.wrongBass,
       reactionMs: j?.reactionMs,
@@ -55,19 +52,19 @@ export function summarizeChords(ex: ChordExercise, judgments: readonly ChordJudg
   const spreads = hits.map((j) => j.spreadMs ?? 0);
   const timing = mean(judgments.filter((j) => j.correct).map((j) => j.timingScore ?? 0));
 
-  // Voice leading: only for progressions, between neighboring chords both played right.
+  // Voice leading: only for progressions from the chart (from the staff the voicing is written,
+  // so a right chord always moves as shown), between neighboring chords both played right.
   let voiceLeading: number | null = null;
   let moves: ChordSummary['movement'] = null;
-  if (item.task === 'progression') {
-    const lhBass = item.hands === 'lh-bass';
+  if (item.task === 'progression' && !item.notation) {
     const played: number[] = [];
     const minimal: number[] = [];
     for (let i = 1; i < targets.length; i++) {
       const a = byIndex.get(i - 1);
       const b = byIndex.get(i);
       if (!a?.correct || !b?.correct) continue;
-      const from = rightHand(a.played, lhBass);
-      const to = rightHand(b.played, lhBass);
+      const from = a.played;
+      const to = b.played;
       played.push(movement(from, to));
       minimal.push(minimalMovement(from, targets[i].pcs));
     }
@@ -137,7 +134,10 @@ export function chordResult(
   ctx: { mode: 'wait' | 'flow'; goalBpm: number; durationMs: number; wrongPresses: number; completedAt: number },
 ): ChordsResult {
   const chords = summarizeChords(ex, judgments, ctx.mode, ctx.goalBpm);
-  const size = (i: number) => ex.chords.targets[i].pcs.length + (ex.chords.targets[i].bassMidi !== null ? 1 : 0);
+  const size = (i: number) => {
+    const t = ex.chords.targets[i];
+    return t.voicing.length + (t.bassMidi !== null ? 1 : 0) + (t.lhChord?.length ?? 0);
+  };
   const totalNotes = ex.chords.targets.reduce((a, _t, i) => a + size(i), 0);
   const correctNotes = chords.outcomes.reduce((a, o, i) => a + (o.correct ? size(i) : 0), 0);
   const hits = judgments.filter((j) => j.correct);
@@ -166,9 +166,12 @@ export function chordResult(
   };
 }
 
-/** "Diminished", "E♭ chords", "1st inversion" — a weak chord statistic in words. */
+const READ_HANDS_LABEL: Record<string, string> = { rh: 'Right-hand chords', lh: 'Left-hand chords', 'lh-bass': 'Chords over a left-hand bass', both: 'Chords hands together' };
+
+/** "Diminished", "E♭ chords", "1st inversion", "Left-hand chords": a weak chord statistic in words. */
 export function weakChordLabel(w: { dimension: string; key: string }): string {
   if (w.dimension === 'chordQuality') return QUALITIES[w.key as ChordQuality]?.name ?? w.key;
   if (w.dimension === 'chordRoot') return `${PC_NAMES[Number(w.key)]} chords`;
+  if (w.dimension === 'chordHands') return READ_HANDS_LABEL[w.key] ?? w.key;
   return ['Root position', '1st inversion', '2nd inversion', '3rd inversion'][Number(w.key)] ?? w.key;
 }
