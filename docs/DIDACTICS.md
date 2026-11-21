@@ -234,9 +234,10 @@ patterns, modes, exam-style stages, LH fingering for black-key arpeggios.
   12-bar blues (dominant sevenths). All 12 major or minor keys (minor dominants from harmonic
   minor); four-chord progressions go around twice so the turnaround is practiced. Hands: right
   hand alone, or **+ LH root** (left hand plays the root in the bass staff, which becomes the
-  required bass note). Symbols *and* Roman numerals are printed above the staff; *Play from the
-  chord chart* hides the notation (voice it yourself, with any hand, so Hands is off there). The
-  chart is judged differently from the staff, so it is its own item.
+  required bass note). Shown as, as in drills: **Notes** prints symbols *and* Roman numerals above
+  the staff; **Symbol** plays from the chord chart, without notation (voice it yourself, with any
+  hand, so Hands is off there). The chart is judged differently from the staff, so it is its own
+  item.
 
 **Judging.** Only what is shown counts. **Read from the staff** (notation drills, progressions
 with the notation), a chord is right when exactly the written keys are down: octave and all,

@@ -169,7 +169,8 @@ test.describe('Chords & progressions', () => {
     const hands = page.getByRole('radiogroup', { name: 'Hands' });
     for (const radio of await hands.getByRole('radio').all()) await expect(radio).toBeDisabled();
     await expect(hands.getByRole('radio', { name: 'RH', exact: true })).toHaveAttribute('aria-checked', 'true');
-    await expect(page.getByText('Off for the chart: any hand plays the chord.')).toBeVisible();
+    await expect(page.getByText('Off for symbols: any hand plays the chord.')).toBeVisible();
+    await expect(page.getByRole('radiogroup', { name: 'Shown as' }).getByRole('radio', { name: 'Symbol' })).toHaveAttribute('aria-checked', 'true');
     await expect(page.locator('.practice-message')).toHaveText('Play the chord in any octave.');
     expect(await app.exercise((ex) => (ex.chords as { itemId: string }).itemId)).toBe('chords/prog/I-V-vi-IV/C/chart');
     const ts = await app.exercise(targets);
@@ -177,6 +178,22 @@ test.describe('Chords & progressions', () => {
     for (const t of ts) await app.tap([t.voicing[0] - 12, ...t.voicing.map((k) => k + 12)]);
     await expect(app.results()).toContainText('8/8');
     await expect(app.results()).toContainText('Voice leading');
+  });
+
+  test('Progression: Shown as switches staff and chart without moving the panel', async ({ app, page }) => {
+    await app.open({ settings: { lesson: 'chords', chords: { task: 'progression', progression: 'I-V-vi-IV', key: 'C', hands: 'lh-bass', mode: 'wait' } } });
+    const shown = page.getByRole('radiogroup', { name: 'Shown as' });
+    const hands = page.getByRole('radiogroup', { name: 'Hands' });
+    await expect(shown.getByRole('radio', { name: 'Notes' })).toHaveAttribute('aria-checked', 'true');
+    await expect(hands.getByRole('radio', { name: '+ LH root' })).toBeEnabled();
+    const ladder = page.getByText('Tempo ladder', { exact: true });
+    const before = await ladder.boundingBox();
+    await shown.getByRole('radio', { name: 'Symbol' }).click();
+    await expect(page.locator('.chord-chart')).toBeVisible();
+    await expect(hands.getByRole('radio', { name: '+ LH root' })).toBeDisabled();
+    expect(await ladder.boundingBox()).toEqual(before);
+    await shown.getByRole('radio', { name: 'Notes' }).click();
+    await expect(hands.getByRole('radio', { name: '+ LH root' })).toHaveAttribute('aria-checked', 'true');
   });
 
   test('Review plays due items first', async ({ app }) => {
