@@ -69,7 +69,7 @@ test.describe('Chords & progressions', () => {
   test('Drill from notes: the hands choose the staff, and the chord plays like any drill', async ({ app, page }) => {
     await app.open({ settings: { lesson: 'chords', chords: { task: 'drill', set: 'triads', prompt: 'notation', inversions: 'inversions', drillHands: 'lh-bass', mode: 'wait' } } });
     const hands = page.getByRole('radiogroup', { name: 'Hands' });
-    await expect(hands.getByRole('radio', { name: '+ LH bass' })).toHaveAttribute('aria-checked', 'true');
+    await expect(hands.getByRole('radio', { name: 'RH + LH bass' })).toHaveAttribute('aria-checked', 'true');
     expect(await app.exercise((ex) => ex.staves)).toEqual(['treble', 'bass']);
     await expect(page.locator('.meta-strip')).toContainText('Both staves');
     // The left hand plays the bass the slash chord asks for, the right hand the chord above it.
