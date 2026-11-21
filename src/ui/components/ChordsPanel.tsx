@@ -6,6 +6,7 @@ import {
   type ChordPrompt,
   type ChordSetId,
   type DrillHands,
+  drillHandsOf,
   findProgression,
   type InversionRule,
   inversionsOf,
@@ -19,10 +20,27 @@ import type { WeakChordStat } from '../../core/progress/chords';
 import type { ProgressState } from '../../core/progress/progress';
 import { progressionChoice, type Settings, type SettingsPatch } from '../../core/settings';
 import { tonicLabel } from '../../core/scales/catalog';
-import { CommitSlider, Field, ProgressBar, ReviewNote, Segmented, Select, Toggle } from './controls';
+import { CommitSlider, Field, ProgressBar, ReviewNote, Segmented, type SegmentedOption, Select, Toggle } from './controls';
 import { Icon } from './Icon';
 
 const DAY = 24 * 60 * 60 * 1000;
+
+/** How the chords are shown, in drills and progressions alike: symbols to find the notes for, or the notes themselves. */
+const SHOWN_AS: SegmentedOption<ChordPrompt>[] = [
+  { value: 'symbol', label: 'Symbols', title: 'Read the chord symbols and find the notes yourself.' },
+  { value: 'notation', label: 'Notes', title: 'Read the chords on the staff and play them as written.' },
+];
+
+/** The hands a chord can be written for. One name per layout, whatever the task. */
+const HANDS: SegmentedOption<DrillHands>[] = [
+  { value: 'rh', label: 'RH', title: 'Right hand: the chord on the treble staff' },
+  { value: 'lh', label: 'LH', title: 'Left hand: the chord on the bass staff' },
+  { value: 'lh-bass', label: 'RH + LH bass', title: 'Left hand plays the bass note, right hand the chord' },
+  { value: 'both', label: 'Both', title: 'Hands together: both hands play the chord, an octave apart' },
+];
+
+/** Progressions are voiced for the right hand, alone or over the root in the left. */
+const PROGRESSION_HANDS: readonly DrillHands[] = ['rh', 'lh-bass'] satisfies readonly ChordHands[];
 
 function dueText(dueAt: number, now: number): string {
   const days = Math.ceil((dueAt - now) / DAY);
@@ -46,6 +64,8 @@ export function ChordsPanel(props: {
   const item = props.progress.repertoire[ex.chords.itemId];
   const review = s.chords.source === 'review';
   const drill = s.chords.task === 'drill';
+  /** The chords are written on the staff, not named by symbol. */
+  const notes = drill ? s.chords.prompt === 'notation' : s.chords.notation;
   const def = findProgression(s.chords.progression) ?? PROGRESSIONS[0];
   const goal = s.chords.goalBpm;
   const bpm = ex.chords.bpm;
@@ -64,6 +84,25 @@ export function ChordsPanel(props: {
             ]}
           />
         </Field>
+        {/* The same two rows in drills and progressions, so they stay put when the task changes. */}
+        <Field label="Shown as">
+          <Segmented<ChordPrompt>
+            label="Shown as"
+            value={notes ? 'notation' : 'symbol'}
+            onChange={(shown) => update({ chords: drill ? { prompt: shown, source: 'pick' } : { notation: shown === 'notation', source: 'pick' } })}
+            options={SHOWN_AS}
+          />
+        </Field>
+        {/* Only the staff says which hand plays what. Under symbols the choice stays in place, disabled, and the hint says why. */}
+        <Field label="Hands" hint={notes ? 'What each hand plays is written on the staff.' : 'Off for symbols: any hand plays the chord.'}>
+          <Segmented<DrillHands>
+            label="Hands"
+            value={drill ? drillHandsOf(s.chords.prompt, s.chords.drillHands) : progressionHandsOf(s.chords.notation, s.chords.hands)}
+            disabled={!notes}
+            onChange={(chordsHands) => update({ chords: drill ? { drillHands: chordsHands, source: 'pick' } : { hands: chordsHands as ChordHands, source: 'pick' } })}
+            options={drill ? HANDS : HANDS.filter((o) => PROGRESSION_HANDS.includes(o.value))}
+          />
+        </Field>
         {drill ? (
           <>
             <Select<ChordSetId>
@@ -73,17 +112,17 @@ export function ChordsPanel(props: {
               options={CHORD_SET_IDS.map((id) => ({ value: id, label: `${CHORD_SETS[id].name} (${chordSetExamples(id)})` }))}
             />
             <div className="grid-2">
-              <Field label="Shown as">
-                <Segmented<ChordPrompt>
-                  label="Shown as"
-                  value={s.chords.prompt}
-                  onChange={(chordsPrompt) => update({ chords: { prompt: chordsPrompt, source: 'pick' } })}
-                  options={[
-                    { value: 'symbol', label: 'Symbol', title: 'Read the chord name (Cm7) and find it' },
-                    { value: 'notation', label: 'Notes', title: 'Read the chord on the staff and play it' },
-                  ]}
-                />
-              </Field>
+              {/* Notes show one voicing, so "any voicing" is for symbols only. */}
+              <Select<InversionRule>
+                label="Voicing"
+                value={inversionsOf(s.chords.prompt, s.chords.inversions)}
+                onChange={(chordsInversions) => update({ chords: { inversions: chordsInversions, source: 'pick' } })}
+                options={[
+                  { value: 'root', label: 'Root position' },
+                  { value: 'inversions', label: 'Inversions' },
+                  ...(s.chords.prompt === 'symbol' ? [{ value: 'any' as const, label: 'Any voicing' }] : []),
+                ]}
+              />
               <Select<number>
                 label="Length"
                 value={s.chords.count}
@@ -91,32 +130,6 @@ export function ChordsPanel(props: {
                 options={[8, 12, 16].map((n) => ({ value: n, label: `${n} chords` }))}
               />
             </div>
-            {/* Only notes are read in a clef. Under symbols the choice stays in place, disabled, and the hint says why. */}
-            <Field label="Hands" hint={s.chords.prompt === 'notation' ? 'The staff the chord is written on.' : 'Off for symbols: any hand plays the chord.'}>
-              <Segmented<DrillHands>
-                label="Hands"
-                value={s.chords.prompt === 'notation' ? s.chords.drillHands : 'rh'}
-                disabled={s.chords.prompt !== 'notation'}
-                onChange={(chordsHands) => update({ chords: { drillHands: chordsHands, source: 'pick' } })}
-                options={[
-                  { value: 'rh', label: 'RH', title: 'Right hand: the chord on the treble staff' },
-                  { value: 'lh', label: 'LH', title: 'Left hand: the chord on the bass staff' },
-                  { value: 'lh-bass', label: 'RH + LH bass', title: 'Left hand plays the bass note, right hand the chord' },
-                  { value: 'both', label: 'Both', title: 'Hands together: both hands play the chord, an octave apart' },
-                ]}
-              />
-            </Field>
-            {/* Notes show one voicing, so "any voicing" is for symbols only. */}
-            <Select<InversionRule>
-              label="Voicing"
-              value={inversionsOf(s.chords.prompt, s.chords.inversions)}
-              onChange={(chordsInversions) => update({ chords: { inversions: chordsInversions, source: 'pick' } })}
-              options={[
-                { value: 'root', label: 'Root position (root in the bass)' },
-                { value: 'inversions', label: 'Inversions (the bass note asked for)' },
-                ...(s.chords.prompt === 'symbol' ? [{ value: 'any' as const, label: 'Any voicing (just the right notes)' }] : []),
-              ]}
-            />
           </>
         ) : (
           <>
@@ -126,39 +139,12 @@ export function ChordsPanel(props: {
               onChange={(id) => update({ chords: { ...progressionChoice(id, s.chords.key), source: 'pick' } })}
               options={PROGRESSIONS.map((p) => ({ value: p.id, label: p.name }))}
             />
-            <div className="grid-2">
-              <Select<string>
-                label="Key"
-                value={s.chords.key}
-                onChange={(chordsKey) => update({ chords: { key: chordsKey, source: 'pick' } })}
-                options={[{ value: 'shuffle', label: 'Shuffle keys' }, ...keysFor(def.mode).map((k) => ({ value: k, label: `${tonicLabel(k)} ${def.mode}` }))]}
-              />
-              {/* As in drills: from the chart (symbols) you choose the voicing, from the staff (notes) you read it. */}
-              <Field label="Shown as">
-                <Segmented<'symbol' | 'notation'>
-                  label="Shown as"
-                  value={s.chords.notation ? 'notation' : 'symbol'}
-                  onChange={(shown) => update({ chords: { notation: shown === 'notation', source: 'pick' } })}
-                  options={[
-                    { value: 'symbol', label: 'Symbol', title: 'Play from the chord chart: symbols and numerals, your own voicing' },
-                    { value: 'notation', label: 'Notes', title: 'Read the voicings on the staff and play them' },
-                  ]}
-                />
-              </Field>
-            </div>
-            {/* Only the staff says which hand plays what. Under symbols the choice stays in place, disabled, and the hint says why. */}
-            <Field label="Hands" hint={s.chords.notation ? 'What each hand plays is written on the staff.' : 'Off for symbols: any hand plays the chord.'}>
-              <Segmented<ChordHands>
-                label="Hands"
-                value={progressionHandsOf(s.chords.notation, s.chords.hands)}
-                disabled={!s.chords.notation}
-                onChange={(chordsHands) => update({ chords: { hands: chordsHands, source: 'pick' } })}
-                options={[
-                  { value: 'rh', label: 'RH', title: 'Right hand plays the chords' },
-                  { value: 'lh-bass', label: '+ LH root', title: 'Left hand plays the root, right hand the chord' },
-                ]}
-              />
-            </Field>
+            <Select<string>
+              label="Key"
+              value={s.chords.key}
+              onChange={(chordsKey) => update({ chords: { key: chordsKey, source: 'pick' } })}
+              options={[{ value: 'shuffle', label: 'Shuffle keys' }, ...keysFor(def.mode).map((k) => ({ value: k, label: `${tonicLabel(k)} ${def.mode}` }))]}
+            />
           </>
         )}
         {props.reviewing ? <ReviewNote mode={s.chords.mode} /> : null}

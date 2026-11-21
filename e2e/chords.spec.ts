@@ -108,7 +108,7 @@ test.describe('Chords & progressions', () => {
     const hands = page.getByRole('radiogroup', { name: 'Hands' });
     const voicing = page.getByLabel('Voicing');
     const before = await voicing.boundingBox();
-    await page.getByRole('radiogroup', { name: 'Shown as' }).getByRole('radio', { name: 'Symbol' }).click();
+    await page.getByRole('radiogroup', { name: 'Shown as' }).getByRole('radio', { name: 'Symbols' }).click();
     await expect(hands.getByRole('radio')).toHaveCount(4);
     for (const radio of await hands.getByRole('radio').all()) await expect(radio).toBeDisabled();
     await expect(hands.getByRole('radio', { name: 'RH', exact: true })).toHaveAttribute('aria-checked', 'true');
@@ -121,7 +121,7 @@ test.describe('Chords & progressions', () => {
     await expect(hands.getByRole('radio', { name: 'LH', exact: true })).toHaveAttribute('aria-checked', 'true');
     await expect(hands.getByRole('radio', { name: 'LH', exact: true })).toBeEnabled();
     // Notes show one voicing: "any voicing" is offered for symbols only.
-    await expect(voicing.locator('option')).toHaveText(['Root position (root in the bass)', 'Inversions (the bass note asked for)']);
+    await expect(voicing.locator('option')).toHaveText(['Root position', 'Inversions']);
   });
 
   test('Progression (Flow): on the beat moves the ladder; symbols and numerals are engraved', async ({ app, page }) => {
@@ -151,7 +151,7 @@ test.describe('Chords & progressions', () => {
     expect((progress.repertoire as Record<string, { ladderTempo: number }>)['chords/prog/I-IV-V-I/F/lh-bass'].ladderTempo).toBe(124);
   });
 
-  test('Progression (Wait), + LH root: the right hand landing first is still right first time', async ({ app }) => {
+  test('Progression (Wait), RH + LH bass: the right hand landing first is still right first time', async ({ app }) => {
     await app.open({
       settings: { lesson: 'chords', chords: { task: 'progression', progression: 'I-V-vi-IV', key: 'C', hands: 'lh-bass', mode: 'wait' } },
     });
@@ -192,7 +192,7 @@ test.describe('Chords & progressions', () => {
     for (const radio of await hands.getByRole('radio').all()) await expect(radio).toBeDisabled();
     await expect(hands.getByRole('radio', { name: 'RH', exact: true })).toHaveAttribute('aria-checked', 'true');
     await expect(page.getByText('Off for symbols: any hand plays the chord.')).toBeVisible();
-    await expect(page.getByRole('radiogroup', { name: 'Shown as' }).getByRole('radio', { name: 'Symbol' })).toHaveAttribute('aria-checked', 'true');
+    await expect(page.getByRole('radiogroup', { name: 'Shown as' }).getByRole('radio', { name: 'Symbols' })).toHaveAttribute('aria-checked', 'true');
     await expect(page.locator('.practice-message')).toHaveText('Play the chord in any octave.');
     expect(await app.exercise((ex) => (ex.chords as { itemId: string }).itemId)).toBe('chords/prog/I-V-vi-IV/C/chart');
     const ts = await app.exercise(targets);
@@ -207,15 +207,47 @@ test.describe('Chords & progressions', () => {
     const shown = page.getByRole('radiogroup', { name: 'Shown as' });
     const hands = page.getByRole('radiogroup', { name: 'Hands' });
     await expect(shown.getByRole('radio', { name: 'Notes' })).toHaveAttribute('aria-checked', 'true');
-    await expect(hands.getByRole('radio', { name: '+ LH root' })).toBeEnabled();
+    await expect(hands.getByRole('radio', { name: 'RH + LH bass' })).toBeEnabled();
     const ladder = page.getByText('Tempo ladder', { exact: true });
     const before = await ladder.boundingBox();
-    await shown.getByRole('radio', { name: 'Symbol' }).click();
+    await shown.getByRole('radio', { name: 'Symbols' }).click();
     await expect(page.locator('.chord-chart')).toBeVisible();
-    await expect(hands.getByRole('radio', { name: '+ LH root' })).toBeDisabled();
+    await expect(hands.getByRole('radio', { name: 'RH + LH bass' })).toBeDisabled();
     expect(await ladder.boundingBox()).toEqual(before);
     await shown.getByRole('radio', { name: 'Notes' }).click();
-    await expect(hands.getByRole('radio', { name: '+ LH root' })).toHaveAttribute('aria-checked', 'true');
+    await expect(hands.getByRole('radio', { name: 'RH + LH bass' })).toHaveAttribute('aria-checked', 'true');
+  });
+
+  test('Shown as and Hands are the same two rows in drills and progressions, and nothing moves between the tasks', async ({ app, page }) => {
+    await app.open({
+      settings: { lesson: 'chords', chords: { task: 'drill', set: 'triads', prompt: 'notation', inversions: 'root', drillHands: 'lh-bass', hands: 'lh-bass', mode: 'wait' } },
+    });
+    const task = page.getByRole('radiogroup', { name: 'Task' });
+    const shown = page.getByRole('radiogroup', { name: 'Shown as' });
+    const hands = page.getByRole('radiogroup', { name: 'Hands' });
+    const hint = page.getByText('What each hand plays is written on the staff.');
+    const ladder = page.getByText('Tempo ladder', { exact: true });
+    const boxes = async () => [await shown.boundingBox(), await hands.boundingBox(), await hint.boundingBox(), await ladder.boundingBox()];
+
+    await expect(hands.getByRole('radio')).toHaveText(['RH', 'LH', 'RH + LH bass', 'Both']);
+    await expect(hands.getByRole('radio', { name: 'RH + LH bass' })).toHaveAttribute('aria-checked', 'true');
+    const drill = await boxes();
+
+    await task.getByRole('radio', { name: 'Progressions' }).click();
+    await expect(page.getByLabel('Progression', { exact: true })).toBeVisible();
+    // The same words for the same things; progressions are voiced for the right hand, alone or over the bass.
+    await expect(shown.getByRole('radio')).toHaveText(['Symbols', 'Notes']);
+    await expect(hands.getByRole('radio')).toHaveText(['RH', 'RH + LH bass']);
+    await expect(hands.getByRole('radio', { name: 'RH + LH bass' })).toHaveAttribute('aria-checked', 'true');
+    await expect(page.locator('.meta-strip')).toContainText('RH + LH bass');
+    expect(await boxes()).toEqual(drill);
+
+    // Each task keeps its own choice of how it is shown.
+    await shown.getByRole('radio', { name: 'Symbols' }).click();
+    await expect(page.locator('.chord-chart')).toBeVisible();
+    await task.getByRole('radio', { name: 'Chord drill' }).click();
+    await expect(shown.getByRole('radio', { name: 'Notes' })).toHaveAttribute('aria-checked', 'true');
+    expect(await boxes()).toEqual(drill);
   });
 
   test('Review plays due items first', async ({ app }) => {

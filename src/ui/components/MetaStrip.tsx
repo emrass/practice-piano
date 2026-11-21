@@ -34,7 +34,7 @@ export function MetaStrip(props: { exercise: Exercise; firstSight: boolean; focu
       : [
           ['Key', ex.key.label],
           ['Chords', `${findProgression(ci!.progression)?.chords.length ?? chords.targets.length}`],
-          ['Hands', !ci!.notation ? 'Any' : ci!.hands === 'lh-bass' ? 'RH + LH root' : 'Right hand'],
+          ['Hands', !ci!.notation ? 'Any' : ci!.hands === 'lh-bass' ? 'RH + LH bass' : 'Right hand'],
           ['Length', `${chords.targets.length} bars`],
           ['Tempo', `${ex.bpm} bpm`],
           ['Per chord', `${(240 / ex.bpm).toFixed(1)} s`],
