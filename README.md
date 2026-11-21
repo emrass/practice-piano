@@ -18,6 +18,13 @@ Lessons:
   standard progressions in every key, judged by the notes you hold in any voicing, with a
   voice-leading score.
 
+There are two ways to practice, switched in the top bar. **Free practice** is the five lessons:
+pick one and set it up yourself. **Today** plays a plan of 10, 20 or 30 minutes made from what
+the app already knows: due scales first, sight reading at the level you last passed with your
+weakest notes featured, then ear training and rhythm, whichever needs it more. Each part of the
+plan is a block of one lesson, played with that lesson's own exercises and results; what you
+change during a block stays in today's plan.
+
 The didactic concept behind the lessons (and the planned ones) is in
 [docs/DIDACTICS.md](docs/DIDACTICS.md).
 

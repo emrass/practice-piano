@@ -344,3 +344,68 @@ Why it is built this way:
 1. Sight reading ✓ 2. Ear training ✓ 3. Rhythm ✓ 4. Scales & arpeggios ✓ (introduced the
 fixed-repertoire infrastructure: item picker, tempo ladder, spaced review, evenness metrics)
 5. Chords & progressions ✓ (reuses it: tempo ladder in bpm, review, pitch-class judging).
+
+## 7. Today's practice ✓ (v1)
+
+The lessons are built for someone who knows what to practice. Many players open the app with a
+quarter of an hour and no plan. **Today's practice** is a plan for that sitting, made from what
+the app already knows: what is due, what is weak, and what has waited longest.
+
+**Two ways to practice.** *Today* plays the plan. *Free practice* is the app as described above:
+pick a lesson and set it up yourself. They share everything that measures the player (levels
+passed, weak spots, tempo ladders, review dates, XP, the streak): it is the same playing.
+
+**One lesson per block.** A plan is a short list of blocks, and a block is one lesson played for
+a few runs with the lesson's own exercises, results and rules. Nothing is mixed inside an
+exercise, so principle 1 holds: the plan decides *what comes next*, never *what an exercise is*.
+This is the "suggestion, never automatic mixing" of §3, taken one step further: the suggestions
+come in an order and the app walks through them.
+
+**How the blocks are chosen.**
+
+| # | Block | What it plays | Says why |
+|---|---|---|---|
+| 1 | Warm-up: Scales & arpeggios | The due items, most overdue first (the order of *Review*). Nothing due: a few runs of the item the lesson is set to. | "3 of 7 due items, most overdue first. Starts with G major scale." |
+| 2 | Sight reading | New passages at the level last passed, with the weakest notes featured when there are any. | "Level 45. Featuring F2 and B2, your weakest notes." |
+| 3, 4 | Ear training and Rhythm | The one that needs it more first: a lesson never tried, then one with weak intervals or figures, then the one that has waited longest. A short plan has room for one of them. | "Not tried yet. Starts at level 13." |
+| 5 | Chords & progressions | Due items, in a long plan. Chords take the warm-up when scales are switched off. | "2 due items." |
+
+Every block says why it is there in the app's own words (principle 6): the note, the figure, the
+number of due items.
+
+**The level is the level last passed.** A block of sight reading, ear training or rhythm is
+played at the level of that lesson's last passed run, not at the level the lesson happens to be
+set to. Trying level 80 in free practice does not move the plan; passing there does. Before any
+pass it is the lesson's starting level (§5). Accuracy before speed (principle 4) applies to the
+plan too: it follows what was played cleanly.
+
+**Length.** 10, 20 or 30 minutes sets how many blocks there are and how many runs each has:
+
+| Length | Warm-up | Sight reading | Ear / rhythm | Chords |
+|---|---|---|---|---|
+| 10 min | 2 runs | 2 | 2 (one of them) | none |
+| 20 min | 3 | 4 | 3 and 2 | none |
+| 30 min | 4 | 5 | 3 and 3 | 3 |
+
+A review block is never longer than what is due, and a lesson can be switched out of the plan;
+the time that frees goes to the other blocks, sight reading first. Minutes are estimates (1.5 to
+2 minutes a run with the time around it); the plan counts runs, not the clock.
+
+**Playing it.** Every finished run counts, a repeat of the same exercise too: repeating is
+practice. Until a block has its runs the lesson's own way on leads ("New exercise", "Again",
+"Next due item"); then the way on is the next block, on the button, on Enter and on the piano's
+D. A block can be skipped, and the plan can be left and picked up again the same day.
+
+**Today only.** What the player changes during a block (a level harder, the other hand, Wait
+instead of Flow) stays in that block. The lesson's own settings in free practice are as they
+were. What a block does to its lesson is small on purpose: the level and the weak-spot focus for
+the three level lessons, review or the player's own item for the repertoire. Hands, length, mode
+and everything else are the player's own.
+
+**The end.** The plan page becomes the summary: playing time, runs passed, the streak, XP, and
+for each block what it came to. It closes with what is due tomorrow. No fanfare (design
+principle 7): the streak already counts the day, whichever way it was practiced.
+
+**Not in v1:** goals and a plan for the week, changing the order of blocks, a plan that reacts
+during the sitting (a failed block is not made longer), per-lesson time measurement, and
+cross-lesson suggestions on evidence from two lessons (§3).

@@ -30,44 +30,50 @@ If you add, rename or remove a part, change the list in the script and the table
 
 ## Parts
 
-![The same screen with 21 numbered parts and a legend](ui-map/ui-map-parts.png)
+![The same screen with 22 numbered parts and a legend](ui-map/ui-map-parts.png)
 
 | # | Part | What it is | Code |
 |---|---|---|---|
 | | **Top bar** | | |
-| 1 | Logo | The wordmark; only the mark stays below 1080 px. | `Logo` in `Icon.tsx` |
-| 2 | Lesson switcher | Sight, Ear, Rhythm, Scales, Chords. | `.topbar-lesson` |
-| 3 | Mode switch | Wait or Flow, for lessons that have both. | `.topbar-mode` |
-| 4 | Streak chip | Days in a row with practice. | `.chip-streak` |
-| 5 | XP chip | Experience points. | `.chip-xp` |
-| 6 | Piano chip | MIDI status and the piano's name; opens the Piano & audio dialog. | `.chip-midi` |
-| 7 | Theme toggle | Light or dark. | `.topbar-right .icon-btn` |
+| 1 | Logo | The wordmark; only the mark stays below 1280 px. | `Logo` in `Icon.tsx` |
+| 2 | Today switch | Today (the plan) or Free practice (pick a lesson). | `.topbar-way` |
+| 3 | Lesson switcher | Sight, Ear, Rhythm, Scales, Chords. | `.topbar-lesson` |
+| 4 | Mode switch | Wait or Flow, for lessons that have both. | `.topbar-mode` |
+| 5 | Streak chip | Days in a row with practice. | `.chip-streak` |
+| 6 | XP chip | Experience points. | `.chip-xp` |
+| 7 | Piano chip | MIDI status and the piano's name; opens the Piano & audio dialog. | `.chip-midi` |
+| 8 | Theme toggle | Light or dark. | `.topbar-right .icon-btn` |
 | | **Sidebar** | | |
-| 8 | Sidebar tabs | Exercise and Progress. | `Tabs` in `App.tsx` |
-| 9 | Exercise panel | The lesson's settings: difficulty, hands, length and so on. One per lesson. | `ExercisePanel.tsx`, `EarPanel.tsx`, `RhythmPanel.tsx`, `ScalesPanel.tsx`, `ChordsPanel.tsx` |
+| 9 | Sidebar tabs | Exercise and Progress (Plan and Progress on the plan page, This block and Progress while a block is played). | `Tabs` in `App.tsx` |
+| 10 | Exercise panel | The lesson's settings: difficulty, hands, length and so on. One per lesson. | `ExercisePanel.tsx`, `EarPanel.tsx`, `RhythmPanel.tsx`, `ScalesPanel.tsx`, `ChordsPanel.tsx` |
 | | **Meta strip** | | |
-| 10 | Level and tier | The level number and the tier's name (or the scale or chord title). | `.meta-lead` |
-| 11 | Exercise stats | Key, time, tempo, length, hands, rhythm. | `.meta-strip > .stat` |
-| 12 | Badges | First sight, weak-spot focus. | `.meta-badges` |
+| 11 | Level and tier | The level number and the tier's name (or the scale or chord title). | `.meta-lead` |
+| 12 | Exercise stats | Key, time, tempo, length, hands, rhythm. | `.meta-strip > .stat` |
+| 13 | Badges | First sight, weak-spot focus. | `.meta-badges` |
 | | **Score** | | |
-| 13 | Staff | The engraved exercise, with note names when they are on. | `.score-host` |
-| 14 | Cursor | The step to play now, in Wait mode. | `.score-cursor` |
+| 14 | Staff | The engraved exercise, with note names when they are on. | `.score-host` |
+| 15 | Cursor | The step to play now, in Wait mode. | `.score-cursor` |
 | | **Practice bar** | | |
-| 15 | Practice actions | Start or Stop, Hint, Restart, New exercise, Results. | `.practice-actions` |
-| 16 | Beat dots | Count-in and the beat in Flow mode. | `.beat-dots` |
-| 17 | Practice message | What to do now, and the grade after a run. | `.practice-message` |
-| 18 | Practice stats | Live numbers for this run: accuracy, wrong notes, streak. | `.practice-stats` |
+| 16 | Practice actions | Start or Stop, Hint, Restart, New exercise, Results. | `.practice-actions` |
+| 17 | Beat dots | Count-in and the beat in Flow mode. | `.beat-dots` |
+| 18 | Practice message | What to do now, and the grade after a run. | `.practice-message` |
+| 19 | Practice stats | Live numbers for this run: accuracy, wrong notes, streak. | `.practice-stats` |
 | | **Keyboard** | | |
-| 19 | Input monitor | Sustain pedal and the notes held right now. | `InputMonitor.tsx` |
-| 20 | Keyboard tools | Range, keyboard guide, keyboard display menu, key sound. | `KeyboardControls.tsx` |
-| 21 | Keys | The on-screen piano. Guide keys light up the notes to play. | `PianoKeyboard.tsx`, `.keys` |
+| 20 | Input monitor | Sustain pedal and the notes held right now. | `InputMonitor.tsx` |
+| 21 | Keyboard tools | Range, keyboard guide, keyboard display menu, key sound. | `KeyboardControls.tsx` |
+| 22 | Keys | The on-screen piano. Guide keys light up the notes to play. | `PianoKeyboard.tsx`, `.keys` |
 
 ## Not in the picture
 
 | Name | What it is | Code |
 |---|---|---|
-| Drawer | The sidebar below 1080 px wide, over the stage with a scrim behind it. | `.sidebar.is-open` |
-| Drawer toggle | The menu button at the right end of the top bar below 1080 px. | `.drawer-toggle` |
+| Drawer | The sidebar below 1080 px wide, and at every width while a block of Today's practice is played, over the stage with a scrim behind it. | `.sidebar.is-open` |
+| Drawer toggle | The menu button at the right end of the top bar, wherever the sidebar is a drawer. | `.drawer-toggle` |
+| Plan page | Today's practice in the stage's place: the blocks with their reasons, the way on, and the summary once the plan is played. | `PlanPage.tsx`, `.plan-page` |
+| Plan list | The blocks on the plan page, one row each. The block that is next is outlined and has the Start button. | `.plan-list` |
+| Plan panel | The sidebar's first tab on the plan page: the plan's length and the lessons it draws from. | `PlanPanel.tsx` |
+| Plan steps | The blocks in the top bar while one is played, in the lesson switcher's place: done, under way with a dot per run, to come. | `PlanSteps.tsx`, `.plan-steps` |
+| Plan button | The way back to the plan page, before the plan steps. | `.topbar-plan .btn` |
 | Progress panel | The sidebar's Progress tab: XP, mastery, streaks, heatmaps. | `ProgressPanel.tsx` |
 | Playhead | The line that moves through the score in Flow mode. | `.score-playhead` |
 | Results card | The card over the score after a run: verdict, numbers, piano shortcuts, actions. | `ResultsCard.tsx`, `.results` |

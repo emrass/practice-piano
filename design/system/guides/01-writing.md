@@ -13,7 +13,7 @@ The app speaks like a good piano teacher sitting beside you: calm, specific, bri
 ## Mechanics
 
 - **Sentence case** everywhere, including buttons, titles and tabs. Uppercase only through the `overline` style.
-- **Buttons are verbs**: Start, Stop, Restart, Next, New exercise, Measure again. No "OK", no "Submit".
+- **Buttons are verbs**: Start, Stop, Restart, Next, New exercise, Measure again. No "OK", no "Submit". A button that leads somewhere new names it: "Start sight reading", "Next: rhythm".
 - **Titles are nouns or tasks**: "Piano & audio", "Connect your piano".
 - **One idea per sentence.** Two short sentences instead of one joined by a dash: "Take your time. The cursor waits for you."
 - **Periods** end sentences in messages and hints. Labels, buttons, titles and stats take none.
@@ -46,6 +46,9 @@ The app speaks like a good piano teacher sitting beside you: calm, specific, bri
 | run | attempt, try, session |
 | lesson (Sight reading, Ear, Rhythm, Scales, Chords) | mode, module |
 | Wait, Flow (the two practice modes) | untimed, timed |
+| Today, Free practice (the two ways to practice) | guided, freestyle, play mode |
+| Today's practice, the plan (what Today plays) | routine, session, workout |
+| block (one lesson's part of the plan) | step, unit, task |
 | level (1–100), tier (a named band of levels) | stage, rank |
 | mastered | completed, done |
 | due, review | overdue, repeat |

@@ -296,6 +296,45 @@ gets plain objects back.
   fingering rows in `renderScore`, `MemoryCard` for playing from memory. The layout now fills
   lines for odd bar counts.
 
+## Today's practice
+
+A plan of blocks, one lesson each (DIDACTICS §7). It is built so that no lesson, controller or
+stage component knows about it.
+
+- **Core** (`core/plan/`, pure): `planner.ts` makes the blocks from progress, settings and the
+  plan's preferences (`buildPlan`), with the level rule (`planLevel`: the level last passed) and
+  what a block lays over its lesson's settings (`blockPatch`). `day.ts` is today's plan as it is
+  played: runs per block, the block under way, skipping, the minutes readout, and
+  `normalizePlanDay`, which drops a saved plan that is not today's.
+- **Settings** hold what the player chose: `way` (`'today'` or `'free'`) and `plan` (length,
+  lessons). **Today's plan** itself is a third document beside settings and progress
+  (`ProfileRepository.loadToday` / `saveToday`, key `users/<id>/today`): it survives closing the
+  app, is not part of a backup, and goes with a reset.
+- **`usePlan`** (`ui/plan/usePlan.ts`) owns the plan's state and is the only thing `App.tsx`
+  talks to. The plan meets the lessons at four seams, all in `App.tsx`:
+  1. *Settings in.* `plan.settings` is the player's settings with the block's laid over them
+     (and over those, what the player changed during the block). `useLesson` gets these, so a
+     lesson cannot tell a block from free practice. Lesson groups the layer does not touch keep
+     their identity, because the lessons make a new exercise when their group changes.
+  2. *Settings back.* `plan.update` splits a change: the lessons' own settings and the weak-spot
+     focus stay in the block (memory only), everything else (theme, piano, sound) is saved.
+  3. *Results.* `onFinished` hands every result and its award to `plan.record`.
+  4. *The way on.* `plan.continuation` passes the lesson's `Continuation` through until the
+     block has its runs, then replaces `next` ("Next: rhythm", with a `detail` sentence the
+     results card shows). The practice bar, results card, Enter, N and the piano's D all read
+     the one continuation, so none of them changed.
+- **A block coming onto the stage** is set up the way the Progress tab sets a lesson up: the
+  active runtime's `review()` or `practiceWeakSpots()`, or a new seed. The plan moves in an event
+  handler, is rendered at once (`flushSync`), and the block's lesson, now the active one, is set
+  up in the same handler (`moveToBlock` in `App.tsx`). No effect is involved.
+- **UI** (`ui/plan/`): `PlanPage` (the plan page in the stage's place: the list, the way on,
+  the summary), `PlanPanel` (the sidebar's first tab on that page), `PlanSteps` (the top bar
+  while a block is played). `TopBar` takes the steps as a slot and renders the Today / Free
+  practice switch. While a block is played the app has `.is-plan-block`: the sidebar is the
+  drawer at every width and the stage takes the full width (`styles/plan.css`).
+- On the plan page the lesson underneath is not attached to the input, and the computer-key
+  shortcuts are off, as under a dialog; the page takes Enter and the piano's D itself.
+
 ## Extending with new lesson types
 
 A lesson is a set of modules, one of each kind, and App.tsx only picks the active one:

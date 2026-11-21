@@ -19,6 +19,20 @@ The stage, in order, with `space-12` between cards and `space-16` around them:
 
 Only the score flexes. Rows 1, 3 and 4 never change height because of their content.
 
+## Today
+
+Today's practice changes the frame around the stage, never the stage.
+
+| View | Top bar | Sidebar | Main area |
+|---|---|---|---|
+| Free practice | Today / Free practice switch, lesson switcher, Wait or Flow | Exercise, Progress | The stage |
+| Plan page | Today / Free practice switch | Plan, Progress | One Card on `surface-canvas`, up to 780px wide, centered, holding the title, the readout and the PlanList. It scrolls inside the main area. |
+| A block | "Plan" button and PlanSteps in the lesson switcher's place, Wait or Flow | A drawer at every width: This block, Progress | The stage, full width |
+
+- **The plan page is the one page that is not the stage.** It is read from the bench between blocks, so it follows the stage's type floor: names in `title`, sentences in `body-lg`. Its controls (length, lessons) are in the sidebar, where the player leans in.
+- **While a block is played the score has the whole width.** The plan set the exercise up, so the settings are a drawer away, not on screen. The stage's four cards and their heights are unchanged.
+- **The steps take exactly the lesson switcher's box**, so nothing else in the top bar moves when a block starts or ends.
+
 ## Stability rules
 
 - A value that changes has a reserved width: `min-width` in `ch` for numbers, a fixed track for stats and badges.
@@ -35,11 +49,12 @@ Use these four for the shell, written as numbers in media queries. Everything el
 | Token | Width | What changes |
 |---|---|---|
 | `bp-xl` | 1440px and up | Long lesson names. |
-| `bp-lg` | below 1080px | Sidebar becomes a drawer over the stage, opened from the top bar, with `scrim` behind it. Wordmark and reward chips drop out. |
+| `bp-lg` | below 1080px | Sidebar becomes a drawer over the stage, opened from the top bar, with `scrim` behind it. Reward chips drop out. |
 | `bp-md` | below 760px | Stage padding and gaps go to `space-8`. Short labels in the switchers. Keyboard at 148px. |
 | `bp-sm` | below 480px | Shortcut caps and the middle stat hide. Dialogs are full-screen sheets below 600px. |
 
 - What drops out goes in a fixed order: decoration, then labels that have an icon, then secondary numbers. Actions and the score never drop.
+- **The top bar has its own steps on the way down**, because it holds the most: "Free practice" reads "Free" below 1440px (the full name is still read out), the wordmark goes below 1280px, the reward chips below 1080px, the piano's name below 940px (its dot stays), and below 650px the lessons, or the plan's steps, take a second row, with Today as a button before the lessons.
 - Respect safe areas: pad the top bar and the bottom of the stage with `env(safe-area-inset-*)`.
 - Landscape tablet is the reference layout. Design there first, then check a 13-inch laptop and a phone.
 

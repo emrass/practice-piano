@@ -47,6 +47,7 @@ const AREAS: Area[] = [
     sel: '.topbar',
     parts: [
       { name: 'Logo', sel: '.topbar .logo' },
+      { name: 'Today switch', sel: '.topbar-way', note: 'Today or Free practice' },
       { name: 'Lesson switcher', sel: '.topbar-lesson', note: 'Picks the lesson' },
       { name: 'Mode switch', sel: '.topbar-mode', note: 'Wait or Flow' },
       { name: 'Streak chip', sel: '.chip-streak', note: 'Daily practice streak' },
