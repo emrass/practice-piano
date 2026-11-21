@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Colors from design/system/tokens.json, for what shows before the page has loaded (window,
+  splash) and for the icon. The page then reports its own top bar color (see MainActivity.applyTheme).
+-->
+<resources>
+    <!-- surface-sheet (light): sepia-100 -->
+    <color name="surface_sheet">#FBF7EE</color>
+    <!-- Icon, as drawn in public/favicon.svg -->
+    <color name="icon_field">#FBF7EE</color>
+    <color name="icon_lines">#DCCFB9</color>
+    <color name="icon_keys">#26211D</color>
+    <color name="icon_edge">#8C2F22</color>
+</resources>

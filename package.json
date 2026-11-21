@@ -2,7 +2,7 @@
   "name": "practice-piano",
   "private": true,
   "version": "1.0.0",
-  "description": "practice-piano.com — interactive piano sight-reading studio (web + iPadOS/macOS)",
+  "description": "practice-piano.com — interactive piano sight-reading studio (web + iPadOS/macOS + Android)",
   "type": "module",
   "engines": {
     "node": ">=20.19"
@@ -11,12 +11,14 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "build:native": "tsc -b && vite build --mode native",
+    "build:android": "tsc -b && vite build --mode android",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc -b",
     "lint": "eslint .",
     "check": "npm run typecheck && npm run lint && npm run design:check && npm run test && npm run build",
+    "android:check": "cd android && ./gradlew testDebugUnitTest lintDebug assembleDebug",
     "design:build": "node design/scripts/build.mjs",
     "design:check": "node design/scripts/check.mjs",
     "design:preview": "node design/scripts/preview.mjs",

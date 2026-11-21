@@ -41,3 +41,47 @@ jobs:
           name: playwright-traces
           path: test-results/
           retention-days: 7
+
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # The runner image has the Android SDK; Gradle builds the web app into the APK itself.
+      - name: Android unit tests, lint and debug APK
+        working-directory: android
+        run: ./gradlew testDebugUnitTest lintDebug assembleDebug
+
+      - name: Keep the debug APK (install it on a tablet; see docs/ANDROID.md)
+        uses: actions/upload-artifact@v4
+        with:
+          name: practice-piano-android-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
+
+      - name: Keep the test and lint reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-reports
+          path: android/app/build/reports/
+          retention-days: 7
