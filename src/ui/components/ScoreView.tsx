@@ -213,6 +213,7 @@ function copyStaff(svg: SVGSVGElement | null, covers: (HTMLDivElement | null)[])
     copy.removeAttribute('role');
     copy.removeAttribute('aria-label');
     copy.setAttribute('aria-hidden', 'true');
+    copy.setAttribute('class', 'score-cover-staff');
     svg.querySelectorAll('.vf-stave, .vf-stavebarline').forEach((g) => copy.appendChild(g.cloneNode(true)));
     cover.appendChild(copy);
   }
