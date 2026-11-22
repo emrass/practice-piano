@@ -213,7 +213,7 @@ patterns, modes, exam-style stages, LH fingering for black-key arpeggios.
 
 ### 4.5 Chords & progressions ✓ (v1 — fixed repertoire)
 
-**Items.** Two tasks, each a repertoire item with its own tempo ladder and review date:
+**Items.** Three tasks, each a repertoire item with its own tempo ladder and review date:
 - **Chord drill** — *set × prompt × voicing rule* (× *hands* for notation). Sets: major & minor triads; all triads (+ °, +);
   suspended (sus2, sus4); sevenths (7, maj7, m7); all sevenths (+ ø7, °7). Every root, spelled
   with flats for major-type chords and sharps for minor-type ones (D♭, F♯m). The *order* is
@@ -241,32 +241,55 @@ patterns, modes, exam-style stages, LH fingering for black-key arpeggios.
   the staff; **Symbols** plays from the chord chart, without notation (voice it yourself, with any
   hand, so Hands is off there). The chart is judged differently from the staff, so it is its own
   item.
+- **Inversions** (in code: `sequence`) — *chord × key × hands*, or *chord × key* from symbols. One
+  chord through its inversions, up the keyboard and back, as it is taught and asked for in
+  technique exams: C, C/E, C/G, C an octave higher, and down again. The notes never change, so
+  what is practiced is the three hand shapes and the move from one to the next. Major and minor
+  triads in all 12 keys (keys spelled as the mode spells them: D♭ major, C♯ minor), solid chords
+  in half notes, the last one a whole note: 7 chords in 4 bars of 4/4, in the key signature of the
+  chord's key. One octave: two octaves fit a 61-key keyboard but need four to six ledger lines,
+  so they wait until the score can write 8va. Hands: **RH**, **LH**, or **Both** (the same shape
+  in each hand, one or two octaves apart). Each hand starts where its whole way up needs the fewest
+  ledger lines (at most three) and fits the player's keyboard; the left hand takes ledger lines
+  above the bass staff before it goes into the muddy octave below C3 (C major: left hand from C3,
+  right hand from middle C). A hand alone plays what it plays hands together. Shown as, as in the
+  other tasks: **Notes** prints the chords with their slash symbols above the staff (the symbols
+  name the inversions; the pattern is known, so they give nothing away); **Symbols** plays from
+  the chord chart, in any octave with any hand, with the inversion's note in the bass. Standard
+  fingering is printed with the chords (right hand 1-3-5, 1-2-5, 1-3-5; left hand 5-3-1, 5-3-1,
+  5-2-1), stacked as in printed music, and can be switched off.
 
 **Judging.** Only what is shown counts. **Read from the staff** (notation drills, progressions
-with the notation), a chord is right when exactly the written keys are down: octave and all,
+and inversions with the notation), a chord is right when exactly the written keys are down: octave and all,
 nothing extra. Which hand plays which key does not matter (MIDI cannot tell), so a right hand
 landing before the left is simply not complete yet. A key that is not written is a wrong key the
 moment it is pressed; a chord tone below the written bass is a wrong bass ("put C in the bass").
-**Read from a symbol** (symbol drills, progressions from the chart), a chord is right when the
-keys down together have exactly its pitch classes — any octave, any doubling, any hand, nothing
-extra — and, where the drill's rule asks, the right note lowest; right notes over the wrong bass
+**Read from a symbol** (symbol drills, progressions and inversions from the chart), a chord is
+right when the keys down together have exactly its pitch classes — any octave, any doubling, any
+hand, nothing extra — and, where the drill's rule or the inversion asks, the right note lowest; right notes over the wrong bass
 get a hint ("right notes, put E in the bass"). Wait: the chord counts the moment it is complete
 (or when a stray key is let go); wrong keys first make it "not first time". A repeated chord
 must be struck again. Flow: one chord per 4/4 bar on beat 1; keys pressed around the bar
 line (−0.3 / +0.4 of a bar, at most 300 / 450 ms) plus keys held over from before (common tones)
-make the chord; holding the previous chord through the bar line does not count.
+make the chord; holding the previous chord through the bar line does not count. Inversions come
+twice a bar, on beats 1 and 3, each chord judged against its own beat; the windows are the same
+shares of the time between two chords (half a bar), with the same limits in ms.
 
 **Keyboard guide and hints.** In progressions the guide shows the suggested voicing, as it shows
-the notes in sight reading. In drills it would give the answer away, so there is none: after 5 s
+the notes in sight reading; in inversions it shows the next shape, as it shows the next note of a
+scale. In drills it would give the answer away, so there is none: after 5 s
 without the chord, or a wrong key, the Hint button is pointed out ("Stuck? Press ? for a hint"),
 and a chord found after a hint is not right first time ("needed a hint").
 
 **Voicings.** The suggested voicing is close position; progressions move to the nearest voicing
 each time (smallest total semitone movement, kept between G3 and G5).
 
-**Tempo ladder and review** as in §4.4, counted in bpm (one chord per bar, ladder step 4 bpm).
-Starts at 48 bpm (drills) / 60 bpm (progressions); clean = ≥ 90 % chords and ≥ 75 % timing;
-mastered at the goal tempo (default ♩ = 80, a chord every 3 s).
+**Tempo ladder and review** as in §4.4, counted in bpm (one chord per bar, or every 2 beats in
+inversions; ladder step 4 bpm). Starts at 48 bpm (drills) / 60 bpm (progressions, inversions);
+clean = ≥ 90 % chords and ≥ 75 % timing; mastered at the goal tempo (default ♩ = 80, a chord
+every 3 s, or every 1.5 s in inversions). Inversions have 7 chords, too few for a share to be
+fair (one miss is 86 %), so they count misses: clean = every chord and ≥ 75 % timing; one missed
+chord keeps the tempo; two or more take 4 bpm off.
 
 **Measurements.** Wait: right first time, median time to find a chord, slow chords (> 2× your
 median). Flow: chords on the beat, timing tendency, **keys together** (median time from the first
@@ -274,15 +297,19 @@ to the last key of a chord; > 120 ms reads as rolled). Progressions from the cha
 **voice-leading score** — average semitones moved per change against the smallest move possible
 (1 = as smooth as the suggested voicings). From the staff the voicing is written, so there is
 nothing to score. Results list the chords to look at (missed, wrong bass, slow,
-early / late, rolled).
+early / late, rolled). In inversions each chord comes twice, so the list says where it was:
+"C/E going up", "C at the top", "C/G going down".
 
 **Weak spots.** Shared tags `chordQuality`, `chordRoot` (pitch class) and `chordInversion`
 (accuracy, reaction, timing), and `chordHands` (rh / lh / lh-bass / both) for chords read from notation only:
 symbols and progressions say nothing about reading in a clef. Weak-spot focus draws more of the
 weak qualities and roots in drills; a weak reading hand is shown, not drawn, as the hand is fixed
-per drill.
+per drill. Inversions record none of these: walking one known chord up and down says nothing about
+finding chords, and its reaction times would distort the drill statistics. Their progress is the
+item's own tempo ladder.
 
-**Not in v1:** open / spread voicings and left-hand shells, extended chords (9, 11, 13) and
+**Not in v1:** inversions of seventh chords, over two octaves (needs 8va in the score) and broken
+(arpeggiated) instead of solid; open / spread voicings and left-hand shells, extended chords (9, 11, 13) and
 altered dominants, rule-based progressions generated from functions, Roman-numeral prompts in a
 key for drills, rhythm patterns (comping) inside the bar.
 
@@ -320,10 +347,10 @@ skill. The statements are shown in the skill's own words and can be changed befo
 
 | # | Scales & chords | Scales & arpeggios | Chords |
 |---|---|---|---|
-| 1 | I don't know any yet | right hand, 1 octave, eighths | major & minor triads, root position |
+| 1 | I don't know any yet | right hand, 1 octave, eighths | major & minor triads, root position; inversions in sequence with the right hand |
 | 2 | I know a few major scales and basic chords | right hand, 2 octaves, eighths | same |
-| 3 | I play major and minor scales hands together, and chords in inversions | hands together, 2 octaves, eighths | all triads, inversions |
-| 4 | I play scales in all keys at speed, and seventh chords | hands together, 2 octaves, sixteenths | seventh chords, inversions |
+| 3 | I play major and minor scales hands together, and chords in inversions | hands together, 2 octaves, eighths | all triads, inversions; inversions in sequence hands together |
+| 4 | I play scales in all keys at speed, and seventh chords | hands together, 2 octaves, sixteenths | seventh chords, inversions; inversions in sequence hands together |
 
 Why it is built this way:
 

@@ -60,19 +60,19 @@ export const SKILLS: Readonly<Record<ExperienceSkill, ExperienceSkillInfo>> = {
     statements: [
       {
         text: 'I don’t know any yet',
-        patch: { scales: { hands: 'rh', octaves: 1, noteValue: 'eighth' }, chords: { set: 'triads', inversions: 'root' } },
+        patch: { scales: { hands: 'rh', octaves: 1, noteValue: 'eighth' }, chords: { set: 'triads', inversions: 'root', sequenceHands: 'rh' } },
       },
       {
         text: 'I know a few major scales and basic chords',
-        patch: { scales: { hands: 'rh', octaves: 2, noteValue: 'eighth' }, chords: { set: 'triads', inversions: 'root' } },
+        patch: { scales: { hands: 'rh', octaves: 2, noteValue: 'eighth' }, chords: { set: 'triads', inversions: 'root', sequenceHands: 'rh' } },
       },
       {
         text: 'I play major and minor scales hands together, and chords in inversions',
-        patch: { scales: { hands: 'together', octaves: 2, noteValue: 'eighth' }, chords: { set: 'all-triads', inversions: 'inversions' } },
+        patch: { scales: { hands: 'together', octaves: 2, noteValue: 'eighth' }, chords: { set: 'all-triads', inversions: 'inversions', sequenceHands: 'both' } },
       },
       {
         text: 'I play scales in all keys at speed, and seventh chords',
-        patch: { scales: { hands: 'together', octaves: 2, noteValue: 'sixteenth' }, chords: { set: 'sevenths', inversions: 'inversions' } },
+        patch: { scales: { hands: 'together', octaves: 2, noteValue: 'sixteenth' }, chords: { set: 'sevenths', inversions: 'inversions', sequenceHands: 'both' } },
       },
     ],
   },

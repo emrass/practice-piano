@@ -140,11 +140,13 @@ export interface ChordOutcome {
 /** Chords & progressions measurements (docs/DIDACTICS.md §4.5). */
 export interface ChordSummary {
   itemId: string;
-  task: 'drill' | 'progression';
+  task: 'drill' | 'progression' | 'sequence';
   bpm: number;
   goalBpm: number;
   /** Flow: clean enough to move up the tempo ladder. */
   clean: boolean;
+  /** Flow: so many chords missed that the tempo ladder moves down. */
+  messy: boolean;
   chords: number;
   correct: number;
   /** Wait: median time to find a chord. */
@@ -159,7 +161,13 @@ export interface ChordSummary {
   /** Average semitones the right hand moved per change, and the smallest possible. */
   movement: { played: number; minimal: number } | null;
   /** Chords to look at, worst first. */
-  trouble: { symbol: string; reason: 'missed' | 'retry' | 'hint' | 'bass' | 'slow' | 'late' | 'early' | 'rolled'; ms?: number }[];
+  trouble: {
+    symbol: string;
+    /** Sequences: where the chord is, since each one comes on the way up and on the way down. */
+    leg?: 'up' | 'top' | 'down';
+    reason: 'missed' | 'retry' | 'hint' | 'bass' | 'slow' | 'late' | 'early' | 'rolled';
+    ms?: number;
+  }[];
   outcomes: ChordOutcome[];
 }
 

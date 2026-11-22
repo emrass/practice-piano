@@ -5,11 +5,12 @@ import { RHYTHM_COMPLEXITY_LABELS } from '../../core/generator/difficulty';
 import { isRhythmExercise, TASK_INFO, TEXTURE_INFO } from '../../core/rhythm/generator';
 import { HANDS_LABEL as SCALE_HANDS, NOTE_VALUE_LABEL } from '../../core/scales/catalog';
 import { isScaleExercise, nps } from '../../core/scales/generator';
-import { CHORD_SETS, chordSetExamples, findProgression } from '../../core/chords/catalog';
+import { CHORD_SETS, chordSetExamples, findProgression, sequenceName } from '../../core/chords/catalog';
 import { isChordExercise } from '../../core/chords/generator';
 
 /** A notation drill is read on the staff its hand plays from. */
 const DRILL_STAFF_LABEL = { rh: 'Treble clef', lh: 'Bass clef', 'lh-bass': 'Bass + chord', both: 'Both hands' } as const;
+const SEQUENCE_HANDS_LABEL = { rh: 'Right hand', lh: 'Left hand', both: 'Hands together' } as const;
 const HANDS_LABEL = { rh: 'Right hand', lh: 'Left hand', alternating: 'Alternating', both: 'Both hands' } as const;
 
 /** MetaStrip: fixed-geometry facts about the current exercise (cells never change width). */
@@ -30,6 +31,15 @@ export function MetaStrip(props: { exercise: Exercise; firstSight: boolean; focu
           ['Length', `${chords.targets.length} chords`],
           ['Tempo', `${ex.bpm} bpm`],
           ['Per chord', `${(240 / ex.bpm).toFixed(1)} s`],
+        ]
+      : ci!.task === 'sequence'
+      ? [
+          ['Key', ex.key.label],
+          ['Hands', ci!.notation ? SEQUENCE_HANDS_LABEL[ci!.hands] : 'Any'],
+          ['Range', '1 octave'],
+          ['Length', `${chords.targets.length} chords`],
+          ['Tempo', `${ex.bpm} bpm`],
+          ['Per chord', `${(120 / ex.bpm).toFixed(1)} s`],
         ]
       : [
           ['Key', ex.key.label],
@@ -79,7 +89,13 @@ export function MetaStrip(props: { exercise: Exercise; firstSight: boolean; focu
       <div className="meta-lead">
         {scale || chords ? (
           <span className="meta-title" title={(scale ?? chords)!.title}>
-            {ci?.task === 'drill' ? CHORD_SETS[ci.set].name : ci?.task === 'progression' ? (findProgression(ci.progression)?.name ?? chords!.title) : scale!.title}
+            {ci?.task === 'drill'
+              ? CHORD_SETS[ci.set].name
+              : ci?.task === 'progression'
+                ? (findProgression(ci.progression)?.name ?? chords!.title)
+                : ci?.task === 'sequence'
+                  ? sequenceName(ci)
+                  : scale!.title}
           </span>
         ) : (
           <>

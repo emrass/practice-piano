@@ -26,17 +26,16 @@ export interface ChordPracticeOptions {
 const NUDGE_AFTER_MS = 5000;
 
 /**
- * Chords & progressions: one chord per bar. Wait waits for each chord (from the staff exactly the
- * written keys; from a symbol any voicing that has exactly its notes, and the right bass where
- * asked); Flow wants it on the downbeat with the metronome. Shares the practice state shape, so
- * score, bar, keyboard and results just work.
+ * Chords & progressions: one chord per bar, or every 2 beats in a sequence of inversions. Wait
+ * waits for each chord (from the staff exactly the written keys; from a symbol any voicing that
+ * has exactly its notes, and the right bass where asked); Flow wants it on its beat with the
+ * metronome. Shares the practice state shape, so score, bar, keyboard and results just work.
  */
 export class ChordController extends SessionBase {
   private wait: ChordWaitEngine | null = null;
   private flow: ChordFlowEngine | null = null;
   private clock: FlowClock | null = null;
   private readonly tickMs: number;
-  private readonly barMs: number;
   private firstInputAt: number | null = null;
   private nudgeTimer: ReturnType<typeof setTimeout> | null = null;
   /** Flow: keys outside the chord pressed inside a chord's window. */
@@ -49,7 +48,6 @@ export class ChordController extends SessionBase {
   ) {
     super(bus, audio, initialState(opts));
     this.tickMs = msPerTick(opts.exercise.bpm, opts.exercise.timeSignature);
-    this.barMs = this.tickMs * opts.exercise.timeSignature.ticksPerBar;
     if (opts.mode === 'wait') this.resetWait();
   }
 
@@ -115,7 +113,7 @@ export class ChordController extends SessionBase {
       totalTicks: ex.totalTicks,
       volume: this.opts.metronomeVolume,
     });
-    this.flow = new ChordFlowEngine(ex.chords.targets, { barMs: this.barMs, latencyMs: this.opts.latencyMs });
+    this.flow = new ChordFlowEngine(ex.chords.targets, { tickMs: this.tickMs, endTick: ex.totalTicks, latencyMs: this.opts.latencyMs });
     this.flow.setStartTime(this.clock.startTime);
     this.wrongFlows = 0;
     this.state.set({ ...initialState(this.opts), status: 'countin', countIn: { beat: 0, total: this.clock.countInBeats } });
@@ -174,10 +172,9 @@ export class ChordController extends SessionBase {
       this.showCountIn(clock, visualNow);
     } else {
       const judged = flow.update(now);
-      const n = this.opts.exercise.chords.targets.length;
       const beatIndex = Math.floor((visualNow - flow.startTime) / beatMs) % ts.beatsPerBar;
-      // Guide: the chord whose bar is coming up (shown a little before the bar line).
-      const idx = Math.min(n, Math.max(0, Math.floor((visualNow - flow.startTime + flow.preMs) / this.barMs)));
+      // Guide: the chord whose beat is coming up (shown a little before it).
+      const idx = flow.askedAt(visualNow);
       const next: Partial<PracticeState> = {};
       if (s.status !== 'running') Object.assign(next, { status: 'running', countIn: null });
       if (s.beat?.index !== beatIndex) next.beat = { index: beatIndex, beatsPerBar: ts.beatsPerBar };
@@ -193,7 +190,7 @@ export class ChordController extends SessionBase {
       }
       if (Object.keys(next).length) this.patch(next);
       if (flow.isFinished(now)) {
-        this.finish(flow.results, this.wrongFlows + flow.extraPresses(), n * this.barMs);
+        this.finish(flow.results, this.wrongFlows + flow.extraPresses(), this.opts.exercise.totalTicks * this.tickMs);
         return false;
       }
     }
@@ -285,11 +282,11 @@ function targetKeys(ex: ChordExercise, i: number): number[] {
 
 /**
  * The keyboard guide shows a progression's suggested voicing (reading it is the exercise, as
- * in sight reading). In a drill the chord is the question, so it is never guided: Wait offers
- * a hint instead.
+ * in sight reading) and a sequence's next shape (a fixed pattern to learn, as a scale is). In a
+ * drill the chord is the question, so it is never guided: Wait offers a hint instead.
  */
 function guideFor(opts: ChordPracticeOptions, i: number): number[] {
-  return opts.exercise.chords.item.task === 'progression' ? targetKeys(opts.exercise, i) : [];
+  return opts.exercise.chords.item.task === 'drill' ? [] : targetKeys(opts.exercise, i);
 }
 
 function initialState(opts: ChordPracticeOptions): PracticeState {
@@ -312,5 +309,5 @@ function initialState(opts: ChordPracticeOptions): PracticeState {
 }
 
 function chordsState(opts: ChordPracticeOptions, index: number): NonNullable<PracticeState['chords']> {
-  return { index, fromStaff: readsNotation(opts.exercise.chords.item), bassHint: null };
+  return { index, fromStaff: readsNotation(opts.exercise.chords.item), beatsPerChord: opts.exercise.chords.beatsPerChord, bassHint: null };
 }

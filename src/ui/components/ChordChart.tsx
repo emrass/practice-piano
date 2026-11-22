@@ -14,7 +14,8 @@ const CELL_MARK: Partial<Record<StepMark, { name: string; glyph: 'check' | '~' |
 };
 
 /**
- * Chords without notation (the design system's ChordChart): a lead-sheet grid, one cell per bar.
+ * Chords without notation (the design system's ChordChart): a lead-sheet grid, one cell per chord
+ * (a bar, or half a bar in a sequence of inversions).
  * The cell being asked for is marked; played ones take their result color and a mark.
  */
 export function ChordChart(props: { exercise: ChordExercise; controller: Session }) {

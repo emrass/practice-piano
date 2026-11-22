@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
+import { generateChordExercise } from '../../core/chords/generator';
 import { generateExercise, type GeneratorSettings } from '../../core/generator/generator';
 import { allEvents } from '../../core/exercise';
 import { chooseScale, computeLayout, measureX, tickToX } from './layout';
-import { drawStepMark, renderScore } from './renderScore';
+import { drawStepMark, fingeringRoom, renderScore } from './renderScore';
 
 const base: GeneratorSettings = {
   level: 40,
@@ -105,6 +106,44 @@ describe('renderScore (VexFlow)', () => {
     expect(host.querySelectorAll('.score-label').length).toBe(0);
     expect(host.querySelectorAll('.score-mark').length).toBe(ex.steps.length);
     expect(r.stepMarks.size).toBe(ex.steps.length);
+  });
+
+  it('stacks a chord\'s fingering away from the staff, with the chord symbols over it', () => {
+    const ex = generateChordExercise({ task: 'sequence', chord: 'maj', key: 'C', hands: 'both', notation: true }, { bpm: 60, count: 8 }, 1);
+    const plain = renderScore(document.createElement('div'), ex, { width: 1200, height: 0, showNoteNames: false });
+    const host = document.createElement('div');
+    const r = renderScore(host, ex, { width: 1200, height: 0, showNoteNames: false, showFingering: true });
+    // Two more rows of numbers above the treble staff and below the bass staff.
+    expect(fingeringRoom(ex, false)).toEqual({ top: 0, bottom: 0 });
+    expect(fingeringRoom(ex, true)).toEqual({ top: 28, bottom: 24 });
+    expect(r.layout.height - plain.layout.height).toBe(52 * r.layout.systems.length);
+    expect(r.layout.systems[0].staveY.treble! - plain.layout.systems[0].staveY.treble!).toBe(28);
+    const ys = (step: number, x: string) =>
+      [...host.querySelectorAll<SVGTextElement>(`.pp-finger[data-step="${step}"]`)]
+        .filter((el) => el.getAttribute('x') === x)
+        .map((el) => ({ y: Number(el.getAttribute('y')), finger: el.textContent }))
+        .sort((a, b) => a.y - b.y);
+    const fingers = [...host.querySelectorAll<SVGTextElement>('.pp-finger[data-step="1"]')];
+    expect(fingers).toHaveLength(6);
+    expect(fingers.some((el) => el.classList.contains('is-thumb'))).toBe(false);
+    // First inversion, read from the top of the page down: right hand 5-2-1 over the staff, left hand 1-3-5 under it.
+    const stack = ys(1, fingers[0].getAttribute('x')!).map((f) => f.finger).join('');
+    expect(stack).toBe('521135');
+    const all = ys(1, fingers[0].getAttribute('x')!);
+    const treble = r.layout.systems[0].staveY.treble! + 40;
+    const bassBottom = r.layout.systems[0].staveY.bass! + 80;
+    expect(all[2].y).toBeLessThan(treble);
+    expect(all[3].y).toBeGreaterThan(bassBottom);
+    // The symbols clear the stack, and everything stays on the sheet.
+    const symbols = [...host.querySelectorAll<SVGTextElement>('.chord-symbol')];
+    expect(symbols).toHaveLength(7);
+    for (const symbol of symbols) {
+      expect(Number(symbol.getAttribute('y'))).toBeLessThan(all[0].y - 10);
+      expect(Number(symbol.getAttribute('y'))).toBeGreaterThan(14);
+    }
+    const marks = [...r.stepMarks.values()].flat().map((m) => Number(m.getAttribute('y')));
+    expect(Math.max(...marks)).toBeLessThan(r.layout.height);
+    expect(Math.max(...marks)).toBeGreaterThan(all[5].y);
   });
 
   it('marks a note by its state: a tilde for nearly, a cross for wrong or missed, nothing for right', () => {

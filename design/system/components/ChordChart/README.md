@@ -1,6 +1,6 @@
 # ChordChart
 
-A lead-sheet grid: one cell per bar, the chord symbol large, its Roman numeral small beneath.
+A lead-sheet grid: one cell per chord (a bar of a drill or a progression, half a bar of a sequence of inversions), the chord symbol large, its Roman numeral small beneath.
 
 - **Use** in the Chords lesson when the notation is hidden and the player voices the chords themselves.
 - **You provide** a title that says what the chart asks for, the bars per line (`--bars`), and per cell the symbol, the numeral and the state.

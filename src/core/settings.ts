@@ -15,6 +15,11 @@ import {
   type InversionRule,
   keysFor,
   PROGRESSIONS,
+  SEQUENCE_CHORDS,
+  SEQUENCE_HANDS,
+  type SequenceChord,
+  type SequenceHands,
+  sequenceKeys,
 } from './chords/catalog';
 import { SCALE_TYPE_IDS, SCALE_TYPES, type NoteValue, type ScaleHands, type ScaleTypeId } from './scales/catalog';
 import { type ExperienceSelection, normalizeExperience } from './experience';
@@ -63,7 +68,7 @@ export interface ScaleSettings {
 }
 
 export interface ChordSettings {
-  task: 'drill' | 'progression';
+  task: 'drill' | 'progression' | 'sequence';
   set: ChordSetId;
   /** Drill: chords named by symbol, or written on the staff. */
   prompt: ChordPrompt;
@@ -78,10 +83,19 @@ export interface ChordSettings {
   hands: ChordHands;
   mode: 'wait' | 'flow';
   source: 'pick' | 'review';
-  /** Mastery goal in bpm (one chord per bar). */
+  /** Mastery goal in bpm (one chord per bar, or every 2 beats in a sequence of inversions). */
   goalBpm: number;
   /** Progressions: shown as notes on the staff (judged as written), or as symbols on the chord chart. */
   notation: boolean;
+  /** Inversions in sequence: the chord that is walked up and down the keyboard. */
+  sequenceChord: SequenceChord;
+  /** A key the sequence chord has (major keys for major, minor keys for minor), or 'shuffle'. */
+  sequenceKey: string;
+  sequenceHands: SequenceHands;
+  /** Inversions: shown as notes on the staff (judged as written), or as symbols on the chord chart. */
+  sequenceNotation: boolean;
+  /** Inversions: fingering printed with the chords on the staff. */
+  showFingering: boolean;
 }
 
 /** The lessons' own settings, one group per lesson. */
@@ -229,6 +243,11 @@ export const DEFAULT_SETTINGS: Settings = {
     source: 'pick',
     goalBpm: 80,
     notation: true,
+    sequenceChord: 'maj',
+    sequenceKey: 'C',
+    sequenceHands: 'rh',
+    sequenceNotation: true,
+    showFingering: true,
   },
   synthVolume: 0.8,
   weakSpotFocus: false,
@@ -375,7 +394,7 @@ function normalizeScales(r: Record<string, unknown>): ScaleSettings {
 function normalizeChords(r: Record<string, unknown>): ChordSettings {
   const d = DEFAULT_SETTINGS.chords;
   return {
-    task: oneOf(r.task, ['drill', 'progression'] as const, d.task),
+    task: oneOf(r.task, ['drill', 'progression', 'sequence'] as const, d.task),
     set: oneOf(r.set, CHORD_SET_IDS, d.set),
     prompt: oneOf(r.prompt, ['symbol', 'notation'] as const, d.prompt),
     inversions: oneOf(r.inversions, ['any', 'root', 'inversions'] as const, d.inversions),
@@ -387,7 +406,25 @@ function normalizeChords(r: Record<string, unknown>): ChordSettings {
     source: oneOf(r.source, ['pick', 'review'] as const, d.source),
     goalBpm: Math.round(clampNum(r.goalBpm, 40, 160, d.goalBpm)),
     notation: bool(r.notation, d.notation),
+    ...sequenceChoice(r.sequenceChord, r.sequenceKey),
+    sequenceHands: oneOf(r.sequenceHands, SEQUENCE_HANDS, d.sequenceHands),
+    sequenceNotation: bool(r.sequenceNotation, d.sequenceNotation),
+    showFingering: bool(r.showFingering, d.showFingering),
   };
+}
+
+const tonicPc = (key: string) => ({ C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 })[key[0]]! + (key[1] === '#' ? 1 : key[1] === 'b' ? -1 : 0);
+
+/**
+ * A sequence chord and a key it has. A key the other mode spells differently keeps its place on
+ * the keyboard (D♭ major becomes C♯ minor), so changing the chord does not change the key.
+ */
+export function sequenceChoice(chord: unknown, key: unknown): Pick<ChordSettings, 'sequenceChord' | 'sequenceKey'> {
+  const sequenceChord = oneOf(chord, SEQUENCE_CHORDS, DEFAULT_SETTINGS.chords.sequenceChord);
+  const keys = sequenceKeys(sequenceChord);
+  if (key === 'shuffle' || keys.includes(key as string)) return { sequenceChord, sequenceKey: key as string };
+  const same = typeof key === 'string' && /^[A-G][#b]?$/.test(key) ? keys.find((k) => tonicPc(k) === tonicPc(key)) : undefined;
+  return { sequenceChord, sequenceKey: same ?? keys[0] };
 }
 
 /** A progression and a key of its mode (major keys for major progressions, minor for minor). */

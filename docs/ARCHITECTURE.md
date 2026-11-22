@@ -84,6 +84,12 @@ measures share one width and every tick has the same width, then each `StaveNote
 - RH and LH notes at the same tick have identical x (tested);
 - the system header (clef/key/time) has a fixed width, so every system lines up.
 
+Fingering is a row of numbers above the treble staff and below the bass staff (scales: one per
+note). A chord's numbers are a stack, away from the staff, in the order of its notes; a system
+has place for one row, so `fingeringRoom()` (`renderScore.ts`) asks `computeLayout` for the rows
+beyond it (`SystemRoom`: above the first staff, below the last), and the chord symbols sit on top
+of the stack. A bar with more than one chord symbol is at least as wide as its symbols.
+
 Measures per line depend only on available width and the shortest note value; the score area
 is a fixed-height scroller, so changing exercises never moves the controls or keyboard. The
 difficulty slider previews while dragging and regenerates only on release.
@@ -127,7 +133,7 @@ N and piano C / D all read it. On the computer keyboard R sits among the black k
 restarts after a run, with the same 600 ms delay; Backspace restarts at any time
 (`ui/hooks/useComputerKeyboard.ts`). `ui/lessons/continuation.ts` builds it: generated material (sight
 reading, ear, rhythm, chord drills) suggests something new; fixed repertoire (scales,
-progressions) suggests "Again", has no next for a specific key, and suggests the next due item in
+progressions, inversions) suggests "Again", has no next for a specific key, and suggests the next due item in
 review. Restart in Wait is off while the run is untouched (`isUntouched`, `ui/practice/session.ts`).
 
 ## Progress & gamification
@@ -287,7 +293,9 @@ gets plain objects back.
 - `core/repertoire/repertoire.ts` — pure ladder + Leitner review shared by scales and chords
   (`applyRepertoireRun`, `dueItems`, `setLadder`, `normalizeRepertoire`). Tempo is in the
   lesson's unit (`ladderTempo`: notes per minute for scales, bpm for chords); a `LadderRun`
-  carries the run's tempo, goal and the step size (4 bpm × notes per beat).
+  carries the run's tempo, goal and the step size (4 bpm × notes per beat), and may say itself
+  when a run is `messy` (moves the ladder down) instead of the ladder's 90 % rule: a sequence of
+  inversions has seven chords and counts misses.
   `ProgressState.repertoire` stores it; the lesson's progress rules (`ladderRun`) map its result
   onto it. Repertoire lessons (`LESSONS.x.repertoire`) skip level tiers and first-sight logic in
   `computeAward`/`applyResult`.
@@ -295,6 +303,22 @@ gets plain objects back.
   turns the raw result into a scale result; `ScalesPanel` (picker, ladder, review, display),
   fingering rows in `renderScore`, `MemoryCard` for playing from memory. The layout now fills
   lines for odd bar counts.
+
+## Chords & progressions (fixed repertoire)
+
+- `core/chords/catalog.ts` — chord qualities, sets, the progression library, and the three kinds
+  of `ChordItem` with their ids: `drill`, `progression` and `sequence` (the Inversions task: one
+  chord through its inversions, `chords/seq/<chord>/<key>/<hands or chart>`).
+- `core/chords/generator.ts` — `ChordExercise` (= `Exercise` + `chords` info). Every `ChordTarget`
+  has its own onset `tick`: one per bar in drills and progressions, every half bar in a sequence
+  (`beatsPerChord`). A sequence is placed per hand where it needs the fewest ledger lines and fits
+  the player's keyboard (`opts.keyboard`), and its events carry `fingers` (one per note of the chord).
+- `core/chords/engine.ts` — `ChordWaitEngine`, and `ChordFlowEngine`, which judges each chord
+  against its own tick; the timing windows scale with the shortest gap between two chords.
+- `core/chords/analysis.ts` — the result summary: `clean` and `messy` (what moves the tempo
+  ladder; a share of the chords, or a count of misses in a sequence), and the chords to look at
+  (with the `leg` of a sequence: going up, at the top, going down).
+- UI: `ChordController` (Wait / Flow), `ChordsPanel`, `ChordChart` for everything shown as symbols.
 
 ## Extending with new lesson types
 

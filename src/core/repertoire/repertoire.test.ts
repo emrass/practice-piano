@@ -20,6 +20,15 @@ describe('repertoire ladder and review', () => {
     expect(w.item.ladderTempo).toBe(r.item.ladderTempo);
   });
 
+  it('lets the lesson say when a run is messy', () => {
+    const at = (accuracy: number, messy?: boolean) =>
+      applyRepertoireRun(setLadder(undefined, 64, 0), { mode: 'flow', accuracy, ladder: { ...run(false, 64, 1), messy } }, 0).item.ladderTempo;
+    // Unsaid, the ladder's own rule holds: below 90% is messy.
+    expect([at(0.86), at(0.95)]).toEqual([60, 64]);
+    // A lesson with few steps a run (seven chords) counts misses instead.
+    expect([at(0.86, false), at(0.95, true)]).toEqual([64, 60]);
+  });
+
   it('steps by 4 bpm in the unit of the lesson', () => {
     const r = applyRepertoireRun(undefined, { mode: 'flow', accuracy: 1, ladder: { ...run(true, 60, 1), goalTempo: 80 } }, 0);
     expect(r.change).toMatchObject({ fromTempo: 60, toTempo: 64 });

@@ -32,6 +32,11 @@ describe('experience statements', () => {
     }
   });
 
+  it('start the inversions with one hand, or hands together for players who know them', () => {
+    const hands = [...SKILLS.technique.statements.keys()].map((technique) => applySettingsPatch(DEFAULT_SETTINGS, experiencePatch({ reading: 0, ear: 0, technique })).chords.sequenceHands);
+    expect(hands).toEqual(['rh', 'rh', 'both', 'both']);
+  });
+
   it('are valid settings: nothing is changed by normalizing', () => {
     for (const reading of SKILLS.reading.statements.keys()) {
       for (const ear of SKILLS.ear.statements.keys()) {
