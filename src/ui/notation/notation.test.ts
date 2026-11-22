@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { generateChordExercise } from '../../core/chords/generator';
 import { generateExercise, type GeneratorSettings } from '../../core/generator/generator';
 import { allEvents } from '../../core/exercise';
-import { chooseScale, COVER_FEATHER_PX, COVER_TRAIL_PX, computeLayout, coverBoxes, measureX, PLAYHEAD_OFFSET_PX, tickToX } from './layout';
+import { chooseScale, COVER_FADE_IN_PX, COVER_FADE_OUT_PX, COVER_TRAIL_PX, computeLayout, coverBoxes, measureX, PLAYHEAD_OFFSET_PX, tickToX } from './layout';
 import { drawStepMark, fingeringRoom, renderScore } from './renderScore';
 
 const base: GeneratorSettings = {
@@ -60,12 +60,13 @@ describe('read-ahead cover', () => {
     const [box, ...rest] = coverBoxes(layout, tick, 4);
     expect(rest).toEqual([]);
     const playhead = tickToX(layout, tick).x + PLAYHEAD_OFFSET_PX;
-    const half = COVER_FEATHER_PX / 2;
-    expect(box.left).toBeCloseTo(playhead - COVER_TRAIL_PX - half);
-    // The note on the playhead is under it (past the fading edge); the note at the far edge starts where the fade is half done.
-    expect(box.left + half).toBeLessThan(tickToX(layout, tick).x);
-    expect(box.right - half).toBeLessThan(tickToX(layout, tick + 4).x);
-    expect(box.right - half).toBeGreaterThan(tickToX(layout, tick + 4).x - 4);
+    expect(box.left).toBeCloseTo(playhead - COVER_TRAIL_PX - COVER_FADE_OUT_PX / 2);
+    expect(box).toMatchObject({ fadeLeft: COVER_FADE_OUT_PX, fadeRight: COVER_FADE_IN_PX });
+    // The note on the playhead is under it (past the fading edge); the note at the far edge starts where the fade in is half done.
+    expect(box.left + COVER_FADE_OUT_PX).toBeLessThan(tickToX(layout, tick).x);
+    const edge = box.right - COVER_FADE_IN_PX / 2;
+    expect(edge).toBeLessThan(tickToX(layout, tick + 4).x);
+    expect(edge).toBeGreaterThan(tickToX(layout, tick + 4).x - 4);
     expect(box.top).toBeGreaterThan(first.top);
     expect(box.top + box.height).toBeLessThan(first.top + first.height);
     expect(box.top).toBeLessThan(first.bandTop);
@@ -77,10 +78,12 @@ describe('read-ahead cover', () => {
     const tick = perLine * tpb - 2;
     const boxes = coverBoxes(layout, tick, tpb);
     expect(boxes).toHaveLength(2);
-    expect(boxes[0].right).toBeCloseTo(first.measuresX + perLine * layout.measureWidth + COVER_FEATHER_PX / 2);
+    expect(boxes[0].right).toBeCloseTo(first.measuresX + perLine * layout.measureWidth + COVER_FADE_OUT_PX / 2);
+    // It runs on without a fade from the line end into the next line's start.
+    expect(boxes[1].fadeLeft).toBe(0);
     expect(boxes[1].top).toBeGreaterThan(boxes[0].top);
     expect(boxes[1].left).toBe(second.measuresX);
-    expect(boxes[1].right).toBeCloseTo(tickToX(layout, tick + tpb).x - 2 + COVER_FEATHER_PX / 2);
+    expect(boxes[1].right).toBeCloseTo(tickToX(layout, tick + tpb).x - 2 + COVER_FADE_IN_PX / 2);
   });
 
   it('stops at the end of the piece, and covers nothing without a span', () => {
@@ -88,7 +91,7 @@ describe('read-ahead cover', () => {
     const boxes = coverBoxes(layout, total - 2, tpb);
     expect(boxes).toHaveLength(1);
     const last = layout.systems[layout.systems.length - 1];
-    expect(boxes[0].right).toBeCloseTo(last.measuresX + last.measureCount * layout.measureWidth + COVER_FEATHER_PX / 2);
+    expect(boxes[0].right).toBeCloseTo(last.measuresX + last.measureCount * layout.measureWidth + COVER_FADE_OUT_PX / 2);
     expect(coverBoxes(layout, tpb, 0)).toEqual([]);
   });
 });
