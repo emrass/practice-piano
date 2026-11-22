@@ -79,8 +79,10 @@ export function TopBar(props: {
           <span className={`status-dot ${midiConnected ? 'is-on' : ''}`} aria-hidden="true" />
           <span className="chip-text">{midiLabelText(props.midi)}</span>
         </button>
-        <button type="button" className="icon-btn" onClick={props.onOpenData} aria-haspopup="dialog" aria-label="Your data" title="Your data: back up, restore or erase">
-          <Icon name="archive" />
+        {/* A labeled button; where the label does not fit (topbar.css) it narrows to the icon. */}
+        <button type="button" className="btn topbar-data" onClick={props.onOpenData} aria-haspopup="dialog" aria-label="Your data" title="Your data: back up, restore or erase">
+          <Icon name="database" />
+          <span className="topbar-data-label">Your data</span>
         </button>
         <button
           type="button"

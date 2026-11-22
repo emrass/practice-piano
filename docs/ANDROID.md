@@ -81,7 +81,7 @@ Store) then signs with it. Without the file, release builds come out unsigned.
   never touches the screen.
 - The volume buttons set the metronome volume. Bluetooth audio adds about 200 ms of delay: choose
   the **Headphones on piano** preset or calibrate (*Piano & audio → Audio & timing*).
-- *Your data → Export file* (the archive button in the top bar) saves the backup where you pick; *Import* opens it from any file app.
+- *Your data → Export file* (the button in the top bar) saves the backup where you pick; *Import* opens it from any file app.
 - A hardware keyboard works for computer-key practice too.
 
 ## How it fits together
