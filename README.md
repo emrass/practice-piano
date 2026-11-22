@@ -14,9 +14,9 @@ Lessons:
   independence.
 - **Scales & arpeggios** — a fixed repertoire with standard fingering, a tempo ladder per item
   and spaced review.
-- **Chords & progressions** — chord drills from symbols or notation (with inversions) and
+- **Chords & progressions** — chord drills from symbols or notation (with inversions),
   standard progressions in every key, judged by the notes you hold in any voicing, with a
-  voice-leading score.
+  voice-leading score, and one chord through its inversions up and down the keyboard, with fingering.
 
 The didactic concept behind the lessons (and the planned ones) is in
 [docs/DIDACTICS.md](docs/DIDACTICS.md).
@@ -187,7 +187,9 @@ contains the current web code.
   from a chord chart (symbols) or from the staff, in root position, a given inversion (slash
   chords) or any voicing; or progressions (I–IV–V–I, ii–V–I, pop, doo-wop, Andalusian, canon,
   circle of fifths, 12-bar blues…) in all keys, right hand alone or with the left-hand root, with
-  symbols and Roman numerals over smooth suggested voicings. Any octave and doubling counts.
+  symbols and Roman numerals over smooth suggested voicings; or one major or minor triad through
+  its inversions, up an octave and back in half notes, each hand alone or hands together, with
+  standard fingering. From symbols any octave and doubling counts; from the staff, what is written.
   *Wait* times how fast you find each chord; *Flow* wants it on beat 1 with the metronome and
   uses the same tempo ladder and spaced review as scales. Results show keys-together spread,
   timing tendency, the voice-leading score and the chords to look at; weak qualities, roots and

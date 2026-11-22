@@ -14,6 +14,9 @@ const TROUBLE_TEXT = {
   rolled: 'keys not together',
 } as const;
 
+/** A sequence plays each chord twice: on the way up and on the way down. */
+const LEG_TEXT = { up: ' going up', top: ' at the top', down: ' going down' } as const;
+
 /** The timing tile's note names the direction only, so it fits one line; the title gives the size. */
 function tendencyWord(ms: number | null): string {
   return ms === null || Math.abs(ms) < 8 ? '' : ` · ${ms < 0 ? 'early' : 'late'}`;
@@ -29,6 +32,8 @@ export const chordsResults: ResultsView = {
   ribbon: (result, passed) => {
     const flow = result.mode === 'flow';
     if (passed) return flow ? 'Clean run. Tempo goes up.' : 'Chords found. Try them in Flow.';
+    // Seven chords are too few for a share: a sequence asks for all of them.
+    if (result.lesson === 'chords' && result.chords.task === 'sequence') return flow ? 'A clean run needs every chord and 75% timing.' : 'Needs every chord right the first time.';
     return flow ? 'A clean run needs 90% of chords and 75% timing.' : 'Needs 90% of chords right the first time.';
   },
   // As in scales: a pass in Flow is a clean run; mastery is said in the tempo callout.
@@ -76,8 +81,9 @@ export const chordsResults: ResultsView = {
         {c.trouble.length || (c.voiceLeading !== null && c.voiceLeading < 0.8) ? (
           <ul className="results-notes">
             {c.trouble.map((t) => (
-              <li key={`${t.symbol}${t.reason}`}>
-                <b>{t.symbol}</b>: {TROUBLE_TEXT[t.reason]}
+              <li key={`${t.symbol}${t.leg ?? ''}${t.reason}`}>
+                <b>{t.symbol}</b>
+                {t.leg ? LEG_TEXT[t.leg] : ''}: {TROUBLE_TEXT[t.reason]}
                 {t.ms !== undefined ? ` (${t.reason === 'slow' ? `${(t.ms / 1000).toFixed(1)} s` : `${Math.abs(t.ms)} ms`})` : ''}
               </li>
             ))}

@@ -5,7 +5,7 @@
  * come back sooner. Pure functions; stored in ProgressState.repertoire.
  *
  * Tempo is in the lesson's own unit: notes per minute for scales (so switching eighths and
- * sixteenths keeps the speed), beats per minute for chords (one chord per bar).
+ * sixteenths keeps the speed), beats per minute for chords (one chord per bar, or every 2 beats).
  */
 export interface RepertoireItem {
   attempts: number;
@@ -42,6 +42,8 @@ export interface LadderRun {
   notesPerBeat: number;
   goalTempo: number;
   clean: boolean;
+  /** The run moves the ladder down. Left out: any run below 90% accuracy does. */
+  messy?: boolean;
 }
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -61,8 +63,8 @@ function clampTempo(tempo: number): number {
 
 /**
  * Apply one run. Flow (with metronome): a clean run moves the ladder up by 4 bpm (in the
- * note value played) and the item to a later review; a run below 90 % moves it down and makes
- * it due again. Wait (learning) runs only count as practice.
+ * note value played) and the item to a later review; a messy one (below 90 %, unless the lesson
+ * says otherwise) moves it down and makes it due again. Wait (learning) runs only count as practice.
  */
 export function applyRepertoireRun(
   prev: RepertoireItem | undefined,
@@ -88,7 +90,7 @@ export function applyRepertoireRun(
         item.masteredAt = now;
         newlyMastered = true;
       }
-    } else if (run.accuracy < 0.9) {
+    } else if (s.messy ?? run.accuracy < 0.9) {
       item.ladderTempo = clampTempo(Math.min(item.ladderTempo, s.tempo - step));
       item.box = 0;
     }

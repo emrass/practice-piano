@@ -80,7 +80,7 @@ export function ChordStats(props: ProgressSectionProps) {
             })}
           </ul>
         ) : (
-          <p className="field-hint">Drills and progressions you play appear here with their tempo ladder, and come back for review on a spaced schedule.</p>
+          <p className="field-hint">Drills, progressions and inversions you play appear here with their tempo ladder, and come back for review on a spaced schedule.</p>
         )}
         <button type="button" className="btn btn-block" disabled={due.length === 0} onClick={props.onReview}>
           Review due items{due.length ? ` (${due.length})` : ''}

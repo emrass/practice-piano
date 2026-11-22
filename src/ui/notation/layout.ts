@@ -67,15 +67,37 @@ export function accidentalDensity(ex: Exercise): number {
   return pitches.filter((p) => p.alter !== alters[p.letter]).length / pitches.length;
 }
 
+/** Rough width of the widest chord symbol with the gap after it: 11.5 px a character at the `chord` type size. */
+function symbolWidth(ex: Exercise): number {
+  const longest = Math.max(0, ...allEvents(ex).map((e) => e.symbol?.length ?? 0));
+  return longest * 11.5 + 12;
+}
+
+/** Chord symbols in the fullest bar, when a bar has more than one (inversions): each needs room for its width. */
+function symbolsPerBar(ex: Exercise): number {
+  const most = Math.max(0, ...ex.measures.map((m) => [...m.rh, ...m.lh].filter((e) => e.symbol).length));
+  return most > 1 ? most : 0;
+}
+
 export function systemHeight(staves: readonly Clef[]): number {
   return staves.length > 1 ? GRAND_SYSTEM_HEIGHT : SINGLE_SYSTEM_HEIGHT;
 }
 
-export function computeLayout(ex: Exercise, width: number, headerWidth: number, maxPerSystem = 4): ScoreLayout {
+/**
+ * Room a system needs beyond its usual height, above its first staff and below its last: for
+ * rows of text the usual height has no place for (a stack of chord fingering, see `fingeringRoom`).
+ */
+export interface SystemRoom {
+  top: number;
+  bottom: number;
+}
+const NO_ROOM: SystemRoom = { top: 0, bottom: 0 };
+
+export function computeLayout(ex: Exercise, width: number, headerWidth: number, maxPerSystem = 4, room: SystemRoom = NO_ROOM): ScoreLayout {
   const tpb = ex.timeSignature.ticksPerBar;
   const shortest = shortestDuration(ex);
   const available = Math.max(120, width - SCORE_MARGIN_X * 2 - headerWidth);
-  const minMeasure = Math.max(110, tpb * minPxPerTick(shortest) * (1 + 0.8 * accidentalDensity(ex)));
+  const minMeasure = Math.max(110, tpb * minPxPerTick(shortest) * (1 + 0.8 * accidentalDensity(ex)), symbolsPerBar(ex) * symbolWidth(ex));
   const maxFit = Math.max(1, Math.floor(available / minMeasure));
   const candidates = [4, 3, 2, 1].filter((m) => m <= maxPerSystem && ex.bars % m === 0);
   let measuresPerSystem = candidates.find((m) => m <= maxFit) ?? 1;
@@ -86,13 +108,13 @@ export function computeLayout(ex: Exercise, width: number, headerWidth: number, 
   // Chords (one stacked chord per bar) need room after the bar line for columns of accidentals.
   const leadPx = 'chords' in ex ? 44 : Math.max(10, Math.min(26, pxPerTick * shortest * 0.45));
 
-  const h = systemHeight(ex.staves);
+  const h = systemHeight(ex.staves) + room.top + room.bottom;
   const systems: SystemLayout[] = [];
   const count = Math.ceil(ex.bars / measuresPerSystem);
   for (let i = 0; i < count; i++) {
     const top = i * h;
     const staveY: Partial<Record<Clef, number>> = {};
-    ex.staves.forEach((clef, k) => (staveY[clef] = top + FIRST_STAVE_Y + k * GRAND_STAFF_GAP));
+    ex.staves.forEach((clef, k) => (staveY[clef] = top + room.top + FIRST_STAVE_Y + k * GRAND_STAFF_GAP));
     const firstY = staveY[ex.staves[0]]!;
     const lastY = staveY[ex.staves[ex.staves.length - 1]]!;
     const firstMeasure = i * measuresPerSystem;
@@ -146,10 +168,10 @@ export function measureX(layout: ScoreLayout, measureIndex: number): { system: S
  * Largest zoom (1–1.5) at which the whole exercise fits the available height, so short
  * beginner pieces are engraved large while long ones keep a normal size and scroll.
  */
-export function chooseScale(ex: Exercise, width: number, height: number, headerWidth: number): number {
-  const base = computeLayout(ex, width, headerWidth);
+export function chooseScale(ex: Exercise, width: number, height: number, headerWidth: number, room: SystemRoom = NO_ROOM): number {
+  const base = computeLayout(ex, width, headerWidth, 4, room);
   for (let scale = 1.5; scale > 1.001; scale -= 0.1) {
-    const layout = computeLayout(ex, width / scale, headerWidth);
+    const layout = computeLayout(ex, width / scale, headerWidth, 4, room);
     // Zoom only when it fits and doesn't cost measures per line.
     if (layout.height * scale <= height - 8 && layout.measuresPerSystem >= base.measuresPerSystem) return Math.round(scale * 10) / 10;
   }

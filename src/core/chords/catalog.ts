@@ -184,15 +184,38 @@ export function keysFor(mode: 'major' | 'minor'): readonly string[] {
 export type ChordHands = 'rh' | 'lh-bass';
 
 // ---------------------------------------------------------------------------------------
+// Inversions in sequence
+
+/**
+ * One chord through its inversions, up the keyboard and back (C, C/E, C/G, C an octave up, and
+ * down again): the same notes each time, so the hand learns the three shapes and the move between
+ * them. Triads for now; every quality here is played in all twelve keys.
+ */
+export const SEQUENCE_CHORDS = ['maj', 'min'] as const satisfies readonly ChordQuality[];
+export type SequenceChord = (typeof SEQUENCE_CHORDS)[number];
+/** Each hand alone, or both playing the chord an octave apart. */
+export type SequenceHands = 'rh' | 'lh' | 'both';
+export const SEQUENCE_HANDS: readonly SequenceHands[] = ['rh', 'lh', 'both'];
+
+const sequenceMode = (chord: SequenceChord) => (chord === 'min' ? 'minor' : 'major');
+
+/** The keys a sequence chord is played in, spelled as the keys of its mode (D♭ major, C♯ minor). */
+export function sequenceKeys(chord: SequenceChord): readonly string[] {
+  return keysFor(sequenceMode(chord));
+}
+
+// ---------------------------------------------------------------------------------------
 // Items (repertoire entries)
 
 /**
  * A progression is played from the staff (`notation`, judged note for note) or from the chord
- * chart (symbols only, any voicing and any hand, so `hands` is 'rh').
+ * chart (symbols only, any voicing and any hand, so `hands` is 'rh'). So is a sequence of inversions.
  */
 export type ChordItem =
   | { task: 'drill'; set: ChordSetId; prompt: ChordPrompt; inversions: InversionRule; drillHands: DrillHands }
-  | { task: 'progression'; progression: string; key: string; hands: ChordHands; notation: boolean };
+  | { task: 'progression'; progression: string; key: string; hands: ChordHands; notation: boolean }
+  /** Inversions in sequence: from the staff (`notation`), or from symbols with any hand ('rh'). */
+  | { task: 'sequence'; chord: SequenceChord; key: string; hands: SequenceHands; notation: boolean };
 
 /** A drill's hands, as it is practiced: symbol drills are played with any hand ('rh'). */
 export function drillHandsOf(prompt: ChordPrompt, hands: DrillHands): DrillHands {
@@ -209,13 +232,19 @@ export function progressionHandsOf(notation: boolean, hands: ChordHands): ChordH
   return notation ? hands : 'rh';
 }
 
-/** The item judged exactly as written: notation drills, and progressions played from the staff. */
+/** A sequence's hands, as it is practiced: from symbols any hand plays the chord ('rh'). */
+export function sequenceHandsOf(notation: boolean, hands: SequenceHands): SequenceHands {
+  return notation ? hands : 'rh';
+}
+
+/** The item judged exactly as written: notation drills, and progressions and sequences played from the staff. */
 export function readsNotation(item: ChordItem): boolean {
   return item.task === 'drill' ? item.prompt === 'notation' : item.notation;
 }
 
 /** Right-hand drills keep the id they had before drills had hands, so their progress carries on. */
 export function chordItemId(item: ChordItem): string {
+  if (item.task === 'sequence') return `chords/seq/${item.chord}/${item.key}/${item.notation ? item.hands : 'chart'}`;
   if (item.task === 'progression') return `chords/prog/${item.progression}/${item.key}/${item.notation ? item.hands : 'chart'}`;
   const hands = drillHandsOf(item.prompt, item.drillHands);
   return `chords/drill/${item.set}/${item.prompt}/${inversionsOf(item.prompt, item.inversions)}${hands === 'rh' ? '' : `/${hands}`}`;
@@ -233,6 +262,14 @@ export function parseChordItemId(id: string): ChordItem | null {
     if (prompt === 'notation' && inversions === 'any') return null;
     return { task: 'drill', set: set as ChordSetId, prompt: prompt as ChordPrompt, inversions: inversions as InversionRule, drillHands: (hands ?? 'rh') as DrillHands };
   }
+  if (parts[1] === 'seq') {
+    const [, , chord, key, hands, ...rest] = parts;
+    if (!(SEQUENCE_CHORDS as readonly string[]).includes(chord) || !sequenceKeys(chord as SequenceChord).includes(key) || rest.length) return null;
+    // From symbols: any hand.
+    if (hands === 'chart') return { task: 'sequence', chord: chord as SequenceChord, key, hands: 'rh', notation: false };
+    if (!(SEQUENCE_HANDS as readonly string[]).includes(hands)) return null;
+    return { task: 'sequence', chord: chord as SequenceChord, key, hands: hands as SequenceHands, notation: true };
+  }
   if (parts[1] === 'prog') {
     const [, , progression, key, hands] = parts;
     const def = findProgression(progression);
@@ -247,13 +284,24 @@ export function parseChordItemId(id: string): ChordItem | null {
 const INVERSION_TEXT: Record<InversionRule, string> = { any: 'any voicing', root: 'root position', inversions: 'inversions' };
 const DRILL_HANDS_TEXT: Record<DrillHands, string> = { rh: 'right hand', lh: 'left hand', 'lh-bass': 'LH bass', both: 'hands together' };
 
+const keyName = (key: string) => key.replace('#', '♯').replace(/b$/, '♭');
+
+/** "C major inversions", "C♯ minor inversions": a sequence by its chord, whatever the hands. */
+export function sequenceName(item: { chord: SequenceChord; key: string }): string {
+  return `${keyName(item.key)} ${sequenceMode(item.chord)} inversions`;
+}
+
 export function chordItemTitle(item: ChordItem): string {
   if (item.task === 'drill') {
     const hands = drillHandsOf(item.prompt, item.drillHands);
     return `${CHORD_SETS[item.set].name} · ${item.prompt === 'symbol' ? 'from symbols' : 'from notation'} · ${INVERSION_TEXT[item.inversions]}${hands === 'rh' ? '' : ` · ${DRILL_HANDS_TEXT[hands]}`}`;
   }
+  if (item.task === 'sequence') {
+    const how = !item.notation ? ' · from symbols' : item.hands === 'rh' ? '' : ` · ${DRILL_HANDS_TEXT[item.hands]}`;
+    return `${sequenceName(item)}${how}`;
+  }
   const def = findProgression(item.progression)!;
-  const key = `${item.key.replace('#', '♯').replace(/b$/, '♭')} ${def.mode}`;
+  const key = `${keyName(item.key)} ${def.mode}`;
   const how = !item.notation ? ' · from symbols' : item.hands === 'lh-bass' ? ' · LH bass' : '';
   return `${def.name} in ${key}${how}`;
 }

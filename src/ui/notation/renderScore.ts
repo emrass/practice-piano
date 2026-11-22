@@ -16,7 +16,7 @@ import { MeasureAccidentals } from '../../core/music/keys';
 import { pitchLabel, pitchToStep, vexKey } from '../../core/music/pitch';
 import { beamLevel, durationCode, isDotted } from '../../core/music/rhythm';
 import type { StepMark } from '../practice/session';
-import { chooseScale, computeLayout, measureX, type ScoreLayout, tickToX } from './layout';
+import { chooseScale, computeLayout, measureX, type ScoreLayout, type SystemRoom, tickToX } from './layout';
 
 export interface RenderedScore {
   layout: ScoreLayout;
@@ -38,7 +38,10 @@ export interface RenderOptions {
   showNoteNames: boolean;
   /** Draw a "?" marker at every step, shown while that step's notes are hidden (ear training). */
   placeholders?: boolean;
-  /** Print fingering numbers where events carry them (scales): RH above, LH below the staff. */
+  /**
+   * Print fingering numbers where events carry them: RH above, LH below the staff. One number
+   * per note (scales) is a row; a chord's numbers (inversions) are a stack, as in printed music.
+   */
   showFingering?: boolean;
 }
 
@@ -149,6 +152,19 @@ function addText(svg: SVGSVGElement, parent: SVGElement, x: number, y: number, t
 
 /** Baseline-to-baseline distance of the rows of text under a staff (note names, then the mark). */
 const LABEL_ROW = 12;
+
+/**
+ * Room for stacks of chord fingering. A system has place for one row of fingering as it is; each
+ * further number of a stack needs a row more: above the treble staff (where the chord symbols
+ * then sit on top of the stack), below the bass staff (where the marks follow under it).
+ */
+export function fingeringRoom(ex: Exercise, showFingering: boolean): SystemRoom {
+  if (!showFingering) return { top: 0, bottom: 0 };
+  const rows = (hand: Hand) => Math.max(0, ...ex.measures.flatMap((m) => m[hand].map((e) => (e.fingers?.length ?? 1) - 1)));
+  const above = ex.staves[0] === 'treble' ? rows('rh') : 0;
+  const below = ex.staves[ex.staves.length - 1] === 'bass' ? rows('lh') : 0;
+  return { top: above ? above * LABEL_ROW + 4 : 0, bottom: below * LABEL_ROW };
+}
 /** The mark of a note state, the second cue beside its color: a tilde for nearly, a cross for wrong or missed. */
 const MARK_GLYPH: Partial<Record<StepMark, string>> = { ok: '~', bad: '×', missed: '×' };
 
@@ -175,8 +191,9 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
   // the exercise). Names stay on the keyboard.
   const showNames = opts.showNoteNames && !percussion && !fingered && !chordChart;
   const headerWidth = measureHeaderWidth(ex);
-  const scale = opts.height > 0 ? chooseScale(ex, opts.width, opts.height, headerWidth) : 1;
-  const layout = computeLayout(ex, Math.floor(opts.width / scale), headerWidth);
+  const room = fingeringRoom(ex, !!opts.showFingering);
+  const scale = opts.height > 0 ? chooseScale(ex, opts.width, opts.height, headerWidth, room) : 1;
+  const layout = computeLayout(ex, Math.floor(opts.width / scale), headerWidth, 4, room);
   const renderer = new Renderer(container, Renderer.Backends.SVG);
   renderer.resize(layout.width, layout.height);
   const ctx = renderer.getContext();
@@ -196,7 +213,7 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
       percussion
         ? `Rhythm exercise, ${ex.timeSignature.id}, ${ex.bars} bars`
         : 'chords' in ex
-          ? `Chord exercise in ${ex.key.label}, ${ex.bars} chords`
+          ? `Chord exercise in ${ex.key.label}, ${ex.steps.length} chords`
           : `Sight-reading exercise in ${ex.key.label}, ${ex.timeSignature.id}, ${ex.bars} bars`,
     );
   }
@@ -317,8 +334,11 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
         ctx.closeGroup();
       });
 
-      // Fingering: one row per staff, above the treble staff and below the bass staff.
+      // Fingering: one row per staff, above the treble staff and below the bass staff. A chord's
+      // numbers are stacked away from the staff, in the order of its notes: the top number is the
+      // top note's finger.
       let fingerRowBelow: number | null = null;
+      let fingerRowAbove: number | null = null;
       if (opts.showFingering && svg && labelLayer && labeled.some((l) => l.event.fingers)) {
         const above = clef === 'treble';
         const staveTop = staveBottom - 40;
@@ -339,13 +359,22 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
             }
           }
         }
+        let outermost = rowY;
         for (const { note, event } of labeled) {
-          const f = event.fingers?.[0];
-          if (f === undefined) continue;
+          const fingers = event.fingers;
+          if (!fingers?.length) continue;
           const cx = (note.getNoteHeadBeginX() + note.getNoteHeadEndX()) / 2;
-          addText(svg, labelLayer, cx, rowY, String(f), `score-label pp-finger ${f === 1 ? 'is-thumb' : ''}`, stepByTick.get(event.startTick));
+          const step = stepByTick.get(event.startTick);
+          // Thumb crossings are marked in a line of single notes; a chord has a thumb in every stack.
+          const thumb = fingers.length === 1 && fingers[0] === 1;
+          (above ? fingers : [...fingers].reverse()).forEach((f, i) => {
+            const y = above ? rowY - i * LABEL_ROW : rowY + i * LABEL_ROW;
+            outermost = above ? Math.min(outermost, y) : Math.max(outermost, y);
+            addText(svg, labelLayer, cx, y, String(f), `score-label pp-finger ${thumb ? 'is-thumb' : ''}`, step);
+          });
         }
-        if (!above) fingerRowBelow = rowY;
+        if (above) fingerRowAbove = outermost;
+        else fingerRowBelow = outermost;
       }
 
       // Chord symbols (and Roman numerals) on one row above the treble staff.
@@ -355,6 +384,8 @@ export function renderScore(container: HTMLDivElement, ex: Exercise, opts: Rende
           rowY = Math.min(rowY, ...note.getYs().map((y) => y - 16));
           if (note.hasStem() && note.getStemDirection() === Stem.UP) rowY = Math.min(rowY, note.getStemExtents().topY - 10);
         }
+        // Over the fingering, where there is some.
+        if (fingerRowAbove !== null) rowY = Math.min(rowY, fingerRowAbove - 14);
         for (const { note, event } of labeled) {
           if (!event.symbol) continue;
           const [symbol, numeral] = event.symbol.split(/\s{2,}/);

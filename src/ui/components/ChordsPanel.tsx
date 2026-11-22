@@ -13,12 +13,18 @@ import {
   keysFor,
   progressionHandsOf,
   PROGRESSIONS,
+  SEQUENCE_CHORDS,
+  SEQUENCE_HANDS,
+  type SequenceChord,
+  type SequenceHands,
+  sequenceHandsOf,
+  sequenceKeys,
 } from '../../core/chords/catalog';
 import { weakChordLabel } from '../../core/chords/analysis';
 import type { ChordExercise } from '../../core/chords/generator';
 import type { WeakChordStat } from '../../core/progress/chords';
 import type { ProgressState } from '../../core/progress/progress';
-import { progressionChoice, type Settings, type SettingsPatch } from '../../core/settings';
+import { progressionChoice, sequenceChoice, type Settings, type SettingsPatch } from '../../core/settings';
 import { tonicLabel } from '../../core/scales/catalog';
 import { CommitSlider, Field, ProgressBar, ReviewNote, Segmented, type SegmentedOption, Select, Toggle } from './controls';
 import { Icon } from './Icon';
@@ -41,6 +47,14 @@ const HANDS: SegmentedOption<DrillHands>[] = [
 
 /** Progressions are voiced for the right hand, alone or over the root in the left. */
 const PROGRESSION_HANDS: readonly DrillHands[] = ['rh', 'lh-bass'] satisfies readonly ChordHands[];
+/** Inversions are played by each hand alone, or by both an octave apart. */
+const INVERSION_HANDS: readonly DrillHands[] = SEQUENCE_HANDS;
+
+/** "Major triads (C: C E G)": a sequence chord, shown on C. */
+const SEQUENCE_CHORD_LABEL: Record<SequenceChord, string> = {
+  maj: 'Major triads (C: C E G)',
+  min: 'Minor triads (Cm: C E♭ G)',
+};
 
 function dueText(dueAt: number, now: number): string {
   const days = Math.ceil((dueAt - now) / DAY);
@@ -63,9 +77,14 @@ export function ChordsPanel(props: {
   const { settings: s, update, exercise: ex, now } = props;
   const item = props.progress.repertoire[ex.chords.itemId];
   const review = s.chords.source === 'review';
-  const drill = s.chords.task === 'drill';
+  const task = s.chords.task;
+  const drill = task === 'drill';
+  const sequence = task === 'sequence';
   /** The chords are written on the staff, not named by symbol. */
-  const notes = drill ? s.chords.prompt === 'notation' : s.chords.notation;
+  const notes = drill ? s.chords.prompt === 'notation' : sequence ? s.chords.sequenceNotation : s.chords.notation;
+  const sequenceMode = s.chords.sequenceChord === 'min' ? 'minor' : 'major';
+  /** Seconds from one chord to the next at a tempo. */
+  const perChord = (tempo: number) => ((60 * ex.chords.beatsPerChord) / tempo).toFixed(1);
   const def = findProgression(s.chords.progression) ?? PROGRESSIONS[0];
   const goal = s.chords.goalBpm;
   const bpm = ex.chords.bpm;
@@ -74,22 +93,31 @@ export function ChordsPanel(props: {
     <div className="panel-body">
       <section className="section">
         <Field label="Practice">
-          <Segmented<'drill' | 'progression'>
+          <Segmented<Settings['chords']['task']>
             label="Task"
             value={s.chords.task}
             onChange={(chordsTask) => update({ chords: { task: chordsTask, source: 'pick' } })}
             options={[
               { value: 'drill', label: 'Chord drill', title: 'Find chords from a set, in shuffled order' },
               { value: 'progression', label: 'Progressions', title: 'Standard progressions in every key, with smooth voice leading' },
+              { value: 'sequence', label: 'Inversions', title: 'One chord through its inversions, up the keyboard and back' },
             ]}
           />
         </Field>
-        {/* The same two rows in drills and progressions, so they stay put when the task changes. */}
+        {/* The same two rows in every task, so they stay put when the task changes. */}
         <Field label="Shown as">
           <Segmented<ChordPrompt>
             label="Shown as"
             value={notes ? 'notation' : 'symbol'}
-            onChange={(shown) => update({ chords: drill ? { prompt: shown, source: 'pick' } : { notation: shown === 'notation', source: 'pick' } })}
+            onChange={(shown) =>
+              update({
+                chords: drill
+                  ? { prompt: shown, source: 'pick' }
+                  : sequence
+                    ? { sequenceNotation: shown === 'notation', source: 'pick' }
+                    : { notation: shown === 'notation', source: 'pick' },
+              })
+            }
             options={SHOWN_AS}
           />
         </Field>
@@ -97,10 +125,24 @@ export function ChordsPanel(props: {
         <Field label="Hands" hint={notes ? 'What each hand plays is written on the staff.' : 'Off for symbols: any hand plays the chord.'}>
           <Segmented<DrillHands>
             label="Hands"
-            value={drill ? drillHandsOf(s.chords.prompt, s.chords.drillHands) : progressionHandsOf(s.chords.notation, s.chords.hands)}
+            value={
+              drill
+                ? drillHandsOf(s.chords.prompt, s.chords.drillHands)
+                : sequence
+                  ? sequenceHandsOf(s.chords.sequenceNotation, s.chords.sequenceHands)
+                  : progressionHandsOf(s.chords.notation, s.chords.hands)
+            }
             disabled={!notes}
-            onChange={(chordsHands) => update({ chords: drill ? { drillHands: chordsHands, source: 'pick' } : { hands: chordsHands as ChordHands, source: 'pick' } })}
-            options={drill ? HANDS : HANDS.filter((o) => PROGRESSION_HANDS.includes(o.value))}
+            onChange={(chordsHands) =>
+              update({
+                chords: drill
+                  ? { drillHands: chordsHands, source: 'pick' }
+                  : sequence
+                    ? { sequenceHands: chordsHands as SequenceHands, source: 'pick' }
+                    : { hands: chordsHands as ChordHands, source: 'pick' },
+              })
+            }
+            options={drill ? HANDS : HANDS.filter((o) => (sequence ? INVERSION_HANDS : PROGRESSION_HANDS).includes(o.value))}
           />
         </Field>
         {drill ? (
@@ -131,6 +173,24 @@ export function ChordsPanel(props: {
               />
             </div>
           </>
+        ) : sequence ? (
+          <>
+            <Select<SequenceChord>
+              label="Chord"
+              value={s.chords.sequenceChord}
+              onChange={(chord) => update({ chords: { ...sequenceChoice(chord, s.chords.sequenceKey), source: 'pick' } })}
+              options={SEQUENCE_CHORDS.map((q) => ({ value: q, label: SEQUENCE_CHORD_LABEL[q] }))}
+            />
+            <Select<string>
+              label="Key"
+              value={s.chords.sequenceKey}
+              onChange={(sequenceKey) => update({ chords: { sequenceKey, source: 'pick' } })}
+              options={[
+                { value: 'shuffle', label: 'Shuffle keys' },
+                ...sequenceKeys(s.chords.sequenceChord).map((k) => ({ value: k, label: `${tonicLabel(k)} ${sequenceMode}` })),
+              ]}
+            />
+          </>
         ) : (
           <>
             <Select<string>
@@ -155,7 +215,7 @@ export function ChordsPanel(props: {
         <div className="well item-status">
           <div className="item-status-title">{ex.chords.title}</div>
           <div className="item-status-sub">
-            One chord per bar
+            {ex.chords.beatsPerChord === 2 ? 'One chord every 2 beats' : 'One chord per bar'}
             {item?.mastered ? (
               <span className="badge badge-mastered">
                 <Icon name="star" />
@@ -182,10 +242,17 @@ export function ChordsPanel(props: {
               : ' · new item'}
           </p>
         </div>
-        <p className="field-hint">
-          In <b>Flow</b>, play each chord on the downbeat. A clean run (90% of chords, 75% timing) adds 4 bpm; a messy one takes 4 bpm off. <b>Wait</b> times how quickly you find
-          each chord.
-        </p>
+        {sequence ? (
+          <p className="field-hint">
+            In <b>Flow</b>, play a chord on beats 1 and 3. A clean run (every chord, 75% timing) adds 4 bpm; 2 or more missed chords take 4 bpm off. <b>Wait</b> is for learning
+            the shapes and the fingering.
+          </p>
+        ) : (
+          <p className="field-hint">
+            In <b>Flow</b>, play each chord on the downbeat. A clean run (90% of chords, 75% timing) adds 4 bpm; a messy one takes 4 bpm off. <b>Wait</b> times how quickly you
+            find each chord.
+          </p>
+        )}
       </section>
 
       <section className="section">
@@ -196,7 +263,7 @@ export function ChordsPanel(props: {
               ? `${props.dueCount} item${props.dueCount === 1 ? '' : 's'} due, weakest and longest-unplayed first`
               : review
                 ? 'Nothing is due, so you play your current pick.'
-                : 'Drills and progressions you have played come back on a spaced schedule.'
+                : 'Drills, progressions and inversions you have played come back on a spaced schedule.'
           }
           checked={review}
           onChange={(on) => update({ chords: { source: on ? 'review' : 'pick' } })}
@@ -213,11 +280,19 @@ export function ChordsPanel(props: {
 
       <section className="section">
         <div className="section-title">Display</div>
+        {sequence ? (
+          <Toggle
+            label="Fingering"
+            hint="Standard fingering above or below the chords"
+            checked={s.chords.showFingering}
+            onChange={(showFingering) => update({ chords: { showFingering } })}
+          />
+        ) : null}
         <Select<number>
           label="Mastery goal"
           value={goal}
           onChange={(chordsGoalBpm) => update({ chords: { goalBpm: chordsGoalBpm } })}
-          options={[60, 72, 80, 96, 112, 120].map((n) => ({ value: n, label: `♩ = ${n} (a chord every ${(240 / n).toFixed(1)} s)` }))}
+          options={[60, 72, 80, 96, 112, 120].map((n) => ({ value: n, label: `♩ = ${n} (a chord every ${perChord(n)} s)` }))}
         />
         <CommitSlider
           label="Metronome"

@@ -5,7 +5,7 @@
 <body>
 <div class="ds-stack">
   <div class="score" id="p-score" style="min-height:200px"><p class="ds-note" style="padding:var(--space-16)">Loading the engraving…</p></div>
-  <p class="ds-note">Engraved live with VexFlow 4.2.5, as in the app. First bar: Wait, with the cursor on the current note. Second bar: Flow, with the playhead. Third bar: two notes the app played, and a placeholder for a note not found yet.</p>
+  <p class="ds-note">Engraved live with VexFlow 4.2.5, as in the app. First bar: Wait, with the cursor on the current note. Second bar: Flow, with the playhead. Third bar: two notes the app played, a placeholder for a note not found yet, and a chord with its fingering stacked above it.</p>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.5/build/cjs/vexflow.js"></script>
 <script>
@@ -19,7 +19,7 @@
   var bars = [
     { x: 16, w: 268, clef: true, notes: 'E4/q, F4, D4, C4', names: ['E', 'F', 'D', 'C'], state: ['is-good', 'is-good', 'is-current', ''] },
     { x: 284, w: 212, notes: 'A4/q, B4, D5, C5', names: ['A', 'B', 'D', 'C'], state: ['is-good', 'is-ok', 'is-bad', 'is-missed'], mark: [null, '~', '\u00d7', '\u00d7'] },
-    { x: 496, w: 208, notes: 'G4/q, A4, B4, G4', names: ['G', 'A', 'B', 'G'], state: ['is-call', 'is-call', 'is-hidden', ''], hole: 2 }
+    { x: 496, w: 208, notes: 'G4/q, A4, B4, (C4 E4 G4)', names: ['G', 'A', 'B', null], state: ['is-call', 'is-call', 'is-hidden', ''], hole: 2, fingers: [null, null, null, [1, 3, 5]] }
   ];
   var drawn = [];
   bars.forEach(function (b) {
@@ -32,14 +32,16 @@
   vf.draw();
   var svg = host.querySelector('svg');
   svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.removeAttribute('width'); svg.removeAttribute('height'); svg.removeAttribute('style');
-  svg.setAttribute('class', 'score-svg'); svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', 'Three bars of music with played, current, late, wrong and missed notes, two notes played by the app and a placeholder for a hidden note');
+  svg.setAttribute('class', 'score-svg'); svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', 'Three bars of music with played, current, late, wrong and missed notes, two notes played by the app, a placeholder for a hidden note and a chord with fingering');
   var NS = 'http://www.w3.org/2000/svg', xs = [];
   function text(cls, x, y, s) { var t = document.createElementNS(NS, 'text'); t.setAttribute('class', cls); t.setAttribute('x', x); t.setAttribute('y', y); t.setAttribute('text-anchor', 'middle'); t.textContent = s; svg.appendChild(t); }
   drawn.forEach(function (d) {
     d.notes.forEach(function (n, i) {
       var el = n.getSVGElement ? n.getSVGElement() : n.attrs.el, x = n.getAbsoluteX() + 6;
       if (el) el.setAttribute('class', (el.getAttribute('class') || '') + ' note ' + d.b.state[i]);
-      if (d.b.state[i] !== 'is-hidden') text('score-label', x, 152, d.b.names[i]);
+      if (d.b.state[i] !== 'is-hidden' && d.b.names[i]) text('score-label', x, 152, d.b.names[i]);
+      // A chord's fingering: a stack above the stem, the lowest note's finger nearest the staff.
+      if (d.b.fingers && d.b.fingers[i]) d.b.fingers[i].forEach(function (f, row) { text('score-label', x, Math.round(n.getStemExtents().topY) - 8 - row * 12, f); });
       if (d.b.hole === i) {
         var g = document.createElementNS(NS, 'g'); g.setAttribute('class', 'score-placeholder is-shown');
         var r = document.createElementNS(NS, 'rect'); r.setAttribute('x', x - 10); r.setAttribute('y', 71); r.setAttribute('width', 20); r.setAttribute('height', 26); r.setAttribute('rx', 6); g.appendChild(r);

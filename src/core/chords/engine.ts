@@ -13,7 +13,7 @@ export interface ChordJudgment {
   correct: boolean;
   /** Wait: time from the chord being asked to it being played. */
   reactionMs?: number;
-  /** Flow: average onset against the bar line (+ = late). */
+  /** Flow: average onset against the chord's beat (+ = late). */
   deltaMs?: number;
   /** Flow: time between the first and last key of the chord. */
   spreadMs?: number;
@@ -172,13 +172,16 @@ interface Played {
 }
 
 export interface ChordFlowOptions {
-  barMs: number;
+  tickMs: number;
+  /** Where the run ends, in ticks: the end of the last chord's note value. */
+  endTick: number;
   latencyMs: number;
 }
 
 /**
- * In time: one chord per bar, played on the downbeat. A chord counts if the keys pressed
- * around the bar line (plus any held over from before) make exactly that chord.
+ * In time: each chord on its own beat (`tick`): the downbeat of every bar, or beats 1 and 3 in a
+ * sequence. A chord counts if the keys pressed around its beat (plus any held over from before)
+ * make exactly that chord. The windows scale with the shortest gap between two chords.
  */
 export class ChordFlowEngine {
   private readonly notes: Played[] = [];
@@ -193,9 +196,12 @@ export class ChordFlowEngine {
     private readonly targets: readonly ChordTarget[],
     private readonly opts: ChordFlowOptions,
   ) {
-    this.preMs = Math.min(300, 0.3 * opts.barMs);
-    this.postMs = Math.min(450, 0.4 * opts.barMs);
-    this.perfectMs = Math.min(90, 0.08 * opts.barMs);
+    const ticks = targets.map((t) => t.tick);
+    const gaps = ticks.slice(1).map((t, i) => t - ticks[i]);
+    const gapMs = (gaps.length ? Math.min(...gaps) : opts.endTick - (ticks[0] ?? 0)) * opts.tickMs;
+    this.preMs = Math.min(300, 0.3 * gapMs);
+    this.postMs = Math.min(450, 0.4 * gapMs);
+    this.perfectMs = Math.min(90, 0.08 * gapMs);
   }
 
   setStartTime(t0: number): void {
@@ -207,7 +213,18 @@ export class ChordFlowEngine {
   }
 
   expectedTime(index: number): number {
-    return this.t0 + index * this.opts.barMs;
+    return this.t0 + this.targets[index].tick * this.opts.tickMs;
+  }
+
+  /**
+   * The chord being asked for at `time` (not latency-corrected: what the player sees): the last
+   * one whose window has opened, a little before its beat. Past the end, the number of chords.
+   */
+  askedAt(time: number): number {
+    if (time + this.preMs >= this.endTime) return this.targets.length;
+    let index = 0;
+    for (let i = 1; i < this.targets.length && time + this.preMs >= this.expectedTime(i); i++) index = i;
+    return index;
   }
 
   noteOn(midi: number, time: number): void {
@@ -246,9 +263,9 @@ export class ChordFlowEngine {
     return out;
   }
 
-  /** When the run is over: the end of the last chord's bar, once every chord is judged. */
+  /** When the run is over: the end of the last chord's note value, once every chord is judged. */
   get endTime(): number {
-    return this.expectedTime(this.targets.length);
+    return this.t0 + this.opts.endTick * this.opts.tickMs;
   }
 
   isFinished(now: number): boolean {
@@ -259,10 +276,10 @@ export class ChordFlowEngine {
     const target = this.targets[i];
     const e = this.expectedTime(i);
     const fresh = this.notes.filter((n) => n.on >= e - this.preMs && n.on <= e + this.postMs);
-    // Keys held into the bar count (common tones), unless they are let go just after the bar line.
+    // Keys held into the chord count (common tones), unless they are let go just after its beat.
     const heldOver = this.notes.filter((n) => n.on < e - this.preMs && (n.off === undefined || n.off > e + RELEASE_GRACE_MS));
     const keys = [...new Set([...fresh, ...heldOver].map((n) => n.midi))].sort((a, b) => a - b);
-    // A chord must be struck: holding the previous one through the bar line does not count.
+    // A chord must be struck: holding the previous one through the beat does not count.
     const correct = fresh.length > 0 && matches(target, keys);
     const onsets = fresh.map((n) => n.on).sort((a, b) => a - b);
     const judgment: ChordJudgment = { index: i, correct, played: keys, wrongPresses: 0, wrongBass: !correct && bassOnlyWrong(target, keys) };

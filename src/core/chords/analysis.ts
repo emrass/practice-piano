@@ -5,9 +5,14 @@ import { drillHandsOf, QUALITIES, type ChordQuality } from './catalog';
 import { type ChordExercise, PC_NAMES } from './generator';
 import { minimalMovement, movement } from './voicing';
 
-/** Clean run (moves up the tempo ladder): nearly every chord right, and on the beat. */
+/** Clean run (moves up the tempo ladder): nearly every chord right, and on the beat. Below that accuracy the ladder moves down. */
 export const CHORD_CLEAN_ACCURACY = 0.9;
 export const CHORD_CLEAN_TIMING = 0.75;
+/**
+ * A sequence has too few chords for a share to be fair (one miss in seven is 86%): a clean run
+ * has every chord, one miss keeps the tempo, and from this many misses the ladder moves down.
+ */
+export const SEQUENCE_MESSY_MISSES = 2;
 /** Keys of one chord further apart than this sound rolled rather than together. */
 export const ROLLED_MS = 120;
 const OFF_BEAT_MS = 120;
@@ -80,40 +85,46 @@ export function summarizeChords(ex: ChordExercise, judgments: readonly ChordJudg
   const typical = median(reactions);
   const trouble: ChordSummary['trouble'] = [];
   const seen = new Set<string>();
-  const add = (t: ChordSummary['trouble'][number]) => {
-    const key = `${t.symbol}|${t.reason}`;
+  const add = (index: number, reason: ChordSummary['trouble'][number]['reason'], ms?: number) => {
+    const { symbol, leg } = targets[index];
+    const key = `${symbol}|${leg ?? ''}|${reason}`;
     if (seen.has(key)) return;
     seen.add(key);
-    trouble.push(t);
+    trouble.push({ symbol, ...(leg ? { leg } : {}), reason, ...(ms === undefined ? {} : { ms }) });
   };
-  for (const o of outcomes) if (o.wrongBass) add({ symbol: o.symbol, reason: 'bass' });
+  outcomes.forEach((o, i) => {
+    if (o.wrongBass) add(i, 'bass');
+  });
   outcomes.forEach((o, i) => {
     if (o.correct || o.wrongBass) return;
-    add({ symbol: o.symbol, reason: byIndex.get(targets[i].index)?.hinted ? 'hint' : flow ? 'missed' : 'retry' });
+    add(i, byIndex.get(targets[i].index)?.hinted ? 'hint' : flow ? 'missed' : 'retry');
   });
   if (!flow && typical !== null) {
     judgments
       .filter((j) => j.reactionMs !== undefined && j.reactionMs > Math.max(2 * typical, typical + 1500))
       .sort((a, b) => b.reactionMs! - a.reactionMs!)
-      .forEach((j) => add({ symbol: targets[j.index].symbol, reason: 'slow', ms: Math.round(j.reactionMs!) }));
+      .forEach((j) => add(j.index, 'slow', Math.round(j.reactionMs!)));
   }
   if (flow) {
     hits
       .filter((j) => Math.abs(j.deltaMs!) > OFF_BEAT_MS)
       .sort((a, b) => Math.abs(b.deltaMs!) - Math.abs(a.deltaMs!))
-      .forEach((j) => add({ symbol: targets[j.index].symbol, reason: j.deltaMs! > 0 ? 'late' : 'early', ms: Math.round(j.deltaMs!) }));
+      .forEach((j) => add(j.index, j.deltaMs! > 0 ? 'late' : 'early', Math.round(j.deltaMs!)));
     hits
       .filter((j) => (j.spreadMs ?? 0) > ROLLED_MS)
-      .forEach((j) => add({ symbol: targets[j.index].symbol, reason: 'rolled', ms: j.spreadMs }));
+      .forEach((j) => add(j.index, 'rolled', j.spreadMs));
   }
 
   const accuracy = correct / Math.max(1, targets.length);
+  const missed = targets.length - correct;
+  const sequence = item.task === 'sequence';
   return {
     itemId: ex.chords.itemId,
     task: item.task,
     bpm: ex.chords.bpm,
     goalBpm,
-    clean: flow && accuracy >= CHORD_CLEAN_ACCURACY && (timing ?? 0) >= CHORD_CLEAN_TIMING,
+    clean: flow && (sequence ? missed === 0 : accuracy >= CHORD_CLEAN_ACCURACY) && (timing ?? 0) >= CHORD_CLEAN_TIMING,
+    messy: flow && (sequence ? missed >= SEQUENCE_MESSY_MISSES : accuracy < CHORD_CLEAN_ACCURACY),
     chords: targets.length,
     correct,
     medianReactionMs: flow || typical === null ? null : Math.round(typical),

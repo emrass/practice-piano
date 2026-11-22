@@ -34,7 +34,7 @@ export interface PracticeState {
    * Chords: the chord asked for, whether it is read from the staff (exact keys) or a symbol (any
    * octave), and a nudge when the right notes have the wrong bass.
    */
-  chords?: { index: number; fromStaff: boolean; bassHint: string | null };
+  chords?: { index: number; fromStaff: boolean; beatsPerChord: 2 | 4; bassHint: string | null };
 }
 
 /**

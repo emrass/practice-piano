@@ -5,6 +5,9 @@ import type { LessonProgressRules, ProgressState } from './types';
 export const chordsRules: LessonProgressRules<ChordsResult> = {
   isPass: (result) => (result.mode === 'flow' ? result.chords.clean : result.pitchAccuracy >= MASTERY_ACCURACY),
   recordObservations(stats, result) {
+    // A sequence walks one known chord up and down: it says nothing about finding chords, so it
+    // stays out of the weak-chord statistics (its own progress is the item's tempo ladder).
+    if (result.chords.task === 'sequence') return;
     for (const o of result.chords.outcomes) {
       addObservation(stats, 'chordQuality', o.quality, o.correct, o.reactionMs, o.timingScore, o.deltaMs);
       addObservation(stats, 'chordRoot', String(o.rootPc), o.correct, o.reactionMs, o.timingScore, o.deltaMs);
@@ -12,8 +15,9 @@ export const chordsRules: LessonProgressRules<ChordsResult> = {
       if (o.readHands) addObservation(stats, 'chordHands', o.readHands, o.correct, o.reactionMs, o.timingScore, o.deltaMs);
     }
   },
-  ladderRun: ({ chords: c }) => ({ itemId: c.itemId, tempo: c.bpm, notesPerBeat: 1, goalTempo: c.goalBpm, clean: c.clean }),
-  /** Relative to 60 bpm with a chord per bar. */
+  // Results saved before `messy` existed fall back to the ladder's own 90% rule.
+  ladderRun: ({ chords: c }) => ({ itemId: c.itemId, tempo: c.bpm, notesPerBeat: 1, goalTempo: c.goalBpm, clean: c.clean, messy: c.messy }),
+  /** Relative to 60 bpm. */
   tempoRatio: (result) => result.chords.bpm / 60,
 };
 
