@@ -363,12 +363,12 @@ kbd { display: inline-block; padding: 1px var(--space-4); border: var(--stroke-t
 
 /* ---------- Score ---------- */
 .score { position: relative; border: var(--stroke-thin) solid var(--border); border-radius: var(--radius-lg); background: var(--surface-sheet); box-shadow: var(--shadow-1); color: var(--text); overflow: hidden; }
-.score-svg { display: block; width: 100%; height: auto; fill: var(--text); stroke: var(--text); }
+:is(.score-svg, .score-cover-staff) { display: block; width: 100%; height: auto; fill: var(--text); stroke: var(--text); }
 /* The engraver (VexFlow) writes fill and stroke attributes on its paths; CSS overrides them. */
-.score-svg [fill]:not([fill="none"]) { fill: var(--text); }
-.score-svg [stroke]:not([stroke="none"]) { stroke: var(--text); }
-.score-svg .vf-stave [fill]:not([fill="none"]) { fill: var(--score-staff); }
-.score-svg .vf-stave [stroke]:not([stroke="none"]) { stroke: var(--score-staff); }
+:is(.score-svg, .score-cover-staff) [fill]:not([fill="none"]) { fill: var(--text); }
+:is(.score-svg, .score-cover-staff) [stroke]:not([stroke="none"]) { stroke: var(--text); }
+:is(.score-svg, .score-cover-staff) .vf-stave [fill]:not([fill="none"]) { fill: var(--score-staff); }
+:is(.score-svg, .score-cover-staff) .vf-stave [stroke]:not([stroke="none"]) { stroke: var(--score-staff); }
 .score-svg .note, .score-svg .note [fill]:not([fill="none"]), .score-svg .note [stroke]:not([stroke="none"]) { transition: fill var(--duration-fast), stroke var(--duration-fast); }
 .score-svg .note.is-current, .score-svg .note.is-current [fill]:not([fill="none"]) { fill: var(--accent); }
 .score-svg .note.is-current, .score-svg .note.is-current [stroke]:not([stroke="none"]) { stroke: var(--accent); }
@@ -404,7 +404,7 @@ kbd { display: inline-block; padding: 1px var(--space-4); border: var(--stroke-t
    over --cover-fade-right, so a note fades out gradually as the cover reaches it; the trailing edge is shorter. */
 .score-cover { --cover-fade-left: var(--space-12); --cover-fade-right: var(--space-48); position: absolute; overflow: hidden; pointer-events: none; --cover-mask: linear-gradient(to right, transparent, black var(--cover-fade-left), black calc(100% - var(--cover-fade-right)), color-mix(in srgb, black 84%, transparent) calc(100% - var(--cover-fade-right) * 0.75), color-mix(in srgb, black 50%, transparent) calc(100% - var(--cover-fade-right) * 0.5), color-mix(in srgb, black 16%, transparent) calc(100% - var(--cover-fade-right) * 0.25), transparent), linear-gradient(transparent, black var(--space-8), black calc(100% - var(--space-8)), transparent); -webkit-mask-image: var(--cover-mask); -webkit-mask-composite: source-in; mask-image: var(--cover-mask); mask-composite: intersect; }
 .score-cover::before { content: ""; position: absolute; inset: 0; background: var(--surface-sheet); }
-.score-cover > svg { position: absolute; top: 0; left: 0; }
+.score-cover > .score-cover-staff { position: absolute; top: 0; left: 0; }
 .score-playhead { position: absolute; width: 3px; border-radius: var(--radius-full); background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); pointer-events: none; }
 .veil { position: absolute; inset: 0; z-index: var(--z-sticky); display: grid; place-items: center; padding: var(--space-12); background: var(--veil); animation: fade-in var(--duration-base) var(--ease-out); }
 
