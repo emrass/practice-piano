@@ -21,6 +21,7 @@
 
 /* Placed with a transform from the top left corner; hidden until a run shows them. */
 .score-cursor,
+.score-cover,
 .score-playhead {
   left: 0;
   top: 0;

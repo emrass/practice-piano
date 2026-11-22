@@ -68,7 +68,7 @@ export interface LessonRuntime {
   /** What to show instead of the engraved score (chord chart, play from memory), if anything. */
   stage?: (session: Session) => ReactNode;
   /** Engraved score options. */
-  score?: { showFingering?: boolean };
+  score?: { showFingering?: boolean; /** Flow: ticks just ahead of the playhead to cover (read-ahead). */ coverTicks?: number };
   /** The Wait / Flow switch in the top bar, for lessons that have both. */
   mode?: { value: 'wait' | 'flow'; set: (mode: 'wait' | 'flow') => void };
   /** Weak-spot focus is shaping this exercise (shown in the meta strip). */

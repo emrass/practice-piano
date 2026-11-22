@@ -5,7 +5,7 @@
 <body>
 <div class="ds-stack">
   <div class="score" id="p-score" style="min-height:200px"><p class="ds-note" style="padding:var(--space-16)">Loading the engraving…</p></div>
-  <p class="ds-note">Engraved live with VexFlow 4.2.5, as in the app. First bar: Wait, with the cursor on the current note. Second bar: Flow, with the playhead. Third bar: two notes the app played, a placeholder for a note not found yet, and a chord with its fingering stacked above it.</p>
+  <p class="ds-note">Engraved live with VexFlow 4.2.5, as in the app. First bar: Wait, with the cursor on the current note. Second bar: Flow, with the playhead and a read-ahead cover over what comes next. Third bar: two notes the app played, a placeholder for a note not found yet, and a chord with its fingering stacked above it.</p>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.5/build/cjs/vexflow.js"></script>
 <script>
@@ -55,6 +55,8 @@
   var numeral = document.createElementNS(NS, 'tspan'); numeral.setAttribute('class', 'chord-numeral'); numeral.setAttribute('dx', 6); numeral.textContent = 'I'; chord.appendChild(numeral); svg.appendChild(chord);
   function place(cls, x, top, h) { var e = document.createElement('div'); e.className = cls; e.style.cssText = 'left:' + (x / W * 100) + '%;top:' + (top / H * 100) + '%;height:' + (h / H * 100) + '%'; host.appendChild(e); return e; }
   place('score-cursor', xs[2] - 15, 44, 92).style.width = (30 / W * 100) + '%';
+  // The read-ahead cover: from just behind the playhead to the next beat; the note at its edge stays visible.
+  place('score-cover', xs[7] + 20, 8, 184).style.width = ((xs[8] - 8 - (xs[7] + 20)) / W * 100) + '%';
   place('score-playhead', xs[7] + 34, 50, 76);
 })();
 </script>

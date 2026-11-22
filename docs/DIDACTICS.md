@@ -86,6 +86,9 @@ Decoding notation into keys. Open-ended → random passages with musical constra
 progressions, phrase cadences, stepwise motion, leap recovery, motifs), level 1–100.
 Wait mode isolates pitch reading; Flow mode adds time. Weak spots: note × clef; in Flow mode also
 rhythm figures.
+An optional read-ahead cover in Flow hides the music from the playhead to a beat, half a bar or a
+bar ahead, so the eyes have to stay ahead of the hands (keep going, don't stop to fix a note). It
+is a training aid: scoring and XP are the same with it.
 
 ### 4.2 Ear training ✓
 

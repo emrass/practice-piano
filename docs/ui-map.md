@@ -70,6 +70,7 @@ If you add, rename or remove a part, change the list in the script and the table
 | Drawer toggle | The menu button at the right end of the top bar below 1080 px. | `.drawer-toggle` |
 | Progress panel | The sidebar's Progress tab: XP, mastery, streaks, heatmaps. | `ProgressPanel.tsx` |
 | Playhead | The line that moves through the score in Flow mode. | `.score-playhead` |
+| Read-ahead cover | The card that moves with the playhead in sight-reading Flow and hides the next beat, half bar or bar (Read ahead in the Exercise tab). | `.score-cover` |
 | Results card | The card over the score after a run: verdict, numbers, piano shortcuts, actions. | `ResultsCard.tsx`, `.results` |
 | Keyboard display menu | The popover from the keyboard tools: note names on the keys, computer-key hints, keyboard view. | `.keyboard-popover` |
 | Piano & audio dialog | Piano connection, latency, metronome and scoring, opened from the piano chip. | `PianoAudioDialog.tsx` |

@@ -159,6 +159,44 @@ export function tickToX(layout: ScoreLayout, tick: number): { system: SystemLayo
   return { system, x: system.measuresX + layout.leadPx + local * layout.pxPerTick };
 }
 
+/** A box over the score, in layout pixels. */
+export interface CoverBox {
+  top: number;
+  height: number;
+  left: number;
+  right: number;
+}
+
+/** The read-ahead cover trails the playhead by about a notehead, so the note being played is hidden too. */
+export const COVER_TRAIL_PX = 14;
+/** Where the Flow playhead line is drawn, right of a note's x (the middle of its notehead). */
+export const PLAYHEAD_OFFSET_PX = 5.5;
+
+/**
+ * Read-ahead cover: hides the music from just behind the playhead at `tick` to `span` ticks
+ * ahead of it, over the whole height of the line. Past the end of a line it carries on at the
+ * start of the next one (a second box); it stops at the end of the piece.
+ */
+export function coverBoxes(layout: ScoreLayout, tick: number, span: number): CoverBox[] {
+  const last = layout.systems[layout.systems.length - 1];
+  if (!last || span <= 0) return [];
+  const total = last.endTick;
+  const end = Math.min(tick + span, total);
+  const boxes: CoverBox[] = [];
+  let system = systemForTick(layout, Math.max(0, Math.min(tick, total - 1)));
+  let left = system.measuresX + layout.leadPx + (tick - system.startTick) * layout.pxPerTick + PLAYHEAD_OFFSET_PX - COVER_TRAIL_PX;
+  for (;;) {
+    const lineEnd = system.measuresX + system.measureCount * layout.measureWidth;
+    // The note that starts right at the edge is not covered: that is where to read.
+    const right = end >= system.endTick ? lineEnd : system.measuresX + layout.leadPx + (end - system.startTick) * layout.pxPerTick - 2;
+    if (right - left >= 1) boxes.push({ top: system.top + 4, height: system.height - 8, left: Math.max(system.measuresX, left), right });
+    if (end <= system.endTick || system === last) break;
+    system = layout.systems[system.index + 1];
+    left = system.measuresX;
+  }
+  return boxes;
+}
+
 export function measureX(layout: ScoreLayout, measureIndex: number): { system: SystemLayout; x: number } {
   const system = layout.systems[Math.floor(measureIndex / layout.measuresPerSystem)] ?? layout.systems[layout.systems.length - 1];
   return { system, x: system.measuresX + (measureIndex - system.firstMeasure) * layout.measureWidth };
