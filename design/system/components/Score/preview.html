@@ -56,7 +56,13 @@
   function place(cls, x, top, h) { var e = document.createElement('div'); e.className = cls; e.style.cssText = 'left:' + (x / W * 100) + '%;top:' + (top / H * 100) + '%;height:' + (h / H * 100) + '%'; host.appendChild(e); return e; }
   place('score-cursor', xs[2] - 15, 44, 92).style.width = (30 / W * 100) + '%';
   // The read-ahead cover: from just behind the playhead to the next beat; the note at its edge stays visible.
-  place('score-cover', xs[7] + 20, 8, 184).style.width = ((xs[8] - 8 - (xs[7] + 20)) / W * 100) + '%';
+  var cover = place('score-cover', xs[7] + 14, 8, 184), k = host.clientWidth / W;
+  cover.style.width = ((xs[8] - 2 - (xs[7] + 14)) / W * 100) + '%';
+  // The staff runs on through the cover (the app draws it from the layout the same way).
+  var ys = [64, 74, 84, 94, 104];
+  cover.style.backgroundImage = ys.map(function () { return 'linear-gradient(var(--score-staff), var(--score-staff))'; }).join(',');
+  cover.style.backgroundSize = ys.map(function () { return '100% 1px'; }).join(',');
+  cover.style.backgroundPosition = ys.map(function (y) { return '0 ' + ((y - 8) * k - 0.5) + 'px'; }).join(',');
   place('score-playhead', xs[7] + 34, 50, 76);
 })();
 </script>

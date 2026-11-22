@@ -212,5 +212,18 @@ function placeCovers(covers: HTMLDivElement[], layout: ScoreLayout, k: number, t
     c.style.transform = `translate(${b.left * k}px, ${b.top * k}px)`;
     c.style.width = `${(b.right - b.left) * k}px`;
     c.style.height = `${b.height * k}px`;
+    // The staff and its bar lines run on through the cover: only the notes dissolve.
+    const line = 'linear-gradient(var(--score-staff), var(--score-staff))';
+    const w = Math.max(1, k);
+    // Bar lines go from the top line to the bottom line of each staff (five lines a staff).
+    const staffTops = b.staffLines.filter((_, i) => i % 5 === 0);
+    const staffHeight = (b.staffLines[4] - b.staffLines[0]) * k + w;
+    const layers = [
+      ...b.staffLines.map((y) => ({ size: `100% ${w}px`, pos: `0 ${(y - b.top) * k - w / 2}px` })),
+      ...staffTops.flatMap((y) => b.barLines.map((x) => ({ size: `${w}px ${staffHeight}px`, pos: `${(x - b.left) * k - w / 2}px ${(y - b.top) * k - w / 2}px` }))),
+    ];
+    c.style.backgroundImage = layers.map(() => line).join(',');
+    c.style.backgroundSize = layers.map((l) => l.size).join(',');
+    c.style.backgroundPosition = layers.map((l) => l.pos).join(',');
   });
 }
