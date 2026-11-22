@@ -26,18 +26,8 @@
   min-width: 0;
 }
 
-/* Your data: icon and label; at 960px and below the icon alone, square like an IconButton. */
-.topbar-data {
-  flex: none;
-}
 .topbar-right > :not(.chip-midi) {
   flex: none;
-}
-.topbar-data .icon {
-  color: var(--text-muted);
-}
-.topbar-data:hover .icon {
-  color: var(--text);
 }
 
 .topbar-lesson .segmented {
@@ -70,18 +60,8 @@
 }
 
 /* With Your data beside the theme toggle, the wordmark goes first. */
-@media (max-width: 1220px) {
+@media (max-width: 1180px) {
   .logo-name {
-    display: none;
-  }
-}
-
-@media (max-width: 960px) {
-  .topbar-data {
-    width: var(--size-control-md);
-    padding: 0;
-  }
-  .topbar-data-label {
     display: none;
   }
 }

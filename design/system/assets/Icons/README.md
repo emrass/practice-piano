@@ -6,4 +6,4 @@ Nineteen line icons drawn for the app on a 20-unit grid: 1.5 stroke, round caps 
 - Render at 16px inside controls (`size-icon`) and 20px standing alone (`size-icon-lg`). Do not scale the stroke.
 - `guide` / `guide-on` and `sound-on` / `sound-off` are pairs: a toggle swaps the drawing as well as the color.
 - `star` is mastery, `streak` is the daily streak. Neither is used for anything else.
-- `database` is Your data (backup, restore, erase) and nothing else; in the top bar it sits beside its label wherever the label fits.
+- `database` is Your data (backup, restore, erase) and nothing else.
