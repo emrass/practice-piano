@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { generateChordExercise } from '../../core/chords/generator';
 import { generateExercise, type GeneratorSettings } from '../../core/generator/generator';
 import { allEvents } from '../../core/exercise';
-import { chooseScale, computeLayout, measureX, tickToX } from './layout';
+import { chooseScale, COVER_TRAIL_PX, computeLayout, coverBoxes, measureX, PLAYHEAD_OFFSET_PX, tickToX } from './layout';
 import { drawStepMark, fingeringRoom, renderScore } from './renderScore';
 
 const base: GeneratorSettings = {
@@ -45,6 +45,50 @@ describe('score layout', () => {
     expect(computeLayout(dense, 1000, 80).measuresPerSystem).toBeLessThan(computeLayout(easy, 1000, 80).measuresPerSystem);
     expect(chooseScale(easy, 1000, 600, 80)).toBeGreaterThan(1);
     expect(chooseScale(generateExercise({ ...base, bars: 16 }, 3), 1000, 400, 80)).toBe(1);
+  });
+});
+
+describe('read-ahead cover', () => {
+  const ex = generateExercise({ ...base, timeSignature: '4/4', bars: 8 }, 5);
+  const layout = computeLayout(ex, 1100, 80);
+  const tpb = ex.timeSignature.ticksPerBar;
+  const perLine = layout.measuresPerSystem;
+  const [first, second] = layout.systems;
+
+  it('runs from just behind the playhead to the edge of the span, over the whole line', () => {
+    const tick = tpb + 2;
+    const [box, ...rest] = coverBoxes(layout, tick, 4);
+    expect(rest).toEqual([]);
+    const playhead = tickToX(layout, tick).x + PLAYHEAD_OFFSET_PX;
+    expect(box.left).toBeCloseTo(playhead - COVER_TRAIL_PX);
+    // The note on the playhead is under it; the note at the edge starts just outside it.
+    expect(box.left).toBeLessThan(tickToX(layout, tick).x);
+    expect(box.right).toBeLessThan(tickToX(layout, tick + 4).x);
+    expect(box.right).toBeGreaterThan(tickToX(layout, tick + 4).x - 4);
+    expect(box.top).toBeGreaterThan(first.top);
+    expect(box.top + box.height).toBeLessThan(first.top + first.height);
+    expect(box.top).toBeLessThan(first.bandTop);
+    expect(box.top + box.height).toBeGreaterThan(first.bandBottom);
+  });
+
+  it('carries on at the start of the next line', () => {
+    expect(layout.systems.length).toBeGreaterThan(1);
+    const tick = perLine * tpb - 2;
+    const boxes = coverBoxes(layout, tick, tpb);
+    expect(boxes).toHaveLength(2);
+    expect(boxes[0].right).toBeCloseTo(first.measuresX + perLine * layout.measureWidth);
+    expect(boxes[1].top).toBeGreaterThan(boxes[0].top);
+    expect(boxes[1].left).toBe(second.measuresX);
+    expect(boxes[1].right).toBeCloseTo(tickToX(layout, tick + tpb).x - 2);
+  });
+
+  it('stops at the end of the piece, and covers nothing without a span', () => {
+    const total = ex.totalTicks;
+    const boxes = coverBoxes(layout, total - 2, tpb);
+    expect(boxes).toHaveLength(1);
+    const last = layout.systems[layout.systems.length - 1];
+    expect(boxes[0].right).toBeCloseTo(last.measuresX + last.measureCount * layout.measureWidth);
+    expect(coverBoxes(layout, tpb, 0)).toEqual([]);
   });
 });
 

@@ -316,7 +316,7 @@ function Studio({ profile }: { profile: Profile }) {
             {runtime.stage ? (
               runtime.stage(controller)
             ) : (
-              <ScoreView exercise={exercise} showNoteNames={s.showStaffNames} controller={controller} showFingering={!!runtime.score?.showFingering} />
+              <ScoreView exercise={exercise} showNoteNames={s.showStaffNames} controller={controller} showFingering={!!runtime.score?.showFingering} coverTicks={runtime.score?.coverTicks} />
             )}
             <ResultsLayer
               controller={controller}

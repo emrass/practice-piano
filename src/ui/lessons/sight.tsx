@@ -4,7 +4,7 @@ import { midiLabel } from '../../core/music/pitch';
 import type { ProgressState } from '../../core/progress/progress';
 import { findWeakFigures } from '../../core/progress/rhythm';
 import { findWeakSpots } from '../../core/progress/sight';
-import { generatorSettingsFrom } from '../../core/settings';
+import { generatorSettingsFrom, readAheadTicks } from '../../core/settings';
 import { inputBus } from '../../input/inputBus';
 import { audioEngine } from '../../platform/audio/audioEngine';
 import { ExercisePanel } from '../components/ExercisePanel';
@@ -22,10 +22,12 @@ export function useSightLesson(ctx: LessonContext, active: boolean): LessonRunti
   const [focus, refreshFocus] = useFocus(ctx, weakNotes, []);
   const [figures, refreshFigures] = useFocus(ctx, weakFigures, []);
   const sight = s.sight;
+  // The read-ahead cover only changes what the score shows: the passage stays.
+  const { readAhead, ...shape } = sight;
   const exercise = useBuiltFor(
     // Only the fields that shape a passage (not e.g. the theme) make a new one; progress is read
     // when it is made (an unseen passage first), not followed.
-    { active, sight, keyboardSize: s.keyboardSize, weakSpotFocus: s.weakSpotFocus, focus, figures, seed },
+    { active, ...shape, keyboardSize: s.keyboardSize, weakSpotFocus: s.weakSpotFocus, focus, figures, seed },
     () =>
       active
         ? freshExercise(
@@ -59,6 +61,7 @@ export function useSightLesson(ctx: LessonContext, active: boolean): LessonRunti
     () => (exercise ? new PracticeController({ exercise, mode: sight.mode, ...waitOptions(s), ...flowTiming(s) }, inputBus, audioEngine) : null),
   );
   if (!session || !exercise) return null;
+  const coverTicks = sight.mode === 'flow' ? readAheadTicks(readAhead, exercise.timeSignature) : 0;
 
   const refresh = () => {
     refreshFocus();
@@ -78,10 +81,15 @@ export function useSightLesson(ctx: LessonContext, active: boolean): LessonRunti
     onPatch: (patch) => {
       if (patch.weakSpotFocus) refresh();
     },
+    score: { coverTicks },
     panel: <ExercisePanel settings={s} progress={ctx.progress} update={ctx.update} weakNotesLabel={weakLabel} />,
     mode: { value: sight.mode, set: (mode) => ctx.update({ sight: { mode } }) },
     focusActive: s.weakSpotFocus && focus.length > 0,
-    keyboard: { span: exercise.range },
+    keyboard: {
+      span: exercise.range,
+      // The guide would light the very keys the cover hides.
+      unavailable: { guide: coverTicks ? 'Off while the read-ahead cover is on.' : undefined },
+    },
     practiceWeakSpots: () => {
       refresh();
       ctx.update({ weakSpotFocus: true });

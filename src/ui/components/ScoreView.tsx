@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { Exercise } from '../../core/exercise';
 import { useStore } from '../../lib/store';
-import { systemForTick, tickToX } from '../notation/layout';
+import { coverBoxes, PLAYHEAD_OFFSET_PX, type ScoreLayout, systemForTick, tickToX } from '../notation/layout';
 import { drawStepMark, renderScore, type RenderedScore } from '../notation/renderScore';
 import type { StepMark } from '../practice/session';
 import type { Session } from '../practice/session';
@@ -20,13 +20,22 @@ const ALL_MARK_CLASSES = Object.values(MARK_CLASSES);
  * exercise, width or label setting changes; per-note feedback is applied by toggling
  * classes, and the Flow playhead moves via requestAnimationFrame + transform.
  */
-export function ScoreView(props: { exercise: Exercise; showNoteNames: boolean; controller: Session; showFingering?: boolean }) {
+export function ScoreView(props: {
+  exercise: Exercise;
+  showNoteNames: boolean;
+  controller: Session;
+  showFingering?: boolean;
+  /** Flow: ticks of music just ahead of the playhead to cover (read-ahead training). */
+  coverTicks?: number;
+}) {
   const { exercise, showNoteNames, controller } = props;
+  const coverTicks = props.coverTicks ?? 0;
   const showFingering = props.showFingering ?? false;
   const scrollRef = useRef<HTMLDivElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
   const cursorRef = useRef<HTMLDivElement>(null);
   const playheadRef = useRef<HTMLDivElement>(null);
+  const coverRefs = useRef<(HTMLDivElement | null)[]>([]);
   const renderedRef = useRef<RenderedScore | null>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
   const { width, height: viewHeight } = size;
@@ -136,8 +145,11 @@ export function ScoreView(props: { exercise: Exercise; showNoteNames: boolean; c
   useEffect(() => {
     const head = playheadRef.current;
     if (!head) return;
+    const covers = coverRefs.current.filter((c): c is HTMLDivElement => !!c);
+    const hideCovers = () => covers.forEach((c) => (c.style.opacity = '0'));
     if (state.mode !== 'flow' || (state.status !== 'countin' && state.status !== 'running')) {
       head.style.opacity = '0';
+      hideCovers();
       // A fresh (or stopped) Flow run starts from the top.
       if (state.mode === 'flow' && state.status === 'ready') scrollRef.current?.scrollTo({ top: 0 });
       return;
@@ -154,29 +166,51 @@ export function ScoreView(props: { exercise: Exercise; showNoteNames: boolean; c
         const x = system.measuresX + r.layout.leadPx + local * r.layout.pxPerTick;
         const k = r.scale;
         head.style.opacity = tick < 0 ? '0.45' : '1';
-        head.style.transform = `translate(${(x + 5.5) * k - 1.5}px, ${system.bandTop * k}px)`;
+        head.style.transform = `translate(${(x + PLAYHEAD_OFFSET_PX) * k - 1.5}px, ${system.bandTop * k}px)`;
         head.style.height = `${(system.bandBottom - system.bandTop) * k}px`;
+        // The cover shows from the first beat on: the count-in is for reading the opening.
+        if (coverTicks > 0 && tick >= 0) placeCovers(covers, r.layout, r.scale, clamped, coverTicks);
+        else hideCovers();
         if (system.index !== lastSystem) {
           lastSystem = system.index;
           scrollRef.current?.scrollTo({ top: Math.max(0, system.top * k - 6), behavior: 'smooth' });
         }
       } else {
         head.style.opacity = '0'; // e.g. Rhythm Pulse: no visual metronome in silent bars
+        hideCovers();
       }
       raf = requestAnimationFrame(frame);
     };
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, [state.mode, state.status, controller, exercise]);
+  }, [state.mode, state.status, controller, exercise, coverTicks]);
 
   return (
     <div className="score-scroll" ref={scrollRef}>
       <div className="score-canvas" style={{ height: height ?? undefined }}>
         <div className="score-host" ref={hostRef} />
         <div className="score-cursor" ref={cursorRef} aria-hidden="true" />
+        <div className="score-cover" ref={(el) => void (coverRefs.current[0] = el)} aria-hidden="true" />
+        <div className="score-cover" ref={(el) => void (coverRefs.current[1] = el)} aria-hidden="true" />
         <div className="score-playhead" ref={playheadRef} aria-hidden="true" />
         {renderError ? <div className="score-error">Could not engrave this exercise: {renderError}</div> : null}
       </div>
     </div>
   );
+}
+
+/** Places the read-ahead cover's boxes (one, or two across a line break); unused ones hide. */
+function placeCovers(covers: HTMLDivElement[], layout: ScoreLayout, k: number, tick: number, span: number) {
+  const boxes = coverBoxes(layout, tick, span);
+  covers.forEach((c, i) => {
+    const b = boxes[i];
+    if (!b) {
+      c.style.opacity = '0';
+      return;
+    }
+    c.style.opacity = '1';
+    c.style.transform = `translate(${b.left * k}px, ${b.top * k}px)`;
+    c.style.width = `${(b.right - b.left) * k}px`;
+    c.style.height = `${b.height * k}px`;
+  });
 }

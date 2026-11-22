@@ -1,5 +1,5 @@
 import { KEYS } from './music/keys';
-import { TIME_SIGNATURE_IDS, type TimeSignatureId } from './music/rhythm';
+import { TIME_SIGNATURE_IDS, type TimeSignature, type TimeSignatureId } from './music/rhythm';
 import { KEYBOARD_SIZES, type KeyboardSize } from './keyboard/range';
 import type { GeneratorSettings } from './generator/generator';
 import type { EarSettings } from './ear/generator';
@@ -35,6 +35,19 @@ export type Theme = 'light' | 'dark';
 export interface SightSettings extends Omit<GeneratorSettings, 'keyboardSize' | 'focus' | 'focusFigures'> {
   bars: 4 | 8 | 16;
   mode: 'wait' | 'flow';
+  /** Flow: how much of the music just ahead of the playhead is covered, so the eyes read ahead. */
+  readAhead: ReadAhead;
+}
+
+export const READ_AHEAD = ['off', 'beat', 'half', 'bar'] as const;
+export type ReadAhead = (typeof READ_AHEAD)[number];
+
+/** Ticks of music the read-ahead cover hides: a beat (of the time signature), half a bar or a bar. */
+export function readAheadTicks(readAhead: ReadAhead, ts: TimeSignature): number {
+  if (readAhead === 'beat') return ts.beatTicks;
+  if (readAhead === 'half') return ts.ticksPerBar / 2;
+  if (readAhead === 'bar') return ts.ticksPerBar;
+  return 0;
 }
 
 /** Ear training: what the phrase generator takes (weak-spot focus is added per run). */
@@ -204,6 +217,7 @@ export const DEFAULT_SETTINGS: Settings = {
     maxPolyphony: 'auto',
     bpm: null,
     mode: 'wait',
+    readAhead: 'off',
   },
   ear: { level: 1, length: 'auto', reference: 'auto', keyId: 'auto' },
   rhythm: {
@@ -350,6 +364,7 @@ function normalizeSight(r: Record<string, unknown>): SightSettings {
     maxPolyphony: autoOrInt(r.maxPolyphony, 1, 4),
     bpm: optionalBpm(r.bpm),
     mode: oneOf(r.mode, ['wait', 'flow'] as const, d.mode),
+    readAhead: oneOf(r.readAhead, READ_AHEAD, d.readAhead),
   };
 }
 
@@ -469,6 +484,6 @@ function normalizeCalibration(raw: unknown): LatencyCalibration | null {
 }
 
 export function generatorSettingsFrom(s: Settings): GeneratorSettings {
-  const { mode: _mode, ...sight } = s.sight;
+  const { mode: _mode, readAhead: _readAhead, ...sight } = s.sight;
   return { ...sight, keyboardSize: s.keyboardSize };
 }

@@ -5,7 +5,7 @@ import { tierForLevel } from '../../core/generator/tiers';
 import { KEYS } from '../../core/music/keys';
 import { TIME_SIGNATURE_IDS, type TimeSignatureId } from '../../core/music/rhythm';
 import type { ProgressState } from '../../core/progress/progress';
-import type { Settings, SettingsPatch } from '../../core/settings';
+import type { ReadAhead, Settings, SettingsPatch } from '../../core/settings';
 import { CommitSlider, Field, ProgressBar, Segmented, Select, Toggle } from './controls';
 
 export function ExercisePanel(props: { settings: Settings; progress: ProgressState; update: (patch: SettingsPatch) => void; weakNotesLabel: string | null }) {
@@ -13,6 +13,7 @@ export function ExercisePanel(props: { settings: Settings; progress: ProgressSta
   const [preview, setPreview] = useState<number | null>(null);
   const shownLevel = preview ?? s.sight.level;
   const tier = tierForLevel(shownLevel);
+  const flow = s.sight.mode === 'flow';
   const tierState = props.progress.tiers[tier.id];
   const advancedCount = [
     s.sight.keyId !== 'auto',
@@ -131,6 +132,21 @@ export function ExercisePanel(props: { settings: Settings; progress: ProgressSta
       <section className="section">
         <div className="section-title">Display</div>
         <Toggle label="Note names on the staff" hint="Letter names under the notes" checked={s.showStaffNames} onChange={(showStaffNames) => update({ showStaffNames })} />
+        {/* Flow only: in Wait the choice stays in place, disabled, and the hint says why. */}
+        <Field label="Read ahead" hint={flow ? 'Hides the music just ahead of the playhead.' : 'Flow only: Wait has no playhead to read ahead of.'}>
+          <Segmented<ReadAhead>
+            label="Read ahead"
+            value={s.sight.readAhead}
+            disabled={!flow}
+            onChange={(readAhead) => update({ sight: { readAhead } })}
+            options={[
+              { value: 'off', label: 'Off' },
+              { value: 'beat', label: '1 beat', title: 'Cover the next beat' },
+              { value: 'half', label: 'Half bar', title: 'Cover the next half bar' },
+              { value: 'bar', label: '1 bar', title: 'Cover the next bar' },
+            ]}
+          />
+        </Field>
       </section>
     </div>
   );

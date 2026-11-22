@@ -399,6 +399,7 @@ kbd { display: inline-block; padding: 1px var(--space-4); border: var(--stroke-t
 .score-svg .score-bar-number { fill: var(--score-label); stroke: none; font: var(--type-bar-number); }
 .score-cursor { position: absolute; border-radius: var(--radius-md); background: var(--score-cursor); box-shadow: inset 0 0 0 1.5px var(--score-cursor-edge); pointer-events: none; transition: transform var(--duration-base) var(--ease-out), height var(--duration-base) var(--ease-out); }
 .score-cursor.is-wrong { background: var(--danger-soft); box-shadow: inset 0 0 0 2px var(--danger); animation: shake var(--duration-slow) var(--ease-out); }
+.score-cover { position: absolute; border-radius: var(--radius-md); background: var(--surface-well); box-shadow: inset 0 0 0 1px var(--border-subtle); pointer-events: none; }
 .score-playhead { position: absolute; width: 3px; border-radius: var(--radius-full); background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); pointer-events: none; }
 .veil { position: absolute; inset: 0; z-index: var(--z-sticky); display: grid; place-items: center; padding: var(--space-12); background: var(--veil); animation: fade-in var(--duration-base) var(--ease-out); }
 
