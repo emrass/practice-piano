@@ -58,6 +58,8 @@ const RESUME_GRACE_MS = 1500;
 const FRESH_RESUME_MS = 300;
 /** Rebuilds at most this often, so an interruption that lasts (a phone call) cannot cause a loop. */
 const REBUILD_GAP_MS = 5000;
+/** After the audio output changes, wait this long for it to settle (devices come and go in bursts). */
+const OUTPUT_SETTLE_MS = 500;
 
 export interface AudioEngineOptions {
   /** Builds a context; defaults to the browser's (webkit-prefixed if need be). */
@@ -85,6 +87,9 @@ export class AudioEngine {
   private lastRebuild = Number.NEGATIVE_INFINITY;
   /** The context has run at least once, so audio was unlocked by a gesture where that is needed. */
   private hasRun = false;
+  /** The native session reported an interruption that has not ended. */
+  private interrupted = false;
+  private rebuildTimer: ReturnType<typeof setTimeout> | null = null;
   synth: NoteSynth = simplePiano;
 
   constructor(private readonly opts: AudioEngineOptions = {}) {}
@@ -132,12 +137,38 @@ export class AudioEngine {
     this.resume(ctx);
   }
 
-  /** The native app reports what happened to the iOS audio session. */
+  /**
+   * The native app reports what happened to the iOS audio session. On iPad, a context can go on
+   * saying "running" while nothing comes out: after the output moved to a Bluetooth device and
+   * back (a piano connecting its Bluetooth audio along with MIDI), or after an interruption that
+   * never ended. Those get a new context; the rest a resume.
+   */
   handleNativeEvent(event: NativeAudioEvent): void {
     this.log(`native: ${event}${this.ctx ? `, context ${this.ctx.state}` : ''}`);
-    if (!this.ctx || event === 'interruptionBegan') return;
-    if (event === 'mediaServicesReset') this.build('media services were reset');
-    else this.revive();
+    switch (event) {
+      case 'interruptionBegan':
+        this.interrupted = true;
+        return;
+      case 'interruptionEnded':
+        this.interrupted = false;
+        this.revive();
+        return;
+      case 'outputChanged':
+        this.rebuildSoon('the audio output changed');
+        return;
+      case 'becameActive':
+        if (this.interrupted) {
+          this.interrupted = false;
+          this.rebuildSoon('back from an interruption that never ended');
+        } else this.revive();
+        return;
+      case 'mediaServicesReset':
+        if (this.ctx) this.build('media services were reset');
+        return;
+      case 'routeChanged':
+        this.revive();
+        return;
+    }
   }
 
   /** The page became visible again. */
@@ -146,6 +177,16 @@ export class AudioEngine {
       this.log(`page visible, context ${this.ctx.state}`);
       this.revive();
     }
+  }
+
+  /** Builds a new context once the output has settled; several requests in a row make one. */
+  private rebuildSoon(reason: string): void {
+    if (!this.ctx) return;
+    if (this.rebuildTimer !== null) clearTimeout(this.rebuildTimer);
+    this.rebuildTimer = setTimeout(() => {
+      this.rebuildTimer = null;
+      if (this.ctx) this.build(reason);
+    }, OUTPUT_SETTLE_MS);
   }
 
   private now(): number {

@@ -23,7 +23,8 @@
  *   { type: 'midi', source: id, data: number[] }
  *   { type: 'bluetoothClosed' }
  *   { type: 'audio', event }          what happened to the audio session (Apple): interruptionBegan,
- *                                     interruptionEnded, routeChanged, becameActive, mediaServicesReset
+ *                                     interruptionEnded, outputChanged, routeChanged, becameActive,
+ *                                     mediaServicesReset
  *   { type: 'fileSaved', id, status: 'saved' | 'canceled' | 'failed' }   (Android)
  *
  * native → JS (Android): window.__practicePianoNative.back() → boolean
@@ -32,7 +33,15 @@
  */
 
 /** What the Apple app reports about the iOS audio session. */
-export type NativeAudioEvent = 'interruptionBegan' | 'interruptionEnded' | 'routeChanged' | 'becameActive' | 'mediaServicesReset';
+export type NativeAudioEvent =
+  | 'interruptionBegan'
+  | 'interruptionEnded'
+  /** The audio output device changed (a Bluetooth device came or went). */
+  | 'outputChanged'
+  /** The route changed without a new output (category or configuration). */
+  | 'routeChanged'
+  | 'becameActive'
+  | 'mediaServicesReset';
 
 export type NativeMessage =
   | { type: 'inputs'; inputs: { id: string; name: string; manufacturer?: string; online?: boolean }[] }

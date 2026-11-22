@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AudioEngine } from './audioEngine';
 
 /** Just enough of an AudioContext for the engine: nodes record what was scheduled on them. */
@@ -212,6 +212,10 @@ describe('AudioEngine recovery', () => {
 });
 
 describe('AudioEngine and the native audio session', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('resumes when an interruption ends, the route changes or the app is active again', () => {
     for (const event of ['interruptionEnded', 'routeChanged', 'becameActive'] as const) {
       const t = started();
@@ -228,6 +232,59 @@ describe('AudioEngine and the native audio session', () => {
     const t = started();
     t.engine.handleNativeEvent('interruptionBegan');
     expect(t.current().resumeCalls).toBe(1);
+  });
+
+  it('builds one new context once the output settles, though the old one says running', () => {
+    vi.useFakeTimers();
+    const t = started();
+    // The piano's Bluetooth audio comes along with MIDI and leaves again (#82).
+    t.engine.handleNativeEvent('outputChanged');
+    vi.advanceTimersByTime(200);
+    t.engine.handleNativeEvent('outputChanged');
+    vi.advanceTimersByTime(499);
+    expect(t.contexts).toHaveLength(1);
+    vi.advanceTimersByTime(1);
+    expect(t.contexts).toHaveLength(2);
+    expect(t.contexts[0].closed).toBe(true);
+    expect(t.lines).toContain('new context (the audio output changed), suspended');
+  });
+
+  it('builds a new context when the app comes back from an interruption that never ended', () => {
+    vi.useFakeTimers();
+    const t = started();
+    t.engine.handleNativeEvent('interruptionBegan');
+    t.engine.handleNativeEvent('becameActive');
+    vi.advanceTimersByTime(500);
+    expect(t.contexts).toHaveLength(2);
+    // Once is enough: the next return to the app finds nothing pending.
+    t.current().set('running');
+    t.engine.handleNativeEvent('becameActive');
+    vi.advanceTimersByTime(500);
+    expect(t.contexts).toHaveLength(2);
+  });
+
+  it('keeps the context when an interruption ended normally', () => {
+    vi.useFakeTimers();
+    const t = started();
+    t.engine.handleNativeEvent('interruptionBegan');
+    t.engine.handleNativeEvent('interruptionEnded');
+    t.engine.handleNativeEvent('becameActive');
+    vi.advanceTimersByTime(1000);
+    expect(t.contexts).toHaveLength(1);
+  });
+
+  it('ends up with a fresh context after the sequence logged on the iPad in #82', () => {
+    vi.useFakeTimers();
+    const t = started();
+    for (const event of ['outputChanged', 'outputChanged', 'interruptionBegan', 'becameActive', 'interruptionBegan', 'becameActive'] as const) {
+      t.engine.handleNativeEvent(event);
+      vi.advanceTimersByTime(100);
+    }
+    vi.advanceTimersByTime(500);
+    expect(t.contexts).toHaveLength(2);
+    t.current().set('running');
+    t.engine.click(t.at(), true, 0.7);
+    expect(t.current().oscillators).toBe(1);
   });
 
   it('builds a new context when media services were reset', () => {

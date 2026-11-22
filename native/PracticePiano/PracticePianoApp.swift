@@ -113,7 +113,8 @@ final class AudioSessionMonitor {
         let reason = AVAudioSession.RouteChangeReason(rawValue: rawReason).map(Self.routeChangeReason) ?? "reason \(rawReason)"
         let previous = (note.userInfo?[AVAudioSessionRouteChangePreviousRouteKey] as? AVAudioSessionRouteDescription).map(Self.outputs) ?? "?"
         Self.log("route changed (\(reason)): \(previous) -> \(Self.describe(session))")
-        onEvent?("routeChanged")
+        // Web Audio can keep "running" into an output that is gone; the web side rebuilds for this.
+        onEvent?(previous == Self.outputs(session.currentRoute) ? "routeChanged" : "outputChanged")
     }
 
     // MARK: Log text
