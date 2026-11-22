@@ -165,28 +165,25 @@ export interface CoverBox {
   height: number;
   left: number;
   right: number;
-  /** y of every staff line in the box's line, so the staff can run on through the cover. */
-  staffLines: number[];
-  /** x of the bar lines inside the box, drawn from the first staff line to the last. */
-  barLines: number[];
-}
-
-/** y of the five lines of each staff in a system, top to bottom. */
-export function staffLineYs(system: SystemLayout): number[] {
-  return Object.values(system.staveY).flatMap((y) => Array.from({ length: 5 }, (_, i) => y! + STAVE_TOP_OFFSET + (i * STAFF_LINE_SPAN) / 4));
+  /** Width over which the box fades out at its left and right ends (0: a hard end, at the start of a line). */
+  fadeLeft: number;
+  fadeRight: number;
 }
 
 /** The read-ahead cover trails the playhead by about a notehead, so the note being played is hidden too. */
 export const COVER_TRAIL_PX = 14;
-/** The cover's edges fade over this width (`space-12` in its mask); the box reaches half of it past each edge, so the fade is centered on the edge. */
-export const COVER_FEATHER_PX = 12;
+/** Behind the playhead, a played note comes back over this width (`space-12`). */
+export const COVER_FADE_OUT_PX = 12;
+/** Ahead, a note fades out gradually over this width as the cover reaches it (`space-48`). */
+export const COVER_FADE_IN_PX = 48;
 /** Where the Flow playhead line is drawn, right of a note's x (the middle of its notehead). */
 export const PLAYHEAD_OFFSET_PX = 5.5;
 
 /**
  * Read-ahead cover: hides the music from just behind the playhead at `tick` to `span` ticks
  * ahead of it, over the whole height of the line. Past the end of a line it carries on at the
- * start of the next one (a second box); it stops at the end of the piece.
+ * start of the next one (a second box); it stops at the end of the piece. Each fade is centered
+ * on its edge: the box reaches half of it past the edge.
  */
 export function coverBoxes(layout: ScoreLayout, tick: number, span: number): CoverBox[] {
   const last = layout.systems[layout.systems.length - 1];
@@ -195,18 +192,22 @@ export function coverBoxes(layout: ScoreLayout, tick: number, span: number): Cov
   const end = Math.min(tick + span, total);
   const boxes: CoverBox[] = [];
   let system = systemForTick(layout, Math.max(0, Math.min(tick, total - 1)));
-  const half = COVER_FEATHER_PX / 2;
-  let left = system.measuresX + layout.leadPx + (tick - system.startTick) * layout.pxPerTick + PLAYHEAD_OFFSET_PX - COVER_TRAIL_PX - half;
+  let left = system.measuresX + layout.leadPx + (tick - system.startTick) * layout.pxPerTick + PLAYHEAD_OFFSET_PX - COVER_TRAIL_PX - COVER_FADE_OUT_PX / 2;
+  let fadeLeft = COVER_FADE_OUT_PX;
   for (;;) {
     const lineEnd = system.measuresX + system.measureCount * layout.measureWidth;
-    // The note that starts right at the edge is not covered: that is where to read.
-    const right = (end >= system.endTick ? lineEnd : system.measuresX + layout.leadPx + (end - system.startTick) * layout.pxPerTick - 2) + half;
+    // The reading edge fades in gently; the note that starts right at it is half there.
+    const atLineEnd = end >= system.endTick;
+    const fadeRight = atLineEnd ? COVER_FADE_OUT_PX : COVER_FADE_IN_PX;
+    const right = (atLineEnd ? lineEnd : system.measuresX + layout.leadPx + (end - system.startTick) * layout.pxPerTick - 2) + fadeRight / 2;
     const boxLeft = Math.max(system.measuresX, left);
-    const barLines = Array.from({ length: system.measureCount }, (_, i) => system.measuresX + (i + 1) * layout.measureWidth).filter((x) => x > boxLeft && x < right);
-    if (right - boxLeft >= 1) boxes.push({ top: system.top + 4, height: system.height - 8, left: boxLeft, right, staffLines: staffLineYs(system), barLines });
+    if (right - boxLeft >= 1) {
+      boxes.push({ top: system.top + 4, height: system.height - 8, left: boxLeft, right, fadeLeft, fadeRight });
+    }
     if (end <= system.endTick || system === last) break;
     system = layout.systems[system.index + 1];
     left = system.measuresX;
+    fadeLeft = 0;
   }
   return boxes;
 }

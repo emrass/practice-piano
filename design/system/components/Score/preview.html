@@ -55,14 +55,20 @@
   var numeral = document.createElementNS(NS, 'tspan'); numeral.setAttribute('class', 'chord-numeral'); numeral.setAttribute('dx', 6); numeral.textContent = 'I'; chord.appendChild(numeral); svg.appendChild(chord);
   function place(cls, x, top, h) { var e = document.createElement('div'); e.className = cls; e.style.cssText = 'left:' + (x / W * 100) + '%;top:' + (top / H * 100) + '%;height:' + (h / H * 100) + '%'; host.appendChild(e); return e; }
   place('score-cursor', xs[2] - 15, 44, 92).style.width = (30 / W * 100) + '%';
-  // The read-ahead cover: from just behind the playhead to the next beat; the note at its edge stays visible.
-  var cover = place('score-cover', xs[7] + 14, 8, 184), k = host.clientWidth / W;
-  cover.style.width = ((xs[8] - 2 - (xs[7] + 14)) / W * 100) + '%';
-  // The staff runs on through the cover (the app draws it from the layout the same way).
-  var ys = [64, 74, 84, 94, 104];
-  cover.style.backgroundImage = ys.map(function () { return 'linear-gradient(var(--score-staff), var(--score-staff))'; }).join(',');
-  cover.style.backgroundSize = ys.map(function () { return '100% 1px'; }).join(',');
-  cover.style.backgroundPosition = ys.map(function (y) { return '0 ' + ((y - 8) * k - 0.5) + 'px'; }).join(',');
+  // The read-ahead cover: from just behind the playhead to the next beat, fading in toward the note at its edge.
+  // Paper over the notes, with a copy of the staff moved to sit exactly on the real one (the app does the same).
+  var left = xs[7] + 14, top = 8, k = svg.getBoundingClientRect().width / W;
+  var sr = svg.getBoundingClientRect(), hr = host.getBoundingClientRect();
+  var dx = sr.left - hr.left - host.clientLeft, dy = sr.top - hr.top - host.clientTop;
+  var cover = place('score-cover', 0, 0, 0);
+  cover.style.cssText = 'left:' + (dx + left * k) + 'px;top:' + (dy + top * k) + 'px;width:' + (xs[8] + 4 - left) * k + 'px;height:' + 184 * k + 'px';
+  cover.style.setProperty('--cover-fade-right', 'var(--space-24)');
+  var staff = svg.cloneNode(false);
+  staff.removeAttribute('role'); staff.removeAttribute('aria-label'); staff.setAttribute('aria-hidden', 'true');
+  svg.querySelectorAll('.vf-stave, .vf-stavebarline').forEach(function (g) { staff.appendChild(g.cloneNode(true)); });
+  staff.style.width = W * k + 'px';
+  staff.style.transform = 'translate(' + (-left * k) + 'px,' + (-top * k) + 'px)';
+  cover.appendChild(staff);
   place('score-playhead', xs[7] + 34, 50, 76);
 })();
 </script>

@@ -71,6 +71,7 @@ export function ScoreView(props: {
         showFingering,
       });
       renderedRef.current = rendered;
+      copyStaff(rendered.svg, coverRefs.current);
       setHeight(Math.round(rendered.layout.height * rendered.scale));
       setRenderError(null);
     } catch (err) {
@@ -199,6 +200,24 @@ export function ScoreView(props: {
   );
 }
 
+/**
+ * The read-ahead cover hides the notes but not the staff: each cover holds a copy of the engraved
+ * staves (lines and bar lines), drawn above its paper exactly where the real ones are.
+ */
+function copyStaff(svg: SVGSVGElement | null, covers: (HTMLDivElement | null)[]) {
+  for (const cover of covers) {
+    if (!cover) continue;
+    cover.replaceChildren();
+    if (!svg) continue;
+    const copy = svg.cloneNode(false) as SVGSVGElement;
+    copy.removeAttribute('role');
+    copy.removeAttribute('aria-label');
+    copy.setAttribute('aria-hidden', 'true');
+    svg.querySelectorAll('.vf-stave, .vf-stavebarline').forEach((g) => copy.appendChild(g.cloneNode(true)));
+    cover.appendChild(copy);
+  }
+}
+
 /** Places the read-ahead cover's boxes (one, or two across a line break); unused ones hide. */
 function placeCovers(covers: HTMLDivElement[], layout: ScoreLayout, k: number, tick: number, span: number) {
   const boxes = coverBoxes(layout, tick, span);
@@ -212,18 +231,14 @@ function placeCovers(covers: HTMLDivElement[], layout: ScoreLayout, k: number, t
     c.style.transform = `translate(${b.left * k}px, ${b.top * k}px)`;
     c.style.width = `${(b.right - b.left) * k}px`;
     c.style.height = `${b.height * k}px`;
-    // The staff and its bar lines run on through the cover: only the notes dissolve.
-    const line = 'linear-gradient(var(--score-staff), var(--score-staff))';
-    const w = Math.max(1, k);
-    // Bar lines go from the top line to the bottom line of each staff (five lines a staff).
-    const staffTops = b.staffLines.filter((_, i) => i % 5 === 0);
-    const staffHeight = (b.staffLines[4] - b.staffLines[0]) * k + w;
-    const layers = [
-      ...b.staffLines.map((y) => ({ size: `100% ${w}px`, pos: `0 ${(y - b.top) * k - w / 2}px` })),
-      ...staffTops.flatMap((y) => b.barLines.map((x) => ({ size: `${w}px ${staffHeight}px`, pos: `${(x - b.left) * k - w / 2}px ${(y - b.top) * k - w / 2}px` }))),
-    ];
-    c.style.backgroundImage = layers.map(() => line).join(',');
-    c.style.backgroundSize = layers.map((l) => l.size).join(',');
-    c.style.backgroundPosition = layers.map((l) => l.pos).join(',');
+    // Fades never take more than half of a short box, so its middle stays fully covered.
+    const width = b.right - b.left;
+    const fadeLeft = Math.min(b.fadeLeft, width / 4);
+    const fadeRight = Math.min(b.fadeRight, width / 2 - fadeLeft);
+    c.style.setProperty('--cover-fade-left', `${fadeLeft * k}px`);
+    c.style.setProperty('--cover-fade-right', `${Math.max(0, fadeRight) * k}px`);
+    // The copy of the staff inside moves the other way, so it sits exactly on the real one.
+    const staff = c.firstElementChild as SVGElement | null;
+    if (staff) staff.style.transform = `translate(${-b.left * k}px, ${-b.top * k}px)`;
   });
 }
