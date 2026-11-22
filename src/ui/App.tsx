@@ -17,6 +17,7 @@ import { requestPersistentStorageOnce } from '../platform/storageProtection';
 import { KeyboardDock } from './components/KeyboardDock';
 import { LatencyCalibration } from './components/LatencyCalibration';
 import { MetaStrip } from './components/MetaStrip';
+import { DataDialog } from './components/DataDialog';
 import { PianoAudioDialog } from './components/PianoAudioDialog';
 import { PracticeBar } from './components/PracticeBar';
 import { ProgressPanel } from './components/ProgressPanel';
@@ -68,6 +69,7 @@ function Studio({ profile }: { profile: Profile }) {
   const setupOpen = !s.setupGuideSeen || audioGuideOpen;
   /** Piano & audio: the settings every lesson shares, opened from the piano chip. */
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [dataOpen, setDataOpen] = useState(false);
   const [hiddenResultsFor, setHiddenResultsFor] = useState<object | null>(null);
   const progressRef = useRef(progress);
   useEffect(() => {
@@ -140,7 +142,7 @@ function Studio({ profile }: { profile: Profile }) {
   // and no dialog open (platform/serviceWorker.ts).
   const dialogOpenRef = useRef(false);
   useLayoutEffect(() => {
-    dialogOpenRef.current = setupOpen || settingsOpen || calibrating;
+    dialogOpenRef.current = setupOpen || settingsOpen || dataOpen || calibrating;
   });
   useEffect(
     () =>
@@ -191,6 +193,12 @@ function Studio({ profile }: { profile: Profile }) {
     setSettingsOpen(true);
   }, [controller]);
   const closeSettings = useCallback(() => setSettingsOpen(false), []);
+  const openData = useCallback(() => {
+    if (controller.isActive) controller.stop();
+    setDrawerOpen(false);
+    setDataOpen(true);
+  }, [controller]);
+  const closeData = useCallback(() => setDataOpen(false), []);
   const openAudioGuide = useCallback(() => {
     if (controller.isActive) controller.stop();
     setSettingsOpen(false);
@@ -215,7 +223,7 @@ function Studio({ profile }: { profile: Profile }) {
     controller,
     exercise,
     rhythmQwerty: runtime.keyboard.qwerty,
-    dialogOpen: calibrating || setupOpen || settingsOpen,
+    dialogOpen: calibrating || setupOpen || settingsOpen || dataOpen,
     startStop,
     nextExercise,
     retry,
@@ -272,10 +280,7 @@ function Studio({ profile }: { profile: Profile }) {
               runtime.practiceWeakSpots();
               setTab('exercise');
             }}
-            onDataReplaced={(settings, p) => {
-              progressRef.current = p;
-              profile.replaceAll(settings, p);
-            }}
+            onOpenData={openData}
           />
         ) : null}
       </div>
@@ -296,6 +301,7 @@ function Studio({ profile }: { profile: Profile }) {
         progress={progress}
         midi={midiState}
         onOpenMidi={openSettings}
+        onOpenData={openData}
         onToggleDrawer={() => setDrawerOpen((o) => !o)}
       />
 
@@ -374,6 +380,19 @@ function Studio({ profile }: { profile: Profile }) {
           onCalibrate={openCalibration}
           onSetup={openAudioGuide}
           onClose={closeSettings}
+        />
+      ) : null}
+      {dataOpen ? (
+        <DataDialog
+          storageKind={profile.storageKind}
+          onDataReplaced={(settings, p) => {
+            progressRef.current = p;
+            profile.replaceAll(settings, p);
+            // Data without a finished setup opens the setup guide: one dialog at a time.
+            if (!settings.setupGuideSeen) setDataOpen(false);
+          }}
+          onErased={closeData}
+          onClose={closeData}
         />
       ) : null}
       {calibrating ? (

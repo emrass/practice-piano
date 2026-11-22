@@ -216,9 +216,10 @@ gets plain objects back.
 
 - `platform/storageProtection.ts` asks `navigator.storage.persist()` once per session, after a
   finished exercise (Firefox shows a permission pop-up; other browsers decide silently, so it is
-  never asked while the page loads). Progress → *Your data* shows whether the browser agreed. In an
+  never asked while the page loads). *Your data* (top bar) shows whether the browser agreed. In an
   iPad/iPhone browser tab it explains WebKit's 7-day deletion and how to move to a Home Screen app,
-  which is exempt but has its own, empty storage (Export → Import).
+  which is exempt but has its own, empty storage (Export → Import); there, and where storage is
+  unavailable, the Progress tab also shows a note that opens Your data.
 - `pwa/vitePwa.ts` (website build only — not `vite dev`, not `--mode native` or `--mode android`) adds the web app
   manifest, icons (`pwa/icons/`, rendered from the keys logo by `scripts/pwa-icons.ts` with the native app icon), the
   iOS home-screen tags and `sw.js` from `pwa/sw.js`. The worker precaches every file of the build

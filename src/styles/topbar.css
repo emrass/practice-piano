@@ -13,6 +13,7 @@
 }
 
 .topbar-right {
+  min-width: 0;
   margin-left: auto;
   display: flex;
   align-items: center;
@@ -21,6 +22,12 @@
 
 .chip-midi {
   max-width: 230px;
+  /* A long device name shortens (with an ellipsis) before the bar runs out of room. */
+  min-width: 0;
+}
+
+.topbar-right > :not(.chip-midi) {
+  flex: none;
 }
 
 .topbar-lesson .segmented {
@@ -49,6 +56,23 @@
   }
   .topbar-lesson .label-short {
     display: inline;
+  }
+}
+
+/* With Your data beside the theme toggle, the wordmark goes first. */
+@media (max-width: 1180px) {
+  .logo-name {
+    display: none;
+  }
+}
+
+/* Tablets in landscape: the drawer toggle joins the bar, so the switches take their compact width. */
+@media (max-width: 1080px) {
+  .topbar-lesson .segmented {
+    width: 252px;
+  }
+  .topbar-mode .segmented {
+    width: 96px;
   }
 }
 

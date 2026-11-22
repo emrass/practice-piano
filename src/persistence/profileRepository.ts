@@ -25,6 +25,11 @@ export class BackupError extends Error {}
 
 /** Validate + migrate a parsed backup file. Throws BackupError on anything unusable. */
 export function parseBackup(json: string): ProfileData {
+  return readBackup(json).data;
+}
+
+/** A checked backup and when it was made (null if the file does not say), to confirm before restoring. */
+export function readBackup(json: string): { data: ProfileData; exportedAt: Date | null } {
   let raw: unknown;
   try {
     raw = JSON.parse(json);
@@ -38,7 +43,8 @@ export function parseBackup(json: string): ProfileData {
     throw new BackupError('This backup was made by a newer version of the app.');
   }
   // Future: if (r.version < BACKUP_VERSION) migrate step by step here.
-  return { settings: normalizeSettings(r.settings), progress: normalizeProgress(r.progress) };
+  const exportedAt = typeof r.exportedAt === 'string' && !Number.isNaN(Date.parse(r.exportedAt)) ? new Date(r.exportedAt) : null;
+  return { data: { settings: normalizeSettings(r.settings), progress: normalizeProgress(r.progress) }, exportedAt };
 }
 
 /**
@@ -107,7 +113,11 @@ export class ProfileRepository {
 
   /** Replaces the current profile with the backup's contents. */
   async importBackup(json: string): Promise<ProfileData> {
-    const data = parseBackup(json);
+    return this.restore(parseBackup(json));
+  }
+
+  /** Replaces the current profile with checked data (see readBackup). */
+  async restore(data: ProfileData): Promise<ProfileData> {
     await this.saveSettings(data.settings);
     await this.saveProgress(data.progress);
     return data;

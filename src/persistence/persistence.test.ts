@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_SETTINGS, applySettingsPatch, normalizeSettings } from '../core/settings';
 import { applyResult, emptyProgress } from '../core/progress/progress';
 import { LocalIdentityProvider } from './identity';
-import { BackupError, parseBackup, ProfileRepository } from './profileRepository';
+import { BackupError, parseBackup, ProfileRepository, readBackup } from './profileRepository';
 import { LocalStorageAdapter, MemoryStorageAdapter } from './storage';
 
 function repo(storage = new MemoryStorageAdapter()) {
@@ -88,6 +88,23 @@ describe('ProfileRepository', () => {
     expect(() => parseBackup('not json')).toThrow(BackupError);
     expect(() => parseBackup('{"format":"something-else"}')).toThrow(/not a practice-piano/);
     expect(() => parseBackup('{"format":"practice-piano.backup","version":99}')).toThrow(/newer version/);
+  });
+
+  it('reads a backup without restoring it, with the day it was made', async () => {
+    const { repo: r } = repo();
+    const settings = applySettingsPatch(DEFAULT_SETTINGS, { setupGuideSeen: true, theme: 'dark' });
+    await r.saveSettings(settings);
+    const json = await r.exportBackup(new Date('2026-03-04T10:00:00.000Z'));
+
+    const read = readBackup(json);
+    expect(read.exportedAt?.toISOString()).toBe('2026-03-04T10:00:00.000Z');
+    expect(read.data.settings.theme).toBe('dark');
+
+    const fresh = repo().repo;
+    expect((await fresh.load()).settings.theme).not.toBe('dark');
+    await fresh.restore(read.data);
+    expect((await fresh.load()).settings.theme).toBe('dark');
+    expect(readBackup(json.replace('2026-03-04T10:00:00.000Z', 'soon')).exportedAt).toBeNull();
   });
 
   it('reset clears only this user', async () => {

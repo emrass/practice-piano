@@ -8,7 +8,7 @@ A labeled action. Quiet (card fill, hairline border) is the default; everything 
 | Primary | `.btn-primary` | The one way forward in a view: Start, Next, Continue. At most one visible per region. |
 | Inverse | `.btn-inverse` | Stop, and only Stop: Start turns into it while a run plays. |
 | Ghost | `.btn-ghost` | The way out beside a primary: Skip, Cancel, Back. |
-| Danger text | `.btn-ghost.btn-danger-text` | Opens a destructive flow (Reset progress). |
+| Danger text | `.btn-ghost.btn-danger-text` | Opens a destructive flow (Erase everything in Your data). |
 | Danger | `.btn-danger` | Confirms it, inside the confirming dialog only. |
 | Pressed | `aria-pressed="true"` | A toggle that is on. |
 | Nudge | `.is-nudge` | Points a new player at the next setup step. Remove once used. |

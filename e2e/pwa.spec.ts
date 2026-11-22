@@ -55,8 +55,8 @@ test('After one visit, the app loads and plays offline', async ({ page, context 
 test('Your data shows whether the browser keeps the data', async ({ page }) => {
   await page.goto('./');
   await skipSetup(page);
-  await page.getByRole('tab', { name: 'Progress' }).click();
-  await expect(page.locator('.storage-status')).toContainText(/protected from automatic clean-up|may clear it/);
+  await page.getByRole('button', { name: 'Your data' }).click();
+  await expect(page.getByRole('dialog', { name: 'Your data' }).locator('.storage-status')).toContainText(/protected from automatic clean-up|may clear it/);
 });
 
 // ---- Updates ----------------------------------------------------------------------------
