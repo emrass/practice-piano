@@ -53,6 +53,8 @@ final class MIDIBridge {
                 let refCon = UnsafeMutableRawPointer(bitPattern: Int(uid))
                 if MIDIPortConnectSource(inputPort, source, refCon) == noErr {
                     connected[uid] = source
+                    // Next to the audio session's events, so a log shows what a piano connecting did to the sound.
+                    AudioSessionMonitor.log("MIDI input connected: \(Self.stringProperty(source, kMIDIPropertyDisplayName) ?? String(uid))")
                 }
             }
             inputs.append([
@@ -64,6 +66,7 @@ final class MIDIBridge {
             ])
         }
         for (uid, source) in connected where !seen.contains(uid) {
+            AudioSessionMonitor.log("MIDI input gone: \(uid)")
             MIDIPortDisconnectSource(inputPort, source)
             connected[uid] = nil
         }

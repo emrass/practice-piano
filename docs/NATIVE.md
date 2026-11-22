@@ -52,6 +52,9 @@ environment variable `SKIP_WEB_BUILD=1` to embed the existing build without rebu
   background, and WebKit does not always restart it. `AudioSessionMonitor` reports each of these to
   the web side, whose audio engine resumes its context whenever it leaves *running*, again before
   each sound, and builds a new one when a resume does not take (`src/platform/audio/audioEngine.ts`).
+  A context can also keep saying *running* while nothing comes out: after the output moved to a
+  Bluetooth device and back (a piano that connects its Bluetooth audio along with MIDI, seen in
+  #82) or after an interruption that never ended. Those always get a new context.
 - A hardware keyboard (Magic Keyboard / Mac) works for QWERTY practice too.
 
 ## How it fits together
@@ -74,7 +77,8 @@ native → JS   window.__practicePianoNative.receive(msg)
               { type: 'midi', source: id, data: [status, data1, data2] }
               { type: 'bluetoothClosed' } | { type: 'log', message }
               { type: 'audio', event }   event: 'interruptionBegan' | 'interruptionEnded' |
-                                         'routeChanged' | 'becameActive' | 'mediaServicesReset'
+                                         'outputChanged' | 'routeChanged' | 'becameActive' |
+                                         'mediaServicesReset'
 ```
 
 On the web side `NativeMidiBackend` implements the same `MidiBackend` interface as
