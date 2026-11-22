@@ -14,7 +14,7 @@ export interface ProgressView {
     /** Third tile: median reaction time, or the rushing/dragging tendency (rhythm). */
     third: 'reaction' | 'tendency';
   };
-  /** The lesson's own section(s), rendered between the summary and "Your data". */
+  /** The lesson's own section(s), rendered below the summary. */
   Section: (props: ProgressSectionProps) => ReactNode;
 }
 

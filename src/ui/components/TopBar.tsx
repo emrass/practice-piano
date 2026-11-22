@@ -19,7 +19,7 @@ function midiLabelText(midi: MidiState): string {
     : 'Connect a piano';
 }
 
-/** Brand, lesson and Wait / Flow switches, streak and XP chips, the piano chip (Piano & audio), theme and drawer toggles. */
+/** Brand, lesson and Wait / Flow switches, streak and XP chips, the piano chip (Piano & audio), Your data, theme and drawer toggles. */
 export function TopBar(props: {
   settings: Settings;
   update: (patch: SettingsPatch) => void;
@@ -30,6 +30,8 @@ export function TopBar(props: {
   midi: MidiState;
   /** The piano chip: opens Piano & audio, whether or not a piano is connected. */
   onOpenMidi: () => void;
+  /** Your data: backup, restore and erase for the whole app. */
+  onOpenData: () => void;
   onToggleDrawer: () => void;
 }) {
   const { settings: s, mode } = props;
@@ -76,6 +78,9 @@ export function TopBar(props: {
         <button type="button" className="chip chip-midi" onClick={props.onOpenMidi} aria-haspopup="dialog" title="Piano & audio settings">
           <span className={`status-dot ${midiConnected ? 'is-on' : ''}`} aria-hidden="true" />
           <span className="chip-text">{midiLabelText(props.midi)}</span>
+        </button>
+        <button type="button" className="icon-btn" onClick={props.onOpenData} aria-haspopup="dialog" aria-label="Your data" title="Your data: back up, restore or erase">
+          <Icon name="archive" />
         </button>
         <button
           type="button"

@@ -83,10 +83,10 @@ test('The system bars follow the theme', async ({ app, page }) => {
   await expect.poll(async () => (await sent(page)).filter((c) => c.cmd === 'theme').at(-1)).toEqual({ cmd: 'theme', dark: true, color: '#221e1a' });
 });
 
-test('Export JSON saves through the system picker', async ({ app, page }) => {
+test('Export file saves through the system picker', async ({ app, page }) => {
   await app.open({ settings: { lesson: 'sight' } });
-  await app.openTab('Progress');
-  await page.getByRole('button', { name: 'Export JSON' }).click();
+  await page.getByRole('button', { name: 'Your data' }).click();
+  await page.getByRole('button', { name: 'Export file' }).click();
   await expect.poll(async () => (await sent(page)).find((c) => c.cmd === 'saveFile')).toBeTruthy();
   const save = (await sent(page)).find((c) => c.cmd === 'saveFile')!;
   expect(save).toMatchObject({ mimeType: 'application/json', name: expect.stringMatching(/^practice-piano-backup-.*\.json$/) });

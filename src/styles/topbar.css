@@ -52,6 +52,23 @@
   }
 }
 
+/* With Your data beside the theme toggle, the wordmark goes first. */
+@media (max-width: 1180px) {
+  .logo-name {
+    display: none;
+  }
+}
+
+/* Tablets in landscape: the drawer toggle joins the bar, so the switches take their compact width. */
+@media (max-width: 1080px) {
+  .topbar-lesson .segmented {
+    width: 252px;
+  }
+  .topbar-mode .segmented {
+    width: 96px;
+  }
+}
+
 /* Five lessons: the top bar drops the wordmark and chip labels before it runs out of room. */
 @media (max-width: 900px) {
   .logo-name,

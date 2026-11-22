@@ -18,6 +18,7 @@ const ICONS: Record<string, string> = Object.fromEntries(
 );
 
 export type IconName =
+  | 'archive'
   | 'check'
   | 'chevron-down'
   | 'chevron-right'

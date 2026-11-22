@@ -2,7 +2,7 @@ import { expect, test } from './support';
 
 const LESSONS = ['sight', 'ear', 'rhythm', 'scales', 'chords'];
 
-for (const width of [390, 768, 1100, 1440, 1800]) {
+for (const width of [390, 768, 960, 1024, 1100, 1440, 1800]) {
   test(`Top bar fits at ${width}px for every lesson`, async ({ app, page }) => {
     await page.setViewportSize({ width, height: 800 });
     await app.open({ settings: { lesson: 'sight' } });
