@@ -45,13 +45,20 @@ environment variable `SKIP_WEB_BUILD=1` to embed the existing build without rebu
 - The audio session uses the *playback* category, so the metronome sounds with the silent switch
   on and can be routed to Bluetooth headphones or the piano's Bluetooth audio input. Choose the
   **Headphones on piano** preset in that case (~180 ms compensation).
+  The app's sound is Web Audio, which WebKit plays from its own process with its own audio
+  category, so the web side also asks for playback with `navigator.audioSession.type = 'playback'`.
+  Like most metronome apps, it pauses music from other apps while it plays.
+- iOS stops Web Audio on interruptions, route changes (a Bluetooth device connecting) and in the
+  background, and WebKit does not always restart it. `AudioSessionMonitor` reports each of these to
+  the web side, whose audio engine resumes its context whenever it leaves *running*, again before
+  each sound, and builds a new one when a resume does not take (`src/platform/audio/audioEngine.ts`).
 - A hardware keyboard (Magic Keyboard / Mac) works for QWERTY practice too.
 
 ## How it fits together
 
 | File | Role |
 |---|---|
-| `PracticePianoApp.swift` | App entry; configures `AVAudioSession` |
+| `PracticePianoApp.swift` | App entry; configures `AVAudioSession`; `AudioSessionMonitor` reports interruptions, route changes and returning to the foreground |
 | `WebContainer.swift` | `WKWebView` host; JS ↔ native message routing |
 | `AppSchemeHandler.swift` | Serves the bundled build at `app://local/…` (a real origin, so ES modules and `localStorage` work as on the web) |
 | `MIDIBridge.swift` | CoreMIDI client, source enumeration, UMP → MIDI 1.0 bytes |
@@ -61,11 +68,13 @@ Bridge protocol (also documented in `src/platform/native.ts`):
 
 ```
 JS → native   window.webkit.messageHandlers.practicePiano.postMessage({ cmd })
-              cmd: 'hello' | 'rescan' | 'showBluetoothPairing'
+              cmd: 'hello' | 'rescan' | 'showBluetoothPairing' | 'log' (+ message)
 native → JS   window.__practicePianoNative.receive(msg)
               { type: 'inputs', inputs: [{ id, name, manufacturer, online }] }
               { type: 'midi', source: id, data: [status, data1, data2] }
               { type: 'bluetoothClosed' } | { type: 'log', message }
+              { type: 'audio', event }   event: 'interruptionBegan' | 'interruptionEnded' |
+                                         'routeChanged' | 'becameActive' | 'mediaServicesReset'
 ```
 
 On the web side `NativeMidiBackend` implements the same `MidiBackend` interface as
@@ -75,3 +84,8 @@ On the web side `NativeMidiBackend` implements the same `MidiBackend` interface 
 
 The web view is inspectable (iOS/macOS 16.4+): Safari → *Develop* → your device →
 *Practice Piano*. Native logs appear in Xcode's console with the `practice-piano` prefix.
+
+No sound? Filter Xcode's console by `practice-piano audio`. Lines from the native side show each
+interruption (with the reason iOS gives), each route change (reason, the old and new output, the
+session's category) and returning to the foreground; lines marked `audio (web)` show the web
+audio context's state changes, resumes and rebuilds, in the same timeline.

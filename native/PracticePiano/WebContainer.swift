@@ -21,6 +21,7 @@ final class WebViewController: UIViewController, WKScriptMessageHandler, WKNavig
 
     private var webView: WKWebView!
     private let midi = MIDIBridge()
+    private let audio = AudioSessionMonitor()
     private let schemeHandler = AppSchemeHandler()
     private var pageReady = false
     private var pending: [String] = []
@@ -51,6 +52,8 @@ final class WebViewController: UIViewController, WKScriptMessageHandler, WKNavig
         super.viewDidLoad()
         midi.onMessage = { [weak self] json in self?.send(json) }
         midi.start()
+        audio.onEvent = { [weak self] event in self?.send(#"{"type":"audio","event":"\#(event)"}"#) }
+        audio.start()
         webView.load(URLRequest(url: AppSchemeHandler.startURL))
     }
 
@@ -76,6 +79,8 @@ final class WebViewController: UIViewController, WKScriptMessageHandler, WKNavig
                 self?.midi.rescan()
                 self?.send(#"{"type":"bluetoothClosed"}"#)
             }
+        case "log":
+            if let text = body["message"] as? String { NSLog("practice-piano %@", text) }
         default:
             NSLog("practice-piano: unknown command \(cmd)")
         }

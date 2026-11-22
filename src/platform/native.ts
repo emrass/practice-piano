@@ -10,6 +10,8 @@
  *   { cmd: 'hello' }                  ask for the current MIDI source list
  *   { cmd: 'rescan' }                 re-enumerate MIDI sources
  *   { cmd: 'showBluetoothPairing' }   present the Bluetooth MIDI pairing sheet
+ *   Apple only:
+ *   { cmd: 'log', message }           write a line to the native log (audio recovery events)
  *   Android only:
  *   { cmd: 'theme', dark, color }     system bars follow the app theme
  *   { cmd: 'saveFile', id, name, mimeType, text }
@@ -20,6 +22,8 @@
  *   { type: 'inputs', inputs: [{ id, name, manufacturer, online }] }
  *   { type: 'midi', source: id, data: number[] }
  *   { type: 'bluetoothClosed' }
+ *   { type: 'audio', event }          what happened to the audio session (Apple): interruptionBegan,
+ *                                     interruptionEnded, routeChanged, becameActive, mediaServicesReset
  *   { type: 'fileSaved', id, status: 'saved' | 'canceled' | 'failed' }   (Android)
  *
  * native → JS (Android): window.__practicePianoNative.back() → boolean
@@ -27,10 +31,14 @@
  *   when nothing is open, so the app goes to the background.
  */
 
+/** What the Apple app reports about the iOS audio session. */
+export type NativeAudioEvent = 'interruptionBegan' | 'interruptionEnded' | 'routeChanged' | 'becameActive' | 'mediaServicesReset';
+
 export type NativeMessage =
   | { type: 'inputs'; inputs: { id: string; name: string; manufacturer?: string; online?: boolean }[] }
   | { type: 'midi'; source: string; data: number[] }
   | { type: 'bluetoothClosed' }
+  | { type: 'audio'; event: NativeAudioEvent }
   | { type: 'fileSaved'; id: string; status: 'saved' | 'canceled' | 'failed' }
   | { type: 'log'; message: string };
 
@@ -38,6 +46,7 @@ export type NativeCommand =
   | { cmd: 'hello' }
   | { cmd: 'rescan' }
   | { cmd: 'showBluetoothPairing' }
+  | { cmd: 'log'; message: string }
   | { cmd: 'theme'; dark: boolean; color: string }
   | { cmd: 'saveFile'; id: string; name: string; mimeType: string; text: string };
 
